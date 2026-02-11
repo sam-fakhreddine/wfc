@@ -29,13 +29,13 @@ Solo coding means solo risk.
 
 ## ✨ The WFC Solution
 
-WFC gives you a **complete engineering team** for your entire workflow:
+WFC gives you a **complete engineering team** for your entire workflow:<br>
 
-**📋 Planning** - Structured task breakdown with dependencies and properties
-**⚙️ Implementation** - Parallel TDD agents in isolated worktrees
-**🔍 Review** - 54 expert personas, 5 per review, true consensus
+**📋 Planning** - Structured task breakdown with dependencies and properties<br>
+**⚙️ Implementation** - Parallel TDD agents in isolated worktrees<br>
+**🔍 Review** - 54 expert personas, 5 per review, true consensus<br>
 
-**Not just review. The whole workflow. In parallel. World-class.**
+**Not just review. The whole workflow. In parallel. World-class.**<br>
 
 Your specialists:
 - 🛡️ Security experts who've seen every attack vector
