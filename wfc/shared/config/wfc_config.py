@@ -67,7 +67,7 @@ class WFCConfig:
             }
         },
         "entire_io": {
-            "enabled": True,
+            "enabled": False,  # OPT-IN: Set to true to enable agent session capture
             "local_only": True,
             "create_checkpoints": True,
             "checkpoint_phases": [
@@ -161,6 +161,30 @@ class WFCConfig:
                 return default
 
         return value
+
+    def set(self, key_path: str, value: Any) -> None:
+        """
+        Set a config value using dot notation (runtime only, not persisted).
+
+        Args:
+            key_path: Dot-separated path (e.g., "entire_io.enabled")
+            value: Value to set
+
+        Example:
+            >>> config.set("entire_io.enabled", True)
+        """
+        config = self.load()
+        keys = key_path.split(".")
+
+        # Navigate to parent dict
+        current = config
+        for key in keys[:-1]:
+            if key not in current:
+                current[key] = {}
+            current = current[key]
+
+        # Set the value
+        current[keys[-1]] = value
 
     def _load_file(self, path: Path) -> Optional[Dict[str, Any]]:
         """Load JSON config file if it exists."""

@@ -9,7 +9,7 @@ Usage:
     wfc lint [--fix]                                  - Run linters
     wfc format                                        - Format code
     wfc install [--dev]                               - Install WFC
-    wfc implement [--tasks FILE] [--agents N] [--dry-run]  - Execute implementation tasks
+    wfc implement [--tasks FILE] [--agents N] [--dry-run] [--enable-entire]  - Execute implementation tasks
     wfc version                                       - Show version
 """
 
@@ -157,7 +157,8 @@ def cmd_version():
 
 
 def cmd_implement(tasks_file: Optional[str] = None, agents: Optional[int] = None,
-                  dry_run: bool = False, skip_quality: bool = False):
+                  dry_run: bool = False, skip_quality: bool = False,
+                  enable_entire: bool = False):
     """
     Execute implementation tasks with wfc-implement.
 
@@ -166,6 +167,7 @@ def cmd_implement(tasks_file: Optional[str] = None, agents: Optional[int] = None
         agents: Number of parallel agents (default: from config)
         dry_run: Show plan without executing
         skip_quality: Skip quality checks (NOT RECOMMENDED)
+        enable_entire: Enable Entire.io session capture (RECOMMENDED for debugging)
     """
     print("🚀 WFC Implement - Multi-Agent Parallel Implementation")
     print("=" * 60)
@@ -207,6 +209,17 @@ def cmd_implement(tasks_file: Optional[str] = None, agents: Optional[int] = None
     else:
         max_agents = config.get("orchestration.max_agents", 5)
         print(f"👥 Agents: {max_agents} (from config)")
+
+    # Enable Entire.io if requested
+    if enable_entire:
+        print("📹 Entire.io: ENABLED (session capture for debugging)")
+        config.set("entire_io.enabled", True)
+    else:
+        entire_enabled = config.get("entire_io.enabled", False)
+        if entire_enabled:
+            print("📹 Entire.io: ENABLED (from config)")
+        else:
+            print("💡 Entire.io: DISABLED (use --enable-entire to enable session capture)")
 
     # Warn if skipping quality
     if skip_quality:
@@ -341,6 +354,7 @@ def main():
     implement_parser.add_argument("--agents", type=int, help="Number of parallel agents")
     implement_parser.add_argument("--dry-run", action="store_true", help="Show plan without executing")
     implement_parser.add_argument("--skip-quality", action="store_true", help="Skip quality checks (NOT RECOMMENDED)")
+    implement_parser.add_argument("--enable-entire", action="store_true", help="Enable Entire.io session capture (RECOMMENDED for debugging)")
 
     args = parser.parse_args()
 
@@ -368,7 +382,8 @@ def main():
             tasks_file=args.tasks,
             agents=args.agents,
             dry_run=args.dry_run,
-            skip_quality=args.skip_quality
+            skip_quality=args.skip_quality,
+            enable_entire=args.enable_entire
         )
 
 

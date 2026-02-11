@@ -1,8 +1,26 @@
 # Entire.io Integration - Agent Session Capture
 
-**Status**: ✅ IMPLEMENTED
+**Status**: ✅ IMPLEMENTED (OPTIONAL, HIGHLY RECOMMENDED)
 **Security**: 🔒 LOCAL-ONLY by default, privacy-first
 **Purpose**: Capture agent reasoning for debugging and cross-session learning
+
+> 💡 **Note**: Entire.io is **OPTIONAL** but **HIGHLY RECOMMENDED**. It's disabled by default - you opt-in when you want agent session capture for debugging and learning.
+
+---
+
+## Why Optional But Recommended?
+
+**Optional** because:
+- Not everyone needs session capture
+- Some prefer minimal tooling
+- Privacy-conscious users can skip it
+- Works perfectly fine without it
+
+**Recommended** because:
+- 🐛 **10x faster debugging** - Rewind to exact failure point
+- 📚 **Cross-session learning** - Never repeat the same mistake
+- 🔍 **Understand agent reasoning** - See "why" not just "what"
+- 📊 **Retrospective analysis** - Improve over time
 
 ---
 
@@ -85,16 +103,34 @@ entire --version
 
 ## 🚀 Usage
 
-### Automatic Integration
+### Enable Session Capture (OPT-IN)
 
-Entire.io integration is **automatic** when the CLI is installed. No additional setup required!
+Entire.io is **disabled by default**. Enable it when you want to debug agents or learn from failures.
 
+**Option 1: CLI Flag (Recommended for one-time use)**
 ```bash
-# Just run WFC normally
-wfc implement --tasks plan/TASKS.md
-
-# Sessions are automatically captured (local only)
+# Enable for this run only
+wfc implement --tasks plan/TASKS.md --enable-entire
 ```
+
+**Option 2: Configuration (For persistent enable)**
+```bash
+# Edit wfc.config.json
+{
+  "entire_io": {
+    "enabled": true  // Change from false to true
+  }
+}
+
+# Then run normally
+wfc implement --tasks plan/TASKS.md
+```
+
+**When to enable:**
+- 🐛 Debugging a failing agent
+- 📚 Learning from past failures
+- 🔍 Understanding agent decision-making
+- 📊 Collecting data for retrospective analysis
 
 ### Configuration
 
