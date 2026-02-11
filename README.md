@@ -1,6 +1,6 @@
 <div align="center">
 
-<img src="assets/logo-full.svg" alt="WFC - World Fucking Class" width="500">
+<img src="assets/logo-championship-belt.svg" alt="WFC - World Fucking Class Championship Belt" width="700">
 
 # 🚀 The Multi-Agent Framework That Doesn't Fuck Around
 

@@ -1,0 +1,175 @@
+<svg viewBox="0 0 800 300" xmlns="http://www.w3.org/2000/svg">
+  <!-- Gradient Definitions -->
+  <defs>
+    <!-- Gold Metallic Gradient -->
+    <linearGradient id="goldGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#FFD700;stop-opacity:1" />
+      <stop offset="50%" style="stop-color:#FFA500;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#FFD700;stop-opacity:1" />
+    </linearGradient>
+
+    <!-- Dark Gold for depth -->
+    <linearGradient id="darkGold" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#B8860B;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#8B6914;stop-opacity:1" />
+    </linearGradient>
+
+    <!-- Purple-Cyan Gradient (WFC Brand) -->
+    <linearGradient id="wfcGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" style="stop-color:#7C3AED;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#06B6D4;stop-opacity:1" />
+    </linearGradient>
+
+    <!-- Radial shine effect -->
+    <radialGradient id="shine" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" style="stop-color:#FFFFFF;stop-opacity:0.8" />
+      <stop offset="100%" style="stop-color:#FFD700;stop-opacity:0.2" />
+    </radialGradient>
+  </defs>
+
+  <!-- Main Belt Base (wider center, tapered sides) -->
+  <!-- Left side plate -->
+  <path d="M 10 100 L 150 80 L 150 220 L 10 200 Z" fill="url(#darkGold)" stroke="#8B6914" stroke-width="2"/>
+  <rect x="10" y="100" width="140" height="100" fill="url(#goldGrad)" opacity="0.7"/>
+
+  <!-- Right side plate -->
+  <path d="M 650 80 L 790 100 L 790 200 L 650 220 Z" fill="url(#darkGold)" stroke="#8B6914" stroke-width="2"/>
+  <rect x="650" y="100" width="140" height="100" fill="url(#goldGrad)" opacity="0.7"/>
+
+  <!-- Center main plate (large championship plate) -->
+  <ellipse cx="400" cy="150" rx="280" ry="140" fill="url(#darkGold)" stroke="#8B6914" stroke-width="3"/>
+  <ellipse cx="400" cy="150" rx="270" ry="130" fill="url(#goldGrad)"/>
+  <ellipse cx="400" cy="140" rx="270" ry="130" fill="url(#shine)" opacity="0.3"/>
+
+  <!-- Ornate border around center plate -->
+  <ellipse cx="400" cy="150" rx="275" ry="135" fill="none" stroke="#B8860B" stroke-width="4"/>
+  <ellipse cx="400" cy="150" rx="260" ry="120" fill="none" stroke="#FFD700" stroke-width="2" stroke-dasharray="5,5"/>
+
+  <!-- Side plate decorative hexagons (agent network theme) -->
+  <!-- Left plate hexagons -->
+  <g transform="translate(80, 150)">
+    <polygon points="0,-15 13,-7.5 13,7.5 0,15 -13,7.5 -13,-7.5" fill="url(#wfcGrad)" opacity="0.8"/>
+    <polygon points="0,-12 10,-6 10,6 0,12 -10,6 -10,-6" fill="none" stroke="#FFD700" stroke-width="1.5"/>
+  </g>
+
+  <!-- Right plate hexagons -->
+  <g transform="translate(720, 150)">
+    <polygon points="0,-15 13,-7.5 13,7.5 0,15 -13,7.5 -13,-7.5" fill="url(#wfcGrad)" opacity="0.8"/>
+    <polygon points="0,-12 10,-6 10,6 0,12 -10,6 -10,-6" fill="none" stroke="#FFD700" stroke-width="1.5"/>
+  </g>
+
+  <!-- Laurel Wreath (left side) -->
+  <g transform="translate(200, 150)">
+    <!-- Left laurel leaves -->
+    <path d="M -50 -40 Q -60 -30 -55 -20 Q -50 -10 -60 0 Q -55 10 -50 20 Q -45 30 -50 40"
+          fill="none" stroke="#228B22" stroke-width="4" stroke-linecap="round"/>
+    <ellipse cx="-52" cy="-30" rx="8" ry="12" fill="#2E7D32" transform="rotate(-20 -52 -30)"/>
+    <ellipse cx="-57" cy="-10" rx="8" ry="12" fill="#2E7D32" transform="rotate(-10 -57 -10)"/>
+    <ellipse cx="-57" cy="10" rx="8" ry="12" fill="#2E7D32" transform="rotate(10 -57 10)"/>
+    <ellipse cx="-52" cy="30" rx="8" ry="12" fill="#2E7D32" transform="rotate(20 -52 30)"/>
+  </g>
+
+  <!-- Laurel Wreath (right side) -->
+  <g transform="translate(600, 150)">
+    <!-- Right laurel leaves -->
+    <path d="M 50 -40 Q 60 -30 55 -20 Q 50 -10 60 0 Q 55 10 50 20 Q 45 30 50 40"
+          fill="none" stroke="#228B22" stroke-width="4" stroke-linecap="round"/>
+    <ellipse cx="52" cy="-30" rx="8" ry="12" fill="#2E7D32" transform="rotate(20 52 -30)"/>
+    <ellipse cx="57" cy="-10" rx="8" ry="12" fill="#2E7D32" transform="rotate(10 57 -10)"/>
+    <ellipse cx="57" cy="10" rx="8" ry="12" fill="#2E7D32" transform="rotate(-10 57 10)"/>
+    <ellipse cx="52" cy="30" rx="8" ry="12" fill="#2E7D32" transform="rotate(-20 52 30)"/>
+  </g>
+
+  <!-- Crown at top center -->
+  <g transform="translate(400, 40)">
+    <polygon points="-30,0 -20,-20 -10,0 0,-25 10,0 20,-20 30,0 25,10 -25,10"
+             fill="url(#goldGrad)" stroke="#B8860B" stroke-width="2"/>
+    <!-- Crown jewels (purple-cyan) -->
+    <circle cx="-20" cy="-15" r="4" fill="url(#wfcGrad)"/>
+    <circle cx="0" cy="-20" r="5" fill="url(#wfcGrad)"/>
+    <circle cx="20" cy="-15" r="4" fill="url(#wfcGrad)"/>
+  </g>
+
+  <!-- Hexagonal Network Pattern (center, behind text) -->
+  <g opacity="0.15">
+    <!-- Top row -->
+    <polygon points="400,-20 420,-10 420,10 400,20 380,10 380,-10" fill="url(#wfcGrad)" transform="translate(-60, 120)"/>
+    <polygon points="400,-20 420,-10 420,10 400,20 380,10 380,-10" fill="url(#wfcGrad)" transform="translate(0, 120)"/>
+    <polygon points="400,-20 420,-10 420,10 400,20 380,10 380,-10" fill="url(#wfcGrad)" transform="translate(60, 120)"/>
+
+    <!-- Middle row -->
+    <polygon points="400,-20 420,-10 420,10 400,20 380,10 380,-10" fill="url(#wfcGrad)" transform="translate(-90, 150)"/>
+    <polygon points="400,-20 420,-10 420,10 400,20 380,10 380,-10" fill="url(#wfcGrad)" transform="translate(-30, 150)"/>
+    <polygon points="400,-20 420,-10 420,10 400,20 380,10 380,-10" fill="url(#wfcGrad)" transform="translate(30, 150)"/>
+    <polygon points="400,-20 420,-10 420,10 400,20 380,10 380,-10" fill="url(#wfcGrad)" transform="translate(90, 150)"/>
+
+    <!-- Bottom row -->
+    <polygon points="400,-20 420,-10 420,10 400,20 380,10 380,-10" fill="url(#wfcGrad)" transform="translate(-60, 180)"/>
+    <polygon points="400,-20 420,-10 420,10 400,20 380,10 380,-10" fill="url(#wfcGrad)" transform="translate(0, 180)"/>
+    <polygon points="400,-20 420,-10 420,10 400,20 380,10 380,-10" fill="url(#wfcGrad)" transform="translate(60, 180)"/>
+  </g>
+
+  <!-- Main Text: WFC -->
+  <text x="400" y="170" font-family="Arial Black, sans-serif" font-size="90" font-weight="900"
+        text-anchor="middle" fill="url(#wfcGrad)" stroke="#1a1a1a" stroke-width="3">
+    WFC
+  </text>
+  <text x="400" y="170" font-family="Arial Black, sans-serif" font-size="90" font-weight="900"
+        text-anchor="middle" fill="url(#wfcGrad)">
+    WFC
+  </text>
+
+  <!-- Subtitle: WORLD CLASS -->
+  <text x="400" y="210" font-family="Arial, sans-serif" font-size="20" font-weight="700"
+        text-anchor="middle" fill="#1a1a1a" letter-spacing="8">
+    WORLD CLASS
+  </text>
+  <text x="400" y="210" font-family="Arial, sans-serif" font-size="20" font-weight="700"
+        text-anchor="middle" fill="url(#goldGrad)" letter-spacing="8">
+    WORLD CLASS
+  </text>
+
+  <!-- Agent Count Badge (54 EXPERTS) -->
+  <g transform="translate(400, 250)">
+    <rect x="-60" y="-15" width="120" height="30" rx="15" fill="#1a1a1a" stroke="url(#goldGrad)" stroke-width="2"/>
+    <text x="0" y="5" font-family="Arial, sans-serif" font-size="14" font-weight="700"
+          text-anchor="middle" fill="url(#goldGrad)">
+      54 EXPERT AGENTS
+    </text>
+  </g>
+
+  <!-- Side plate decorative text -->
+  <text x="80" y="120" font-family="Arial, sans-serif" font-size="12" font-weight="700"
+        text-anchor="middle" fill="#1a1a1a">MULTI</text>
+  <text x="80" y="135" font-family="Arial, sans-serif" font-size="12" font-weight="700"
+        text-anchor="middle" fill="#1a1a1a">AGENT</text>
+  <text x="80" y="165" font-family="Arial, sans-serif" font-size="12" font-weight="700"
+        text-anchor="middle" fill="#1a1a1a">CODE</text>
+  <text x="80" y="180" font-family="Arial, sans-serif" font-size="12" font-weight="700"
+        text-anchor="middle" fill="#1a1a1a">REVIEW</text>
+
+  <text x="720" y="120" font-family="Arial, sans-serif" font-size="12" font-weight="700"
+        text-anchor="middle" fill="#1a1a1a">CONSENSUS</text>
+  <text x="720" y="135" font-family="Arial, sans-serif" font-size="12" font-weight="700"
+        text-anchor="middle" fill="#1a1a1a">DRIVEN</text>
+  <text x="720" y="165" font-family="Arial, sans-serif" font-size="12" font-weight="700"
+        text-anchor="middle" fill="#1a1a1a">QUALITY</text>
+  <text x="720" y="180" font-family="Arial, sans-serif" font-size="12" font-weight="700"
+        text-anchor="middle" fill="#1a1a1a">ASSURED</text>
+
+  <!-- Decorative rivets/studs on belt -->
+  <circle cx="140" cy="90" r="8" fill="url(#darkGold)" stroke="#FFD700" stroke-width="2"/>
+  <circle cx="140" cy="210" r="8" fill="url(#darkGold)" stroke="#FFD700" stroke-width="2"/>
+  <circle cx="660" cy="90" r="8" fill="url(#darkGold)" stroke="#FFD700" stroke-width="2"/>
+  <circle cx="660" cy="210" r="8" fill="url(#darkGold)" stroke="#FFD700" stroke-width="2"/>
+
+  <!-- Stars for prestige (top corners of center plate) -->
+  <g transform="translate(180, 80)">
+    <polygon points="0,-10 2.5,-3 10,-3 4,2 6,10 0,5 -6,10 -4,2 -10,-3 -2.5,-3"
+             fill="url(#goldGrad)" stroke="#B8860B" stroke-width="1"/>
+  </g>
+  <g transform="translate(620, 80)">
+    <polygon points="0,-10 2.5,-3 10,-3 4,2 6,10 0,5 -6,10 -4,2 -10,-3 -2.5,-3"
+             fill="url(#goldGrad)" stroke="#B8860B" stroke-width="1"/>
+  </g>
+</svg>

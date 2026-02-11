@@ -1,0 +1,75 @@
+<svg viewBox="0 0 400 120" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="goldGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#FFD700;stop-opacity:1" />
+      <stop offset="50%" style="stop-color:#FFA500;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#FFD700;stop-opacity:1" />
+    </linearGradient>
+
+    <linearGradient id="darkGold" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#B8860B;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#8B6914;stop-opacity:1" />
+    </linearGradient>
+
+    <linearGradient id="wfcGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" style="stop-color:#7C3AED;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#06B6D4;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+
+  <!-- Main Belt Plate -->
+  <ellipse cx="200" cy="60" rx="190" ry="50" fill="url(#darkGold)" stroke="#8B6914" stroke-width="2"/>
+  <ellipse cx="200" cy="60" rx="185" ry="45" fill="url(#goldGrad)"/>
+  <ellipse cx="200" cy="60" rx="180" ry="42" fill="none" stroke="#FFD700" stroke-width="1.5"/>
+
+  <!-- Crown -->
+  <g transform="translate(200, 15)">
+    <polygon points="-15,0 -10,-10 -5,0 0,-12 5,0 10,-10 15,0 12,5 -12,5"
+             fill="url(#goldGrad)" stroke="#B8860B" stroke-width="1.5"/>
+    <circle cx="-10" cy="-8" r="2" fill="url(#wfcGrad)"/>
+    <circle cx="0" cy="-10" r="2.5" fill="url(#wfcGrad)"/>
+    <circle cx="10" cy="-8" r="2" fill="url(#wfcGrad)"/>
+  </g>
+
+  <!-- Hexagonal pattern (subtle background) -->
+  <g opacity="0.1">
+    <polygon points="150,60 160,55 160,65 150,70 140,65 140,55" fill="url(#wfcGrad)"/>
+    <polygon points="200,60 210,55 210,65 200,70 190,65 190,55" fill="url(#wfcGrad)"/>
+    <polygon points="250,60 260,55 260,65 250,70 240,65 240,55" fill="url(#wfcGrad)"/>
+  </g>
+
+  <!-- Main Text: WFC -->
+  <text x="200" y="70" font-family="Arial Black, sans-serif" font-size="40" font-weight="900"
+        text-anchor="middle" fill="url(#wfcGrad)" stroke="#1a1a1a" stroke-width="2">
+    WFC
+  </text>
+  <text x="200" y="70" font-family="Arial Black, sans-serif" font-size="40" font-weight="900"
+        text-anchor="middle" fill="url(#wfcGrad)">
+    WFC
+  </text>
+
+  <!-- Subtitle -->
+  <text x="200" y="90" font-family="Arial, sans-serif" font-size="12" font-weight="700"
+        text-anchor="middle" fill="url(#goldGrad)" letter-spacing="6">
+    WORLD CLASS
+  </text>
+
+  <!-- Agent badge -->
+  <g transform="translate(200, 105)">
+    <rect x="-35" y="-8" width="70" height="16" rx="8" fill="#1a1a1a" stroke="url(#goldGrad)" stroke-width="1"/>
+    <text x="0" y="3" font-family="Arial, sans-serif" font-size="8" font-weight="700"
+          text-anchor="middle" fill="url(#goldGrad)">
+      54 EXPERTS
+    </text>
+  </g>
+
+  <!-- Decorative stars -->
+  <g transform="translate(40, 60)">
+    <polygon points="0,-6 1.5,-2 6,-2 2.5,1 3.5,6 0,3 -3.5,6 -2.5,1 -6,-2 -1.5,-2"
+             fill="url(#goldGrad)" stroke="#B8860B" stroke-width="0.5"/>
+  </g>
+  <g transform="translate(360, 60)">
+    <polygon points="0,-6 1.5,-2 6,-2 2.5,1 3.5,6 0,3 -3.5,6 -2.5,1 -6,-2 -1.5,-2"
+             fill="url(#goldGrad)" stroke="#B8860B" stroke-width="0.5"/>
+  </g>
+</svg>
