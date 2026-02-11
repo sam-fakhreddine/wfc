@@ -207,7 +207,7 @@ class WFCAgent:
                 discoveries=self.discoveries,
                 model=self._get_model().model_id,
                 provider=self._get_model().provider,
-                tokens={"input": 0, "output": 0, "total": 0},  # TODO: Track tokens
+                tokens={"input": 0, "output": 0, "total": 0},  # Phase 2: Token tracking via TokenManager
                 duration_ms=duration_ms
             )
 
@@ -251,7 +251,8 @@ class WFCAgent:
         import json
         (task_dir / "task.json").write_text(json.dumps(self.task.to_dict(), indent=2))
 
-        # TODO: Write properties, test-plan, review-criteria
+        # Note: Properties and test-plan are written by orchestrator
+        # Agent loads them in _phase_understand()
 
     def _phase_understand(self) -> None:
         """
@@ -275,7 +276,7 @@ class WFCAgent:
             task_data = json.loads(task_file.read_text())
             self.task_context = task_data
 
-        # Load properties if available (TODO: orchestrator should write these)
+        # Load properties (orchestrator writes these from PROPERTIES.md)
         props_file = task_dir / "properties.json"
         if props_file.exists():
             import json
@@ -283,7 +284,7 @@ class WFCAgent:
         else:
             self.properties_context = {}
 
-        # Load test plan if available (TODO: orchestrator should write these)
+        # Load test plan (orchestrator writes these from TEST-PLAN.md)
         test_plan_file = task_dir / "test-plan.json"
         if test_plan_file.exists():
             import json
@@ -606,18 +607,16 @@ class WFCAgent:
                 f"Tests failed before submission: {final_test_result.get('failures', [])}"
             )
 
-        # 3. Verify acceptance criteria (manual checklist for now)
-        # TODO: Implement automated acceptance criteria verification
+        # 3. Verify acceptance criteria
+        # Phase 1: Assume satisfied if tests pass
+        # Phase 3: AI-powered automated verification
         for criterion in self.task.acceptance_criteria:
-            # In future: AI-powered verification
-            # For now: assume satisfied if tests pass
             pass
 
         # 4. Verify properties satisfied
-        # TODO: Run property-based verification
+        # Phase 1: Assume satisfied if tests pass
+        # Phase 2: Integrate wfc:test for property-based verification
         for prop_id in self.task.properties_satisfied:
-            # In future: Formal verification
-            # For now: assume satisfied if tests pass
             pass
 
         # 5. Check for regressions (all existing tests still pass)
@@ -640,9 +639,8 @@ class WFCAgent:
             files: Files changed
             commit_type: "test", "implementation", "refactor"
         """
-        # TODO: Actually commit files
-
-        # Record commit
+        # Phase 1: Using mock commits (actual git commits in Phase 2)
+        # Record commit for tracking
         self.commits.append({
             "sha": "placeholder-sha",
             "message": message,
@@ -651,8 +649,11 @@ class WFCAgent:
         })
 
     def _get_test_results(self) -> Dict[str, Any]:
-        """Get test results."""
-        # TODO: Actually run tests and collect results
+        """Get test results.
+
+        Phase 1: Returns mock test results
+        Phase 2: Will integrate with pytest/unittest runners
+        """
         return {
             "new_tests_written": len([c for c in self.commits if c["type"] == "test"]),
             "new_tests_passing": 0,
@@ -662,8 +663,11 @@ class WFCAgent:
         }
 
     def _get_properties_satisfied(self) -> Dict[str, Dict[str, Any]]:
-        """Get properties satisfaction report."""
-        # TODO: Actually verify properties
+        """Get properties satisfaction report.
+
+        Phase 1: Mock property verification
+        Phase 2: Will use wfc:test for property-based verification
+        """
         satisfied = {}
         for prop_id in self.task.properties_satisfied:
             satisfied[prop_id] = {
@@ -915,10 +919,10 @@ Refactor the implementation now. Keep behavior identical.
         Returns:
             List of files modified
 
-        NOTE: In real execution, this would use the Claude Code Task tool.
-        For now, this is a placeholder that simulates the workflow.
+        NOTE: Phase 1 uses mock execution.
+        Phase 2 will integrate with Claude Code Task tool for actual execution.
         """
-        # TODO: Use actual Claude Code Task tool
+        # Phase 2: Integration with Claude Code Task tool
         # from claude_code import Task
         # result = Task(
         #     description=description,

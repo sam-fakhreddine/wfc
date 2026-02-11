@@ -202,7 +202,8 @@ def cmd_implement(tasks_file: Optional[str] = None, agents: Optional[int] = None
     # Override agent count if specified
     if agents:
         print(f"👥 Agents: {agents} (override)")
-        # TODO: Set config override
+        config.set("orchestration.max_agents", agents)
+        max_agents = agents
     else:
         max_agents = config.get("orchestration.max_agents", 5)
         print(f"👥 Agents: {max_agents} (from config)")

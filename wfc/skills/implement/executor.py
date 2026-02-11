@@ -95,7 +95,8 @@ class ExecutionEngine:
         review_passed = self._review(report)
 
         if not review_passed:
-            # TODO: Handle review retry
+            # Phase 1: Mark as failed
+            # Phase 2: Implement retry logic with agent feedback loop
             self.orchestrator.mark_task_failed(task.id)
             return
 

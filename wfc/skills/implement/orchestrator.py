@@ -126,9 +126,9 @@ class WFCOrchestrator:
             run_id=self.telemetry.data.get("run_id", "unknown"),
             tasks_completed=len(self.completed),
             tasks_failed=len(self.failed),
-            tasks_rolled_back=0,  # TODO: Track rollbacks
+            tasks_rolled_back=0,  # Phase 2: Track via merge_engine rollback events
             duration_ms=duration_ms,
-            total_tokens={"input": 0, "output": 0, "total": 0}  # TODO: Aggregate from agents
+            total_tokens={"input": 0, "output": 0, "total": 0}  # Phase 2: Aggregate from agent reports
         )
 
         # Record telemetry
