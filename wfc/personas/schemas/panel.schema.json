@@ -1,0 +1,52 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://wfc.dev/schemas/panel.schema.json",
+  "title": "WFC Panel Schema",
+  "description": "Schema for defining expert panels in the WFC consensus review system",
+  "type": "object",
+  "required": ["id", "name", "description", "personas"],
+  "properties": {
+    "id": {
+      "type": "string",
+      "enum": [
+        "engineering",
+        "security",
+        "architecture",
+        "quality",
+        "data",
+        "product",
+        "operations",
+        "domain-experts",
+        "specialists"
+      ],
+      "description": "Unique identifier for the panel"
+    },
+    "name": {
+      "type": "string",
+      "description": "Human-readable name for the panel"
+    },
+    "description": {
+      "type": "string",
+      "description": "Detailed description of the panel's expertise and focus"
+    },
+    "personas": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "List of persona IDs belonging to this panel"
+    },
+    "subpanels": {
+      "type": "object",
+      "patternProperties": {
+        "^[a-z-]+$": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "description": "Optional subpanel groupings of personas"
+    }
+  }
+}

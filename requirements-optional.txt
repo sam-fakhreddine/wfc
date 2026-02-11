@@ -1,0 +1,21 @@
+# Optional WFC Dependencies
+# Install with: pip install -r requirements-optional.txt
+
+# Token Management (recommended for accurate token counting)
+tiktoken>=0.5.0
+
+# Enhanced Logging
+colorlog>=6.7.0
+
+# Performance Profiling
+py-spy>=0.3.14
+
+# Advanced Code Analysis
+tree-sitter>=0.20.0
+tree-sitter-python>=0.20.0
+
+# Markdown Rendering
+rich>=13.0.0
+
+# YAML Configuration
+pyyaml>=6.0

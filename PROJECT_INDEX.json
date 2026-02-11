@@ -1,0 +1,424 @@
+{
+  "project": {
+    "name": "wfc",
+    "full_name": "World Fucking Class",
+    "version": "0.1.0",
+    "description": "Multi-agent consensus review system with parallel implementation engine",
+    "license": "MIT",
+    "author": "Sam Fakhreddine",
+    "requires_python": ">=3.10",
+    "repository": "https://github.com/samfakhreddine/wfc"
+  },
+  "generated": {
+    "timestamp": "2026-02-11T00:00:00Z",
+    "generator": "wfc:implement Phase 3 (TASK-010)",
+    "latest_commit": "b15ebf7",
+    "version": "1.0.0"
+  },
+  "structure": {
+    "entry_points": {
+      "cli": {
+        "path": "wfc/cli.py",
+        "command": "wfc",
+        "purpose": "Main CLI interface for all WFC commands",
+        "commands": [
+          "wfc implement - Multi-agent parallel implementation",
+          "wfc review - Multi-agent consensus code review",
+          "wfc plan - Adaptive planning with interview",
+          "wfc test - Property-based test generation",
+          "wfc security - Threat modeling and analysis",
+          "wfc architecture - Architecture documentation",
+          "wfc observe - Observability instrumentation",
+          "wfc retro - Retrospective analysis",
+          "wfc init - Initialize WFC for project",
+          "wfc safeclaude - Generate safe command allowlist"
+        ]
+      }
+    },
+    "skills": {
+      "implement": {
+        "path": "wfc/skills/implement",
+        "purpose": "Multi-agent parallel implementation engine",
+        "status": "Phase 2 Complete (Intelligence)",
+        "features": [
+          "TDD workflow (RED-GREEN-REFACTOR)",
+          "Universal quality checker (Trunk.io)",
+          "Merge engine with rollback",
+          "Confidence checking (SuperClaude pattern)",
+          "Memory system (ReflexionMemory)",
+          "Token budget optimization",
+          "Failure severity classification"
+        ],
+        "files": [
+          "orchestrator.py",
+          "agent.py",
+          "merge_engine.py",
+          "parser.py",
+          "quality_checker.py"
+        ]
+      },
+      "review": {
+        "path": "wfc/skills/review",
+        "purpose": "Multi-agent consensus code review",
+        "features": [
+          "54 specialized expert personas",
+          "Automatic persona selection",
+          "Weighted consensus voting",
+          "Severity-based filtering",
+          "Review report generation"
+        ],
+        "files": [
+          "orchestrator.py",
+          "consensus.py",
+          "agents.py"
+        ]
+      },
+      "plan": {
+        "path": "wfc/skills/plan",
+        "purpose": "Adaptive planning with structured interview",
+        "features": [
+          "Intelligent interview system",
+          "TASKS.md generation (with dependencies)",
+          "PROPERTIES.md generation (formal properties)",
+          "TEST-PLAN.md generation"
+        ],
+        "files": [
+          "interview.py",
+          "tasks_generator.py",
+          "properties_generator.py"
+        ]
+      },
+      "test": {
+        "path": "wfc/skills/test",
+        "purpose": "Property-based test generation",
+        "features": [
+          "Property-based testing",
+          "Requirement-based test cases",
+          "Coverage gap analysis"
+        ]
+      },
+      "security": {
+        "path": "wfc/skills/security",
+        "purpose": "Threat modeling and security analysis",
+        "features": [
+          "STRIDE threat analysis",
+          "Attack surface mapping",
+          "Dependency vulnerability scanning",
+          "Secret detection"
+        ]
+      },
+      "architecture": {
+        "path": "wfc/skills/architecture",
+        "purpose": "Architecture documentation and C4 diagrams",
+        "features": [
+          "C4 diagrams (Context, Container, Component)",
+          "Architecture Decision Records (ADRs)",
+          "Code alignment auditing"
+        ]
+      },
+      "observe": {
+        "path": "wfc/skills/observe",
+        "purpose": "Observability instrumentation from properties",
+        "features": [
+          "Property-to-observable mapping",
+          "Metrics collector generation",
+          "Alert rule generation",
+          "Dashboard panel configuration"
+        ]
+      },
+      "retro": {
+        "path": "wfc/skills/retro",
+        "purpose": "Retrospective analysis of telemetry",
+        "features": [
+          "Pattern identification",
+          "Performance analysis",
+          "Bottleneck detection",
+          "Actionable recommendations"
+        ]
+      },
+      "safeclaude": {
+        "path": "wfc/skills/safeclaude",
+        "purpose": "Safe command allowlist generator",
+        "features": [
+          "Project scanning",
+          "Command categorization",
+          "Risk-based allowlisting",
+          "settings.json generation"
+        ]
+      },
+      "isthissmart": {
+        "path": "wfc/skills/isthissmart",
+        "purpose": "Critical thinking advisor",
+        "features": [
+          "7-dimension analysis",
+          "Feasibility assessment",
+          "Risk identification",
+          "Alternative generation"
+        ]
+      },
+      "newskill": {
+        "path": "wfc/skills/newskill",
+        "purpose": "Meta-skill for creating new WFC skills",
+        "features": [
+          "Structured interview",
+          "Skill prompt generation",
+          "Auto-build with plan→implement"
+        ]
+      }
+    },
+    "scripts": {
+      "confidence_checker": {
+        "path": "wfc/scripts/confidence_checker.py",
+        "purpose": "SuperClaude confidence-first pattern",
+        "features": [
+          "5-dimension assessment",
+          "Score calculation (0-100)",
+          "Question generation (medium/low confidence)",
+          "Alternative approaches (medium confidence)"
+        ]
+      },
+      "memory_manager": {
+        "path": "wfc/scripts/memory_manager.py",
+        "purpose": "Cross-session learning (ReflexionMemory)",
+        "features": [
+          "Reflexion logging (reflexion.jsonl)",
+          "Workflow metrics (workflow_metrics.jsonl)",
+          "Similar error search",
+          "Historical optimization"
+        ]
+      },
+      "token_manager": {
+        "path": "wfc/scripts/token_manager.py",
+        "purpose": "Token budget optimization",
+        "features": [
+          "Complexity-based budgets (S/M/L/XL)",
+          "Usage tracking and warnings",
+          "Historical learning",
+          "Budget recommendations"
+        ]
+      },
+      "universal_quality_checker": {
+        "path": "wfc/scripts/universal_quality_checker.py",
+        "purpose": "Universal quality checking (Trunk.io)",
+        "features": [
+          "Trunk.io integration (100+ tools)",
+          "Auto-fix capability",
+          "Language-agnostic",
+          "Fallback to Python tools"
+        ]
+      },
+      "quality_checker": {
+        "path": "wfc/scripts/quality_checker.py",
+        "purpose": "Python-specific quality checking",
+        "features": [
+          "black formatting",
+          "ruff linting",
+          "pytest execution",
+          "mypy type checking (optional)"
+        ]
+      },
+      "language_detector": {
+        "path": "wfc/scripts/language_detector.py",
+        "purpose": "Project language and framework detection",
+        "features": [
+          "Multi-language detection",
+          "Framework identification",
+          "Tool recommendation"
+        ]
+      }
+    },
+    "shared_infrastructure": {
+      "config": {
+        "path": "wfc/shared/config",
+        "purpose": "Configuration management",
+        "files": [
+          "wfc_config.py - Global and project-level config"
+        ]
+      },
+      "telemetry": {
+        "path": "wfc/shared/telemetry",
+        "purpose": "Centralized event logging and metrics",
+        "files": [
+          "wfc_telemetry.py - Event logging to JSONL"
+        ]
+      },
+      "schemas": {
+        "path": "wfc/shared/schemas",
+        "purpose": "Common data structures",
+        "files": [
+          "task_schema.py - Task definitions",
+          "property_schema.py - Property definitions"
+        ]
+      },
+      "utils": {
+        "path": "wfc/shared/utils",
+        "purpose": "Shared utilities",
+        "files": [
+          "git_helpers.py - Git operations",
+          "model_selector.py - Claude model selection"
+        ]
+      }
+    },
+    "tools": {
+      "gitwork": {
+        "path": "wfc/wfc-tools/gitwork",
+        "purpose": "Git workflow automation",
+        "features": [
+          "Branch management",
+          "Worktree operations",
+          "Commit automation",
+          "Merge strategies",
+          "Rollback capabilities",
+          "Semantic versioning",
+          "Git hooks"
+        ],
+        "files": [
+          "api/branch.py",
+          "api/worktree.py",
+          "api/commit.py",
+          "api/merge.py",
+          "api/rollback.py",
+          "api/semver.py",
+          "api/hooks.py",
+          "api/history.py"
+        ]
+      }
+    },
+    "personas": {
+      "path": "wfc/personas",
+      "purpose": "Multi-agent persona system",
+      "features": [
+        "54 expert personas",
+        "Token-optimized prompts",
+        "File reference system",
+        "Ultra-minimal prompts",
+        "Persona orchestration"
+      ],
+      "files": [
+        "persona_executor.py",
+        "persona_orchestrator.py",
+        "file_reference_prompts.py",
+        "ultra_minimal_prompts.py"
+      ]
+    }
+  },
+  "metrics": {
+    "files": {
+      "total_python_files": 170,
+      "total_lines_of_code": 13459,
+      "skills": 11,
+      "scripts": 7,
+      "shared_modules": 4,
+      "tools": 1
+    },
+    "coverage": {
+      "phase_1_core": "100% (4/4 tasks)",
+      "phase_2_intelligence": "100% (3/3 tasks)",
+      "phase_3_polish": "25% (1/4 tasks in progress)",
+      "phase_4_optional": "0% (0/1 tasks)",
+      "overall": "58.3% (7/12 tasks)"
+    }
+  },
+  "dependencies": {
+    "required": [],
+    "optional": {
+      "tokens": ["tiktoken>=0.5.0"],
+      "dev": [
+        "pytest>=7.0.0",
+        "black>=23.0.0",
+        "ruff>=0.1.0"
+      ]
+    },
+    "recommended_tools": {
+      "quality": "trunk.io (universal linter)",
+      "testing": "pytest",
+      "formatting": "black",
+      "linting": "ruff"
+    }
+  },
+  "philosophy": {
+    "principles": [
+      "ELEGANT - Simple, clear, no over-engineering",
+      "MULTI-TIER - Presentation/Logic/Data/Config separation",
+      "PARALLEL - Maximum safe concurrency",
+      "CONFIDENCE-FIRST - Assess before acting",
+      "CROSS-SESSION-LEARNING - Learn from mistakes",
+      "TOKEN-AWARE - Optimize for token efficiency",
+      "TEST-FIRST - TDD workflow (RED-GREEN-REFACTOR)",
+      "SAFETY - Rollback on failure, preserve evidence",
+      "DOCUMENTATION - Machine-readable structure"
+    ],
+    "patterns": {
+      "SuperClaude": [
+        "ReflexionMemory (cross-session learning)",
+        "Confidence-first implementation",
+        "Token budget optimization",
+        "PROJECT_INDEX.json (this file)"
+      ],
+      "TDD": [
+        "UNDERSTAND → TEST_FIRST → IMPLEMENT → REFACTOR → QUALITY_CHECK → SUBMIT"
+      ],
+      "Failure_Handling": [
+        "WARNING (don't block)",
+        "ERROR (block but retryable)",
+        "CRITICAL (immediate failure)"
+      ]
+    }
+  },
+  "roadmap": {
+    "completed": [
+      "Phase 1: Core Functionality (100%)",
+      "  - TASK-001: Universal Quality Checker",
+      "  - TASK-002: Agent TDD Workflow",
+      "  - TASK-005: Merge Engine with Rollback",
+      "  - TASK-007: CLI Interface",
+      "Phase 2: Intelligence (100%)",
+      "  - TASK-003: Confidence Checking",
+      "  - TASK-004: Memory System",
+      "  - TASK-009: Token Budget Enhancements"
+    ],
+    "in_progress": [
+      "Phase 3: Polish (25%)",
+      "  - TASK-010: PROJECT_INDEX.json (this task)"
+    ],
+    "planned": [
+      "Phase 3: Polish",
+      "  - TASK-011: make doctor Command",
+      "  - TASK-008: Integration Tests (>80% coverage)",
+      "  - TASK-012: Update Documentation",
+      "Phase 4: Optional",
+      "  - TASK-006: Dashboard (WebSocket, Mermaid)"
+    ]
+  },
+  "usage_examples": {
+    "implement_from_plan": "wfc implement --tasks plan/TASKS.md",
+    "dry_run": "wfc implement --dry-run",
+    "override_agents": "wfc implement --agents 8",
+    "consensus_review": "wfc review TASK-001",
+    "create_plan": "wfc plan",
+    "threat_model": "wfc security",
+    "generate_tests": "wfc test",
+    "architecture_docs": "wfc architecture",
+    "retrospective": "wfc retro"
+  },
+  "key_files": {
+    "config": "wfc.config.json - WFC configuration",
+    "tasks": "plan/TASKS.md - Implementation tasks",
+    "properties": "plan/PROPERTIES.md - Formal properties",
+    "test_plan": "plan/TEST-PLAN.md - Test specifications",
+    "memory_reflexion": "wfc/memory/reflexion.jsonl - Error learning",
+    "memory_metrics": "wfc/memory/workflow_metrics.jsonl - Performance metrics",
+    "telemetry": ".wfc/telemetry.jsonl - Event logs",
+    "project_index": "PROJECT_INDEX.json - This file"
+  },
+  "getting_started": {
+    "install": "pip install -e .",
+    "install_with_tokens": "pip install -e '.[tokens]'",
+    "install_dev": "pip install -e '.[dev]'",
+    "initialize": "wfc init",
+    "create_plan": "wfc plan",
+    "implement": "wfc implement",
+    "review": "wfc review",
+    "check_health": "make doctor (coming in TASK-011)"
+  }
+}

@@ -1,0 +1,100 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*.*.*'
+
+jobs:
+  release:
+    name: Create Release
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install build twine
+
+      - name: Build package
+        run: python -m build
+
+      - name: Generate release notes
+        id: release_notes
+        run: |
+          VERSION=${GITHUB_REF#refs/tags/v}
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+
+          # Count personas
+          PERSONA_COUNT=$(find wfc/personas/panels -name "*.json" | wc -l)
+
+          # Create release notes
+          cat > release_notes.md << EOF
+          ## WFC v$VERSION
+
+          **World Fucking Class** - Multi-agent consensus review system for Claude Code
+
+          ### 📊 Stats
+
+          - **$PERSONA_COUNT expert personas** across 9 panels
+          - **11 skills** for complete development workflow
+          - **Parallel subagent execution** for true independent reviews
+
+          ### ✨ Features
+
+          - Intelligent persona selection based on tech stack and complexity
+          - Relevance-weighted consensus synthesis
+          - Panel diversity enforcement (max 2 per panel)
+          - Hybrid trigger (auto + manual slash commands)
+
+          ### 📦 Installation
+
+          \`\`\`bash
+          git clone https://github.com/yourusername/wfc.git
+          cd wfc
+          git checkout v$VERSION
+          ./install.sh
+          \`\`\`
+
+          ### 📚 Documentation
+
+          - [README](README.md) - Overview and quick start
+          - [QUICKSTART](QUICKSTART.md) - 5-minute getting started guide
+          - [PERSONAS](docs/PERSONAS.md) - Complete persona library
+          - [ARCHITECTURE](docs/ARCHITECTURE.md) - System design
+
+          ### 🔗 Links
+
+          - [Full Changelog](https://github.com/yourusername/wfc/compare/v0.0.0...v$VERSION)
+          - [Issues](https://github.com/yourusername/wfc/issues)
+          EOF
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v1
+        with:
+          body_path: release_notes.md
+          files: |
+            dist/*.tar.gz
+            dist/*.whl
+          draft: false
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Publish to PyPI (optional)
+        if: false  # Enable this when ready to publish to PyPI
+        env:
+          TWINE_USERNAME: __token__
+          TWINE_PASSWORD: ${{ secrets.PYPI_API_TOKEN }}
+        run: twine upload dist/*

@@ -1,0 +1,156 @@
+name: Validate WFC Skills
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  test:
+    name: Run Tests
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.12'
+
+    - name: Install uv
+      run: |
+        curl -LsSf https://astral.sh/uv/install.sh | sh
+        echo "$HOME/.cargo/bin" >> $GITHUB_PATH
+
+    - name: Install dependencies
+      run: |
+        uv venv
+        source .venv/bin/activate
+        uv pip install -e ".[dev,tokens]"
+
+    - name: Run tests
+      run: |
+        source .venv/bin/activate
+        pytest -v
+
+    - name: Check formatting
+      run: |
+        source .venv/bin/activate
+        black --check wfc/
+
+    - name: Run linter
+      run: |
+        source .venv/bin/activate
+        ruff check wfc/
+
+  validate-skills:
+    name: Validate Agent Skills Compliance
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        path: wfc
+
+    - name: Checkout agentskills
+      uses: actions/checkout@v4
+      with:
+        repository: anthropics/agentskills
+        path: agentskills
+
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.12'
+
+    - name: Install skills-ref
+      run: |
+        cd agentskills/skills-ref
+        python -m venv .venv
+        source .venv/bin/activate
+        pip install -e .
+
+    - name: Install WFC skills
+      run: |
+        mkdir -p ~/.claude/skills
+        cp -r wfc/wfc/skills/* ~/.claude/skills/ || true
+
+    - name: Validate all WFC skills
+      run: |
+        cd agentskills/skills-ref
+        source .venv/bin/activate
+
+        FAILED=0
+        for skill in ~/.claude/skills/wfc-*; do
+          if [ -d "$skill" ]; then
+            skill_name=$(basename "$skill")
+            echo "Validating $skill_name..."
+
+            if ! skills-ref validate "$skill"; then
+              echo "❌ $skill_name validation failed"
+              FAILED=1
+            else
+              echo "✅ $skill_name validated"
+            fi
+          fi
+        done
+
+        if [ $FAILED -eq 1 ]; then
+          echo "❌ Some skills failed validation"
+          exit 1
+        fi
+
+        echo "✅ All WFC skills validated"
+
+    - name: Validate XML prompt generation
+      run: |
+        cd agentskills/skills-ref
+        source .venv/bin/activate
+
+        FAILED=0
+        for skill in ~/.claude/skills/wfc-*; do
+          if [ -d "$skill" ]; then
+            skill_name=$(basename "$skill")
+
+            if ! skills-ref to-prompt "$skill" | grep -q "<skill>"; then
+              echo "❌ $skill_name XML generation failed"
+              FAILED=1
+            fi
+          fi
+        done
+
+        if [ $FAILED -eq 1 ]; then
+          exit 1
+        fi
+
+        echo "✅ All XML prompts valid"
+
+  benchmark:
+    name: Token Usage Benchmark
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.12'
+
+    - name: Install uv
+      run: |
+        curl -LsSf https://astral.sh/uv/install.sh | sh
+        echo "$HOME/.cargo/bin" >> $GITHUB_PATH
+
+    - name: Install dependencies
+      run: |
+        uv venv
+        source .venv/bin/activate
+        uv pip install -e ".[tokens]"
+
+    - name: Run benchmark
+      run: |
+        source .venv/bin/activate
+        python scripts/benchmark_tokens.py --compare

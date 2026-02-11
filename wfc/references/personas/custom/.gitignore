@@ -1,0 +1,3 @@
+# Ignore all custom user personas
+*
+!.gitignore

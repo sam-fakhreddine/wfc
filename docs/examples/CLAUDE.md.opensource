@@ -1,0 +1,97 @@
+# Claude Instructions - Open Source Project
+
+## WFC Integration for Contributors
+
+### Before Submitting PRs
+
+Contributors: Please run WFC self-review before submitting:
+
+```
+/wfc:consensus-review FEATURE-{name}
+```
+
+This helps:
+- Catch issues early (faster PR approval)
+- Improve code quality
+- Learn best practices
+- Reduce maintainer review burden
+
+### For Maintainers
+
+Review all PRs with WFC:
+
+```
+/wfc:consensus-review PR-{number}
+```
+
+### Quality Guidelines
+
+- **Target score**: ≥8.0/10
+- **Required**: Zero critical issues
+- **Documentation**: All public APIs documented
+- **Tests**: Coverage maintained or improved
+- **Backwards compatibility**: No breaking changes without major version
+
+## Tech Stack
+
+- **Language**: Python 3.9+ (support 3.9-3.12)
+- **Framework**: FastAPI
+- **Testing**: pytest, coverage
+- **CI/CD**: GitHub Actions
+- **Packaging**: Poetry
+
+## Review Focus Areas
+
+### For New Features
+
+Personas should check:
+- **CODE_REVIEWER**: Readability, maintainability
+- **TEST_AUTOMATION_EXPERT**: Test coverage, test quality
+- **TECH_DEBT_ANALYST**: Won't create future maintenance burden
+
+### For Bug Fixes
+
+Personas should check:
+- **CODE_REVIEWER**: Root cause addressed, not symptom
+- **TEST_AUTOMATION_EXPERT**: Regression test added
+
+### For API Changes
+
+Personas should check:
+- **API_DESIGNER**: Follows REST best practices
+- **DX_SPECIALIST**: Good developer experience
+- **BACKEND_PYTHON_SENIOR**: Pythonic patterns
+
+## Properties to Emphasize
+
+1. **MAINTAINABILITY**: Code should be clear for new contributors
+2. **TESTABILITY**: Easy to test, good test coverage
+3. **USABILITY**: Clear API, good error messages
+4. **COMPATIBILITY**: Don't break existing users
+
+## Community Standards
+
+- Code of Conduct: Be respectful, constructive
+- Communication style: Friendly, welcoming to beginners
+- Review feedback: Explain *why*, not just *what*
+
+## Documentation Requirements
+
+All PRs must include:
+- [ ] Docstrings for public functions/classes
+- [ ] Type hints (Python 3.9+ syntax)
+- [ ] Updated README if user-facing changes
+- [ ] CHANGELOG entry
+- [ ] Examples if new feature
+
+## First-Time Contributors
+
+Welcome! 🎉
+
+For your first PR:
+- Start small (good first issues labeled)
+- Run WFC self-review
+- Ask questions in PR comments
+- Be patient with review process
+
+We'll help you through it!

@@ -1,0 +1,98 @@
+# Claude Instructions - Enterprise Project
+
+## WFC Integration
+
+### Mandatory Review Policy
+
+**ALL code changes MUST pass WFC consensus review** before merge.
+
+Exceptions: None (even documentation must be reviewed for accuracy).
+
+### Review Command
+
+```
+/wfc:consensus-review PR-{number}
+```
+
+### Quality Gates
+
+- **Required score**: ≥9.0/10 for production
+- **Security**: Zero critical or high severity issues
+- **Compliance**: All regulatory requirements met
+- **Performance**: No regressions, <100ms p95 latency
+- **Consensus**: 4/5 personas must agree on approval
+
+### Mandatory Personas
+
+Always include these personas when available:
+- APPSEC_SPECIALIST (security is paramount)
+- COMPLIANCE_AUDITOR (SOC2, GDPR, HIPAA)
+- SRE_SPECIALIST (production stability)
+- BACKEND_PYTHON_SENIOR (primary stack)
+- DB_ARCHITECT_SQL (data integrity critical)
+
+Override automatic selection if needed:
+```
+/wfc:consensus-review PR-{number} --personas APPSEC_SPECIALIST,COMPLIANCE_AUDITOR,SRE_SPECIALIST,DB_ARCHITECT_SQL,BACKEND_PYTHON_SENIOR
+```
+
+## Tech Stack
+
+- **Backend**: Python 3.11, Django 4.2, Celery
+- **Database**: PostgreSQL 15 (primary), Redis (cache)
+- **Infrastructure**: AWS (EKS, RDS, ElastiCache)
+- **Monitoring**: Datadog, PagerDuty
+
+## Regulatory Context
+
+This system processes:
+- **PII**: Customer personal data (GDPR, CCPA)
+- **PHI**: Healthcare records (HIPAA)
+- **Financial**: Payment information (PCI-DSS)
+
+All changes touching user data require:
+- COMPLIANCE_AUDITOR review
+- Data flow diagram updates
+- Privacy impact assessment
+
+## Review Properties
+
+Prioritize these properties (in order):
+1. **SECURITY**: No compromises, ever
+2. **COMPLIANCE**: Regulatory requirements
+3. **RELIABILITY**: 99.95% uptime SLA
+4. **SAFETY**: Data integrity, no data loss
+5. **PERFORMANCE**: Sub-100ms API responses
+6. **MAINTAINABILITY**: Long-term codebase health
+
+## Review Checklist
+
+WFC reviewers must verify:
+- [ ] All inputs validated and sanitized
+- [ ] Authentication/authorization on all endpoints
+- [ ] Audit logs for sensitive operations
+- [ ] Error messages don't leak PII/PHI
+- [ ] Database queries use parameterized statements
+- [ ] Secrets not in code (use AWS Secrets Manager)
+- [ ] Rate limiting on public APIs
+- [ ] HTTPS enforced for all connections
+- [ ] Data encrypted at rest and in transit
+- [ ] Backwards compatibility maintained
+- [ ] Rollback plan documented
+
+## Deployment Approval
+
+After WFC review passes:
+1. Security team review (human)
+2. QA sign-off (automated + manual tests)
+3. Compliance approval (if regulatory scope)
+4. Engineering manager approval
+5. Gradual rollout (canary → 10% → 50% → 100%)
+
+## Incident Response
+
+If WFC flags critical issues after deployment:
+1. Immediate rollback
+2. Incident report
+3. Post-mortem
+4. Update WFC persona selection criteria

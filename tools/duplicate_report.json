@@ -1,0 +1,408 @@
+{
+  "metadata": {
+    "scan_time_seconds": 0.1,
+    "files_scanned": {
+      "js": 0,
+      "python": 29,
+      "total": 29
+    },
+    "functions_extracted": 167,
+    "plugins_loaded": [
+      "JavaScript/TypeScript",
+      "Python"
+    ],
+    "settings": {
+      "threshold": 0.8,
+      "min_lines": 5,
+      "top": 50,
+      "lang": "all",
+      "max_comparisons": 200000,
+      "skip_near_clones": false,
+      "ignore_tests": true
+    }
+  },
+  "summary": {
+    "exact_clone_clusters": 3,
+    "exact_cloned_functions": 7,
+    "near_clone_pairs": 18,
+    "anti_pattern_hits": 4,
+    "anti_pattern_breakdown": {
+      "inline_json_file_io": 4
+    }
+  },
+  "level_1_exact_clones": [
+    {
+      "norm_hash": "b2284f8ec4a21f1d",
+      "count": 3,
+      "representative_source": "def get_config(project_root: Optional[Path] = None) -> WFCConfig:\n    \"\"\"\n    Get WFC configuration instance.\n\n    Args:\n        project_root: Optional project root directory\n\n    Returns:\n        WFCConfig instance\n    \"\"\"\n    return WFCConfig(project_root)",
+      "functions": [
+        {
+          "file": "wfc/shared/config/wfc_config.py",
+          "name": "get_config",
+          "lineno": 173,
+          "lines": 11
+        },
+        {
+          "file": "wfc/shared/telemetry/wfc_telemetry.py",
+          "name": "get_telemetry",
+          "lineno": 167,
+          "lines": 11
+        },
+        {
+          "file": "wfc/shared/utils/model_selector.py",
+          "name": "get_selector",
+          "lineno": 150,
+          "lines": 11
+        }
+      ]
+    },
+    {
+      "norm_hash": "ac898f22b231966f",
+      "count": 2,
+      "representative_source": "    def _match_tech_stack(self, persona_tech: List[str], context_tech: List[str]) -> float:\n        \"\"\"Calculate tech stack match score (0-1)\"\"\"\n        if not context_tech or not persona_tech:\n            return 0.0\n\n        persona_tech_lower = {t.lower() for t in persona_tech}\n        context_tech_lower = {t.lower() for t in context_tech}\n\n        matches = persona_tech_lower & context_tech_lower\n        return len(matches) / len(context_tech_lower) if context_tech_lower else 0.0",
+      "functions": [
+        {
+          "file": "wfc/personas/persona_orchestrator.py",
+          "name": "_match_tech_stack",
+          "lineno": 493,
+          "lines": 10
+        },
+        {
+          "file": "wfc/personas/persona_orchestrator.py",
+          "name": "_match_domain",
+          "lineno": 515,
+          "lines": 10
+        }
+      ]
+    },
+    {
+      "norm_hash": "bfad77c44087009b",
+      "count": 2,
+      "representative_source": "def get_config() -> GitworkConfig:\n    \"\"\"Get gitwork config instance\"\"\"\n    global _instance\n    if _instance is None:\n        _instance = GitworkConfig()\n    return _instance",
+      "functions": [
+        {
+          "file": "wfc/wfc-tools/gitwork/config.py",
+          "name": "get_config",
+          "lineno": 71,
+          "lines": 6
+        },
+        {
+          "file": "wfc/wfc-tools/gitwork/router.py",
+          "name": "get_router",
+          "lineno": 52,
+          "lines": 6
+        }
+      ]
+    }
+  ],
+  "level_2_near_clones": [
+    {
+      "similarity": 0.9932,
+      "func_a": {
+        "file": "wfc/personas/persona_orchestrator.py",
+        "name": "_match_tech_stack",
+        "lineno": 493,
+        "lines": 10
+      },
+      "func_b": {
+        "file": "wfc/personas/persona_orchestrator.py",
+        "name": "_match_properties",
+        "lineno": 504,
+        "lines": 10
+      }
+    },
+    {
+      "similarity": 0.9902,
+      "func_a": {
+        "file": "wfc/personas/persona_orchestrator.py",
+        "name": "search_by_tags",
+        "lineno": 245,
+        "lines": 14
+      },
+      "func_b": {
+        "file": "wfc/personas/persona_orchestrator.py",
+        "name": "search_by_tech_stack",
+        "lineno": 260,
+        "lines": 14
+      }
+    },
+    {
+      "similarity": 0.9803,
+      "func_a": {
+        "file": "wfc/shared/schemas/property_schema.py",
+        "name": "to_dict",
+        "lineno": 107,
+        "lines": 5
+      },
+      "func_b": {
+        "file": "wfc/shared/schemas/task_schema.py",
+        "name": "to_dict",
+        "lineno": 192,
+        "lines": 5
+      }
+    },
+    {
+      "similarity": 0.9779,
+      "func_a": {
+        "file": "wfc/shared/schemas/task_schema.py",
+        "name": "add",
+        "lineno": 121,
+        "lines": 5
+      },
+      "func_b": {
+        "file": "wfc/shared/schemas/property_schema.py",
+        "name": "add",
+        "lineno": 88,
+        "lines": 6
+      }
+    },
+    {
+      "similarity": 0.9759,
+      "func_a": {
+        "file": "wfc/personas/persona_orchestrator.py",
+        "name": "search_by_panel",
+        "lineno": 275,
+        "lines": 11
+      },
+      "func_b": {
+        "file": "wfc/personas/persona_orchestrator.py",
+        "name": "search_by_complexity",
+        "lineno": 287,
+        "lines": 11
+      }
+    },
+    {
+      "similarity": 0.9624,
+      "func_a": {
+        "file": "wfc/shared/config/wfc_config.py",
+        "name": "get_config",
+        "lineno": 173,
+        "lines": 11
+      },
+      "func_b": {
+        "file": "wfc/shared/utils/git_helpers.py",
+        "name": "get_git",
+        "lineno": 174,
+        "lines": 11
+      }
+    },
+    {
+      "similarity": 0.938,
+      "func_a": {
+        "file": "wfc/personas/persona_orchestrator.py",
+        "name": "get_persona",
+        "lineno": 233,
+        "lines": 11
+      },
+      "func_b": {
+        "file": "wfc/personas/persona_orchestrator.py",
+        "name": "search_by_panel",
+        "lineno": 275,
+        "lines": 11
+      }
+    },
+    {
+      "similarity": 0.929,
+      "func_a": {
+        "file": "wfc/personas/persona_orchestrator.py",
+        "name": "get_persona",
+        "lineno": 233,
+        "lines": 11
+      },
+      "func_b": {
+        "file": "wfc/personas/persona_orchestrator.py",
+        "name": "search_by_complexity",
+        "lineno": 287,
+        "lines": 11
+      }
+    },
+    {
+      "similarity": 0.8882,
+      "func_a": {
+        "file": "wfc/shared/utils/git_helpers.py",
+        "name": "revert",
+        "lineno": 149,
+        "lines": 12
+      },
+      "func_b": {
+        "file": "wfc/shared/utils/git_helpers.py",
+        "name": "merge",
+        "lineno": 131,
+        "lines": 13
+      }
+    },
+    {
+      "similarity": 0.8666,
+      "func_a": {
+        "file": "wfc/shared/schemas/property_schema.py",
+        "name": "__post_init__",
+        "lineno": 45,
+        "lines": 10
+      },
+      "func_b": {
+        "file": "wfc/shared/schemas/task_schema.py",
+        "name": "__post_init__",
+        "lineno": 69,
+        "lines": 13
+      }
+    },
+    {
+      "similarity": 0.8625,
+      "func_a": {
+        "file": "wfc/wfc-tools/gitwork/api/history.py",
+        "name": "search_content",
+        "lineno": 77,
+        "lines": 24
+      },
+      "func_b": {
+        "file": "wfc/wfc-tools/gitwork/api/history.py",
+        "name": "search",
+        "lineno": 11,
+        "lines": 27
+      }
+    },
+    {
+      "similarity": 0.8271,
+      "func_a": {
+        "file": "wfc/personas/persona_orchestrator.py",
+        "name": "get_persona",
+        "lineno": 233,
+        "lines": 11
+      },
+      "func_b": {
+        "file": "wfc/shared/utils/git_helpers.py",
+        "name": "get_git",
+        "lineno": 174,
+        "lines": 11
+      }
+    },
+    {
+      "similarity": 0.8193,
+      "func_a": {
+        "file": "wfc/shared/utils/git_helpers.py",
+        "name": "__init__",
+        "lineno": 28,
+        "lines": 8
+      },
+      "func_b": {
+        "file": "wfc/personas/persona_orchestrator.py",
+        "name": "get_persona",
+        "lineno": 233,
+        "lines": 11
+      }
+    },
+    {
+      "similarity": 0.8187,
+      "func_a": {
+        "file": "wfc/shared/schemas/property_schema.py",
+        "name": "from_dict",
+        "lineno": 72,
+        "lines": 5
+      },
+      "func_b": {
+        "file": "wfc/shared/schemas/task_schema.py",
+        "name": "from_dict",
+        "lineno": 104,
+        "lines": 6
+      }
+    },
+    {
+      "similarity": 0.8092,
+      "func_a": {
+        "file": "wfc/personas/persona_orchestrator.py",
+        "name": "get_persona",
+        "lineno": 233,
+        "lines": 11
+      },
+      "func_b": {
+        "file": "wfc/shared/utils/model_selector.py",
+        "name": "select_by_tier",
+        "lineno": 108,
+        "lines": 11
+      }
+    },
+    {
+      "similarity": 0.8083,
+      "func_a": {
+        "file": "wfc/personas/persona_orchestrator.py",
+        "name": "search_by_panel",
+        "lineno": 275,
+        "lines": 11
+      },
+      "func_b": {
+        "file": "wfc/personas/persona_orchestrator.py",
+        "name": "search_by_property",
+        "lineno": 299,
+        "lines": 11
+      }
+    },
+    {
+      "similarity": 0.8037,
+      "func_a": {
+        "file": "wfc/shared/utils/git_helpers.py",
+        "name": "__init__",
+        "lineno": 28,
+        "lines": 8
+      },
+      "func_b": {
+        "file": "wfc/shared/utils/git_helpers.py",
+        "name": "get_git",
+        "lineno": 174,
+        "lines": 11
+      }
+    },
+    {
+      "similarity": 0.8009,
+      "func_a": {
+        "file": "wfc/personas/persona_orchestrator.py",
+        "name": "get_persona",
+        "lineno": 233,
+        "lines": 11
+      },
+      "func_b": {
+        "file": "wfc/shared/config/wfc_config.py",
+        "name": "get_config",
+        "lineno": 173,
+        "lines": 11
+      }
+    }
+  ],
+  "level_3_anti_patterns": [
+    {
+      "pattern_name": "inline_json_file_io",
+      "description": "Repeated JSON file read/write boilerplate (candidate for lib/file_io.py)",
+      "suggested_replacement": "Proposed: from lib.file_io import load_json, save_json",
+      "file": "wfc/personas/persona_orchestrator.py",
+      "name": "(file-level)",
+      "lineno": 0,
+      "matched_snippet": "L184: data = json.load(f)\nL201: data = json.load(f)\nL353: json.dump(registry, f, indent=2)"
+    },
+    {
+      "pattern_name": "inline_json_file_io",
+      "description": "Repeated JSON file read/write boilerplate (candidate for lib/file_io.py)",
+      "suggested_replacement": "Proposed: from lib.file_io import load_json, save_json",
+      "file": "wfc/personas/update_models_to_aliases.py",
+      "name": "(file-level)",
+      "lineno": 0,
+      "matched_snippet": "L31: persona = json.load(f)\nL48: json.dump(persona, f, indent=2)"
+    },
+    {
+      "pattern_name": "inline_json_file_io",
+      "description": "Repeated JSON file read/write boilerplate (candidate for lib/file_io.py)",
+      "suggested_replacement": "Proposed: from lib.file_io import load_json, save_json",
+      "file": "wfc/shared/config/wfc_config.py",
+      "name": "(file-level)",
+      "lineno": 0,
+      "matched_snippet": "L142: return json.load(f)"
+    },
+    {
+      "pattern_name": "inline_json_file_io",
+      "description": "Repeated JSON file read/write boilerplate (candidate for lib/file_io.py)",
+      "suggested_replacement": "Proposed: from lib.file_io import load_json, save_json",
+      "file": "wfc/wfc-tools/gitwork/config.py",
+      "name": "(file-level)",
+      "lineno": 0,
+      "matched_snippet": "L47: self.config.update(json.load(f))\nL54: self.config.update(json.load(f))"
+    }
+  ]
+}

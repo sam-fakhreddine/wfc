@@ -1,0 +1,216 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://wfc.dev/schemas/persona.schema.json",
+  "title": "WFC Persona Schema",
+  "description": "Schema for defining expert personas in the WFC consensus review system",
+  "type": "object",
+  "required": [
+    "id",
+    "name",
+    "panel",
+    "skills",
+    "lens",
+    "personality",
+    "selection_criteria",
+    "model_preference",
+    "system_prompt_additions",
+    "tags",
+    "version",
+    "enabled"
+  ],
+  "properties": {
+    "id": {
+      "type": "string",
+      "pattern": "^[A-Z_]+$",
+      "description": "Unique identifier for the persona in UPPER_SNAKE_CASE"
+    },
+    "name": {
+      "type": "string",
+      "description": "Human-readable name for the persona"
+    },
+    "panel": {
+      "type": "string",
+      "enum": [
+        "engineering",
+        "security",
+        "architecture",
+        "quality",
+        "data",
+        "product",
+        "operations",
+        "domain-experts",
+        "specialists"
+      ],
+      "description": "Primary panel this persona belongs to"
+    },
+    "subpanel": {
+      "type": "string",
+      "description": "Optional subpanel categorization (e.g., 'backend', 'frontend', 'mobile')"
+    },
+    "skills": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": ["name", "level"],
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "Name of the skill"
+          },
+          "level": {
+            "type": "string",
+            "enum": ["novice", "competent", "proficient", "expert", "master"],
+            "description": "Proficiency level in this skill"
+          },
+          "context": {
+            "type": "string",
+            "description": "Additional context about this skill expertise"
+          }
+        }
+      }
+    },
+    "domain_knowledge": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Domain expertise areas (e.g., 'E-commerce', 'Payments', 'Healthcare')"
+    },
+    "lens": {
+      "type": "object",
+      "required": ["focus", "philosophy", "review_dimensions"],
+      "properties": {
+        "focus": {
+          "type": "string",
+          "description": "Primary focus areas for this persona's reviews"
+        },
+        "philosophy": {
+          "type": "string",
+          "description": "Core philosophy or approach to code review"
+        },
+        "review_dimensions": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "required": ["dimension", "weight"],
+            "properties": {
+              "dimension": {
+                "type": "string",
+                "description": "Aspect being evaluated (e.g., 'architecture', 'security')"
+              },
+              "weight": {
+                "type": "number",
+                "minimum": 0,
+                "maximum": 1,
+                "description": "Relative importance (should sum to ~1.0 across all dimensions)"
+              }
+            }
+          }
+        }
+      }
+    },
+    "personality": {
+      "type": "object",
+      "required": ["communication_style", "risk_tolerance", "detail_orientation"],
+      "properties": {
+        "communication_style": {
+          "type": "string",
+          "enum": ["direct", "collaborative", "diplomatic", "analytical", "assertive"],
+          "description": "How this persona communicates feedback"
+        },
+        "risk_tolerance": {
+          "type": "string",
+          "enum": ["conservative", "moderate", "progressive"],
+          "description": "Tolerance for risk in implementation decisions"
+        },
+        "detail_orientation": {
+          "type": "string",
+          "enum": ["strategic", "balanced", "meticulous"],
+          "description": "Level of detail in reviews"
+        }
+      }
+    },
+    "selection_criteria": {
+      "type": "object",
+      "required": ["task_types", "tech_stacks"],
+      "properties": {
+        "task_types": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Types of tasks this persona is suited for (e.g., 'api-design', 'refactoring')"
+        },
+        "tech_stacks": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Technology stacks this persona specializes in"
+        },
+        "complexity_range": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enum": ["S", "M", "L", "XL"]
+          },
+          "description": "Task complexity levels this persona is suited for"
+        },
+        "anti_patterns": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Anti-patterns this persona is particularly good at detecting"
+        },
+        "properties": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "WFC properties this persona specializes in (e.g., 'SAFETY', 'SECURITY')"
+        }
+      }
+    },
+    "model_preference": {
+      "type": "object",
+      "required": ["default", "reasoning"],
+      "properties": {
+        "default": {
+          "type": "string",
+          "description": "Default Claude model to use for this persona"
+        },
+        "reasoning": {
+          "type": "string",
+          "description": "Why this model was chosen for this persona"
+        },
+        "fallback": {
+          "type": "string",
+          "description": "Fallback model if default is unavailable"
+        }
+      }
+    },
+    "system_prompt_additions": {
+      "type": "string",
+      "description": "Additional system prompt text specific to this persona"
+    },
+    "tags": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Tags for indexing and searching personas"
+    },
+    "version": {
+      "type": "string",
+      "pattern": "^\\d+\\.\\d+\\.\\d+$",
+      "description": "Semantic version of this persona definition"
+    },
+    "enabled": {
+      "type": "boolean",
+      "description": "Whether this persona is active and available for selection"
+    }
+  }
+}

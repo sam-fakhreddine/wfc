@@ -1,0 +1,47 @@
+# Claude Instructions - Startup Project
+
+## WFC Integration
+
+### When to Use WFC
+
+Use WFC consensus review for:
+- ✅ Medium/Large features (>100 lines)
+- ✅ Security-sensitive changes
+- ✅ Breaking API changes
+- ✅ Database migrations
+- ⏩ Skip for: docs, typos, config tweaks
+
+### Review Command
+
+```
+/wfc:consensus-review TASK-{id}
+```
+
+### Quality Threshold
+
+- **Required score**: ≥7.5/10
+- **Critical issues**: Zero blocking issues
+- **Consensus**: At least 3/5 personas agree
+
+## Tech Stack
+
+- **Backend**: Python 3.11, FastAPI
+- **Frontend**: React 18, TypeScript
+- **Database**: PostgreSQL
+- **Infrastructure**: Docker, Railway
+
+## Preferred Personas
+
+When WFC selects personas, prefer:
+- BACKEND_PYTHON_SENIOR (primary language)
+- FRONTEND_REACT_EXPERT (primary frontend)
+- CODE_REVIEWER (keep it clean, we iterate fast)
+
+## Review Focus
+
+Properties to emphasize:
+- **MAINTAINABILITY**: Team is small, code must be readable
+- **CORRECTNESS**: Get it right, but don't over-engineer
+- **USABILITY**: We're building for end users
+
+Avoid over-optimization - we're pre-PMF, speed matters more than perfection.

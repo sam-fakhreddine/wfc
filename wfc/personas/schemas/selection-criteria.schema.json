@@ -1,0 +1,106 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://wfc.dev/schemas/selection-criteria.schema.json",
+  "title": "WFC Persona Selection Criteria Schema",
+  "description": "Schema for defining selection criteria used to choose personas for reviews",
+  "type": "object",
+  "required": ["task_types", "tech_stacks"],
+  "properties": {
+    "task_types": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "enum": [
+          "api-design",
+          "api-implementation",
+          "architecture-design",
+          "refactoring",
+          "bug-fix",
+          "feature-implementation",
+          "performance-optimization",
+          "security-hardening",
+          "database-design",
+          "schema-migration",
+          "ui-implementation",
+          "integration",
+          "testing",
+          "documentation",
+          "devops",
+          "infrastructure",
+          "data-pipeline",
+          "migration",
+          "prototype"
+        ]
+      },
+      "description": "Types of tasks this selection applies to"
+    },
+    "tech_stacks": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Technology stacks (e.g., 'python', 'react', 'postgresql')"
+    },
+    "complexity_range": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "enum": ["S", "M", "L", "XL"]
+      },
+      "description": "Task complexity levels (S=Simple, M=Medium, L=Large, XL=Extra Large)"
+    },
+    "anti_patterns": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "enum": [
+          "god-class",
+          "tight-coupling",
+          "sql-injection",
+          "n-plus-one",
+          "memory-leak",
+          "race-condition",
+          "callback-hell",
+          "prop-drilling",
+          "magic-numbers",
+          "hardcoded-values",
+          "missing-error-handling",
+          "missing-validation",
+          "insecure-deserialization",
+          "broken-auth",
+          "missing-encryption",
+          "excessive-logging",
+          "insufficient-logging",
+          "circular-dependency"
+        ]
+      },
+      "description": "Anti-patterns to watch for"
+    },
+    "properties": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "enum": [
+          "SAFETY",
+          "SECURITY",
+          "PERFORMANCE",
+          "LIVENESS",
+          "CORRECTNESS",
+          "MAINTAINABILITY",
+          "SCALABILITY",
+          "RELIABILITY",
+          "TESTABILITY",
+          "OBSERVABILITY"
+        ]
+      },
+      "description": "WFC properties relevant to this selection"
+    },
+    "domain_context": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Domain-specific contexts (e.g., 'fintech', 'healthcare', 'e-commerce')"
+    }
+  }
+}

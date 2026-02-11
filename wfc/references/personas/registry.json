@@ -1,0 +1,1852 @@
+{
+  "version": "1.0.0",
+  "panels": {
+    "architecture": {
+      "count": 7,
+      "personas": [
+        "API_DESIGNER",
+        "CLOUD_ARCHITECT",
+        "DDD_EXPERT",
+        "EVENT_DRIVEN_ARCHITECT",
+        "INTEGRATION_ARCHITECT",
+        "MICROSERVICES_ARCHITECT",
+        "SOLUTIONS_ARCHITECT"
+      ]
+    },
+    "data": {
+      "count": 4,
+      "personas": [
+        "DATA_ENGINEER",
+        "DB_ARCHITECT_SQL",
+        "ML_ENGINEER",
+        "NOSQL_ARCHITECT"
+      ]
+    },
+    "domain-experts": {
+      "count": 5,
+      "personas": [
+        "ECOMMERCE_EXPERT",
+        "FINTECH_PAYMENTS",
+        "GAMING_EXPERT",
+        "HEALTHCARE_HIPAA",
+        "IOT_EMBEDDED_EXPERT"
+      ]
+    },
+    "engineering": {
+      "count": 11,
+      "personas": [
+        "BACKEND_GO_SENIOR",
+        "BACKEND_JAVA_SENIOR",
+        "BACKEND_NODE_SENIOR",
+        "BACKEND_PYTHON_SENIOR",
+        "BACKEND_RUST_EXPERT",
+        "FRONTEND_ANGULAR_EXPERT",
+        "FRONTEND_REACT_EXPERT",
+        "FRONTEND_VUE_EXPERT",
+        "FULLSTACK_GENERALIST",
+        "MOBILE_ANDROID_EXPERT",
+        "MOBILE_IOS_EXPERT"
+      ]
+    },
+    "operations": {
+      "count": 4,
+      "personas": [
+        "DEVOPS_ENGINEER",
+        "OBSERVABILITY_ENGINEER",
+        "PLATFORM_ENGINEER",
+        "SRE_SPECIALIST"
+      ]
+    },
+    "product": {
+      "count": 3,
+      "personas": [
+        "DX_SPECIALIST",
+        "TECHNICAL_PM",
+        "UX_RESEARCHER"
+      ]
+    },
+    "quality": {
+      "count": 8,
+      "personas": [
+        "ACCESSIBILITY_TESTER",
+        "CHAOS_ENGINEER",
+        "CODE_REVIEWER",
+        "LOAD_TESTING_SPECIALIST",
+        "PERF_TESTER",
+        "QA_AUTOMATION_LEAD",
+        "SECURITY_TESTER",
+        "TEST_AUTOMATION_EXPERT"
+      ]
+    },
+    "security": {
+      "count": 8,
+      "personas": [
+        "API_SECURITY_SPECIALIST",
+        "APPSEC_SPECIALIST",
+        "CLOUD_SECURITY_AWS",
+        "COMPLIANCE_AUDITOR",
+        "CRYPTOGRAPHY_EXPERT",
+        "INFRASEC_ENGINEER",
+        "PENTESTER",
+        "SECRETS_MANAGEMENT_EXPERT"
+      ]
+    },
+    "specialists": {
+      "count": 4,
+      "personas": [
+        "ACCESSIBILITY_WCAG",
+        "I18N_EXPERT",
+        "PERFORMANCE_OPTIMIZATION_GURU",
+        "TECH_DEBT_ANALYST"
+      ]
+    }
+  },
+  "index": {
+    "by_tag": {
+      "api-design": [
+        "API_DESIGNER",
+        "SOLUTIONS_ARCHITECT",
+        "DX_SPECIALIST"
+      ],
+      "rest": [
+        "API_DESIGNER"
+      ],
+      "graphql": [
+        "API_DESIGNER"
+      ],
+      "http": [
+        "API_DESIGNER"
+      ],
+      "developer-experience": [
+        "API_DESIGNER",
+        "DX_SPECIALIST"
+      ],
+      "versioning": [
+        "API_DESIGNER"
+      ],
+      "cloud": [
+        "CLOUD_ARCHITECT",
+        "SOLUTIONS_ARCHITECT"
+      ],
+      "architecture": [
+        "CLOUD_ARCHITECT",
+        "DDD_EXPERT",
+        "EVENT_DRIVEN_ARCHITECT",
+        "INTEGRATION_ARCHITECT",
+        "MICROSERVICES_ARCHITECT",
+        "SOLUTIONS_ARCHITECT"
+      ],
+      "aws": [
+        "CLOUD_ARCHITECT",
+        "CLOUD_SECURITY_AWS"
+      ],
+      "azure": [
+        "CLOUD_ARCHITECT"
+      ],
+      "gcp": [
+        "CLOUD_ARCHITECT"
+      ],
+      "infrastructure": [
+        "CLOUD_ARCHITECT",
+        "DEVOPS_ENGINEER",
+        "PLATFORM_ENGINEER",
+        "INFRASEC_ENGINEER"
+      ],
+      "terraform": [
+        "CLOUD_ARCHITECT"
+      ],
+      "ddd": [
+        "DDD_EXPERT"
+      ],
+      "domain-modeling": [
+        "DDD_EXPERT"
+      ],
+      "event-sourcing": [
+        "DDD_EXPERT"
+      ],
+      "event-driven": [
+        "EVENT_DRIVEN_ARCHITECT"
+      ],
+      "kafka": [
+        "EVENT_DRIVEN_ARCHITECT"
+      ],
+      "messaging": [
+        "EVENT_DRIVEN_ARCHITECT"
+      ],
+      "distributed-systems": [
+        "EVENT_DRIVEN_ARCHITECT",
+        "MICROSERVICES_ARCHITECT",
+        "SOLUTIONS_ARCHITECT",
+        "BACKEND_GO_SENIOR",
+        "CHAOS_ENGINEER"
+      ],
+      "cqrs": [
+        "EVENT_DRIVEN_ARCHITECT"
+      ],
+      "integration": [
+        "INTEGRATION_ARCHITECT",
+        "FULLSTACK_GENERALIST"
+      ],
+      "api": [
+        "INTEGRATION_ARCHITECT",
+        "BACKEND_PYTHON_SENIOR"
+      ],
+      "error-handling": [
+        "INTEGRATION_ARCHITECT",
+        "DX_SPECIALIST"
+      ],
+      "compatibility": [
+        "INTEGRATION_ARCHITECT"
+      ],
+      "microservices": [
+        "MICROSERVICES_ARCHITECT",
+        "SOLUTIONS_ARCHITECT",
+        "BACKEND_GO_SENIOR",
+        "BACKEND_JAVA_SENIOR",
+        "BACKEND_NODE_SENIOR",
+        "BACKEND_PYTHON_SENIOR"
+      ],
+      "service-mesh": [
+        "MICROSERVICES_ARCHITECT"
+      ],
+      "system-design": [
+        "SOLUTIONS_ARCHITECT"
+      ],
+      "scalability": [
+        "SOLUTIONS_ARCHITECT",
+        "LOAD_TESTING_SPECIALIST",
+        "PERF_TESTER",
+        "PERFORMANCE_OPTIMIZATION_GURU"
+      ],
+      "data-engineering": [
+        "DATA_ENGINEER"
+      ],
+      "etl": [
+        "DATA_ENGINEER"
+      ],
+      "pipelines": [
+        "DATA_ENGINEER"
+      ],
+      "spark": [
+        "DATA_ENGINEER"
+      ],
+      "airflow": [
+        "DATA_ENGINEER"
+      ],
+      "data-quality": [
+        "DATA_ENGINEER"
+      ],
+      "database": [
+        "DB_ARCHITECT_SQL",
+        "BACKEND_PYTHON_SENIOR"
+      ],
+      "sql": [
+        "DB_ARCHITECT_SQL"
+      ],
+      "postgresql": [
+        "DB_ARCHITECT_SQL"
+      ],
+      "schema-design": [
+        "DB_ARCHITECT_SQL"
+      ],
+      "query-optimization": [
+        "DB_ARCHITECT_SQL"
+      ],
+      "data-integrity": [
+        "DB_ARCHITECT_SQL"
+      ],
+      "migrations": [
+        "DB_ARCHITECT_SQL"
+      ],
+      "machine-learning": [
+        "ML_ENGINEER"
+      ],
+      "ml": [
+        "ML_ENGINEER"
+      ],
+      "deep-learning": [
+        "ML_ENGINEER"
+      ],
+      "mlops": [
+        "ML_ENGINEER"
+      ],
+      "model-deployment": [
+        "ML_ENGINEER"
+      ],
+      "feature-engineering": [
+        "ML_ENGINEER"
+      ],
+      "nosql": [
+        "NOSQL_ARCHITECT"
+      ],
+      "mongodb": [
+        "NOSQL_ARCHITECT"
+      ],
+      "redis": [
+        "NOSQL_ARCHITECT"
+      ],
+      "dynamodb": [
+        "NOSQL_ARCHITECT"
+      ],
+      "data-modeling": [
+        "NOSQL_ARCHITECT"
+      ],
+      "ecommerce": [
+        "ECOMMERCE_EXPERT"
+      ],
+      "retail": [
+        "ECOMMERCE_EXPERT"
+      ],
+      "shopping-cart": [
+        "ECOMMERCE_EXPERT"
+      ],
+      "checkout": [
+        "ECOMMERCE_EXPERT"
+      ],
+      "inventory": [
+        "ECOMMERCE_EXPERT"
+      ],
+      "payments": [
+        "ECOMMERCE_EXPERT",
+        "FINTECH_PAYMENTS"
+      ],
+      "fintech": [
+        "FINTECH_PAYMENTS"
+      ],
+      "pci": [
+        "FINTECH_PAYMENTS"
+      ],
+      "compliance": [
+        "FINTECH_PAYMENTS",
+        "HEALTHCARE_HIPAA",
+        "APPSEC_SPECIALIST",
+        "CLOUD_SECURITY_AWS",
+        "COMPLIANCE_AUDITOR",
+        "INFRASEC_ENGINEER"
+      ],
+      "financial": [
+        "FINTECH_PAYMENTS"
+      ],
+      "transactions": [
+        "FINTECH_PAYMENTS"
+      ],
+      "idempotency": [
+        "FINTECH_PAYMENTS"
+      ],
+      "fraud": [
+        "FINTECH_PAYMENTS"
+      ],
+      "gaming": [
+        "GAMING_EXPERT"
+      ],
+      "real-time": [
+        "GAMING_EXPERT",
+        "BACKEND_NODE_SENIOR"
+      ],
+      "multiplayer": [
+        "GAMING_EXPERT"
+      ],
+      "latency": [
+        "GAMING_EXPERT"
+      ],
+      "performance": [
+        "GAMING_EXPERT",
+        "BACKEND_GO_SENIOR",
+        "BACKEND_PYTHON_SENIOR",
+        "BACKEND_RUST_EXPERT",
+        "FRONTEND_REACT_EXPERT",
+        "LOAD_TESTING_SPECIALIST",
+        "PERF_TESTER",
+        "PERFORMANCE_OPTIMIZATION_GURU"
+      ],
+      "healthcare": [
+        "HEALTHCARE_HIPAA"
+      ],
+      "hipaa": [
+        "HEALTHCARE_HIPAA"
+      ],
+      "phi": [
+        "HEALTHCARE_HIPAA"
+      ],
+      "security": [
+        "HEALTHCARE_HIPAA",
+        "SECURITY_TESTER",
+        "APPSEC_SPECIALIST",
+        "CRYPTOGRAPHY_EXPERT",
+        "PENTESTER"
+      ],
+      "medical-records": [
+        "HEALTHCARE_HIPAA"
+      ],
+      "iot": [
+        "IOT_EMBEDDED_EXPERT"
+      ],
+      "embedded": [
+        "IOT_EMBEDDED_EXPERT"
+      ],
+      "hardware": [
+        "IOT_EMBEDDED_EXPERT"
+      ],
+      "mqtt": [
+        "IOT_EMBEDDED_EXPERT"
+      ],
+      "resource-constrained": [
+        "IOT_EMBEDDED_EXPERT"
+      ],
+      "go": [
+        "BACKEND_GO_SENIOR"
+      ],
+      "backend": [
+        "BACKEND_GO_SENIOR",
+        "BACKEND_JAVA_SENIOR",
+        "BACKEND_NODE_SENIOR",
+        "BACKEND_PYTHON_SENIOR",
+        "FULLSTACK_GENERALIST"
+      ],
+      "concurrency": [
+        "BACKEND_GO_SENIOR",
+        "BACKEND_RUST_EXPERT"
+      ],
+      "grpc": [
+        "BACKEND_GO_SENIOR"
+      ],
+      "java": [
+        "BACKEND_JAVA_SENIOR"
+      ],
+      "spring": [
+        "BACKEND_JAVA_SENIOR"
+      ],
+      "enterprise": [
+        "BACKEND_JAVA_SENIOR",
+        "FRONTEND_ANGULAR_EXPERT"
+      ],
+      "nodejs": [
+        "BACKEND_NODE_SENIOR"
+      ],
+      "typescript": [
+        "BACKEND_NODE_SENIOR",
+        "FRONTEND_ANGULAR_EXPERT",
+        "FRONTEND_REACT_EXPERT",
+        "FRONTEND_VUE_EXPERT"
+      ],
+      "async": [
+        "BACKEND_NODE_SENIOR",
+        "BACKEND_PYTHON_SENIOR"
+      ],
+      "python": [
+        "BACKEND_PYTHON_SENIOR"
+      ],
+      "fastapi": [
+        "BACKEND_PYTHON_SENIOR"
+      ],
+      "rust": [
+        "BACKEND_RUST_EXPERT"
+      ],
+      "systems": [
+        "BACKEND_RUST_EXPERT"
+      ],
+      "memory-safety": [
+        "BACKEND_RUST_EXPERT"
+      ],
+      "angular": [
+        "FRONTEND_ANGULAR_EXPERT"
+      ],
+      "frontend": [
+        "FRONTEND_ANGULAR_EXPERT",
+        "FRONTEND_REACT_EXPERT",
+        "FRONTEND_VUE_EXPERT",
+        "FULLSTACK_GENERALIST"
+      ],
+      "rxjs": [
+        "FRONTEND_ANGULAR_EXPERT"
+      ],
+      "reactive": [
+        "FRONTEND_ANGULAR_EXPERT"
+      ],
+      "react": [
+        "FRONTEND_REACT_EXPERT"
+      ],
+      "component-design": [
+        "FRONTEND_REACT_EXPERT",
+        "FRONTEND_VUE_EXPERT"
+      ],
+      "hooks": [
+        "FRONTEND_REACT_EXPERT"
+      ],
+      "state-management": [
+        "FRONTEND_REACT_EXPERT"
+      ],
+      "vue": [
+        "FRONTEND_VUE_EXPERT"
+      ],
+      "pinia": [
+        "FRONTEND_VUE_EXPERT"
+      ],
+      "composition-api": [
+        "FRONTEND_VUE_EXPERT"
+      ],
+      "fullstack": [
+        "FULLSTACK_GENERALIST"
+      ],
+      "generalist": [
+        "FULLSTACK_GENERALIST"
+      ],
+      "android": [
+        "MOBILE_ANDROID_EXPERT"
+      ],
+      "mobile": [
+        "MOBILE_ANDROID_EXPERT",
+        "MOBILE_IOS_EXPERT"
+      ],
+      "kotlin": [
+        "MOBILE_ANDROID_EXPERT"
+      ],
+      "jetpack-compose": [
+        "MOBILE_ANDROID_EXPERT"
+      ],
+      "app-development": [
+        "MOBILE_ANDROID_EXPERT",
+        "MOBILE_IOS_EXPERT"
+      ],
+      "ios": [
+        "MOBILE_IOS_EXPERT"
+      ],
+      "swift": [
+        "MOBILE_IOS_EXPERT"
+      ],
+      "swiftui": [
+        "MOBILE_IOS_EXPERT"
+      ],
+      "user-experience": [
+        "MOBILE_IOS_EXPERT",
+        "UX_RESEARCHER"
+      ],
+      "devops": [
+        "DEVOPS_ENGINEER",
+        "PLATFORM_ENGINEER"
+      ],
+      "ci-cd": [
+        "DEVOPS_ENGINEER",
+        "PLATFORM_ENGINEER",
+        "TEST_AUTOMATION_EXPERT"
+      ],
+      "automation": [
+        "DEVOPS_ENGINEER",
+        "PLATFORM_ENGINEER",
+        "TEST_AUTOMATION_EXPERT"
+      ],
+      "deployment": [
+        "DEVOPS_ENGINEER"
+      ],
+      "observability": [
+        "OBSERVABILITY_ENGINEER",
+        "SRE_SPECIALIST"
+      ],
+      "monitoring": [
+        "OBSERVABILITY_ENGINEER",
+        "SRE_SPECIALIST",
+        "LOAD_TESTING_SPECIALIST",
+        "PERF_TESTER"
+      ],
+      "tracing": [
+        "OBSERVABILITY_ENGINEER"
+      ],
+      "metrics": [
+        "OBSERVABILITY_ENGINEER"
+      ],
+      "logging": [
+        "OBSERVABILITY_ENGINEER"
+      ],
+      "platform-engineering": [
+        "PLATFORM_ENGINEER"
+      ],
+      "kubernetes": [
+        "PLATFORM_ENGINEER",
+        "INFRASEC_ENGINEER"
+      ],
+      "sre": [
+        "SRE_SPECIALIST"
+      ],
+      "reliability": [
+        "SRE_SPECIALIST",
+        "CHAOS_ENGINEER"
+      ],
+      "operations": [
+        "SRE_SPECIALIST"
+      ],
+      "production": [
+        "SRE_SPECIALIST"
+      ],
+      "incident-response": [
+        "SRE_SPECIALIST"
+      ],
+      "documentation": [
+        "DX_SPECIALIST"
+      ],
+      "sdk": [
+        "DX_SPECIALIST"
+      ],
+      "usability": [
+        "DX_SPECIALIST",
+        "UX_RESEARCHER"
+      ],
+      "product": [
+        "TECHNICAL_PM"
+      ],
+      "requirements": [
+        "TECHNICAL_PM"
+      ],
+      "user-value": [
+        "TECHNICAL_PM"
+      ],
+      "feasibility": [
+        "TECHNICAL_PM"
+      ],
+      "ux": [
+        "UX_RESEARCHER"
+      ],
+      "accessibility": [
+        "UX_RESEARCHER",
+        "ACCESSIBILITY_TESTER",
+        "ACCESSIBILITY_WCAG"
+      ],
+      "design": [
+        "UX_RESEARCHER"
+      ],
+      "wcag": [
+        "ACCESSIBILITY_TESTER",
+        "ACCESSIBILITY_WCAG"
+      ],
+      "qa": [
+        "ACCESSIBILITY_TESTER",
+        "QA_AUTOMATION_LEAD",
+        "SECURITY_TESTER"
+      ],
+      "testing": [
+        "ACCESSIBILITY_TESTER",
+        "PERF_TESTER",
+        "QA_AUTOMATION_LEAD",
+        "SECURITY_TESTER",
+        "TEST_AUTOMATION_EXPERT"
+      ],
+      "a11y": [
+        "ACCESSIBILITY_TESTER",
+        "ACCESSIBILITY_WCAG"
+      ],
+      "inclusive-design": [
+        "ACCESSIBILITY_TESTER",
+        "ACCESSIBILITY_WCAG"
+      ],
+      "chaos-engineering": [
+        "CHAOS_ENGINEER"
+      ],
+      "resilience": [
+        "CHAOS_ENGINEER"
+      ],
+      "failure-modes": [
+        "CHAOS_ENGINEER"
+      ],
+      "code-review": [
+        "CODE_REVIEWER"
+      ],
+      "quality": [
+        "CODE_REVIEWER",
+        "QA_AUTOMATION_LEAD",
+        "TEST_AUTOMATION_EXPERT"
+      ],
+      "refactoring": [
+        "CODE_REVIEWER",
+        "TECH_DEBT_ANALYST"
+      ],
+      "clean-code": [
+        "CODE_REVIEWER"
+      ],
+      "maintainability": [
+        "CODE_REVIEWER",
+        "TECH_DEBT_ANALYST"
+      ],
+      "load-testing": [
+        "LOAD_TESTING_SPECIALIST",
+        "PERF_TESTER"
+      ],
+      "k6": [
+        "LOAD_TESTING_SPECIALIST"
+      ],
+      "optimization": [
+        "PERF_TESTER",
+        "PERFORMANCE_OPTIMIZATION_GURU"
+      ],
+      "profiling": [
+        "PERF_TESTER",
+        "PERFORMANCE_OPTIMIZATION_GURU"
+      ],
+      "test-automation": [
+        "QA_AUTOMATION_LEAD"
+      ],
+      "e2e": [
+        "QA_AUTOMATION_LEAD"
+      ],
+      "owasp": [
+        "SECURITY_TESTER",
+        "API_SECURITY_SPECIALIST",
+        "APPSEC_SPECIALIST"
+      ],
+      "vulnerabilities": [
+        "SECURITY_TESTER",
+        "PENTESTER"
+      ],
+      "test-coverage": [
+        "TEST_AUTOMATION_EXPERT"
+      ],
+      "api-security": [
+        "API_SECURITY_SPECIALIST"
+      ],
+      "authentication": [
+        "API_SECURITY_SPECIALIST",
+        "APPSEC_SPECIALIST"
+      ],
+      "authorization": [
+        "API_SECURITY_SPECIALIST",
+        "APPSEC_SPECIALIST"
+      ],
+      "oauth": [
+        "API_SECURITY_SPECIALIST"
+      ],
+      "jwt": [
+        "API_SECURITY_SPECIALIST"
+      ],
+      "appsec": [
+        "APPSEC_SPECIALIST"
+      ],
+      "cryptography": [
+        "APPSEC_SPECIALIST",
+        "CRYPTOGRAPHY_EXPERT"
+      ],
+      "threat-modeling": [
+        "APPSEC_SPECIALIST"
+      ],
+      "cloud-security": [
+        "CLOUD_SECURITY_AWS",
+        "INFRASEC_ENGINEER"
+      ],
+      "iam": [
+        "CLOUD_SECURITY_AWS"
+      ],
+      "encryption": [
+        "CLOUD_SECURITY_AWS",
+        "CRYPTOGRAPHY_EXPERT",
+        "SECRETS_MANAGEMENT_EXPERT"
+      ],
+      "audit": [
+        "COMPLIANCE_AUDITOR"
+      ],
+      "soc2": [
+        "COMPLIANCE_AUDITOR"
+      ],
+      "gdpr": [
+        "COMPLIANCE_AUDITOR"
+      ],
+      "privacy": [
+        "COMPLIANCE_AUDITOR"
+      ],
+      "governance": [
+        "COMPLIANCE_AUDITOR"
+      ],
+      "tls": [
+        "CRYPTOGRAPHY_EXPERT"
+      ],
+      "hashing": [
+        "CRYPTOGRAPHY_EXPERT"
+      ],
+      "secrets-management": [
+        "INFRASEC_ENGINEER"
+      ],
+      "devsecops": [
+        "INFRASEC_ENGINEER"
+      ],
+      "pentesting": [
+        "PENTESTER"
+      ],
+      "offensive-security": [
+        "PENTESTER"
+      ],
+      "secrets": [
+        "SECRETS_MANAGEMENT_EXPERT"
+      ],
+      "credentials": [
+        "SECRETS_MANAGEMENT_EXPERT"
+      ],
+      "vault": [
+        "SECRETS_MANAGEMENT_EXPERT"
+      ],
+      "kms": [
+        "SECRETS_MANAGEMENT_EXPERT"
+      ],
+      "screen-reader": [
+        "ACCESSIBILITY_WCAG"
+      ],
+      "aria": [
+        "ACCESSIBILITY_WCAG"
+      ],
+      "keyboard-navigation": [
+        "ACCESSIBILITY_WCAG"
+      ],
+      "i18n": [
+        "I18N_EXPERT"
+      ],
+      "localization": [
+        "I18N_EXPERT"
+      ],
+      "internationalization": [
+        "I18N_EXPERT"
+      ],
+      "rtl": [
+        "I18N_EXPERT"
+      ],
+      "unicode": [
+        "I18N_EXPERT"
+      ],
+      "algorithms": [
+        "PERFORMANCE_OPTIMIZATION_GURU"
+      ],
+      "efficiency": [
+        "PERFORMANCE_OPTIMIZATION_GURU"
+      ],
+      "technical-debt": [
+        "TECH_DEBT_ANALYST"
+      ],
+      "code-quality": [
+        "TECH_DEBT_ANALYST"
+      ]
+    },
+    "by_tech_stack": {
+      "rest": [
+        "API_DESIGNER",
+        "INTEGRATION_ARCHITECT",
+        "SOLUTIONS_ARCHITECT",
+        "DX_SPECIALIST",
+        "API_SECURITY_SPECIALIST"
+      ],
+      "graphql": [
+        "API_DESIGNER",
+        "INTEGRATION_ARCHITECT",
+        "SOLUTIONS_ARCHITECT",
+        "DX_SPECIALIST",
+        "API_SECURITY_SPECIALIST"
+      ],
+      "openapi": [
+        "API_DESIGNER",
+        "DX_SPECIALIST"
+      ],
+      "grpc": [
+        "API_DESIGNER",
+        "INTEGRATION_ARCHITECT",
+        "SOLUTIONS_ARCHITECT",
+        "BACKEND_GO_SENIOR",
+        "API_SECURITY_SPECIALIST"
+      ],
+      "aws": [
+        "CLOUD_ARCHITECT",
+        "SOLUTIONS_ARCHITECT",
+        "CLOUD_SECURITY_AWS",
+        "INFRASEC_ENGINEER"
+      ],
+      "azure": [
+        "CLOUD_ARCHITECT",
+        "SOLUTIONS_ARCHITECT",
+        "INFRASEC_ENGINEER"
+      ],
+      "gcp": [
+        "CLOUD_ARCHITECT",
+        "SOLUTIONS_ARCHITECT",
+        "INFRASEC_ENGINEER"
+      ],
+      "terraform": [
+        "CLOUD_ARCHITECT",
+        "DEVOPS_ENGINEER",
+        "PLATFORM_ENGINEER",
+        "SRE_SPECIALIST",
+        "CLOUD_SECURITY_AWS",
+        "INFRASEC_ENGINEER"
+      ],
+      "cloudformation": [
+        "CLOUD_ARCHITECT",
+        "CLOUD_SECURITY_AWS"
+      ],
+      "kubernetes": [
+        "CLOUD_ARCHITECT",
+        "MICROSERVICES_ARCHITECT",
+        "SOLUTIONS_ARCHITECT",
+        "BACKEND_GO_SENIOR",
+        "PLATFORM_ENGINEER",
+        "SRE_SPECIALIST",
+        "CHAOS_ENGINEER",
+        "INFRASEC_ENGINEER"
+      ],
+      "ddd": [
+        "DDD_EXPERT"
+      ],
+      "event-sourcing": [
+        "DDD_EXPERT",
+        "EVENT_DRIVEN_ARCHITECT"
+      ],
+      "cqrs": [
+        "DDD_EXPERT",
+        "EVENT_DRIVEN_ARCHITECT"
+      ],
+      "kafka": [
+        "EVENT_DRIVEN_ARCHITECT",
+        "MICROSERVICES_ARCHITECT",
+        "DATA_ENGINEER",
+        "PERF_TESTER"
+      ],
+      "rabbitmq": [
+        "EVENT_DRIVEN_ARCHITECT"
+      ],
+      "pubsub": [
+        "EVENT_DRIVEN_ARCHITECT"
+      ],
+      "webhook": [
+        "INTEGRATION_ARCHITECT"
+      ],
+      "api-gateway": [
+        "INTEGRATION_ARCHITECT",
+        "API_SECURITY_SPECIALIST"
+      ],
+      "microservices": [
+        "MICROSERVICES_ARCHITECT",
+        "SOLUTIONS_ARCHITECT",
+        "BACKEND_GO_SENIOR",
+        "CHAOS_ENGINEER"
+      ],
+      "service-mesh": [
+        "MICROSERVICES_ARCHITECT"
+      ],
+      "event-driven": [
+        "SOLUTIONS_ARCHITECT"
+      ],
+      "spark": [
+        "DATA_ENGINEER"
+      ],
+      "airflow": [
+        "DATA_ENGINEER"
+      ],
+      "snowflake": [
+        "DATA_ENGINEER"
+      ],
+      "dbt": [
+        "DATA_ENGINEER"
+      ],
+      "python": [
+        "DATA_ENGINEER",
+        "ML_ENGINEER",
+        "BACKEND_PYTHON_SENIOR",
+        "FULLSTACK_GENERALIST",
+        "DX_SPECIALIST",
+        "CODE_REVIEWER",
+        "PERF_TESTER",
+        "APPSEC_SPECIALIST",
+        "PERFORMANCE_OPTIMIZATION_GURU"
+      ],
+      "postgresql": [
+        "DB_ARCHITECT_SQL",
+        "BACKEND_PYTHON_SENIOR",
+        "PERF_TESTER"
+      ],
+      "mysql": [
+        "DB_ARCHITECT_SQL"
+      ],
+      "sql": [
+        "DB_ARCHITECT_SQL"
+      ],
+      "sqlalchemy": [
+        "DB_ARCHITECT_SQL",
+        "BACKEND_PYTHON_SENIOR"
+      ],
+      "alembic": [
+        "DB_ARCHITECT_SQL"
+      ],
+      "liquibase": [
+        "DB_ARCHITECT_SQL"
+      ],
+      "flyway": [
+        "DB_ARCHITECT_SQL"
+      ],
+      "pytorch": [
+        "ML_ENGINEER"
+      ],
+      "tensorflow": [
+        "ML_ENGINEER"
+      ],
+      "scikit-learn": [
+        "ML_ENGINEER"
+      ],
+      "mlflow": [
+        "ML_ENGINEER"
+      ],
+      "kubeflow": [
+        "ML_ENGINEER"
+      ],
+      "mongodb": [
+        "NOSQL_ARCHITECT",
+        "PERF_TESTER"
+      ],
+      "dynamodb": [
+        "NOSQL_ARCHITECT"
+      ],
+      "redis": [
+        "NOSQL_ARCHITECT",
+        "BACKEND_PYTHON_SENIOR",
+        "PERF_TESTER"
+      ],
+      "elasticsearch": [
+        "NOSQL_ARCHITECT",
+        "PERF_TESTER"
+      ],
+      "cassandra": [
+        "NOSQL_ARCHITECT"
+      ],
+      "ecommerce": [
+        "ECOMMERCE_EXPERT"
+      ],
+      "shopify": [
+        "ECOMMERCE_EXPERT"
+      ],
+      "magento": [
+        "ECOMMERCE_EXPERT"
+      ],
+      "stripe": [
+        "ECOMMERCE_EXPERT",
+        "FINTECH_PAYMENTS"
+      ],
+      "payment-gateway": [
+        "ECOMMERCE_EXPERT",
+        "FINTECH_PAYMENTS"
+      ],
+      "plaid": [
+        "FINTECH_PAYMENTS"
+      ],
+      "financial-api": [
+        "FINTECH_PAYMENTS"
+      ],
+      "banking": [
+        "FINTECH_PAYMENTS"
+      ],
+      "game-engine": [
+        "GAMING_EXPERT"
+      ],
+      "websocket": [
+        "GAMING_EXPERT"
+      ],
+      "udp": [
+        "GAMING_EXPERT"
+      ],
+      "real-time": [
+        "GAMING_EXPERT"
+      ],
+      "healthcare": [
+        "HEALTHCARE_HIPAA"
+      ],
+      "hl7": [
+        "HEALTHCARE_HIPAA"
+      ],
+      "fhir": [
+        "HEALTHCARE_HIPAA"
+      ],
+      "ehr": [
+        "HEALTHCARE_HIPAA"
+      ],
+      "c": [
+        "IOT_EMBEDDED_EXPERT"
+      ],
+      "cpp": [
+        "IOT_EMBEDDED_EXPERT"
+      ],
+      "embedded": [
+        "IOT_EMBEDDED_EXPERT"
+      ],
+      "iot": [
+        "IOT_EMBEDDED_EXPERT"
+      ],
+      "mqtt": [
+        "IOT_EMBEDDED_EXPERT"
+      ],
+      "go": [
+        "BACKEND_GO_SENIOR",
+        "CODE_REVIEWER",
+        "PERF_TESTER",
+        "APPSEC_SPECIALIST",
+        "PERFORMANCE_OPTIMIZATION_GURU"
+      ],
+      "protocol-buffers": [
+        "BACKEND_GO_SENIOR"
+      ],
+      "java": [
+        "BACKEND_JAVA_SENIOR",
+        "CODE_REVIEWER",
+        "PERF_TESTER",
+        "APPSEC_SPECIALIST",
+        "PERFORMANCE_OPTIMIZATION_GURU"
+      ],
+      "spring": [
+        "BACKEND_JAVA_SENIOR"
+      ],
+      "spring-boot": [
+        "BACKEND_JAVA_SENIOR"
+      ],
+      "hibernate": [
+        "BACKEND_JAVA_SENIOR"
+      ],
+      "maven": [
+        "BACKEND_JAVA_SENIOR"
+      ],
+      "gradle": [
+        "BACKEND_JAVA_SENIOR"
+      ],
+      "node.js": [
+        "BACKEND_NODE_SENIOR",
+        "FULLSTACK_GENERALIST"
+      ],
+      "nodejs": [
+        "BACKEND_NODE_SENIOR"
+      ],
+      "express": [
+        "BACKEND_NODE_SENIOR"
+      ],
+      "fastify": [
+        "BACKEND_NODE_SENIOR"
+      ],
+      "typescript": [
+        "BACKEND_NODE_SENIOR",
+        "FRONTEND_ANGULAR_EXPERT",
+        "FRONTEND_REACT_EXPERT",
+        "FRONTEND_VUE_EXPERT",
+        "FULLSTACK_GENERALIST",
+        "DX_SPECIALIST",
+        "CODE_REVIEWER",
+        "APPSEC_SPECIALIST"
+      ],
+      "javascript": [
+        "BACKEND_NODE_SENIOR",
+        "FRONTEND_REACT_EXPERT",
+        "FULLSTACK_GENERALIST",
+        "CODE_REVIEWER",
+        "PERF_TESTER",
+        "APPSEC_SPECIALIST",
+        "ACCESSIBILITY_WCAG",
+        "PERFORMANCE_OPTIMIZATION_GURU"
+      ],
+      "fastapi": [
+        "BACKEND_PYTHON_SENIOR"
+      ],
+      "flask": [
+        "BACKEND_PYTHON_SENIOR"
+      ],
+      "django": [
+        "BACKEND_PYTHON_SENIOR"
+      ],
+      "celery": [
+        "BACKEND_PYTHON_SENIOR"
+      ],
+      "asyncio": [
+        "BACKEND_PYTHON_SENIOR"
+      ],
+      "rust": [
+        "BACKEND_RUST_EXPERT",
+        "CODE_REVIEWER",
+        "PERFORMANCE_OPTIMIZATION_GURU"
+      ],
+      "tokio": [
+        "BACKEND_RUST_EXPERT"
+      ],
+      "actix": [
+        "BACKEND_RUST_EXPERT"
+      ],
+      "rocket": [
+        "BACKEND_RUST_EXPERT"
+      ],
+      "angular": [
+        "FRONTEND_ANGULAR_EXPERT",
+        "UX_RESEARCHER",
+        "ACCESSIBILITY_TESTER",
+        "ACCESSIBILITY_WCAG"
+      ],
+      "rxjs": [
+        "FRONTEND_ANGULAR_EXPERT"
+      ],
+      "ngrx": [
+        "FRONTEND_ANGULAR_EXPERT"
+      ],
+      "react": [
+        "FRONTEND_REACT_EXPERT",
+        "FULLSTACK_GENERALIST",
+        "UX_RESEARCHER",
+        "ACCESSIBILITY_TESTER",
+        "ACCESSIBILITY_WCAG"
+      ],
+      "next.js": [
+        "FRONTEND_REACT_EXPERT"
+      ],
+      "redux": [
+        "FRONTEND_REACT_EXPERT"
+      ],
+      "zustand": [
+        "FRONTEND_REACT_EXPERT"
+      ],
+      "tanstack-query": [
+        "FRONTEND_REACT_EXPERT"
+      ],
+      "vite": [
+        "FRONTEND_REACT_EXPERT"
+      ],
+      "vue": [
+        "FRONTEND_VUE_EXPERT",
+        "FULLSTACK_GENERALIST",
+        "UX_RESEARCHER",
+        "ACCESSIBILITY_TESTER",
+        "ACCESSIBILITY_WCAG"
+      ],
+      "vue.js": [
+        "FRONTEND_VUE_EXPERT"
+      ],
+      "nuxt": [
+        "FRONTEND_VUE_EXPERT"
+      ],
+      "pinia": [
+        "FRONTEND_VUE_EXPERT"
+      ],
+      "vuex": [
+        "FRONTEND_VUE_EXPERT"
+      ],
+      "kotlin": [
+        "MOBILE_ANDROID_EXPERT"
+      ],
+      "android": [
+        "MOBILE_ANDROID_EXPERT"
+      ],
+      "jetpack-compose": [
+        "MOBILE_ANDROID_EXPERT"
+      ],
+      "room": [
+        "MOBILE_ANDROID_EXPERT"
+      ],
+      "swift": [
+        "MOBILE_IOS_EXPERT"
+      ],
+      "swiftui": [
+        "MOBILE_IOS_EXPERT"
+      ],
+      "ios": [
+        "MOBILE_IOS_EXPERT"
+      ],
+      "uikit": [
+        "MOBILE_IOS_EXPERT"
+      ],
+      "combine": [
+        "MOBILE_IOS_EXPERT"
+      ],
+      "github-actions": [
+        "DEVOPS_ENGINEER",
+        "PLATFORM_ENGINEER"
+      ],
+      "docker": [
+        "DEVOPS_ENGINEER",
+        "PLATFORM_ENGINEER",
+        "SRE_SPECIALIST",
+        "INFRASEC_ENGINEER"
+      ],
+      "ansible": [
+        "DEVOPS_ENGINEER",
+        "SRE_SPECIALIST"
+      ],
+      "opentelemetry": [
+        "OBSERVABILITY_ENGINEER"
+      ],
+      "prometheus": [
+        "OBSERVABILITY_ENGINEER",
+        "SRE_SPECIALIST"
+      ],
+      "grafana": [
+        "OBSERVABILITY_ENGINEER",
+        "SRE_SPECIALIST"
+      ],
+      "datadog": [
+        "OBSERVABILITY_ENGINEER",
+        "SRE_SPECIALIST"
+      ],
+      "helm": [
+        "PLATFORM_ENGINEER"
+      ],
+      "ci-cd": [
+        "SRE_SPECIALIST"
+      ],
+      "sdk": [
+        "DX_SPECIALIST"
+      ],
+      "cli": [
+        "DX_SPECIALIST"
+      ],
+      "documentation": [
+        "DX_SPECIALIST"
+      ],
+      "any": [
+        "TECHNICAL_PM",
+        "TECH_DEBT_ANALYST"
+      ],
+      "web": [
+        "UX_RESEARCHER",
+        "ACCESSIBILITY_TESTER",
+        "SECURITY_TESTER",
+        "PENTESTER"
+      ],
+      "mobile": [
+        "UX_RESEARCHER"
+      ],
+      "html": [
+        "ACCESSIBILITY_TESTER",
+        "ACCESSIBILITY_WCAG"
+      ],
+      "distributed-systems": [
+        "CHAOS_ENGINEER"
+      ],
+      "k6": [
+        "LOAD_TESTING_SPECIALIST"
+      ],
+      "jmeter": [
+        "LOAD_TESTING_SPECIALIST"
+      ],
+      "gatling": [
+        "LOAD_TESTING_SPECIALIST"
+      ],
+      "locust": [
+        "LOAD_TESTING_SPECIALIST"
+      ],
+      "selenium": [
+        "QA_AUTOMATION_LEAD",
+        "TEST_AUTOMATION_EXPERT"
+      ],
+      "cypress": [
+        "QA_AUTOMATION_LEAD",
+        "TEST_AUTOMATION_EXPERT"
+      ],
+      "playwright": [
+        "QA_AUTOMATION_LEAD"
+      ],
+      "test-automation": [
+        "QA_AUTOMATION_LEAD"
+      ],
+      "api": [
+        "SECURITY_TESTER",
+        "PENTESTER"
+      ],
+      "authentication": [
+        "SECURITY_TESTER",
+        "PENTESTER"
+      ],
+      "authorization": [
+        "SECURITY_TESTER"
+      ],
+      "pytest": [
+        "TEST_AUTOMATION_EXPERT"
+      ],
+      "jest": [
+        "TEST_AUTOMATION_EXPERT"
+      ],
+      "junit": [
+        "TEST_AUTOMATION_EXPERT"
+      ],
+      "testing-library": [
+        "TEST_AUTOMATION_EXPERT"
+      ],
+      "oauth": [
+        "API_SECURITY_SPECIALIST"
+      ],
+      "jwt": [
+        "API_SECURITY_SPECIALIST",
+        "APPSEC_SPECIALIST",
+        "CRYPTOGRAPHY_EXPERT"
+      ],
+      "oauth2": [
+        "APPSEC_SPECIALIST"
+      ],
+      "cryptography": [
+        "APPSEC_SPECIALIST"
+      ],
+      "web-security": [
+        "APPSEC_SPECIALIST"
+      ],
+      "iam": [
+        "CLOUD_SECURITY_AWS"
+      ],
+      "kms": [
+        "CLOUD_SECURITY_AWS",
+        "SECRETS_MANAGEMENT_EXPERT"
+      ],
+      "compliance": [
+        "COMPLIANCE_AUDITOR"
+      ],
+      "audit": [
+        "COMPLIANCE_AUDITOR"
+      ],
+      "privacy": [
+        "COMPLIANCE_AUDITOR"
+      ],
+      "openssl": [
+        "CRYPTOGRAPHY_EXPERT"
+      ],
+      "tls": [
+        "CRYPTOGRAPHY_EXPERT"
+      ],
+      "encryption": [
+        "CRYPTOGRAPHY_EXPERT"
+      ],
+      "hashing": [
+        "CRYPTOGRAPHY_EXPERT"
+      ],
+      "vault": [
+        "INFRASEC_ENGINEER",
+        "SECRETS_MANAGEMENT_EXPERT"
+      ],
+      "secrets-manager": [
+        "SECRETS_MANAGEMENT_EXPERT"
+      ],
+      "hsm": [
+        "SECRETS_MANAGEMENT_EXPERT"
+      ],
+      "svelte": [
+        "ACCESSIBILITY_WCAG"
+      ],
+      "css": [
+        "ACCESSIBILITY_WCAG"
+      ],
+      "aria": [
+        "ACCESSIBILITY_WCAG"
+      ],
+      "i18n": [
+        "I18N_EXPERT"
+      ],
+      "react-intl": [
+        "I18N_EXPERT"
+      ],
+      "i18next": [
+        "I18N_EXPERT"
+      ]
+    },
+    "by_complexity": {
+      "M": [
+        "API_DESIGNER",
+        "INTEGRATION_ARCHITECT",
+        "DATA_ENGINEER",
+        "DB_ARCHITECT_SQL",
+        "ML_ENGINEER",
+        "NOSQL_ARCHITECT",
+        "ECOMMERCE_EXPERT",
+        "FINTECH_PAYMENTS",
+        "HEALTHCARE_HIPAA",
+        "IOT_EMBEDDED_EXPERT",
+        "BACKEND_GO_SENIOR",
+        "BACKEND_JAVA_SENIOR",
+        "BACKEND_NODE_SENIOR",
+        "BACKEND_PYTHON_SENIOR",
+        "FRONTEND_ANGULAR_EXPERT",
+        "FRONTEND_REACT_EXPERT",
+        "FRONTEND_VUE_EXPERT",
+        "FULLSTACK_GENERALIST",
+        "MOBILE_ANDROID_EXPERT",
+        "MOBILE_IOS_EXPERT",
+        "DEVOPS_ENGINEER",
+        "OBSERVABILITY_ENGINEER",
+        "PLATFORM_ENGINEER",
+        "SRE_SPECIALIST",
+        "DX_SPECIALIST",
+        "TECHNICAL_PM",
+        "UX_RESEARCHER",
+        "ACCESSIBILITY_TESTER",
+        "CODE_REVIEWER",
+        "LOAD_TESTING_SPECIALIST",
+        "PERF_TESTER",
+        "QA_AUTOMATION_LEAD",
+        "SECURITY_TESTER",
+        "TEST_AUTOMATION_EXPERT",
+        "API_SECURITY_SPECIALIST",
+        "APPSEC_SPECIALIST",
+        "CLOUD_SECURITY_AWS",
+        "COMPLIANCE_AUDITOR",
+        "CRYPTOGRAPHY_EXPERT",
+        "INFRASEC_ENGINEER",
+        "PENTESTER",
+        "SECRETS_MANAGEMENT_EXPERT",
+        "ACCESSIBILITY_WCAG",
+        "I18N_EXPERT",
+        "PERFORMANCE_OPTIMIZATION_GURU",
+        "TECH_DEBT_ANALYST"
+      ],
+      "L": [
+        "API_DESIGNER",
+        "CLOUD_ARCHITECT",
+        "DDD_EXPERT",
+        "EVENT_DRIVEN_ARCHITECT",
+        "INTEGRATION_ARCHITECT",
+        "MICROSERVICES_ARCHITECT",
+        "SOLUTIONS_ARCHITECT",
+        "DATA_ENGINEER",
+        "DB_ARCHITECT_SQL",
+        "ML_ENGINEER",
+        "NOSQL_ARCHITECT",
+        "ECOMMERCE_EXPERT",
+        "FINTECH_PAYMENTS",
+        "GAMING_EXPERT",
+        "HEALTHCARE_HIPAA",
+        "IOT_EMBEDDED_EXPERT",
+        "BACKEND_GO_SENIOR",
+        "BACKEND_JAVA_SENIOR",
+        "BACKEND_NODE_SENIOR",
+        "BACKEND_PYTHON_SENIOR",
+        "BACKEND_RUST_EXPERT",
+        "FRONTEND_ANGULAR_EXPERT",
+        "FRONTEND_REACT_EXPERT",
+        "FRONTEND_VUE_EXPERT",
+        "FULLSTACK_GENERALIST",
+        "MOBILE_ANDROID_EXPERT",
+        "MOBILE_IOS_EXPERT",
+        "DEVOPS_ENGINEER",
+        "OBSERVABILITY_ENGINEER",
+        "PLATFORM_ENGINEER",
+        "SRE_SPECIALIST",
+        "DX_SPECIALIST",
+        "TECHNICAL_PM",
+        "UX_RESEARCHER",
+        "ACCESSIBILITY_TESTER",
+        "CHAOS_ENGINEER",
+        "CODE_REVIEWER",
+        "LOAD_TESTING_SPECIALIST",
+        "PERF_TESTER",
+        "QA_AUTOMATION_LEAD",
+        "SECURITY_TESTER",
+        "TEST_AUTOMATION_EXPERT",
+        "API_SECURITY_SPECIALIST",
+        "APPSEC_SPECIALIST",
+        "CLOUD_SECURITY_AWS",
+        "COMPLIANCE_AUDITOR",
+        "CRYPTOGRAPHY_EXPERT",
+        "INFRASEC_ENGINEER",
+        "PENTESTER",
+        "SECRETS_MANAGEMENT_EXPERT",
+        "ACCESSIBILITY_WCAG",
+        "I18N_EXPERT",
+        "PERFORMANCE_OPTIMIZATION_GURU",
+        "TECH_DEBT_ANALYST"
+      ],
+      "XL": [
+        "API_DESIGNER",
+        "CLOUD_ARCHITECT",
+        "DDD_EXPERT",
+        "EVENT_DRIVEN_ARCHITECT",
+        "INTEGRATION_ARCHITECT",
+        "MICROSERVICES_ARCHITECT",
+        "SOLUTIONS_ARCHITECT",
+        "DATA_ENGINEER",
+        "DB_ARCHITECT_SQL",
+        "ML_ENGINEER",
+        "NOSQL_ARCHITECT",
+        "ECOMMERCE_EXPERT",
+        "FINTECH_PAYMENTS",
+        "GAMING_EXPERT",
+        "HEALTHCARE_HIPAA",
+        "IOT_EMBEDDED_EXPERT",
+        "BACKEND_GO_SENIOR",
+        "BACKEND_JAVA_SENIOR",
+        "BACKEND_NODE_SENIOR",
+        "BACKEND_PYTHON_SENIOR",
+        "BACKEND_RUST_EXPERT",
+        "FRONTEND_ANGULAR_EXPERT",
+        "FRONTEND_REACT_EXPERT",
+        "FRONTEND_VUE_EXPERT",
+        "MOBILE_ANDROID_EXPERT",
+        "MOBILE_IOS_EXPERT",
+        "OBSERVABILITY_ENGINEER",
+        "PLATFORM_ENGINEER",
+        "SRE_SPECIALIST",
+        "TECHNICAL_PM",
+        "CHAOS_ENGINEER",
+        "CODE_REVIEWER",
+        "LOAD_TESTING_SPECIALIST",
+        "PERF_TESTER",
+        "SECURITY_TESTER",
+        "API_SECURITY_SPECIALIST",
+        "APPSEC_SPECIALIST",
+        "CLOUD_SECURITY_AWS",
+        "COMPLIANCE_AUDITOR",
+        "CRYPTOGRAPHY_EXPERT",
+        "INFRASEC_ENGINEER",
+        "PENTESTER",
+        "SECRETS_MANAGEMENT_EXPERT",
+        "PERFORMANCE_OPTIMIZATION_GURU",
+        "TECH_DEBT_ANALYST"
+      ],
+      "S": [
+        "FRONTEND_REACT_EXPERT",
+        "FRONTEND_VUE_EXPERT",
+        "FULLSTACK_GENERALIST",
+        "MOBILE_ANDROID_EXPERT",
+        "MOBILE_IOS_EXPERT",
+        "DX_SPECIALIST",
+        "UX_RESEARCHER",
+        "ACCESSIBILITY_TESTER",
+        "CODE_REVIEWER",
+        "TEST_AUTOMATION_EXPERT",
+        "APPSEC_SPECIALIST",
+        "SECRETS_MANAGEMENT_EXPERT",
+        "ACCESSIBILITY_WCAG"
+      ]
+    },
+    "by_property": {
+      "USABILITY": [
+        "API_DESIGNER",
+        "ECOMMERCE_EXPERT",
+        "FRONTEND_REACT_EXPERT",
+        "FRONTEND_VUE_EXPERT",
+        "FULLSTACK_GENERALIST",
+        "MOBILE_ANDROID_EXPERT",
+        "MOBILE_IOS_EXPERT",
+        "PLATFORM_ENGINEER",
+        "DX_SPECIALIST",
+        "TECHNICAL_PM",
+        "UX_RESEARCHER",
+        "ACCESSIBILITY_TESTER",
+        "ACCESSIBILITY_WCAG",
+        "I18N_EXPERT"
+      ],
+      "MAINTAINABILITY": [
+        "API_DESIGNER",
+        "DDD_EXPERT",
+        "INTEGRATION_ARCHITECT",
+        "MICROSERVICES_ARCHITECT",
+        "SOLUTIONS_ARCHITECT",
+        "BACKEND_JAVA_SENIOR",
+        "BACKEND_PYTHON_SENIOR",
+        "FRONTEND_ANGULAR_EXPERT",
+        "FRONTEND_REACT_EXPERT",
+        "FRONTEND_VUE_EXPERT",
+        "FULLSTACK_GENERALIST",
+        "DX_SPECIALIST",
+        "CODE_REVIEWER",
+        "TEST_AUTOMATION_EXPERT",
+        "TECH_DEBT_ANALYST"
+      ],
+      "EVOLVABILITY": [
+        "API_DESIGNER"
+      ],
+      "SCALABILITY": [
+        "CLOUD_ARCHITECT",
+        "EVENT_DRIVEN_ARCHITECT",
+        "MICROSERVICES_ARCHITECT",
+        "SOLUTIONS_ARCHITECT",
+        "NOSQL_ARCHITECT",
+        "BACKEND_GO_SENIOR",
+        "BACKEND_NODE_SENIOR",
+        "LOAD_TESTING_SPECIALIST",
+        "PERF_TESTER",
+        "PERFORMANCE_OPTIMIZATION_GURU"
+      ],
+      "RELIABILITY": [
+        "CLOUD_ARCHITECT",
+        "EVENT_DRIVEN_ARCHITECT",
+        "INTEGRATION_ARCHITECT",
+        "MICROSERVICES_ARCHITECT",
+        "SOLUTIONS_ARCHITECT",
+        "DATA_ENGINEER",
+        "IOT_EMBEDDED_EXPERT",
+        "DEVOPS_ENGINEER",
+        "OBSERVABILITY_ENGINEER",
+        "PLATFORM_ENGINEER",
+        "SRE_SPECIALIST",
+        "CHAOS_ENGINEER",
+        "LOAD_TESTING_SPECIALIST",
+        "QA_AUTOMATION_LEAD",
+        "TEST_AUTOMATION_EXPERT",
+        "INFRASEC_ENGINEER"
+      ],
+      "EFFICIENCY": [
+        "CLOUD_ARCHITECT",
+        "DATA_ENGINEER",
+        "IOT_EMBEDDED_EXPERT",
+        "MOBILE_ANDROID_EXPERT",
+        "MOBILE_IOS_EXPERT",
+        "PERF_TESTER",
+        "PERFORMANCE_OPTIMIZATION_GURU"
+      ],
+      "COST": [
+        "CLOUD_ARCHITECT"
+      ],
+      "CLARITY": [
+        "DDD_EXPERT",
+        "TECHNICAL_PM",
+        "UX_RESEARCHER"
+      ],
+      "EXTENSIBILITY": [
+        "DDD_EXPERT",
+        "SOLUTIONS_ARCHITECT"
+      ],
+      "CORRECTNESS": [
+        "EVENT_DRIVEN_ARCHITECT",
+        "DB_ARCHITECT_SQL",
+        "ML_ENGINEER",
+        "ECOMMERCE_EXPERT",
+        "FINTECH_PAYMENTS",
+        "BACKEND_GO_SENIOR",
+        "BACKEND_JAVA_SENIOR",
+        "BACKEND_NODE_SENIOR",
+        "BACKEND_PYTHON_SENIOR",
+        "BACKEND_RUST_EXPERT",
+        "FULLSTACK_GENERALIST",
+        "SECURITY_TESTER",
+        "API_SECURITY_SPECIALIST",
+        "APPSEC_SPECIALIST",
+        "CRYPTOGRAPHY_EXPERT"
+      ],
+      "COMPATIBILITY": [
+        "INTEGRATION_ARCHITECT"
+      ],
+      "DATA_QUALITY": [
+        "DATA_ENGINEER"
+      ],
+      "SAFETY": [
+        "DB_ARCHITECT_SQL",
+        "ECOMMERCE_EXPERT",
+        "FINTECH_PAYMENTS",
+        "BACKEND_RUST_EXPERT",
+        "SECURITY_TESTER",
+        "API_SECURITY_SPECIALIST",
+        "APPSEC_SPECIALIST",
+        "CRYPTOGRAPHY_EXPERT",
+        "PENTESTER",
+        "SECRETS_MANAGEMENT_EXPERT"
+      ],
+      "PERFORMANCE": [
+        "DB_ARCHITECT_SQL",
+        "ML_ENGINEER",
+        "NOSQL_ARCHITECT",
+        "GAMING_EXPERT",
+        "BACKEND_GO_SENIOR",
+        "BACKEND_JAVA_SENIOR",
+        "BACKEND_NODE_SENIOR",
+        "BACKEND_PYTHON_SENIOR",
+        "BACKEND_RUST_EXPERT",
+        "FRONTEND_ANGULAR_EXPERT",
+        "FRONTEND_REACT_EXPERT",
+        "FRONTEND_VUE_EXPERT",
+        "MOBILE_ANDROID_EXPERT",
+        "MOBILE_IOS_EXPERT",
+        "LOAD_TESTING_SPECIALIST",
+        "PERF_TESTER",
+        "PERFORMANCE_OPTIMIZATION_GURU"
+      ],
+      "DATA_INTEGRITY": [
+        "DB_ARCHITECT_SQL",
+        "NOSQL_ARCHITECT"
+      ],
+      "REPRODUCIBILITY": [
+        "ML_ENGINEER"
+      ],
+      "SECURITY": [
+        "FINTECH_PAYMENTS",
+        "HEALTHCARE_HIPAA",
+        "SECURITY_TESTER",
+        "API_SECURITY_SPECIALIST",
+        "APPSEC_SPECIALIST",
+        "CLOUD_SECURITY_AWS",
+        "COMPLIANCE_AUDITOR",
+        "CRYPTOGRAPHY_EXPERT",
+        "INFRASEC_ENGINEER",
+        "PENTESTER",
+        "SECRETS_MANAGEMENT_EXPERT"
+      ],
+      "COMPLIANCE": [
+        "FINTECH_PAYMENTS",
+        "HEALTHCARE_HIPAA",
+        "ACCESSIBILITY_TESTER",
+        "CLOUD_SECURITY_AWS",
+        "COMPLIANCE_AUDITOR",
+        "INFRASEC_ENGINEER",
+        "SECRETS_MANAGEMENT_EXPERT",
+        "ACCESSIBILITY_WCAG"
+      ],
+      "LATENCY": [
+        "GAMING_EXPERT"
+      ],
+      "CONSISTENCY": [
+        "GAMING_EXPERT",
+        "DEVOPS_ENGINEER"
+      ],
+      "PRIVACY": [
+        "HEALTHCARE_HIPAA",
+        "COMPLIANCE_AUDITOR"
+      ],
+      "POWER": [
+        "IOT_EMBEDDED_EXPERT"
+      ],
+      "TESTABILITY": [
+        "BACKEND_PYTHON_SENIOR",
+        "FRONTEND_ANGULAR_EXPERT",
+        "QA_AUTOMATION_LEAD",
+        "TEST_AUTOMATION_EXPERT"
+      ],
+      "TYPE_SAFETY": [
+        "FRONTEND_ANGULAR_EXPERT",
+        "FRONTEND_REACT_EXPERT",
+        "FRONTEND_VUE_EXPERT"
+      ],
+      "AUTOMATION": [
+        "DEVOPS_ENGINEER",
+        "PLATFORM_ENGINEER"
+      ],
+      "OBSERVABILITY": [
+        "OBSERVABILITY_ENGINEER",
+        "SRE_SPECIALIST"
+      ],
+      "DEBUGGABILITY": [
+        "OBSERVABILITY_ENGINEER"
+      ],
+      "LIVENESS": [
+        "SRE_SPECIALIST",
+        "CHAOS_ENGINEER"
+      ],
+      "RECOVERABILITY": [
+        "SRE_SPECIALIST"
+      ],
+      "DOCUMENTATION": [
+        "DX_SPECIALIST"
+      ],
+      "VALUE": [
+        "TECHNICAL_PM"
+      ],
+      "ACCESSIBILITY": [
+        "UX_RESEARCHER",
+        "ACCESSIBILITY_TESTER",
+        "ACCESSIBILITY_WCAG",
+        "I18N_EXPERT"
+      ],
+      "RESILIENCE": [
+        "CHAOS_ENGINEER"
+      ],
+      "READABILITY": [
+        "CODE_REVIEWER"
+      ],
+      "QUALITY": [
+        "CODE_REVIEWER",
+        "QA_AUTOMATION_LEAD",
+        "TECH_DEBT_ANALYST"
+      ],
+      "AUDITABILITY": [
+        "CLOUD_SECURITY_AWS"
+      ],
+      "GLOBALIZATION": [
+        "I18N_EXPERT"
+      ],
+      "SUSTAINABILITY": [
+        "TECH_DEBT_ANALYST"
+      ]
+    }
+  }
+}

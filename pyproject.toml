@@ -1,0 +1,54 @@
+[project]
+name = "wfc"
+version = "0.1.0"
+description = "World Fucking Class - Multi-agent consensus review system"
+authors = [
+    {name = "Sam Fakhreddine"}
+]
+readme = "README.md"
+requires-python = ">=3.10"
+license = {text = "MIT"}
+
+dependencies = [
+    # Core dependencies (none required)
+]
+
+[project.scripts]
+wfc = "wfc.cli:main"
+
+[project.optional-dependencies]
+# Token management (recommended for 99% token reduction)
+tokens = [
+    "tiktoken>=0.5.0",
+]
+
+# Development
+dev = [
+    "pytest>=7.0.0",
+    "black>=23.0.0",
+    "ruff>=0.1.0",
+]
+
+# All optional features
+all = [
+    "wfc[tokens,dev]",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["wfc"]
+
+[tool.black]
+line-length = 100
+target-version = ['py310']
+
+[tool.ruff]
+line-length = 100
+target-version = "py310"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py"]
