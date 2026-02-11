@@ -165,127 +165,6 @@ The installer automatically:
 
 ---
 
-## 🏗️ WFC:IMPLEMENT - The Implementation Beast
-
-<div align="center">
-
-### ✅ PRODUCTION READY ✅
-**Phases 1-3: 100% Complete**
-
-**5 agents. 5 parallel worktrees. 1 unbreakable main branch.**
-
-</div>
-
-### 💪 What It Does
-
-WFC:IMPLEMENT doesn't just implement features—it **orchestrates a team of AI agents** working in **parallel**, following **strict TDD**, with **automatic quality gates** and **zero-downtime merges**.
-
-<table>
-<tr>
-<td width="33%">
-
-#### 🔄 TDD Enforcement
-**6-phase workflow:**
-1. 🧠 UNDERSTAND
-2. 🔴 TEST_FIRST (RED)
-3. 🟢 IMPLEMENT (GREEN)
-4. ♻️ REFACTOR
-5. ✅ QUALITY_CHECK
-6. 📦 SUBMIT
-
-</td>
-<td width="33%">
-
-#### 🧠 Intelligence
-- **Confidence-first**: Agents assess capability before acting
-- **Cross-session memory**: Learns from past mistakes
-- **Token optimization**: 99% reduction with smart budgets
-- **Failure classification**: WARNING vs ERROR vs CRITICAL
-
-</td>
-<td width="33%">
-
-#### 🛡️ Safety
-- **Universal quality gate**: Trunk.io (100+ tools)
-- **Automatic rollback**: Main always passing
-- **Isolated worktrees**: Parallel work, zero conflicts
-- **Integration testing**: Every merge validated
-
-</td>
-</tr>
-</table>
-
-### ⚡ Quick Start
-
-```bash
-# 1. Create intelligent plan
-wfc plan
-   └─ Generates TASKS.md, PROPERTIES.md, TEST-PLAN.md
-
-# 2. Execute with parallel agents
-wfc implement --tasks plan/TASKS.md
-   └─ Spawns up to 5 agents in isolated worktrees
-   └─ Each follows strict TDD workflow
-   └─ Auto-merges on success, rollback on failure
-
-# 3. Verify system health
-make doctor
-   └─ 13 health checks across 7 categories
-```
-
-### 📊 By The Numbers
-
-| Metric | Value |
-|--------|-------|
-| **Token Reduction** | 99% (58K → 3K) |
-| **Parallel Agents** | Up to 5 simultaneous |
-| **Quality Tools** | 100+ via Trunk.io |
-| **Test Coverage** | >80% (22 integration tests) |
-| **Confidence Threshold** | ≥90% to proceed |
-| **Success Rate** | Tracked cross-session |
-
-### 🎯 Features Overview
-
-<details>
-<summary><b>Phase 1: Core Foundation</b> ✅</summary>
-
-- ✅ **Universal Quality Gate** - Trunk.io integration (all languages)
-- ✅ **Complete TDD Workflow** - 6 phases enforced
-- ✅ **Merge Engine with Rollback** - Main branch always passing
-- ✅ **CLI Interface** - User-friendly with dry-run mode
-
-</details>
-
-<details>
-<summary><b>Phase 2: Intelligence Layer</b> ✅</summary>
-
-- ✅ **Confidence Checking** - SuperClaude pattern (≥90% proceed, 70-89% ask, <70% stop)
-- ✅ **Memory System** - ReflexionMemory for cross-session learning
-- ✅ **Token Budgets** - Complexity-based with historical optimization
-  - S: 200 tokens | M: 1K | L: 2.5K | XL: 5K
-- ✅ **Entire.io Integration** 🔒 - Agent session capture (ENABLED BY DEFAULT, local-only, privacy-first)
-  - Checkpoint each TDD phase for rewind & debugging
-  - Cross-session learning from past failures
-  - Local-only storage, sensitive data redacted
-  - [Full docs](docs/ENTIRE_IO.md) - Security guarantees
-
-</details>
-
-<details>
-<summary><b>Phase 3: Production Polish</b> ✅</summary>
-
-- ✅ **PROJECT_INDEX.json** - Machine-readable project structure
-- ✅ **make doctor** - Comprehensive health diagnostics
-- ✅ **Integration Tests** - >80% coverage (22 comprehensive tests)
-- ✅ **Complete Documentation** - Full implementation guide
-
-</details>
-
-**📚 Learn More:**
-- [Complete Guide](docs/WFC_IMPLEMENTATION.md) - Full documentation
-- [Implementation Patterns](PLANNING.md#implementation-patterns) - TDD, confidence-first, cross-session learning
-- [Usage Examples](CLAUDE.md#wfcimplement---multi-agent-parallel-implementation) - Quick reference
-
 ---
 
 ## 🎭 Meet Your 54-Expert Review Board
@@ -310,139 +189,34 @@ make doctor
 
 </div>
 
-### 🎯 Intelligent Selection Algorithm
+### 🎯 Smart Persona Selection
 
-WFC doesn't just randomly pick experts—it **analyzes your code** and **selects the perfect panel**:
+WFC analyzes your code and automatically picks the right experts:
+- **Tech stack match** - Python code? Python experts review it
+- **Properties** - Security-critical? Security specialists weigh in
+- **Complexity** - Large refactor? Senior engineers join the panel
+- **Domain knowledge** - Payments code? Fintech expert included
 
-```python
-def select_review_panel(task):
-    score = (
-        0.40 * tech_stack_match(task.files)      # Python + FastAPI → Python expert
-      + 0.30 * property_alignment(task.props)    # SECURITY → Security experts
-      + 0.15 * complexity_filter(task.size)      # XL tasks → Senior personas
-      + 0.10 * task_type_match(task.type)        # API design → API expert
-      + 0.05 * domain_knowledge(task.domain)     # Payments → Fintech expert
-    )
+**Example:** OAuth2 implementation automatically gets AppSec, API Security, Backend Python, Database, and SRE experts.
 
-    # Enforce diversity: max 2 per panel
-    return top_5_diverse(scores)
-```
+## 🔬 True Independence, Zero Bias
 
-**The result?** Every review panel is **custom-tailored** to your exact code.
+**Each expert reviews in complete isolation** - no context sharing, no groupthink.
 
-## 🔬 Selection In Action
-
-**Real example: OAuth2 + JWT implementation**
-
-```yaml
-📋 Task Analysis:
-   Type: Feature Implementation (OAuth2 login with JWT)
-   Files: auth_service.py, jwt_handler.py
-   Tech Stack: Python, FastAPI, PostgreSQL, Redis
-   Complexity: L (Large)
-   Properties: SECURITY, SAFETY
-
-🎯 Scoring Matrix:
-                           Tech  Props  Complexity  Type  Domain  TOTAL
-   APPSEC_SPECIALIST       0.38  0.30      0.12    0.10   0.05 = 0.95 ⭐
-   BACKEND_PYTHON_SENIOR   0.40  0.18      0.15    0.10   0.05 = 0.88 ⭐
-   API_SECURITY_SPECIALIST 0.30  0.30      0.12    0.10   0.00 = 0.82 ⭐
-   DB_ARCHITECT_SQL        0.35  0.10      0.12    0.08   0.07 = 0.72 ⭐
-   SRE_SPECIALIST          0.20  0.15      0.12    0.05   0.09 = 0.61 ⭐
-   FRONTEND_REACT_EXPERT   0.05  0.00      0.05    0.00   0.00 = 0.10 ❌
-   ML_ENGINEER             0.10  0.00      0.08    0.00   0.00 = 0.18 ❌
-
-✅ Selected Panel:
-   1. 🛡️ APPSEC_SPECIALIST (0.95) - OAuth/JWT security patterns
-   2. 🐍 BACKEND_PYTHON_SENIOR (0.88) - FastAPI best practices
-   3. 🔐 API_SECURITY_SPECIALIST (0.82) - Token security & rotation
-   4. 🗄️ DB_ARCHITECT_SQL (0.72) - Secure token storage
-   5. 🚨 SRE_SPECIALIST (0.61) - Monitoring & key rotation
-
-🎭 Panel Diversity: ✅
-   Security Panel: 2/8 experts
-   Engineering Panel: 1/11 experts
-   Data Panel: 1/4 experts
-   Operations Panel: 1/4 experts
-   (Max 2 per panel enforced)
-```
-
-## 🔬 Zero Bias, True Parallelism
-
-<div align="center">
-
-### The Secret Sauce: Independent Subagents
-
-**Each expert reviews in complete isolation—zero context sharing**
-
-</div>
-
-```python
-# The WFC Way: True independence
-reviews = parallel_map(
-    lambda persona: execute_review_in_isolation(persona),
-    selected_personas  # Each runs in separate subprocess
-)
-
-# THEN and ONLY THEN: Synthesis
-consensus = synthesize_reviews(reviews, relevance_scores)
-```
-
-<table>
-<tr>
-<td width="50%">
-
-### ❌ Traditional Multi-Agent
-```
-Agent 1: "I think this is good"
-Agent 2: *reads Agent 1's review*
-        "Yeah, I agree..."
-Agent 3: *anchoring bias intensifies*
-        "Me too!"
-```
-**Result**: Groupthink, missed issues
-
-</td>
-<td width="50%">
-
-### ✅ WFC Multi-Agent
-```
-Agent 1 (isolated): "Security: 8/10"
-Agent 2 (isolated): "Security: 4/10"
-Agent 3 (isolated): "Security: 9/10"
-```
-**Result**: Disagreement surfaces
-         → Deeper investigation
-         → Critical bug found
-
-</td>
-</tr>
-</table>
+Traditional multi-agent systems let agents see each other's reviews, creating anchoring bias. WFC runs experts in separate subprocesses. They form independent opinions, then we synthesize.
 
 **Why this matters:**
-- 🎯 **No anchoring bias** - Experts form independent opinions
-- 💎 **Unique insights surface** - If only 1 expert caught it, you still see it
-- ⚖️ **Disagreements preserved** - Not averaged into meaningless consensus
-- 🔬 **Genuine multi-perspective** - Not just one opinion echoed 5 times
+- 🎯 No anchoring bias - genuine independent opinions
+- 💎 Unique insights surface - if only 1 expert caught it, you see it
+- ⚖️ Disagreements preserved - not averaged into meaningless consensus
 
-## 📈 The Consensus Engine
+## 📈 Consensus Synthesis
 
-After all experts finish their **independent** reviews, WFC synthesizes their findings using **relevance-weighted consensus**:
-
-```mermaid
-graph TD
-    A[5 Independent Reviews] --> B[Weighted Scoring]
-    B --> C[Consensus Detection]
-    B --> D[Unique Insights]
-    B --> E[Divergent Views]
-    C --> F[Unified Report]
-    D --> F
-    E --> F
-    F --> G{Decision}
-    G -->|Score ≥ 7.0| H[✅ APPROVE]
-    G -->|Score < 7.0| I[❌ REVISE]
-    G -->|Critical Issues| J[🚨 BLOCK]
-```
+After independent reviews, WFC synthesizes findings with relevance weighting:
+- **Consensus areas** - Issues 3+ experts agree on
+- **Unique insights** - Criticals only ONE expert caught
+- **Divergent views** - Where experts disagree (investigate!)
+- **Weighted scoring** - Security experts weigh more on auth code
 
 ### 🎯 Real Review Output
 
@@ -512,30 +286,7 @@ graph TD
 
 ## 🔧 Extend & Customize
 
-**Need a specialist we don't have?** Build your own expert personas:
-
-```bash
-# 1. Create custom persona
-cat > ~/.claude/skills/wfc/personas/custom/MY_EXPERT.json <<EOF
-{
-  "id": "MY_CUSTOM_EXPERT",
-  "name": "Blockchain Security Expert",
-  "panel": "security",
-  "skills": ["solidity", "smart_contracts", "web3"],
-  "lens": {"focus": "blockchain_security", "depth": "expert"},
-  "selection_criteria": {"keywords": ["web3", "solidity", "smart contract"]}
-}
-EOF
-
-# 2. Rebuild registry
-cd ~/.claude/skills/wfc/personas
-python3 -c "from persona_orchestrator import PersonaRegistry; PersonaRegistry.rebuild_registry()"
-
-# 3. Use it
-/wfc:consensus-review --personas MY_CUSTOM_EXPERT,APPSEC_SPECIALIST
-```
-
-**Want to contribute?** See [CONTRIBUTING.md](docs/CONTRIBUTING.md) to add personas to the core library.
+**Need a specialist we don't have?** Add custom personas to `~/.claude/skills/wfc/personas/custom/`. See [Contributing Guide](docs/CONTRIBUTING.md) for details.
 
 ---
 
@@ -601,19 +352,7 @@ python3 -c "from persona_orchestrator import PersonaRegistry; PersonaRegistry.re
 </tr>
 </table>
 
-**Quick config:** `~/.claude/skills/wfc/shared/config/wfc_config.py`
-
-```python
-DEFAULTS = {
-    "personas": {
-        "num_reviewers": 5,           # Panel size
-        "require_diversity": True,    # Enforce diverse panels
-        "min_relevance_score": 0.3,   # Selection threshold
-        "consensus_threshold": 3,     # Issues need 3+ agrees
-        "weight_by_relevance": True   # Smart scoring
-    }
-}
-```
+**Configuration:** See `~/.claude/skills/wfc/shared/config/wfc_config.py` for options (panel size, diversity enforcement, scoring thresholds).
 
 ---
 
