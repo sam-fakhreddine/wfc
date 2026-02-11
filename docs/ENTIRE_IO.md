@@ -1,26 +1,28 @@
 # Entire.io Integration - Agent Session Capture
 
-**Status**: ✅ IMPLEMENTED (OPTIONAL, HIGHLY RECOMMENDED)
+**Status**: ✅ IMPLEMENTED (ENABLED BY DEFAULT)
 **Security**: 🔒 LOCAL-ONLY by default, privacy-first
 **Purpose**: Capture agent reasoning for debugging and cross-session learning
 
-> 💡 **Note**: Entire.io is **OPTIONAL** but **HIGHLY RECOMMENDED**. It's disabled by default - you opt-in when you want agent session capture for debugging and learning.
+> 💡 **Note**: Entire.io is **ENABLED BY DEFAULT**. It's completely safe - sessions are stored locally, sensitive data is redacted, and nothing is pushed to remote automatically. You can disable it anytime by setting `entire_io.enabled=false` in config.
 
 ---
 
-## Why Optional But Recommended?
+## Why Enabled By Default?
 
-**Optional** because:
-- Not everyone needs session capture
-- Some prefer minimal tooling
-- Privacy-conscious users can skip it
-- Works perfectly fine without it
+**Safe to enable** because:
+- 🔒 **Local-only storage** - Never pushed to remote automatically
+- 🔒 **Sensitive data redacted** - API keys, tokens, secrets filtered
+- 🔒 **No environment capture** - Environment variables not recorded
+- 🔒 **Privacy-first design** - User controls all sharing
 
-**Recommended** because:
+**Valuable for everyone** because:
 - 🐛 **10x faster debugging** - Rewind to exact failure point
 - 📚 **Cross-session learning** - Never repeat the same mistake
 - 🔍 **Understand agent reasoning** - See "why" not just "what"
 - 📊 **Retrospective analysis** - Improve over time
+
+**Can opt-out anytime** by setting `entire_io.enabled=false` in config.
 
 ---
 
@@ -103,34 +105,38 @@ entire --version
 
 ## 🚀 Usage
 
-### Enable Session Capture (OPT-IN)
+### Automatic Session Capture (ON BY DEFAULT)
 
-Entire.io is **disabled by default**. Enable it when you want to debug agents or learn from failures.
+Entire.io is **enabled by default**. Just run WFC and sessions are automatically captured locally.
 
-**Option 1: CLI Flag (Recommended for one-time use)**
 ```bash
-# Enable for this run only
-wfc implement --tasks plan/TASKS.md --enable-entire
+# Sessions automatically captured (local only)
+wfc implement --tasks plan/TASKS.md
+# Output: 📹 Entire.io: ENABLED (capturing agent sessions)
 ```
 
-**Option 2: Configuration (For persistent enable)**
+### Disable Session Capture (OPT-OUT)
+
+If you prefer not to capture sessions, disable it in config:
+
 ```bash
 # Edit wfc.config.json
 {
   "entire_io": {
-    "enabled": true  // Change from false to true
+    "enabled": false  // Opt-out of session capture
   }
 }
 
 # Then run normally
 wfc implement --tasks plan/TASKS.md
+# Output: 📹 Entire.io: DISABLED
 ```
 
-**When to enable:**
-- 🐛 Debugging a failing agent
-- 📚 Learning from past failures
-- 🔍 Understanding agent decision-making
-- 📊 Collecting data for retrospective analysis
+**Why it's safe to leave enabled:**
+- 🔒 **Local-only storage** - Nothing pushed to remote
+- 🔒 **Sensitive data redacted** - API keys, tokens filtered
+- 🔒 **Privacy-first** - Environment variables not captured
+- 🔒 **User controlled** - You decide what (if anything) gets shared
 
 ### Configuration
 

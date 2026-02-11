@@ -67,7 +67,7 @@ class WFCConfig:
             }
         },
         "entire_io": {
-            "enabled": False,  # OPT-IN: Set to true to enable agent session capture
+            "enabled": True,  # ON BY DEFAULT: Privacy-first, local-only session capture
             "local_only": True,
             "create_checkpoints": True,
             "checkpoint_phases": [

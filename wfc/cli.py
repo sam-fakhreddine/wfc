@@ -210,16 +210,17 @@ def cmd_implement(tasks_file: Optional[str] = None, agents: Optional[int] = None
         max_agents = config.get("orchestration.max_agents", 5)
         print(f"👥 Agents: {max_agents} (from config)")
 
-    # Enable Entire.io if requested
+    # Entire.io status (enabled by default)
     if enable_entire:
-        print("📹 Entire.io: ENABLED (session capture for debugging)")
+        # Force enable even if config says false
+        print("📹 Entire.io: ENABLED (forced via --enable-entire)")
         config.set("entire_io.enabled", True)
     else:
-        entire_enabled = config.get("entire_io.enabled", False)
+        entire_enabled = config.get("entire_io.enabled", True)  # Default: True
         if entire_enabled:
-            print("📹 Entire.io: ENABLED (from config)")
+            print("📹 Entire.io: ENABLED (capturing agent sessions)")
         else:
-            print("💡 Entire.io: DISABLED (use --enable-entire to enable session capture)")
+            print("📹 Entire.io: DISABLED (set entire_io.enabled=false in config)")
 
     # Warn if skipping quality
     if skip_quality:

@@ -1382,32 +1382,9 @@ Refactor the implementation now. Keep behavior identical.
         import subprocess
         import uuid
 
-        # Check if entire.io integration is enabled in config (OPT-IN)
-        if not self.config.get("entire_io.enabled", False):
+        # Check if entire.io integration is enabled in config (ENABLED BY DEFAULT)
+        if not self.config.get("entire_io.enabled", True):
             self.entire_enabled = False
-
-            # Check if entire CLI is available to show recommendation
-            try:
-                result = subprocess.run(
-                    ["entire", "--version"],
-                    capture_output=True,
-                    timeout=5
-                )
-                if result.returncode == 0:
-                    # Entire is available but not enabled - recommend it
-                    self.discoveries.append({
-                        "description": (
-                            "💡 Entire.io available but not enabled. "
-                            "Enable agent session capture for debugging & learning: "
-                            "Set entire_io.enabled=true in wfc.config.json or use --enable-entire flag. "
-                            "Learn more: docs/ENTIRE_IO.md"
-                        ),
-                        "severity": "info"
-                    })
-            except (FileNotFoundError, subprocess.TimeoutExpired):
-                # Entire not available, silently skip
-                pass
-
             return
 
         try:
