@@ -403,6 +403,8 @@ MIT License - see [LICENSE](LICENSE) for details.
 
 Built on [Claude Code](https://claude.ai/code)'s agent framework. Inspired by ensemble methods in machine learning and the wisdom of diverse expert panels.
 
+Special thanks to [SuperClaude](https://github.com/chadbrewbaker/SuperClaude) for pioneering multi-agent patterns and demonstrating the power of specialized personas working in concert. Their confidence-first approach and agent orchestration patterns heavily influenced WFC's architecture.
+
 ---
 
 <div align="center">
