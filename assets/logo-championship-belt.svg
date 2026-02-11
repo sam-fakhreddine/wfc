@@ -27,7 +27,7 @@
     </radialGradient>
   </defs>
 
-  <!-- Main Belt Base (wider center, tapered sides) -->
+  <!-- Main Belt Base -->
   <!-- Left side plate -->
   <path d="M 10 100 L 150 80 L 150 220 L 10 200 Z" fill="url(#darkGold)" stroke="#8B6914" stroke-width="2"/>
   <rect x="10" y="100" width="140" height="100" fill="url(#goldGrad)" opacity="0.7"/>
@@ -45,14 +45,12 @@
   <ellipse cx="400" cy="150" rx="275" ry="135" fill="none" stroke="#B8860B" stroke-width="4"/>
   <ellipse cx="400" cy="150" rx="260" ry="120" fill="none" stroke="#FFD700" stroke-width="2" stroke-dasharray="5,5"/>
 
-  <!-- Side plate decorative hexagons (agent network theme) -->
-  <!-- Left plate hexagons -->
+  <!-- Side plate decorative hexagons -->
   <g transform="translate(80, 150)">
     <polygon points="0,-15 13,-7.5 13,7.5 0,15 -13,7.5 -13,-7.5" fill="url(#wfcGrad)" opacity="0.8"/>
     <polygon points="0,-12 10,-6 10,6 0,12 -10,6 -10,-6" fill="none" stroke="#FFD700" stroke-width="1.5"/>
   </g>
 
-  <!-- Right plate hexagons -->
   <g transform="translate(720, 150)">
     <polygon points="0,-15 13,-7.5 13,7.5 0,15 -13,7.5 -13,-7.5" fill="url(#wfcGrad)" opacity="0.8"/>
     <polygon points="0,-12 10,-6 10,6 0,12 -10,6 -10,-6" fill="none" stroke="#FFD700" stroke-width="1.5"/>
@@ -60,7 +58,6 @@
 
   <!-- Laurel Wreath (left side) -->
   <g transform="translate(200, 150)">
-    <!-- Left laurel leaves -->
     <path d="M -50 -40 Q -60 -30 -55 -20 Q -50 -10 -60 0 Q -55 10 -50 20 Q -45 30 -50 40"
           fill="none" stroke="#228B22" stroke-width="4" stroke-linecap="round"/>
     <ellipse cx="-52" cy="-30" rx="8" ry="12" fill="#2E7D32" transform="rotate(-20 -52 -30)"/>
@@ -71,7 +68,6 @@
 
   <!-- Laurel Wreath (right side) -->
   <g transform="translate(600, 150)">
-    <!-- Right laurel leaves -->
     <path d="M 50 -40 Q 60 -30 55 -20 Q 50 -10 60 0 Q 55 10 50 20 Q 45 30 50 40"
           fill="none" stroke="#228B22" stroke-width="4" stroke-linecap="round"/>
     <ellipse cx="52" cy="-30" rx="8" ry="12" fill="#2E7D32" transform="rotate(20 52 -30)"/>
@@ -84,14 +80,13 @@
   <g transform="translate(400, 40)">
     <polygon points="-30,0 -20,-20 -10,0 0,-25 10,0 20,-20 30,0 25,10 -25,10"
              fill="url(#goldGrad)" stroke="#B8860B" stroke-width="2"/>
-    <!-- Crown jewels (purple-cyan) -->
     <circle cx="-20" cy="-15" r="4" fill="url(#wfcGrad)"/>
     <circle cx="0" cy="-20" r="5" fill="url(#wfcGrad)"/>
     <circle cx="20" cy="-15" r="4" fill="url(#wfcGrad)"/>
   </g>
 
   <!-- Hexagonal Network Pattern (center, behind text) -->
-  <g opacity="0.15">
+  <g opacity="0.12">
     <!-- Top row -->
     <polygon points="400,-20 420,-10 420,10 400,20 380,10 380,-10" fill="url(#wfcGrad)" transform="translate(-60, 120)"/>
     <polygon points="400,-20 420,-10 420,10 400,20 380,10 380,-10" fill="url(#wfcGrad)" transform="translate(0, 120)"/>
@@ -109,53 +104,60 @@
     <polygon points="400,-20 420,-10 420,10 400,20 380,10 380,-10" fill="url(#wfcGrad)" transform="translate(60, 180)"/>
   </g>
 
-  <!-- Main Text: WFC -->
-  <text x="400" y="170" font-family="Arial Black, sans-serif" font-size="90" font-weight="900"
-        text-anchor="middle" fill="url(#wfcGrad)" stroke="#1a1a1a" stroke-width="3">
+  <!-- Main Text: WFC (Better font and spacing) -->
+  <!-- Text shadow for depth -->
+  <text x="400" y="165" font-family="Impact, 'Arial Black', sans-serif" font-size="110" font-weight="900"
+        text-anchor="middle" fill="#000000" opacity="0.3" letter-spacing="5">
     WFC
   </text>
-  <text x="400" y="170" font-family="Arial Black, sans-serif" font-size="90" font-weight="900"
-        text-anchor="middle" fill="url(#wfcGrad)">
+  <!-- Main text with stroke -->
+  <text x="400" y="162" font-family="Impact, 'Arial Black', sans-serif" font-size="110" font-weight="900"
+        text-anchor="middle" fill="url(#wfcGrad)" stroke="#1a1a1a" stroke-width="4" letter-spacing="5">
+    WFC
+  </text>
+  <!-- Highlight -->
+  <text x="400" y="162" font-family="Impact, 'Arial Black', sans-serif" font-size="110" font-weight="900"
+        text-anchor="middle" fill="url(#wfcGrad)" letter-spacing="5">
     WFC
   </text>
 
-  <!-- Subtitle: WORLD CLASS -->
-  <text x="400" y="210" font-family="Arial, sans-serif" font-size="20" font-weight="700"
-        text-anchor="middle" fill="#1a1a1a" letter-spacing="8">
+  <!-- Subtitle: WORLD CLASS (Better spacing) -->
+  <text x="400" y="218" font-family="'Arial Black', sans-serif" font-size="22" font-weight="900"
+        text-anchor="middle" fill="#1a1a1a" letter-spacing="12">
     WORLD CLASS
   </text>
-  <text x="400" y="210" font-family="Arial, sans-serif" font-size="20" font-weight="700"
-        text-anchor="middle" fill="url(#goldGrad)" letter-spacing="8">
+  <text x="400" y="218" font-family="'Arial Black', sans-serif" font-size="22" font-weight="900"
+        text-anchor="middle" fill="url(#goldGrad)" letter-spacing="12">
     WORLD CLASS
   </text>
 
-  <!-- Agent Count Badge (54 EXPERTS) -->
-  <g transform="translate(400, 250)">
-    <rect x="-60" y="-15" width="120" height="30" rx="15" fill="#1a1a1a" stroke="url(#goldGrad)" stroke-width="2"/>
-    <text x="0" y="5" font-family="Arial, sans-serif" font-size="14" font-weight="700"
-          text-anchor="middle" fill="url(#goldGrad)">
+  <!-- Agent Count Badge (54 EXPERTS) - Better spacing -->
+  <g transform="translate(400, 258)">
+    <rect x="-65" y="-16" width="130" height="32" rx="16" fill="#1a1a1a" stroke="url(#goldGrad)" stroke-width="2.5"/>
+    <text x="0" y="6" font-family="'Arial Black', sans-serif" font-size="15" font-weight="900"
+          text-anchor="middle" fill="url(#goldGrad)" letter-spacing="2">
       54 EXPERT AGENTS
     </text>
   </g>
 
-  <!-- Side plate decorative text -->
-  <text x="80" y="120" font-family="Arial, sans-serif" font-size="12" font-weight="700"
-        text-anchor="middle" fill="#1a1a1a">MULTI</text>
-  <text x="80" y="135" font-family="Arial, sans-serif" font-size="12" font-weight="700"
-        text-anchor="middle" fill="#1a1a1a">AGENT</text>
-  <text x="80" y="165" font-family="Arial, sans-serif" font-size="12" font-weight="700"
-        text-anchor="middle" fill="#1a1a1a">CODE</text>
-  <text x="80" y="180" font-family="Arial, sans-serif" font-size="12" font-weight="700"
-        text-anchor="middle" fill="#1a1a1a">REVIEW</text>
+  <!-- Side plate decorative text (Better font and spacing) -->
+  <text x="80" y="118" font-family="'Arial Black', sans-serif" font-size="13" font-weight="900"
+        text-anchor="middle" fill="#1a1a1a" letter-spacing="1">MULTI</text>
+  <text x="80" y="138" font-family="'Arial Black', sans-serif" font-size="13" font-weight="900"
+        text-anchor="middle" fill="#1a1a1a" letter-spacing="1">AGENT</text>
+  <text x="80" y="168" font-family="'Arial Black', sans-serif" font-size="13" font-weight="900"
+        text-anchor="middle" fill="#1a1a1a" letter-spacing="1">CODE</text>
+  <text x="80" y="188" font-family="'Arial Black', sans-serif" font-size="13" font-weight="900"
+        text-anchor="middle" fill="#1a1a1a" letter-spacing="1">REVIEW</text>
 
-  <text x="720" y="120" font-family="Arial, sans-serif" font-size="12" font-weight="700"
-        text-anchor="middle" fill="#1a1a1a">CONSENSUS</text>
-  <text x="720" y="135" font-family="Arial, sans-serif" font-size="12" font-weight="700"
-        text-anchor="middle" fill="#1a1a1a">DRIVEN</text>
-  <text x="720" y="165" font-family="Arial, sans-serif" font-size="12" font-weight="700"
-        text-anchor="middle" fill="#1a1a1a">QUALITY</text>
-  <text x="720" y="180" font-family="Arial, sans-serif" font-size="12" font-weight="700"
-        text-anchor="middle" fill="#1a1a1a">ASSURED</text>
+  <text x="720" y="118" font-family="'Arial Black', sans-serif" font-size="11" font-weight="900"
+        text-anchor="middle" fill="#1a1a1a" letter-spacing="0.5">CONSENSUS</text>
+  <text x="720" y="138" font-family="'Arial Black', sans-serif" font-size="11" font-weight="900"
+        text-anchor="middle" fill="#1a1a1a" letter-spacing="0.5">DRIVEN</text>
+  <text x="720" y="168" font-family="'Arial Black', sans-serif" font-size="11" font-weight="900"
+        text-anchor="middle" fill="#1a1a1a" letter-spacing="0.5">QUALITY</text>
+  <text x="720" y="188" font-family="'Arial Black', sans-serif" font-size="11" font-weight="900"
+        text-anchor="middle" fill="#1a1a1a" letter-spacing="0.5">ASSURED</text>
 
   <!-- Decorative rivets/studs on belt -->
   <circle cx="140" cy="90" r="8" fill="url(#darkGold)" stroke="#FFD700" stroke-width="2"/>
@@ -163,7 +165,7 @@
   <circle cx="660" cy="90" r="8" fill="url(#darkGold)" stroke="#FFD700" stroke-width="2"/>
   <circle cx="660" cy="210" r="8" fill="url(#darkGold)" stroke="#FFD700" stroke-width="2"/>
 
-  <!-- Stars for prestige (top corners of center plate) -->
+  <!-- Stars for prestige -->
   <g transform="translate(180, 80)">
     <polygon points="0,-10 2.5,-3 10,-3 4,2 6,10 0,5 -6,10 -4,2 -10,-3 -2.5,-3"
              fill="url(#goldGrad)" stroke="#B8860B" stroke-width="1"/>

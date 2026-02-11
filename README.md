@@ -21,19 +21,27 @@ WFC isn't just another code review tool—it's a **panel of 54 expert AI persona
 
 ## 💥 The Problem
 
-You push code. Claude reviews it. One perspective. One opinion. One chance to miss that **critical security flaw**, that **performance bottleneck**, that **architectural landmine**.
+Traditional development: one developer, one perspective, one chance to miss that **critical security flaw**, that **performance bottleneck**, that **architectural landmine**.
 
-**What if you had an entire engineering team review your code—every single commit?**
+Solo coding means solo risk.
+
+**What if you had an entire engineering team—from planning through review?**
 
 ## ✨ The WFC Solution
 
-WFC assembles a **dream team of specialists** for every code review:
+WFC gives you a **complete engineering team** for your entire workflow:
+
+**📋 Planning** - Structured task breakdown with dependencies and properties
+**⚙️ Implementation** - Parallel TDD agents in isolated worktrees
+**🔍 Review** - 54 expert personas, 5 per review, true consensus
+
+**Not just review. The whole workflow. In parallel. World-class.**
+
+Your specialists:
 - 🛡️ Security experts who've seen every attack vector
 - 🏗️ Architects who spot design flaws instantly
 - ⚡ Performance engineers who catch N+1s before production
 - 🔬 Quality specialists who demand excellence
-
-**All reviewing your code. In parallel. Right now.**
 
 ## 🎯 The WFC Difference
 
@@ -41,20 +49,22 @@ WFC assembles a **dream team of specialists** for every code review:
 <tr>
 <td width="50%">
 
-### 😴 Traditional Code Review
-- Single reviewer, single perspective
-- Sequential reviews = slow feedback
+### 😴 Traditional Development
+- Single developer, single perspective
+- Sequential: plan → code → review
 - Anchoring bias in team reviews
 - Miss edge cases & security holes
 - Reviewer fatigue & blind spots
+- One reviewer per PR
 
 </td>
 <td width="50%">
 
-### 🔥 WFC Multi-Agent Review
+### 🔥 WFC Team Workflow
+- **Complete workflow**: plan → implement → review
+- **Parallel TDD agents** in isolated worktrees
 - **54 expert personas**, 5 per review
-- **True parallel** execution
-- **Zero bias**—independent opinions
+- **Zero bias**—independent consensus
 - **Multi-domain** coverage guaranteed
 - **Never tired**, always thorough
 
@@ -66,20 +76,27 @@ WFC assembles a **dream team of specialists** for every code review:
 
 ```mermaid
 graph LR
-    A[Your Code] --> B[WFC Analyzer]
-    B --> C[Select 5 Experts]
-    C --> D1[Security Expert]
-    C --> D2[Architect]
-    C --> D3[Performance Pro]
-    C --> D4[Code Reviewer]
-    C --> D5[Domain Expert]
-    D1 --> E[Consensus Engine]
-    D2 --> E
-    D3 --> E
-    D4 --> E
-    D5 --> E
-    E --> F[Weighted Decision]
-    F --> G[Ship It! 🚀]
+    A[Your Idea] --> B[📋 wfc:plan]
+    B --> C[TASKS.md + Properties]
+    C --> D[⚙️ wfc:implement]
+    D --> E1[Agent 1: TDD]
+    D --> E2[Agent 2: TDD]
+    D --> E3[Agent N: TDD]
+    E1 --> F[🔍 wfc:review]
+    E2 --> F
+    E3 --> F
+    F --> G1[Security Expert]
+    F --> G2[Architect]
+    F --> G3[Performance Pro]
+    F --> G4[Code Reviewer]
+    F --> G5[Domain Expert]
+    G1 --> H[Consensus Engine]
+    G2 --> H
+    G3 --> H
+    G4 --> H
+    G5 --> H
+    H --> I[Weighted Decision]
+    I --> J[Ship It! 🚀]
 ```
 
 **Intelligence baked in:**
