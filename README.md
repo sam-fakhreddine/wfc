@@ -1,11 +1,6 @@
 <div align="center">
 
-```
-╦ ╦╔═╗╔═╗
-║║║╠╣ ║
-╚╩╝╚  ╚═╝
-WORLD FUCKING CLASS
-```
+<img src="assets/logo-full.svg" alt="WFC - World Fucking Class" width="500">
 
 # 🚀 The Multi-Agent Framework That Doesn't Fuck Around
 

@@ -1,0 +1,36 @@
+<svg width="64" height="64" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="grad-compact" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#7C3AED;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#06B6D4;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+
+  <!-- Hexagonal badge background -->
+  <path d="M 32 4 L 56 18 L 56 46 L 32 60 L 8 46 L 8 18 Z"
+        fill="url(#grad-compact)"/>
+
+  <!-- Inner hexagon (darker) -->
+  <path d="M 32 12 L 48 22 L 48 42 L 32 52 L 16 42 L 16 22 Z"
+        fill="#1E293B"
+        opacity="0.3"/>
+
+  <!-- "W" stylized -->
+  <g transform="translate(16, 22)">
+    <text x="0" y="0"
+          font-family="Inter, -apple-system, sans-serif"
+          font-size="24"
+          font-weight="900"
+          fill="#FFFFFF"
+          letter-spacing="-1">
+      W
+    </text>
+  </g>
+
+  <!-- Network dots (representing agents) -->
+  <circle cx="32" cy="32" r="2" fill="#FFFFFF" opacity="0.9"/>
+  <circle cx="24" cy="28" r="1.5" fill="#FFFFFF" opacity="0.6"/>
+  <circle cx="40" cy="28" r="1.5" fill="#FFFFFF" opacity="0.6"/>
+  <circle cx="24" cy="36" r="1.5" fill="#FFFFFF" opacity="0.6"/>
+  <circle cx="40" cy="36" r="1.5" fill="#FFFFFF" opacity="0.6"/>
+</svg>
