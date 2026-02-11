@@ -665,21 +665,74 @@ class WFCAgent:
 
     def _make_commit(self, message: str, files: List[str], commit_type: str) -> None:
         """
-        Make a commit.
+        Make a commit in the worktree.
 
         Args:
             message: Commit message
             files: Files changed
             commit_type: "test", "implementation", "refactor"
         """
-        # Phase 1: Using mock commits (actual git commits in Phase 2)
-        # Record commit for tracking
-        self.commits.append({
-            "sha": "placeholder-sha",
-            "message": message,
-            "files_changed": files,
-            "type": commit_type
-        })
+        import subprocess
+
+        try:
+            # Stage files
+            if files:
+                for file in files:
+                    subprocess.run(
+                        ["git", "add", file],
+                        cwd=self.worktree_path,
+                        check=True,
+                        capture_output=True
+                    )
+            else:
+                # Stage all changes if no specific files
+                subprocess.run(
+                    ["git", "add", "-A"],
+                    cwd=self.worktree_path,
+                    check=True,
+                    capture_output=True
+                )
+
+            # Create commit with task ID in message
+            commit_message = f"{message} [{self.task.id}]"
+            result = subprocess.run(
+                ["git", "commit", "-m", commit_message],
+                cwd=self.worktree_path,
+                check=True,
+                capture_output=True,
+                text=True
+            )
+
+            # Get the commit SHA
+            sha_result = subprocess.run(
+                ["git", "rev-parse", "HEAD"],
+                cwd=self.worktree_path,
+                check=True,
+                capture_output=True,
+                text=True
+            )
+            commit_sha = sha_result.stdout.strip()
+
+            # Record commit
+            self.commits.append({
+                "sha": commit_sha,
+                "message": commit_message,
+                "files_changed": files,
+                "type": commit_type
+            })
+
+        except subprocess.CalledProcessError as e:
+            # If commit fails (e.g., nothing to commit), record without SHA
+            self.discoveries.append({
+                "description": f"Git commit failed: {e.stderr}",
+                "severity": "warning"
+            })
+            self.commits.append({
+                "sha": "no-commit",
+                "message": message,
+                "files_changed": files,
+                "type": commit_type
+            })
 
     def _get_test_results(self) -> Dict[str, Any]:
         """Get test results.
