@@ -55,3 +55,8 @@ wfc-*-prompt.md
 *PROGRESS*.md
 *DEMONSTRATION*.md
 *BUILD_COMPLETE*.md
+
+# Entire.io session data (local-only by default, privacy-first)
+.entire/
+entire/checkpoints/
+*.entire.json

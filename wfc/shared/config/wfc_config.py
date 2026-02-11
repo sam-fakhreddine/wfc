@@ -65,6 +65,36 @@ class WFCConfig:
                 "task_type_weight": 0.1,
                 "domain_weight": 0.05
             }
+        },
+        "entire_io": {
+            "enabled": True,
+            "local_only": True,
+            "create_checkpoints": True,
+            "checkpoint_phases": [
+                "UNDERSTAND",
+                "TEST_FIRST",
+                "IMPLEMENT",
+                "REFACTOR",
+                "QUALITY_CHECK",
+                "SUBMIT"
+            ],
+            "privacy": {
+                "redact_secrets": True,
+                "max_file_size": 100000,
+                "exclude_patterns": [
+                    "*.env",
+                    "*.key",
+                    "*.pem",
+                    "*secret*",
+                    "*credential*",
+                    ".claude/*"
+                ],
+                "capture_env": False
+            },
+            "retention": {
+                "max_sessions": 100,
+                "auto_cleanup": True
+            }
         }
     }
 

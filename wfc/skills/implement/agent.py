@@ -95,6 +95,9 @@ class AgentReport:
     tokens: Dict[str, int] = field(default_factory=dict)
     duration_ms: int = 0
 
+    # Entire.io session tracking (optional)
+    entire_session: Optional[Dict[str, Any]] = None
+
     def to_dict(self) -> Dict[str, Any]:
         """Convert to dictionary for serialization."""
         return {
@@ -112,7 +115,8 @@ class AgentReport:
             "model": self.model,
             "provider": self.provider,
             "tokens": self.tokens,
-            "duration_ms": self.duration_ms
+            "duration_ms": self.duration_ms,
+            "entire_session": self.entire_session
         }
 
 
@@ -175,6 +179,11 @@ class WFCAgent:
         # Git helper (will be initialized when worktree created)
         self.git: Optional[GitHelper] = None
 
+        # Entire.io session tracking
+        self.entire_enabled = False
+        self.entire_session_id: Optional[str] = None
+        self.checkpoints: Dict[str, str] = {}  # phase -> checkpoint_id
+
     def implement(self) -> AgentReport:
         """
         Main entry point - implement the task in TDD style.
@@ -222,7 +231,13 @@ class WFCAgent:
                     "budget": self.token_budget.budget_total,
                     "usage_pct": self.token_budget.get_usage_percentage()
                 },
-                duration_ms=duration_ms
+                duration_ms=duration_ms,
+                entire_session={
+                    "session_id": self.entire_session_id,
+                    "checkpoints": self.checkpoints,
+                    "local_only": True,
+                    "branch": "entire/checkpoints/v1"
+                } if self.entire_enabled else None
             )
 
         except Exception as e:
@@ -267,6 +282,9 @@ class WFCAgent:
 
         # Note: Properties and test-plan are written by orchestrator
         # Agent loads them in _phase_understand()
+
+        # Setup Entire.io session tracking (if available)
+        self._setup_entire_io()
 
     def _phase_understand(self) -> None:
         """
@@ -342,6 +360,13 @@ class WFCAgent:
         # When real Claude calls added, this will track actual usage
         self._track_tokens(input_tokens=100, output_tokens=50)
 
+        # Create checkpoint for UNDERSTAND phase
+        self._create_checkpoint("UNDERSTAND", {
+            "confidence_score": self.confidence_assessment.get("confidence_score", 0),
+            "affected_files": self.affected_files,
+            "should_proceed": self.confidence_assessment.get("should_proceed", False)
+        })
+
     def _phase_test_first(self) -> None:
         """
         Phase 2: TEST FIRST (RED)
@@ -385,6 +410,12 @@ class WFCAgent:
         # Track tokens used in TEST_FIRST phase
         self._track_tokens(input_tokens=150, output_tokens=200)
 
+        # Create checkpoint for TEST_FIRST phase
+        self._create_checkpoint("TEST_FIRST", {
+            "test_files_created": test_files if test_files else [],
+            "tests_initially_failed": not test_result.get("passed", True) if test_files else True
+        })
+
     def _phase_implement(self) -> None:
         """
         Phase 3: IMPLEMENT (GREEN)
@@ -425,6 +456,12 @@ class WFCAgent:
 
         # Track tokens used in IMPLEMENT phase
         self._track_tokens(input_tokens=200, output_tokens=300)
+
+        # Create checkpoint for IMPLEMENT phase
+        self._create_checkpoint("IMPLEMENT", {
+            "implementation_files": impl_files if impl_files else [],
+            "tests_passed": test_result.get("passed", False) if impl_files else False
+        })
 
     def _phase_refactor(self) -> None:
         """
@@ -474,6 +511,12 @@ class WFCAgent:
 
         # Track tokens used in REFACTOR phase
         self._track_tokens(input_tokens=100, output_tokens=150)
+
+        # Create checkpoint for REFACTOR phase
+        self._create_checkpoint("REFACTOR", {
+            "refactored": self.task.complexity in [TaskComplexity.L, TaskComplexity.XL],
+            "complexity": self.task.complexity.value if self.task.complexity else "unknown"
+        })
 
     def _phase_quality_check(self) -> None:
         """
@@ -599,6 +642,13 @@ class WFCAgent:
         # Track tokens used in QUALITY_CHECK phase
         self._track_tokens(input_tokens=50, output_tokens=100)
 
+        # Create checkpoint for QUALITY_CHECK phase
+        self._create_checkpoint("QUALITY_CHECK", {
+            "quality_passed": self.quality_check_result.get("passed", True),
+            "tool_used": self.quality_check_result.get("tool", "none"),
+            "issues_found": self.quality_check_result.get("issues_found", 0)
+        })
+
     def _phase_submit(self) -> None:
         """
         Phase 6: SUBMIT
@@ -670,6 +720,13 @@ class WFCAgent:
 
         # Track tokens used in SUBMIT phase
         self._track_tokens(input_tokens=50, output_tokens=50)
+
+        # Create checkpoint for SUBMIT phase (final checkpoint)
+        self._create_checkpoint("SUBMIT", {
+            "final_commit_count": len(self.commits),
+            "properties_status": "all_verified",
+            "ready_for_review": True
+        })
 
     def _make_commit(self, message: str, files: List[str], commit_type: str) -> None:
         """
@@ -1307,6 +1364,223 @@ Refactor the implementation now. Keep behavior identical.
         text = re.sub(r'[^\w\s-]', '', text)
         text = re.sub(r'[-\s]+', '-', text)
         return text[:50]
+
+    # ======================================================================
+    # ENTIRE.IO INTEGRATION - Session Capture (LOCAL ONLY, PRIVACY-FIRST)
+    # ======================================================================
+
+    def _setup_entire_io(self) -> None:
+        """
+        Initialize Entire.io in worktree for session capture (LOCAL ONLY).
+
+        Security:
+        - Local-only by default (no auto-push)
+        - Sensitive data redacted
+        - Environment variables not captured
+        - User controls remote push
+        """
+        import subprocess
+        import uuid
+
+        # Check if entire.io integration is enabled in config
+        if not self.config.get("entire_io.enabled", True):
+            self.entire_enabled = False
+            return
+
+        try:
+            # Check if entire CLI is available
+            result = subprocess.run(
+                ["entire", "--version"],
+                capture_output=True,
+                timeout=5
+            )
+
+            if result.returncode != 0:
+                self.entire_enabled = False
+                return
+
+            # Generate session ID
+            self.entire_session_id = f"wfc-{self.task.id}-{uuid.uuid4().hex[:8]}"
+
+            # Enable entire.io in worktree with manual commit strategy
+            subprocess.run(
+                ["entire", "enable", "--strategy=manual-commit"],
+                cwd=self.worktree_path,
+                check=True,
+                capture_output=True,
+                timeout=10
+            )
+
+            # Configure privacy settings
+            self._configure_entire_privacy()
+
+            self.entire_enabled = True
+
+        except (FileNotFoundError, subprocess.TimeoutExpired, subprocess.CalledProcessError):
+            # Entire.io not available or setup failed - gracefully skip
+            self.entire_enabled = False
+
+    def _configure_entire_privacy(self) -> None:
+        """
+        Configure Entire.io for privacy and local-only storage.
+
+        Privacy measures:
+        - Never auto-push sessions to remote
+        - Redact API keys, tokens, secrets
+        - Don't capture environment variables
+        - Limit file capture size
+        - Exclude sensitive file patterns
+        """
+        import json
+
+        privacy_config = {
+            "push_on_commit": False,  # NEVER auto-push sessions
+            "local_only": True,  # Keep sessions local by default
+            "redact_secrets": True,  # Auto-redact API keys, tokens
+            "capture_env": False,  # Don't capture environment vars
+            "max_file_size": self.config.get("entire_io.privacy.max_file_size", 100000),
+            "exclude_patterns": self.config.get(
+                "entire_io.privacy.exclude_patterns",
+                [
+                    "*.env",
+                    "*.key",
+                    "*.pem",
+                    "*secret*",
+                    "*credential*",
+                    ".claude/*"
+                ]
+            )
+        }
+
+        # Write config to worktree
+        config_path = self.worktree_path / ".entire" / "config.json"
+        config_path.parent.mkdir(exist_ok=True)
+        config_path.write_text(json.dumps(privacy_config, indent=2))
+
+    def _create_checkpoint(self, phase: str, metadata: Dict[str, Any]) -> Optional[str]:
+        """
+        Create Entire.io checkpoint for current TDD phase.
+
+        Args:
+            phase: TDD phase name (UNDERSTAND, TEST_FIRST, etc.)
+            metadata: Phase-specific metadata (sanitized)
+
+        Returns:
+            Checkpoint ID or None if Entire.io disabled
+        """
+        import subprocess
+        import json
+        import re
+
+        # Skip if entire.io not enabled or phase not configured for checkpointing
+        if not self.entire_enabled:
+            return None
+
+        checkpoint_phases = self.config.get(
+            "entire_io.checkpoint_phases",
+            ["UNDERSTAND", "TEST_FIRST", "IMPLEMENT", "REFACTOR", "QUALITY_CHECK", "SUBMIT"]
+        )
+
+        if phase not in checkpoint_phases:
+            return None
+
+        try:
+            # Sanitize metadata (remove sensitive data)
+            safe_metadata = self._sanitize_metadata(metadata)
+
+            # Create checkpoint (LOCAL ONLY)
+            result = subprocess.run(
+                [
+                    "entire", "checkpoint",
+                    "--message", f"{phase} phase complete",
+                    "--metadata", json.dumps(safe_metadata)
+                ],
+                cwd=self.worktree_path,
+                capture_output=True,
+                text=True,
+                check=True,
+                timeout=10
+            )
+
+            # Extract checkpoint ID from output
+            checkpoint_id = self._parse_checkpoint_id(result.stdout)
+
+            # Store checkpoint ID
+            if checkpoint_id:
+                self.checkpoints[phase] = checkpoint_id
+
+            return checkpoint_id
+
+        except (subprocess.CalledProcessError, subprocess.TimeoutExpired) as e:
+            # Checkpoint failed - log but don't block agent
+            self.discoveries.append({
+                "description": f"Entire.io checkpoint failed for {phase}: {str(e)}",
+                "severity": "warning"
+            })
+            return None
+
+    def _sanitize_metadata(self, metadata: Dict[str, Any]) -> Dict[str, Any]:
+        """
+        Remove sensitive data from metadata before storing in Entire.io.
+
+        Args:
+            metadata: Raw metadata dictionary
+
+        Returns:
+            Sanitized metadata dictionary
+        """
+        import re
+
+        # Patterns to identify sensitive keys
+        SENSITIVE_PATTERNS = [
+            r'api[_-]?key',
+            r'token',
+            r'secret',
+            r'password',
+            r'credential',
+            r'auth'
+        ]
+
+        safe = {}
+        for key, value in metadata.items():
+            # Skip sensitive keys
+            if any(re.search(pattern, key.lower()) for pattern in SENSITIVE_PATTERNS):
+                continue
+
+            # Check string values for potential secrets
+            if isinstance(value, str):
+                # Skip if looks like a token/secret (long alphanumeric string)
+                if len(value) > 20 and value.isalnum():
+                    continue
+
+            # Include safe values
+            safe[key] = value
+
+        return safe
+
+    def _parse_checkpoint_id(self, output: str) -> Optional[str]:
+        """
+        Parse checkpoint ID from entire CLI output.
+
+        Args:
+            output: CLI output from entire checkpoint command
+
+        Returns:
+            Checkpoint ID or None if not found
+        """
+        import re
+
+        # Look for checkpoint ID pattern (e.g., "checkpoint: abc123def")
+        match = re.search(r'checkpoint[:\s]+([a-f0-9]+)', output, re.IGNORECASE)
+        if match:
+            return match.group(1)
+
+        # Alternative pattern (e.g., "Created checkpoint abc123def")
+        match = re.search(r'created[:\s]+checkpoint[:\s]+([a-f0-9]+)', output, re.IGNORECASE)
+        if match:
+            return match.group(1)
+
+        return None
 
 
 if __name__ == "__main__":

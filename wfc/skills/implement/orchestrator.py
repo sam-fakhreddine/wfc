@@ -145,6 +145,11 @@ class WFCOrchestrator:
             }
         )
 
+        # Aggregate session metadata (if any agents used Entire.io)
+        sessions_summary = self._aggregate_sessions()
+        if sessions_summary:
+            self.telemetry.add("entire_sessions", sessions_summary)
+
         # Record telemetry
         self.telemetry.add("result", result.to_dict())
         self.telemetry.save()
@@ -244,6 +249,27 @@ class WFCOrchestrator:
             if all(dep_id in self.completed for dep_id in task.dependencies):
                 self.ready_queue.append(task)
                 task.status = TaskStatus.QUEUED
+
+    def _aggregate_sessions(self) -> Dict[str, Any]:
+        """
+        Aggregate Entire.io session metadata from agent reports (NO DATA EXPOSURE).
+
+        Returns:
+            Dictionary with session metadata summary
+        """
+        sessions = {}
+
+        for task_id, report in self.agent_reports.items():
+            entire_session = report.get("entire_session")
+            if entire_session:
+                sessions[task_id] = {
+                    "session_id": entire_session.get("session_id"),
+                    "checkpoints": list(entire_session.get("checkpoints", {}).keys()),
+                    "local_only": True,  # Emphasize no remote push
+                    "branch": "entire/checkpoints/v1"
+                }
+
+        return sessions
 
 
 # Convenience function for presentation tier

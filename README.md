@@ -246,6 +246,10 @@ make doctor
 - ✅ **Memory System** - ReflexionMemory for cross-session learning
 - ✅ **Token Budgets** - Complexity-based with historical optimization
   - S: 200 tokens | M: 1K | L: 2.5K | XL: 5K
+- ✅ **Entire.io Integration** 🔒 - Agent session capture (local-only, privacy-first)
+  - Checkpoint each TDD phase for rewind & debugging
+  - Cross-session learning from past failures
+  - [Full docs](docs/ENTIRE_IO.md)
 
 </details>
 
