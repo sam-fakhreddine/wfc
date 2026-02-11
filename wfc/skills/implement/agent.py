@@ -29,6 +29,7 @@ import time
 from wfc.shared.config import WFCConfig
 from wfc.shared.schemas import Task, Property, TaskComplexity
 from wfc.shared.utils import GitHelper, ModelConfig
+from wfc.scripts.token_manager import TokenManager, TokenBudget
 
 
 class IssueSeverity(Enum):
@@ -164,6 +165,13 @@ class WFCAgent:
         self.affected_files: List[str] = []
         self.confidence_assessment: Optional[Dict[str, Any]] = None
 
+        # Token tracking
+        token_manager = TokenManager()
+        self.token_budget = token_manager.create_budget(
+            task_id=task.id,
+            complexity=task.complexity
+        )
+
         # Git helper (will be initialized when worktree created)
         self.git: Optional[GitHelper] = None
 
@@ -207,7 +215,13 @@ class WFCAgent:
                 discoveries=self.discoveries,
                 model=self._get_model().model_id,
                 provider=self._get_model().provider,
-                tokens={"input": 0, "output": 0, "total": 0},  # Phase 2: Token tracking via TokenManager
+                tokens={
+                    "input": self.token_budget.actual_input,
+                    "output": self.token_budget.actual_output,
+                    "total": self.token_budget.actual_total,
+                    "budget": self.token_budget.budget_total,
+                    "usage_pct": self.token_budget.get_usage_percentage()
+                },
                 duration_ms=duration_ms
             )
 
@@ -324,6 +338,10 @@ class WFCAgent:
         # MEMORY SEARCH (Learn from past mistakes - cross-session learning)
         self._search_past_errors()
 
+        # Track tokens used in UNDERSTAND phase (simulated for now)
+        # When real Claude calls added, this will track actual usage
+        self._track_tokens(input_tokens=100, output_tokens=50)
+
     def _phase_test_first(self) -> None:
         """
         Phase 2: TEST FIRST (RED)
@@ -364,6 +382,9 @@ class WFCAgent:
                 "test"
             )
 
+        # Track tokens used in TEST_FIRST phase
+        self._track_tokens(input_tokens=150, output_tokens=200)
+
     def _phase_implement(self) -> None:
         """
         Phase 3: IMPLEMENT (GREEN)
@@ -401,6 +422,9 @@ class WFCAgent:
                 impl_files,
                 "implementation"
             )
+
+        # Track tokens used in IMPLEMENT phase
+        self._track_tokens(input_tokens=200, output_tokens=300)
 
     def _phase_refactor(self) -> None:
         """
@@ -447,6 +471,9 @@ class WFCAgent:
         else:
             # Skip refactoring for simple tasks (S, M complexity)
             pass
+
+        # Track tokens used in REFACTOR phase
+        self._track_tokens(input_tokens=100, output_tokens=150)
 
     def _phase_quality_check(self) -> None:
         """
@@ -569,6 +596,9 @@ class WFCAgent:
                 "fixable_issues": 0
             }
 
+        # Track tokens used in QUALITY_CHECK phase
+        self._track_tokens(input_tokens=50, output_tokens=100)
+
     def _phase_submit(self) -> None:
         """
         Phase 6: SUBMIT
@@ -629,6 +659,9 @@ class WFCAgent:
                 self._get_all_modified_files(),
                 "final"
             )
+
+        # Track tokens used in SUBMIT phase
+        self._track_tokens(input_tokens=50, output_tokens=50)
 
     def _make_commit(self, message: str, files: List[str], commit_type: str) -> None:
         """
@@ -1089,6 +1122,31 @@ Refactor the implementation now. Keep behavior identical.
 
         # Default: treat as errors (safe default)
         return False
+
+    def _track_tokens(self, input_tokens: int, output_tokens: int) -> None:
+        """
+        Track token usage and check budgets.
+
+        Args:
+            input_tokens: Input tokens used
+            output_tokens: Output tokens used
+        """
+        from wfc.scripts.token_manager import TokenManager
+
+        token_manager = TokenManager()
+        self.token_budget = token_manager.update_usage(
+            self.token_budget,
+            input_tokens,
+            output_tokens
+        )
+
+        # Check for warnings
+        warning = token_manager.get_warning_message(self.token_budget)
+        if warning:
+            self.discoveries.append({
+                "description": warning,
+                "severity": "warning" if not self.token_budget.exceeded else "error"
+            })
 
     def _get_model(self) -> ModelConfig:
         """Get model configuration for this task."""

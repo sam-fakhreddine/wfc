@@ -12,7 +12,7 @@ do the actual implementation (that's the agents' job).
 from dataclasses import dataclass, field
 from enum import Enum
 from pathlib import Path
-from typing import List, Dict, Optional, Set
+from typing import List, Dict, Optional, Set, Any
 import time
 
 from wfc.shared.config import WFCConfig
@@ -90,6 +90,7 @@ class WFCOrchestrator:
         self.in_progress: Dict[str, Task] = {}
         self.completed: Set[str] = set()
         self.failed: Set[str] = set()
+        self.agent_reports: Dict[str, Dict[str, Any]] = {}  # Store agent reports for aggregation
 
         # Telemetry
         self.telemetry = TelemetryRecord("implement", run_id=self._generate_run_id())
@@ -122,13 +123,25 @@ class WFCOrchestrator:
         duration_ms = int((time.time() - start_time) * 1000)
 
         # Build result
+        # Aggregate tokens from all agent reports
+        total_input = 0
+        total_output = 0
+        for report in self.agent_reports.values():
+            tokens = report.get("tokens", {})
+            total_input += tokens.get("input", 0)
+            total_output += tokens.get("output", 0)
+
         result = RunResult(
             run_id=self.telemetry.data.get("run_id", "unknown"),
             tasks_completed=len(self.completed),
             tasks_failed=len(self.failed),
             tasks_rolled_back=0,  # Phase 2: Track via merge_engine rollback events
             duration_ms=duration_ms,
-            total_tokens={"input": 0, "output": 0, "total": 0}  # Phase 2: Aggregate from agent reports
+            total_tokens={
+                "input": total_input,
+                "output": total_output,
+                "total": total_input + total_output
+            }
         )
 
         # Record telemetry
@@ -179,14 +192,19 @@ class WFCOrchestrator:
             return None
         return self.ready_queue.pop(0)
 
-    def mark_task_complete(self, task_id: str) -> None:
+    def mark_task_complete(self, task_id: str, agent_report: Optional[Dict[str, Any]] = None) -> None:
         """
         Mark task as complete and promote dependent tasks.
 
         Args:
             task_id: Task that completed
+            agent_report: Optional agent report for token aggregation
         """
         self.completed.add(task_id)
+
+        # Store agent report for token aggregation
+        if agent_report:
+            self.agent_reports[task_id] = agent_report
 
         # Remove from in_progress
         if task_id in self.in_progress:
