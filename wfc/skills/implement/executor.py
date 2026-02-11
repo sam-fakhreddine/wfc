@@ -107,8 +107,13 @@ class ExecutionEngine:
             worktree_path=Path(report.worktree_path)
         )
 
+        # Track rollbacks
+        from .merge_engine import MergeStatus
+        if merge_result.status == MergeStatus.ROLLED_BACK:
+            self.orchestrator.rollback_count += 1
+
         if merge_result.integration_tests_passed:
-            self.orchestrator.mark_task_complete(task.id)
+            self.orchestrator.mark_task_complete(task.id, report.to_dict())
         else:
             self.orchestrator.mark_task_failed(task.id)
 

@@ -91,6 +91,7 @@ class WFCOrchestrator:
         self.completed: Set[str] = set()
         self.failed: Set[str] = set()
         self.agent_reports: Dict[str, Dict[str, Any]] = {}  # Store agent reports for aggregation
+        self.rollback_count: int = 0  # Track rollback events
 
         # Telemetry
         self.telemetry = TelemetryRecord("implement", run_id=self._generate_run_id())
@@ -135,7 +136,7 @@ class WFCOrchestrator:
             run_id=self.telemetry.data.get("run_id", "unknown"),
             tasks_completed=len(self.completed),
             tasks_failed=len(self.failed),
-            tasks_rolled_back=0,  # Phase 2: Track via merge_engine rollback events
+            tasks_rolled_back=self.rollback_count,  # Actual rollback events from merge_engine
             duration_ms=duration_ms,
             total_tokens={
                 "input": total_input,
