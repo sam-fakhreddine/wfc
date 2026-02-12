@@ -297,8 +297,31 @@ Done! ✅ Rate limiting added to API
 **INTENTIONAL:** Vibe coding + WFC guardrails = professional quality
 **DELEGATED:** Orchestrator NEVER implements, ALWAYS delegates
 
+## Git Safety Policy
+
+**CRITICAL:** WFC NEVER pushes to remote. User must push manually.
+
+```
+WFC workflow:
+  Build → Quality → Review → Merge to LOCAL main → Integration tests
+                                    ↓
+                            [WFC STOPS HERE]
+                                    ↓
+                         User reviews and pushes:
+                            git push origin main
+```
+
+**Why:**
+- ✅ User control before remote changes
+- ✅ Review merged result before push
+- ✅ Respects branch protection rules
+- ✅ Easy to revert before push
+- ✅ User decides: push, PR, or revert
+
+See [GIT_SAFETY_POLICY.md](../../../docs/GIT_SAFETY_POLICY.md) for complete policy.
+
 ---
 
 **This is Intentional Vibe.** 🎯
 
-Fast enough to flow. Structured enough to ship.
+Fast enough to flow. Structured enough to ship. Safe enough to trust.

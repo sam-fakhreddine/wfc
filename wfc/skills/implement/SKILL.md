@@ -168,6 +168,29 @@ Orchestrator
 **MULTI-TIER**: Presentation/Logic/Data/Config cleanly separated
 **PARALLEL**: Maximum concurrency where safe (agents, tasks, reviews)
 
+## Git Safety Policy
+
+**CRITICAL:** WFC NEVER pushes to remote. User must push manually.
+
+```
+WFC workflow:
+  Implement → Quality → Review → Merge to LOCAL main → Integration tests
+                                        ↓
+                                [WFC STOPS HERE]
+                                        ↓
+                             User reviews and pushes:
+                                git push origin main
+```
+
+**Why:**
+- ✅ User control before remote changes
+- ✅ Review merged result before push
+- ✅ Respects branch protection rules
+- ✅ Easy to revert before push
+- ✅ User decides: push, PR, or revert
+
+See [GIT_SAFETY_POLICY.md](../../../docs/GIT_SAFETY_POLICY.md) for complete policy.
+
 ## Current Implementation Status
 
 ### ✅ Done
