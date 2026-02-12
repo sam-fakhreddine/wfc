@@ -8,6 +8,7 @@ from dataclasses import dataclass
 from typing import List
 from pathlib import Path
 from .interview import InterviewResult
+from .ears import EARSPropertyMapper, EARSFormatter
 
 
 @dataclass
@@ -90,20 +91,31 @@ class PropertiesGenerator:
         return mapping.get(prop_type, [])
 
     def _render_markdown(self) -> str:
-        """Render properties as markdown"""
+        """Render properties as markdown with EARS format"""
         lines = [
             "# Formal Properties",
             "",
             "Properties that must hold across the implementation.",
+            "",
+            "**Format**: Using [EARS](https://alistairmavin.com/ears/) (Easy Approach to Requirements Syntax)",
             "",
             "---",
             "",
         ]
 
         for prop in self.properties:
+            # Convert property to EARS format
+            ears_req = EARSPropertyMapper.map_to_ears(
+                prop.type,
+                prop.statement,
+                system=self.result.goal if hasattr(self.result, 'goal') else "system"
+            )
+            ears_formatted = EARSFormatter.format(ears_req)
+
             lines.extend([
                 f"## {prop.id}: {prop.type}",
-                f"- **Statement**: {prop.statement}",
+                f"- **EARS Statement**: {ears_formatted}",
+                f"- **Original**: {prop.statement}",
                 f"- **Rationale**: {prop.rationale}",
                 f"- **Priority**: {prop.priority}",
                 f"- **Observables**: {', '.join(prop.observables)}",

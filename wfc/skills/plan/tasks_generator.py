@@ -8,6 +8,7 @@ from dataclasses import dataclass
 from typing import List, Dict, Any
 from pathlib import Path
 from .interview import InterviewResult
+from .ears import generate_acceptance_criteria_ears
 
 
 @dataclass
@@ -130,13 +131,9 @@ class TasksGenerator:
         return matched
 
     def _generate_acceptance_criteria(self, requirement: str) -> List[str]:
-        """Generate acceptance criteria for requirement"""
-        # Simplified - real implementation would be more intelligent
-        return [
-            "Implementation complete",
-            "Tests passing",
-            "Code reviewed"
-        ]
+        """Generate EARS-formatted acceptance criteria for requirement"""
+        # Use EARS format for clear, testable criteria
+        return generate_acceptance_criteria_ears(requirement, system=self.result.goal or "system")
 
     def _render_markdown(self) -> str:
         """Render tasks as markdown"""

@@ -44,9 +44,12 @@ Transform requirements into structured implementation plans:
 
 - **Task breakdown** - Dependencies, complexity, assignments
 - **Formal properties** - SAFETY, LIVENESS, PERFORMANCE requirements
+- **EARS format** - Clear, testable requirements using industry standard
 - **Test plans** - What to test and why
 
 **Output:** `TASKS.md`, `PROPERTIES.md`, `TEST-PLAN.md`
+
+**Uses [EARS](docs/EARS.md)** (Easy Approach to Requirements Syntax) for unambiguous, testable requirements developed by Rolls-Royce/Airbus for safety-critical systems.
 
 ### 2. Implementation (`/wfc:implement`)
 
