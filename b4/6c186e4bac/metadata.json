@@ -1,0 +1,49 @@
+{
+  "cli_version": "0.4.2",
+  "checkpoint_id": "b46c186e4bac",
+  "strategy": "manual-commit",
+  "branch": "main",
+  "checkpoints_count": 1,
+  "files_touched": [
+    "README.md",
+    "docs/WFC_BUILD.md",
+    "tests/TEST_SUMMARY_BUILD.md",
+    "tests/test_build_cli.py",
+    "tests/test_build_integration.py",
+    "tests/test_build_interview.py",
+    "tests/test_build_orchestrator.py",
+    "wfc/scripts/skills/build/interview.py",
+    "wfc/scripts/skills/build/orchestrator.py",
+    "wfc/shared/config/wfc_config.py",
+    "wfc/wfc-tools/gitwork/README.md",
+    "wfc/wfc-tools/gitwork/TOOL.md",
+    "wfc/wfc-tools/gitwork/__init__.py",
+    "wfc/wfc-tools/gitwork/api/__init__.py",
+    "wfc/wfc-tools/gitwork/api/branch.py",
+    "wfc/wfc-tools/gitwork/api/commit.py",
+    "wfc/wfc-tools/gitwork/api/history.py",
+    "wfc/wfc-tools/gitwork/api/hooks.py",
+    "wfc/wfc-tools/gitwork/api/merge.py",
+    "wfc/wfc-tools/gitwork/api/rollback.py",
+    "wfc/wfc-tools/gitwork/api/semver.py",
+    "wfc/wfc-tools/gitwork/api/worktree.py",
+    "wfc/wfc-tools/gitwork/config.py",
+    "wfc/wfc-tools/gitwork/router.py"
+  ],
+  "sessions": [
+    {
+      "metadata": "/b4/6c186e4bac/0/metadata.json",
+      "transcript": "/b4/6c186e4bac/0/full.jsonl",
+      "context": "/b4/6c186e4bac/0/context.md",
+      "content_hash": "/b4/6c186e4bac/0/content_hash.txt",
+      "prompt": "/b4/6c186e4bac/0/prompt.txt"
+    }
+  ],
+  "token_usage": {
+    "input_tokens": 282,
+    "cache_creation_tokens": 95655,
+    "cache_read_tokens": 3701967,
+    "output_tokens": 7317,
+    "api_call_count": 37
+  }
+}
