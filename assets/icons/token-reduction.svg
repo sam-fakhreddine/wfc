@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none">
+  <circle cx="32" cy="32" r="30" fill="#1E293B" stroke="#8B5CF6" stroke-width="2"/>
+
+  <!-- Down arrow (reduction) -->
+  <path d="M32 20 L32 44 M24 36 L32 44 L40 36" stroke="#8B5CF6" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+
+  <!-- 92% text -->
+  <text x="32" y="18" font-family="system-ui, -apple-system, sans-serif" font-size="10" font-weight="700" fill="#8B5CF6" text-anchor="middle">92%</text>
+</svg>

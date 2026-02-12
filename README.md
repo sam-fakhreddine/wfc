@@ -28,17 +28,9 @@ You write code alone, review happens at the end (if at all), and critical issues
 
 **An entire engineering team for your complete workflow.**
 
-```
-Your Idea
-    ↓
-Plan (wfc:plan) → Structured tasks, dependencies, formal properties
-    ↓
-Implement (wfc:implement) → Parallel TDD agents in isolated worktrees
-    ↓
-Review (wfc:review) → 54 experts, 5 per review, consensus decision
-    ↓
-Ship
-```
+<div align="center">
+<img src="assets/workflow-diagram.svg" alt="WFC Workflow: Plan → Implement → Review → Ship" width="800">
+</div>
 
 Not just review. **Planning, implementation, and review in one system.**
 
@@ -122,6 +114,39 @@ cd wfc
 # - SRE_SPECIALIST (Key rotation)
 # - PERF_TESTER (Response times)
 ```
+
+---
+
+## Key Features
+
+<div align="center">
+
+<table>
+<tr>
+<td align="center" width="200">
+<img src="assets/icons/parallel-execution.svg" width="80" height="80" alt="Parallel Execution">
+<br><strong>Parallel Execution</strong>
+<br><sub>Up to 5 agents working concurrently in isolated worktrees</sub>
+</td>
+<td align="center" width="200">
+<img src="assets/icons/smart-selection.svg" width="80" height="80" alt="Smart Selection">
+<br><strong>Smart Selection</strong>
+<br><sub>Auto-picks 5 relevant experts from 54 specialized personas</sub>
+</td>
+<td align="center" width="200">
+<img src="assets/icons/token-reduction.svg" width="80" height="80" alt="Token Reduction">
+<br><strong>92% Token Reduction</strong>
+<br><sub>Progressive disclosure loads only what you need</sub>
+</td>
+<td align="center" width="200">
+<img src="assets/icons/platform-compatibility.svg" width="80" height="80" alt="Platform Compatibility">
+<br><strong>8+ Platforms</strong>
+<br><sub>Works with Claude Code, Kiro, and all Agent Skills platforms</sub>
+</td>
+</tr>
+</table>
+
+</div>
 
 ---
 
@@ -292,7 +317,7 @@ Works in all Agent Skills platforms.
 
 Built on [Claude Code](https://claude.ai/code)'s agent framework. Inspired by ensemble methods in machine learning and the wisdom of diverse expert panels.
 
-Special thanks to [SuperClaude](https://github.com/chadbrewbaker/SuperClaude) for pioneering multi-agent patterns and demonstrating the power of specialized personas working in concert. Their confidence-first approach and agent orchestration patterns heavily influenced WFC's architecture.
+Special thanks to [SuperClaude](https://github.com/SuperClaude-Org/SuperClaude_Framework) for pioneering multi-agent patterns and demonstrating the power of specialized personas working in concert. Their confidence-first approach and agent orchestration patterns heavily influenced WFC's architecture.
 
 ---
 
