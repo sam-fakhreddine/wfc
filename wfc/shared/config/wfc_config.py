@@ -114,6 +114,17 @@ class WFCConfig:
             "protected_branches": ["main", "master"],  # Branches that trigger warnings
             "require_wfc_origin": False,  # Don't enforce WFC-only commits (yet)
         },
+        "build": {
+            "max_questions": 5,  # Maximum questions in quick interview
+            "auto_assess_complexity": True,  # Automatically assess complexity from interview
+            "dry_run_default": False,  # Default to actual implementation (not dry-run)
+            "xl_recommendation_threshold": 10,  # Files threshold for XL recommendation
+            "interview_timeout_seconds": 30,  # Max time for interview (PROP-008)
+            "enforce_tdd": True,  # Enforce TDD workflow (PROP-007)
+            "enforce_quality_gates": True,  # Enforce quality checks (PROP-001)
+            "enforce_review": True,  # Enforce consensus review (PROP-002)
+            "auto_push": False,  # Never auto-push to remote (PROP-003)
+        },
     }
 
     def __init__(self, project_root: Optional[Path] = None):
