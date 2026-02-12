@@ -19,6 +19,8 @@ Four specialized agents review code and reach consensus decision.
 4. **Complexity Agent (COMP)** - Complexity, architecture, ELEGANT principles
 5. **Consensus Algorithm** - Weighted voting with veto power
 
+**Enhanced with Systematic Checklist**: Each reviewer follows the 6-step review methodology from CHECKLIST.md (Understand Context → Functionality → Quality → Security → Performance → Tests) to ensure comprehensive, consistent reviews.
+
 ## Usage
 
 ```bash
@@ -45,6 +47,49 @@ Four specialized agents review code and reach consensus decision.
 2. **Overall score** = weighted average
 3. **Any critical severity** = automatic fail
 4. **Overall score >= 7.0** required to pass
+
+## Review Methodology
+
+Each reviewer follows the systematic 6-step checklist (see `CHECKLIST.md`):
+
+### 1. UNDERSTAND CONTEXT
+- Read task description, acceptance criteria, properties
+- Understand the "why" behind changes
+- Review test strategy
+
+### 2. REVIEW FUNCTIONALITY
+- Verify acceptance criteria met
+- Check edge case handling
+- Validate error handling and input validation
+
+### 3. REVIEW CODE QUALITY
+- Readability and naming conventions
+- ELEGANT principles compliance
+- SOLID/DRY principles
+- Function size and complexity
+
+### 4. REVIEW SECURITY
+- Input validation, SQL injection, XSS prevention
+- Authentication/authorization checks
+- No hardcoded secrets
+- Sensitive data protection
+
+### 5. REVIEW PERFORMANCE
+- N+1 query prevention
+- Algorithm efficiency
+- Memory management
+- Appropriate caching
+
+### 6. REVIEW TESTS
+- Coverage of happy path and edge cases
+- Property verification (SAFETY, LIVENESS, etc.)
+- Test quality and independence
+
+**Reviewer-Specific Focus**:
+- **CR**: Steps 2 (Functionality), 3 (Quality), 6 (Tests)
+- **SEC**: Steps 2 (Input validation), 4 (Security)
+- **PERF**: Steps 5 (Performance), 6 (Performance tests)
+- **COMP**: Step 3 (Complexity, ELEGANT principles)
 
 ## Output
 
