@@ -55,3 +55,11 @@ push it up!
 
 yep you passed the test
 
+### Prompt 8
+
+change my emails you use to sam.fakhreddine@gmail.com
+
+### Prompt 9
+
+yes
+
