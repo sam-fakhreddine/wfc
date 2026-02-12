@@ -211,6 +211,7 @@ NSFW [Default]       → World Fucking Class    [No Bullshit]
 
 | SKILL              | PURPOSE                       | OUTPUT                               |
 |:-------------------|:------------------------------|:-------------------------------------|
+| `wfc-vibe`         | Natural brainstorming mode    | Smooth transitions to planning       |
 | `wfc-build`        | Quick feature builder         | Implemented feature on local main    |
 | `wfc-plan`         | Structured task breakdown     | TASKS.md, PROPERTIES.md, TEST-PLAN.md|
 | `wfc-implement`    | Parallel TDD execution        | Merged code or rollback              |

@@ -125,6 +125,13 @@ class WFCConfig:
             "enforce_review": True,  # Enforce consensus review (PROP-002)
             "auto_push": False,  # Never auto-push to remote (PROP-003)
         },
+        "vibe": {
+            "reminder_frequency": [8, 12],  # Reminder every 8-12 messages (randomized)
+            "max_scope_suggestions": 1,  # Max 1 scope suggestion per conversation
+            "context_summarization_timeout": 5000,  # Max 5s for summarization (PROP-007)
+            "transition_preview": True,  # Show preview before transition
+            "auto_detect_scope": True,  # Automatically detect growing scope
+        },
     }
 
     def __init__(self, project_root: Optional[Path] = None):
