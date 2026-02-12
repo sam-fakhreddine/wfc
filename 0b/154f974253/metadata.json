@@ -1,0 +1,28 @@
+{
+  "cli_version": "0.4.2",
+  "checkpoint_id": "0b154f974253",
+  "strategy": "manual-commit",
+  "branch": "main",
+  "checkpoints_count": 1,
+  "files_touched": [
+    "docs/DOC_REGISTRY_USAGE.md",
+    "scripts/docs/generate_doc_registry.py",
+    "wfc/shared/doc_loader.py"
+  ],
+  "sessions": [
+    {
+      "metadata": "/0b/154f974253/0/metadata.json",
+      "transcript": "/0b/154f974253/0/full.jsonl",
+      "context": "/0b/154f974253/0/context.md",
+      "content_hash": "/0b/154f974253/0/content_hash.txt",
+      "prompt": "/0b/154f974253/0/prompt.txt"
+    }
+  ],
+  "token_usage": {
+    "input_tokens": 108,
+    "cache_creation_tokens": 13782,
+    "cache_read_tokens": 1075303,
+    "output_tokens": 1905,
+    "api_call_count": 13
+  }
+}
