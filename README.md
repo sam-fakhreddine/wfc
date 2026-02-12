@@ -1,83 +1,87 @@
 <div align="center">
 
-<img src="assets/logo-championship-belt.jpg" alt="WFC - World Fucking Class Championship Belt" width="700">
+<img src="assets/logo-championship-belt.jpg" alt="WFC Championship Belt" width="700">
 
-# The Multi-Agent Framework That Doesn't Fuck Around
+# WFC
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Python 3.9+](https://img.shields.io/badge/python-3.9+-blue.svg)](https://www.python.org/downloads/)
-[![Agent Skills](https://img.shields.io/badge/Agent-Skills-purple.svg)](https://agentskills.io)
+**Multi-Agent Development Framework**
 
-**From idea to production with a team of 54 AI experts.**
+[![License: MIT](https://img.shields.io/badge/License-MIT-1a1a1a.svg)](https://opensource.org/licenses/MIT)
+[![Python 3.9+](https://img.shields.io/badge/python-3.9+-0652DD.svg)](https://www.python.org/downloads/)
+[![Agent Skills](https://img.shields.io/badge/Agent_Skills-Standard-d63031.svg)](https://agentskills.io)
 
-WFC is a complete development workflow powered by specialized AI agents. Plan features, implement in parallel with TDD, and get multi-expert consensus reviews—all automated.
+**54 Expert AI Agents** • **Parallel Execution** • **EARS Requirements** • **92% Token Reduction**
 
-[Quick Start](#quick-start) • [Workflow](#the-wfc-workflow) • [Install](#installation) • [Docs](docs/)
+[Quick Start](#installation) • [Workflow](#workflow) • [Documentation](#documentation)
 
 </div>
 
 ---
 
-## The Problem
+## Overview
 
-Traditional development: one developer, one perspective, sequential execution.
+**Traditional Development**
+- One developer
+- One perspective
+- Sequential execution
+- Critical issues discovered late
 
-You write code alone, review happens at the end (if at all), and critical issues slip through. Security flaws, performance bottlenecks, architectural mistakes—all discovered too late.
+**WFC Solution**
+- Complete engineering team
+- 54 specialized experts
+- Parallel TDD agents
+- Multi-expert consensus review
 
-## The WFC Solution
+---
 
-**An entire engineering team for your complete workflow.**
+## Workflow
 
 <div align="center">
-<img src="assets/workflow-diagram.svg" alt="WFC Workflow: Plan → Implement → Review → Ship" width="800">
+<img src="assets/workflow-diagram.svg" alt="WFC Workflow" width="800">
 </div>
 
-Not just review. **Planning, implementation, and review in one system.**
+### ■ Phase 1: Planning
+
+**Command:** `/wfc-plan`
+
+**Generates:**
+- `TASKS.md` - Task breakdown with dependencies
+- `PROPERTIES.md` - Formal properties (SAFETY, LIVENESS, PERFORMANCE)
+- `TEST-PLAN.md` - Complete test strategy
+
+**Features:**
+- EARS format requirements (Rolls-Royce/Airbus standard)
+- Dependency graph (DAG)
+- Property-based test derivation
+
+### ■ Phase 2: Implementation
+
+**Command:** `/wfc-implement`
+
+**Executes:**
+- Up to 5 parallel TDD agents
+- Isolated git worktrees
+- Quality gates (linting, formatting, tests)
+- Automatic merge or rollback
+
+**Each Agent:**
+```
+Understand → Test First → Implement → Refactor → Quality Check → Submit
+```
+
+### ■ Phase 3: Review
+
+**Command:** `/wfc-review`
+
+**Process:**
+- Auto-selects 5 relevant experts from 54 personas
+- Independent parallel review (no anchoring bias)
+- Weighted consensus algorithm
+- Decision: Score ≥7.0 + no criticals = Ship
 
 ---
 
-## The WFC Workflow
-
-### 1. Planning (`/wfc-plan`)
-
-Transform requirements into structured implementation plans:
-
-- **Task breakdown** - Dependencies, complexity, assignments
-- **Formal properties** - SAFETY, LIVENESS, PERFORMANCE requirements
-- **EARS format** - Clear, testable requirements using industry standard
-- **Test plans** - What to test and why
-
-**Output:** `TASKS.md`, `PROPERTIES.md`, `TEST-PLAN.md`
-
-**Uses [EARS](docs/EARS.md)** (Easy Approach to Requirements Syntax) for unambiguous, testable requirements developed by Rolls-Royce/Airbus for safety-critical systems.
-
-### 2. Implementation (`/wfc-implement`)
-
-Execute tasks with parallel TDD agents:
-
-- **Parallel execution** - Up to 5 agents in isolated git worktrees
-- **TDD enforced** - Tests first, then implementation
-- **Quality gates** - Linting, formatting, tests before review
-- **Auto-merge** - Pass review → merge. Fail → rollback.
-
-**Each agent:** Understand → Test First → Implement → Refactor → Quality Check → Submit
-
-### 3. Review (`/wfc-review`)
-
-Multi-expert consensus code review:
-
-- **54 specialized personas** - Security, architecture, performance, quality
-- **Smart selection** - Auto-picks 5 relevant experts per review
-- **True independence** - No context sharing, zero anchoring bias
-- **Weighted consensus** - Security experts weigh more on auth code
-
-**Decision:** Overall score ≥7.0 + no criticals = Ship
-
----
-
-## Quick Start
-
-### Installation
+## Installation
 
 ```bash
 git clone https://github.com/sam-fakhreddine/wfc.git
@@ -85,101 +89,62 @@ cd wfc
 ./install-universal.sh
 ```
 
-**Detects and installs to:** Claude Code, Kiro, OpenCode, Cursor, VS Code, Codex, Antigravity
+**Installer detects and installs to:**
 
-**Branding Modes:**
-- **SFW** (Safe For Work) → "Workflow Champion" - Professional language
-- **NSFW** (Default) → "World Fucking Class" - No bullshit
+| Platform | Path | Status |
+|----------|------|--------|
+| Claude Code | `~/.claude/skills` | ✓ |
+| Kiro (AWS) | `~/.kiro/skills` | ✓ |
+| OpenCode | `~/.opencode/skills` | ✓ |
+| Cursor | `~/.cursor/skills` | ✓ |
+| VS Code | `~/.vscode/skills` | ✓ |
+| Codex | `~/.codex/skills` | ✓ |
+| Antigravity | `~/.antigravity/skills` | ✓ |
+| Goose | `~/.config/goose/skills` | ✓ |
 
-Choose during installation. [More details](docs/BRANDING.md)
-
-### Example: Build a Feature
-
-```bash
-# 1. Plan the feature
-/wfc-plan
-> "Add OAuth2 login with JWT tokens"
-
-# Generates: TASKS.md, PROPERTIES.md, TEST-PLAN.md
-
-# 2. Implement with parallel agents
-/wfc-implement
-
-# Spawns 5 agents, each:
-# - Writes tests first (RED)
-# - Implements (GREEN)
-# - Refactors
-# - Passes quality gates
-# - Gets reviewed
-# - Auto-merges or rolls back
-
-# 3. Final verification
-/wfc-review
-
-# 54 experts available:
-# - APPSEC_SPECIALIST (OAuth security)
-# - BACKEND_PYTHON_SENIOR (FastAPI patterns)
-# - DB_ARCHITECT_SQL (Token storage)
-# - SRE_SPECIALIST (Key rotation)
-# - PERF_TESTER (Response times)
+**Branding modes:**
 ```
+SFW  (Safe For Work) → Workflow Champion      [Professional]
+NSFW (Default)       → World Fucking Class    [No Bullshit]
+```
+
+[Branding Details](docs/BRANDING.md)
 
 ---
 
 ## Key Features
 
-<div align="center">
-
-<table>
+<table width="100%">
 <tr>
-<td align="center" width="200">
-<img src="assets/icons/parallel-execution.svg" width="80" height="80" alt="Parallel Execution">
+<td width="25%" align="center">
+<img src="assets/icons/parallel-execution.svg" width="64" height="64" alt="Parallel">
 <br><strong>Parallel Execution</strong>
-<br><sub>Up to 5 agents working concurrently in isolated worktrees</sub>
+<br>Up to 5 agents, isolated worktrees
 </td>
-<td align="center" width="200">
-<img src="assets/icons/smart-selection.svg" width="80" height="80" alt="Smart Selection">
+<td width="25%" align="center">
+<img src="assets/icons/smart-selection.svg" width="64" height="64" alt="Smart">
 <br><strong>Smart Selection</strong>
-<br><sub>Auto-picks 5 relevant experts from 54 specialized personas</sub>
+<br>Auto-picks 5 from 54 experts
 </td>
-<td align="center" width="200">
-<img src="assets/icons/token-reduction.svg" width="80" height="80" alt="Token Reduction">
+<td width="25%" align="center">
+<img src="assets/icons/token-reduction.svg" width="64" height="64" alt="Tokens">
 <br><strong>92% Token Reduction</strong>
-<br><sub>Progressive disclosure loads only what you need</sub>
+<br>Progressive disclosure
 </td>
-<td align="center" width="200">
-<img src="assets/icons/platform-compatibility.svg" width="80" height="80" alt="Platform Compatibility">
+<td width="25%" align="center">
+<img src="assets/icons/platform-compatibility.svg" width="64" height="64" alt="Platform">
 <br><strong>8+ Platforms</strong>
-<br><sub>Works with Claude Code, Kiro, and all Agent Skills platforms</sub>
+<br>Agent Skills standard
 </td>
 </tr>
 </table>
 
-</div>
-
 ---
 
-## Platform Compatibility
-
-**Works with 8+ Agent Skills platforms:**
-
-- Claude Code
-- Kiro (AWS)
-- OpenCode
-- Cursor
-- VS Code
-- OpenAI Codex
-- Google Antigravity
-- Goose
-
-**Install once, use everywhere.** Symlinks keep them synchronized.
-
----
-
-## The 54 Expert Personas
+## Expert Panels
 
 | Panel | Count | Examples |
-|-------|-------|----------|
+|-------|------:|----------|
 | **Engineering** | 11 | Python, Node, Go, Rust, React, iOS, Android |
 | **Security** | 8 | AppSec, PenTest, Cloud Security, Compliance |
 | **Architecture** | 7 | Solutions, APIs, Microservices, Event-Driven |
@@ -189,48 +154,35 @@ Choose during installation. [More details](docs/BRANDING.md)
 | **Operations** | 4 | SRE, Platform, DevOps, Observability |
 | **Domain** | 5 | Fintech, Healthcare, E-commerce, Gaming |
 | **Specialists** | 4 | WCAG, Performance Optimization, i18n |
+| **TOTAL** | **54** | **Ready to work** |
 
-**Total: 54 experts ready to work**
-
-[Complete Persona Library](docs/PERSONAS.md)
+[Complete Persona Library →](docs/PERSONAS.md)
 
 ---
 
-## How Smart Selection Works
-
-WFC analyzes your code and picks the right experts:
+## Smart Selection Algorithm
 
 **Example: OAuth2 + JWT Implementation**
 
 ```
-Analyzing:
-- Tech stack: Python, FastAPI, PostgreSQL, Redis
-- Files: auth_service.py, jwt_handler.py
-- Properties: SECURITY, SAFETY
-- Complexity: Large
+Input Analysis:
+├─ Tech stack: Python, FastAPI, PostgreSQL, Redis
+├─ Files: auth_service.py, jwt_handler.py
+├─ Properties: SECURITY, SAFETY
+└─ Complexity: Large
 
-Selected Panel:
-1. APPSEC_SPECIALIST (0.95) - OAuth/JWT security
-2. BACKEND_PYTHON_SENIOR (0.88) - FastAPI best practices
-3. API_SECURITY_SPECIALIST (0.82) - Token security
-4. DB_ARCHITECT_SQL (0.72) - Secure token storage
-5. SRE_SPECIALIST (0.61) - Monitoring & rotation
+Selected Panel (Top 5):
+├─ 1. APPSEC_SPECIALIST      (0.95) - OAuth/JWT security
+├─ 2. BACKEND_PYTHON_SENIOR  (0.88) - FastAPI patterns
+├─ 3. API_SECURITY_SPECIALIST(0.82) - Token security
+├─ 4. DB_ARCHITECT_SQL       (0.72) - Secure storage
+└─ 5. SRE_SPECIALIST         (0.61) - Key rotation
 
-Decision: CONDITIONAL APPROVE
-Required: Fix PII in JWT, add token rotation
+Consensus Decision: CONDITIONAL APPROVE
+Required Actions:
+├─ Fix PII in JWT payload
+└─ Add token rotation mechanism
 ```
-
----
-
-## Progressive Disclosure
-
-**92% token reduction** with on-demand loading:
-
-- **Traditional:** Load all 54 personas (~43K tokens)
-- **WFC:** Load summaries (~3.4K tokens), fetch details when needed
-- **Result:** 10x faster, same capability
-
-Works in all Agent Skills platforms.
 
 ---
 
@@ -238,12 +190,12 @@ Works in all Agent Skills platforms.
 
 | Skill | Purpose |
 |-------|---------|
-| `wfc-plan` | Structured task breakdown & planning |
-| `wfc-implement` | Parallel TDD implementation |
+| `wfc-plan` | Structured task breakdown with EARS format |
+| `wfc-implement` | Parallel TDD implementation engine |
 | `wfc-review` | Multi-expert consensus review |
 | `wfc-test` | Property-based test generation |
 | `wfc-security` | STRIDE threat modeling |
-| `wfc-architecture` | C4 diagrams & architecture docs |
+| `wfc-architecture` | C4 diagrams and ADRs |
 | `wfc-observe` | Observability from properties |
 | `wfc-retro` | AI-powered retrospectives |
 | `wfc-safeclaude` | Safe command allowlist |
@@ -254,77 +206,161 @@ Works in all Agent Skills platforms.
 
 ## Example Workflows
 
-### New Feature
+### New Feature Development
 
-```
-1. /wfc-isthissmart "Add OAuth2 login"
-   → Validates approach
+```bash
+# Step 1: Validate approach
+/wfc-isthissmart "Add OAuth2 login with JWT tokens"
 
-2. /wfc-plan
-   → Generates TASKS.md
+# Step 2: Generate structured plan
+/wfc-plan
 
-3. /wfc-implement
-   → Parallel TDD execution
+# Output:
+# ├─ TASKS.md       (5 tasks, dependencies mapped)
+# ├─ PROPERTIES.md  (3 SAFETY, 2 INVARIANT properties)
+# └─ TEST-PLAN.md   (12 test cases with EARS derivation)
 
-4. /wfc-review
-   → Final consensus review
+# Step 3: Execute with parallel agents
+/wfc-implement
+
+# Process:
+# ├─ Agent 1: TASK-001 (Setup)           [worktree-1]
+# ├─ Agent 2: TASK-002 (OAuth flow)      [worktree-2]
+# ├─ Agent 3: TASK-003 (JWT handler)     [worktree-3]
+# ├─ Agent 4: TASK-004 (Token refresh)   [worktree-4]
+# └─ Agent 5: TASK-005 (Tests)           [worktree-5]
+#
+# Each agent:
+# └─ RED → GREEN → REFACTOR → QUALITY → REVIEW → MERGE
+
+# Step 4: Final verification
+/wfc-review
+
+# Result: ✓ APPROVED (8.5/10)
 ```
 
 ### Security Audit
 
-```
-1. /wfc-security --stride
-   → Threat model
+```bash
+/wfc-security --stride
+# Generates: THREAT-MODEL.md with STRIDE analysis
 
-2. /wfc-review --properties SECURITY,SAFETY
-   → Security-focused review
+/wfc-review --properties SECURITY,SAFETY
+# Auto-selects: APPSEC_SPECIALIST, PENTEST_SPECIALIST, etc.
 ```
 
 ### Bug Fix
 
-```
-1. /wfc-review affected-file.py
-   → Expert analysis
+```bash
+/wfc-review affected-file.py
+# Expert analysis of issue
 
-2. Fix → /wfc-review
-   → Verify fix
+# Fix applied...
+
+/wfc-review
+# Verify fix quality
 ```
+
+---
+
+## Technical Specifications
+
+### Progressive Disclosure
+
+| Metric | Traditional | WFC | Savings |
+|--------|------------:|----:|--------:|
+| Initial context | ~43K tokens | ~3.4K tokens | **92.1%** |
+| Load time | Slow | Fast | **10x** |
+| Memory usage | High | Low | **90%** |
+
+**Mechanism:**
+```
+Load summaries only (IDs + descriptions)
+    ↓
+On expert selection
+    ↓
+Fetch full persona details
+    ↓
+Cache for session
+```
+
+### EARS Requirements Format
+
+Five templates for unambiguous, testable requirements:
+
+| Type | Template | Use Case |
+|------|----------|----------|
+| **UBIQUITOUS** | `The system shall <action>` | Always active |
+| **EVENT_DRIVEN** | `WHEN <trigger>, system shall <action>` | Event response |
+| **STATE_DRIVEN** | `WHILE <state>, system shall <action>` | Continuous condition |
+| **OPTIONAL** | `WHERE <feature>, system shall <action>` | Conditional capability |
+| **UNWANTED** | `IF <condition>, THEN system shall <action>` | Constraint/prevention |
+
+[EARS Documentation →](docs/EARS.md)
+
+### Performance Metrics
+
+| Metric | Value |
+|--------|------:|
+| Expert personas | 54 |
+| Max parallel agents | 5 |
+| Token reduction | 92% |
+| Quality tools | 100+ (via Trunk.io) |
+| Platform support | 8+ |
+
+---
+
+## Platform Compatibility
+
+**Agent Skills Standard Compliant**
+
+WFC implements the [Agent Skills specification](https://agentskills.io) for universal compatibility.
+
+**Features:**
+- Single source of truth (`~/.wfc/`)
+- Symlink synchronization
+- Progressive disclosure
+- Cross-platform configuration
+
+**Install modes:**
+```
+Single platform:   Copy to platform directory
+Multiple platforms: Symlink from ~/.wfc/ (recommended)
+Custom selection:   Choose specific platforms
+```
+
+[Installation Details →](docs/UNIVERSAL_INSTALL.md)
 
 ---
 
 ## Documentation
 
-**Getting Started**
+### Getting Started
 - [Quick Start Guide](QUICKSTART.md)
-- [Installation](docs/UNIVERSAL_INSTALL.md)
+- [Universal Installation](docs/UNIVERSAL_INSTALL.md)
 - [Examples](docs/examples/)
 
-**Reference**
+### Core Concepts
 - [Architecture](docs/ARCHITECTURE.md)
 - [Persona Library](docs/PERSONAS.md)
-- [Configuration](wfc/shared/config/wfc_config.py)
+- [EARS Requirements](docs/EARS.md)
+- [Branding Modes](docs/BRANDING.md)
 
-**Contributing**
+### Configuration
+- [WFC Configuration](wfc/shared/config/wfc_config.py)
+- [Quality Tools](wfc/skills/implement/quality_checker.py)
+
+### Contributing
 - [Contributing Guide](docs/CONTRIBUTING.md)
 - [Creating Skills](docs/CREATING_SKILLS.md)
 
 ---
 
-## Performance
-
-| Metric | Value |
-|--------|-------|
-| **Expert Personas** | 54 |
-| **Parallel Agents** | Up to 5 |
-| **Token Reduction** | 92% (progressive disclosure) |
-| **Quality Tools** | 100+ via Trunk.io |
-| **Supported Platforms** | 8+ (Agent Skills standard) |
-
----
-
 ## Acknowledgments
 
-Built on [Claude Code](https://claude.ai/code)'s agent framework. Inspired by ensemble methods in machine learning and the wisdom of diverse expert panels.
+Built on [Claude Code](https://claude.ai/code)'s agent framework.
+
+Inspired by ensemble methods in machine learning and the wisdom of diverse expert panels.
 
 Special thanks to [SuperClaude](https://github.com/SuperClaude-Org/SuperClaude_Framework) for pioneering multi-agent patterns and demonstrating the power of specialized personas working in concert. Their confidence-first approach and agent orchestration patterns heavily influenced WFC's architecture.
 
@@ -338,10 +374,10 @@ MIT License - see [LICENSE](LICENSE)
 
 <div align="center">
 
-**This is World Fucking Class.**
+**■ WORLD FUCKING CLASS ■**
 
 *Complete workflow. Parallel execution. Expert consensus.*
 
-[Get Started](QUICKSTART.md) • [Star on GitHub](https://github.com/sam-fakhreddine/wfc)
+[Get Started](QUICKSTART.md) • [Documentation](docs/) • [GitHub](https://github.com/sam-fakhreddine/wfc)
 
 </div>
