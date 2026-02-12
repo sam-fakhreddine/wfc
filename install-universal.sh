@@ -3,8 +3,70 @@ set -e
 
 # WFC Universal Installer - Agent Skills Standard Compatible
 # Detects and installs to: Claude Code, Kiro, OpenCode, Cursor, VS Code, Codex, Antigravity
+#
+# Usage:
+#   ./install-universal.sh          - Interactive installation
+#   ./install-universal.sh --help   - Show this help message
+#
+# Features:
+#   - Auto-detects installed Agent Skills platforms
+#   - Supports 8+ platforms (Claude Code, Kiro, OpenCode, etc.)
+#   - Branding modes: SFW (Workflow Champion) or NSFW (World Fucking Class)
+#   - Reinstall options: refresh, change branding, or full reset
+#   - Progressive disclosure (92% token reduction)
+#   - Symlink support for multi-platform sync
 
-VERSION="0.3.0"
+VERSION="0.4.0"
+
+# Show help
+if [ "$1" = "--help" ] || [ "$1" = "-h" ]; then
+    cat << 'EOF'
+WFC Universal Installer v0.4.0
+==============================
+
+USAGE:
+    ./install-universal.sh          Interactive installation
+    ./install-universal.sh --help   Show this help
+
+FEATURES:
+    - Auto-detects Agent Skills platforms
+    - Branding modes: SFW or NSFW
+    - Reinstall options for existing installations
+    - Multi-platform symlink support
+    - Progressive disclosure (92% token reduction)
+
+SUPPORTED PLATFORMS:
+    - Claude Code     (~/.claude/skills)
+    - Kiro (AWS)      (~/.kiro/skills)
+    - OpenCode        (~/.opencode/skills)
+    - Cursor          (~/.cursor/skills)
+    - VS Code         (~/.vscode/skills)
+    - OpenAI Codex    (~/.codex/skills)
+    - Antigravity     (~/.antigravity/skills)
+    - Goose           (~/.config/goose/skills)
+
+REINSTALL OPTIONS:
+    When existing installation detected:
+    1. Refresh         - Update files, keep settings
+    2. Change branding - Switch SFW/NSFW mode
+    3. Full reinstall  - Reset all settings (with backup)
+    4. Cancel          - Exit without changes
+
+BRANDING MODES:
+    SFW  (Safe For Work) - "Workflow Champion"
+         Professional language, corporate-friendly
+
+    NSFW (Default)       - "World Fucking Class"
+         Original branding, no bullshit
+
+DOCUMENTATION:
+    Installation:  docs/UNIVERSAL_INSTALL.md
+    Branding:      docs/BRANDING.md
+    Quick Start:   QUICKSTART.md
+
+EOF
+    exit 0
+fi
 BOLD="\033[1m"
 GREEN="\033[0;32m"
 BLUE="\033[0;34m"
@@ -18,7 +80,89 @@ echo -e "${BOLD}🏆 WFC Universal Installer v${VERSION}${RESET}"
 echo -e "   ${CYAN}Agent Skills Standard Compatible${RESET}"
 echo ""
 
-# Branding mode selection
+# Check for existing installation
+EXISTING_INSTALL=false
+EXISTING_BRANDING=""
+EXISTING_MODE=""
+
+if [ -d "$HOME/.wfc" ]; then
+    EXISTING_INSTALL=true
+    if [ -f "$HOME/.wfc/.wfc_branding" ]; then
+        EXISTING_MODE=$(grep "^mode=" "$HOME/.wfc/.wfc_branding" | cut -d'=' -f2)
+        EXISTING_BRANDING=$(grep "^name=" "$HOME/.wfc/.wfc_branding" | cut -d'=' -f2)
+    fi
+fi
+
+# Reinstall options if existing installation detected
+if [ "$EXISTING_INSTALL" = true ]; then
+    echo -e "${YELLOW}⚠${RESET}  Existing WFC installation detected"
+    if [ -n "$EXISTING_BRANDING" ]; then
+        echo -e "   Current: ${CYAN}$EXISTING_BRANDING${RESET} (${EXISTING_MODE})"
+    fi
+    echo ""
+    echo -e "${BOLD}What would you like to do?${RESET}"
+    echo ""
+    echo -e "1) ${GREEN}Refresh installation${RESET} (keep current settings)"
+    echo -e "   └─ Update files, preserve branding and config"
+    echo ""
+    echo -e "2) ${YELLOW}Change branding mode${RESET}"
+    echo -e "   └─ Switch between SFW/NSFW, keep everything else"
+    echo ""
+    echo -e "3) ${RED}Full reinstall${RESET} (reset all settings)"
+    echo -e "   └─ Clean install, reconfigure everything"
+    echo ""
+    echo -e "4) ${BLUE}Cancel${RESET}"
+    echo -e "   └─ Exit without changes"
+    echo ""
+    read -p "Choose (1-4): " REINSTALL_CHOICE
+
+    case $REINSTALL_CHOICE in
+        1)
+            # Refresh - keep existing settings
+            echo -e "${GREEN}✓${RESET} Refreshing installation..."
+            KEEP_SETTINGS=true
+            if [ -n "$EXISTING_MODE" ]; then
+                WFC_MODE="$EXISTING_MODE"
+                if [ "$WFC_MODE" = "sfw" ]; then
+                    WFC_NAME="Workflow Champion"
+                    WFC_TAGLINE="Professional Multi-Agent Framework"
+                else
+                    WFC_NAME="World Fucking Class"
+                    WFC_TAGLINE="Multi-Agent Framework That Doesn't Fuck Around"
+                fi
+            fi
+            ;;
+        2)
+            # Change branding
+            echo -e "${GREEN}✓${RESET} Changing branding mode..."
+            KEEP_SETTINGS=true
+            CHANGE_BRANDING=true
+            ;;
+        3)
+            # Full reinstall
+            echo -e "${YELLOW}⚠${RESET}  Full reinstall - backing up current config..."
+            BACKUP_DIR="$HOME/.wfc_backup_$(date +%Y%m%d_%H%M%S)"
+            mkdir -p "$BACKUP_DIR"
+            if [ -f "$HOME/.wfc/.wfc_branding" ]; then
+                cp "$HOME/.wfc/.wfc_branding" "$BACKUP_DIR/"
+            fi
+            echo -e "${GREEN}✓${RESET} Backup saved to: ${CYAN}$BACKUP_DIR${RESET}"
+            KEEP_SETTINGS=false
+            ;;
+        4)
+            echo -e "${BLUE}Cancelled${RESET}"
+            exit 0
+            ;;
+        *)
+            echo -e "${RED}✗${RESET} Invalid choice"
+            exit 1
+            ;;
+    esac
+    echo ""
+fi
+
+# Branding mode selection (skip if keeping settings and not changing)
+if [ "${KEEP_SETTINGS:-false}" = false ] || [ "${CHANGE_BRANDING:-false}" = true ]; then
 echo -e "${BOLD}🎨 Choose branding mode:${RESET}"
 echo ""
 echo -e "1) ${BOLD}SFW${RESET} (Safe For Work)  → ${GREEN}Workflow Champion${RESET}"
@@ -52,6 +196,7 @@ case $BRANDING_CHOICE in
         WFC_MODE="nsfw"
         ;;
 esac
+fi
 
 echo ""
 echo -e "${BOLD}🏆 Installing ${WFC_NAME}${RESET}"

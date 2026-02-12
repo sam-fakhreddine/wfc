@@ -171,6 +171,101 @@ git pull
 
 ---
 
+## Reinstalling WFC
+
+When you run the installer on an existing installation, you'll get reinstall options:
+
+### 1. Refresh Installation
+
+**Use when:** You want to update files but keep all settings
+
+```bash
+./install-universal.sh
+
+# Choose: "1) Refresh installation"
+```
+
+**What happens:**
+- ✅ Updates all WFC files to latest version
+- ✅ Keeps current branding mode
+- ✅ Preserves all configuration
+- ✅ Maintains symlinks and platform setup
+
+**Best for:**
+- Pulling latest updates from Git
+- Fixing corrupted files
+- Restoring deleted files
+
+---
+
+### 2. Change Branding Mode
+
+**Use when:** You want to switch between SFW and NSFW modes
+
+```bash
+./install-universal.sh
+
+# Choose: "2) Change branding mode"
+```
+
+**What happens:**
+- ✅ Keeps all files and configuration
+- ✅ Prompts for new branding choice
+- ✅ Updates branding config only
+- ✅ Everything else stays the same
+
+**Best for:**
+- Moving from personal to corporate environment
+- Switching teams or projects
+- Testing both modes
+
+---
+
+### 3. Full Reinstall
+
+**Use when:** You want to reset everything to defaults
+
+```bash
+./install-universal.sh
+
+# Choose: "3) Full reinstall"
+```
+
+**What happens:**
+- ✅ Backs up current config to `~/.wfc_backup_TIMESTAMP/`
+- ✅ Runs complete installation from scratch
+- ✅ Prompts for all settings again
+- ✅ Fresh start with clean configuration
+
+**Best for:**
+- Major troubleshooting
+- Broken configuration
+- Starting over with different setup
+
+**Backup location:**
+```bash
+~/.wfc_backup_20260211_143022/.wfc_branding
+```
+
+---
+
+### 4. Cancel
+
+**Use when:** You don't want to make any changes
+
+```bash
+./install-universal.sh
+
+# Choose: "4) Cancel"
+```
+
+**What happens:**
+- ✅ Exits installer without changes
+- ✅ No files modified
+- ✅ Configuration unchanged
+
+---
+
 ## Verification
 
 ### Check Installation
