@@ -34,7 +34,7 @@ class ModelSelector:
     """
     Selects the appropriate model based on task complexity.
 
-    Used by: wfc:implement (agent assignment)
+    Used by: wfc-implement (agent assignment)
 
     Design: Simple complexity -> model mapping. No ML needed.
     """

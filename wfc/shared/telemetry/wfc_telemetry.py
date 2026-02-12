@@ -59,7 +59,7 @@ class WFCTelemetry:
 
         # Ensure skill is recorded
         if "skill" not in data:
-            data["skill"] = f"wfc:{skill}"
+            data["skill"] = f"wfc-{skill}"
 
         # Build file path: YYYY/wfc-{skill}.WNN.jsonl
         year_dir = self.metrics_dir / year

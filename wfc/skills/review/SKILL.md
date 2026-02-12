@@ -1,6 +1,6 @@
 ---
-name: wfc:consensus-review
-description: Multi-agent consensus code review using specialized expert personas. Automatically selects 5 relevant experts from 54 reviewers (security, architecture, performance, quality, domain specialists) to analyze code and reach consensus. Use when user requests code review, PR analysis, security assessment, or quality checks. Triggers on "review this code", "check for security issues", "analyze this PR", "is this code good", or explicit /wfc:consensus-review. Ideal for feature implementations, refactoring, API changes, and security-sensitive code. Not for simple typo fixes, documentation-only changes, or trivial updates.
+name: wfc-consensus-review
+description: Multi-agent consensus code review using specialized expert personas. Automatically selects 5 relevant experts from 54 reviewers (security, architecture, performance, quality, domain specialists) to analyze code and reach consensus. Use when user requests code review, PR analysis, security assessment, or quality checks. Triggers on "review this code", "check for security issues", "analyze this PR", "is this code good", or explicit /wfc-consensus-review. Ideal for feature implementations, refactoring, API changes, and security-sensitive code. Not for simple typo fixes, documentation-only changes, or trivial updates.
 license: MIT
 user-invocable: true
 disable-model-invocation: false
@@ -23,13 +23,13 @@ Four specialized agents review code and reach consensus decision.
 
 ```bash
 # Review specific task
-/wfc:consensus-review TASK-001
+/wfc-consensus-review TASK-001
 
 # Review files directly
-/wfc:consensus-review path/to/code
+/wfc-consensus-review path/to/code
 
 # With options
-/wfc:consensus-review TASK-001 --properties PROP-001,PROP-002
+/wfc-consensus-review TASK-001 --properties PROP-001,PROP-002
 ```
 
 ## Agent Weighting
@@ -98,7 +98,7 @@ Four specialized agents review code and reach consensus decision.
 ## Integration with WFC
 
 ### Called By
-- `wfc:implement` - After agent completes TDD workflow
+- `wfc-implement` - After agent completes TDD workflow
 
 ### Consumes
 - Task files (from git worktree)

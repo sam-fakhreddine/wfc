@@ -1,6 +1,6 @@
 ---
-name: wfc:observe
-description: Observability instrumentation generator that derives monitoring from formal properties. Maps PROPERTIES.md (SAFETY, LIVENESS, PERFORMANCE) to concrete observables, generates metrics collectors, alert rules, and dashboard panel configurations. Use when implementing observability for new features or improving monitoring coverage. Triggers on "add observability", "generate monitoring", "create alerts from properties", or explicit /wfc:observe. Ideal for SRE work, production readiness, and proactive monitoring. Not for log analysis or incident investigation.
+name: wfc-observe
+description: Observability instrumentation generator that derives monitoring from formal properties. Maps PROPERTIES.md (SAFETY, LIVENESS, PERFORMANCE) to concrete observables, generates metrics collectors, alert rules, and dashboard panel configurations. Use when implementing observability for new features or improving monitoring coverage. Triggers on "add observability", "generate monitoring", "create alerts from properties", or explicit /wfc-observe. Ideal for SRE work, production readiness, and proactive monitoring. Not for log analysis or incident investigation.
 license: MIT
 user-invocable: true
 disable-model-invocation: false
@@ -22,10 +22,10 @@ Generates observability infrastructure from formal properties.
 
 ```bash
 # Generate observability from PROPERTIES.md
-/wfc:observe
+/wfc-observe
 
 # Generate for specific properties
-/wfc:observe --properties PROP-001,PROP-002
+/wfc-observe --properties PROP-001,PROP-002
 ```
 
 ## Mapping Rules

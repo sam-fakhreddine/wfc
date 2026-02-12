@@ -1,8 +1,8 @@
-# wfc:consensus-review - MOCK / STUB
+# wfc-consensus-review - MOCK / STUB
 
-**This is a mock implementation for testing wfc:implement until full wfc:consensus-review is built.**
+**This is a mock implementation for testing wfc-implement until full wfc-consensus-review is built.**
 
-## What wfc:consensus-review Will Do (Real Implementation)
+## What wfc-consensus-review Will Do (Real Implementation)
 
 Multi-agent code review system with specialized agents:
 - **CR** (Correctness): Logic, edge cases, bugs
@@ -14,7 +14,7 @@ Returns consensus score (0-10) and detailed findings.
 
 ## Mock Behavior
 
-For testing wfc:implement, this mock provides:
+For testing wfc-implement, this mock provides:
 - Simple pass/fail based on basic checks
 - Mock review report with findings
 - Configurable failure scenarios for testing rollback

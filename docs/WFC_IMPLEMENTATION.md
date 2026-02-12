@@ -18,7 +18,7 @@
 
 ## Overview
 
-**wfc:implement** is a multi-agent parallel implementation engine that orchestrates N agents in isolated git worktrees, enforces TDD workflow, integrates quality gates and consensus review, and auto-merges with rollback capability.
+**wfc-implement** is a multi-agent parallel implementation engine that orchestrates N agents in isolated git worktrees, enforces TDD workflow, integrates quality gates and consensus review, and auto-merges with rollback capability.
 
 ### Key Capabilities
 
@@ -153,7 +153,7 @@ Complete RED-GREEN-REFACTOR cycle with 6 phases:
 - Verify quality check passed (BLOCKS if failed)
 - Final verification of acceptance criteria
 - Produce agent report
-- Route to wfc:consensus-review
+- Route to wfc-consensus-review
 
 ### 2. Universal Quality Gate (TASK-001)
 

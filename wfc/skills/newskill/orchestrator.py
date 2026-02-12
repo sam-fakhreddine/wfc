@@ -44,12 +44,12 @@ class NewSkillOrchestrator:
 
     def _auto_build(self, spec: SkillSpec, output_dir: Path) -> None:
         """
-        Auto-build skill using wfc:plan → wfc:implement.
+        Auto-build skill using wfc-plan → wfc-implement.
 
         This would call the real plan and implement skills.
         """
         # Simplified - real implementation would:
-        # 1. Call wfc:plan with spec as input
-        # 2. Call wfc:implement with generated TASKS.md
+        # 1. Call wfc-plan with spec as input
+        # 2. Call wfc-implement with generated TASKS.md
         # 3. Register the new skill
         pass

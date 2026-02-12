@@ -1,5 +1,5 @@
 """
-wfc:newskill - Meta-Skill Builder
+wfc-newskill - Meta-Skill Builder
 
 Builds new WFC skills through interview → prompt generation → auto-build.
 """

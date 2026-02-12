@@ -139,7 +139,7 @@ WFC automatically selects 5 personas based on:
 
 Select specific personas:
 ```
-/wfc:consensus-review TASK-001 --personas APPSEC_SPECIALIST,DB_ARCHITECT_SQL,BACKEND_PYTHON_SENIOR
+/wfc-consensus-review TASK-001 --personas APPSEC_SPECIALIST,DB_ARCHITECT_SQL,BACKEND_PYTHON_SENIOR
 ```
 
 ### Persona Traits

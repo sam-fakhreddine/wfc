@@ -1,5 +1,5 @@
 """
-wfc:plan - Adaptive Planning with Formal Properties
+wfc-plan - Adaptive Planning with Formal Properties
 
 Converts requirements into structured implementation plans.
 """

@@ -25,10 +25,10 @@ See README.md for full API documentation.
 
 ## Integration Points
 
-- **wfc:implement**: worktree.*, branch.*, commit.*, merge.*, rollback.*
-- **wfc:architecture**: history.audit, history.blame
-- **wfc:security**: history.search_content (secrets)
-- **wfc:consensus-review**: Implicit (code in branches)
+- **wfc-implement**: worktree.*, branch.*, commit.*, merge.*, rollback.*
+- **wfc-architecture**: history.audit, history.blame
+- **wfc-security**: history.search_content (secrets)
+- **wfc-consensus-review**: Implicit (code in branches)
 
 ## Model Routing
 

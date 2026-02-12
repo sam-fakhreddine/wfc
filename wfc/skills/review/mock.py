@@ -1,5 +1,5 @@
 """
-wfc:consensus-review Mock - Simple review stub for testing wfc:implement
+wfc-consensus-review Mock - Simple review stub for testing wfc-implement
 
 ELEGANT: Minimal mock that simulates real review behavior
 """
@@ -12,7 +12,7 @@ from typing import Dict, List, Any
 
 class MockReview:
     """
-    Mock implementation of wfc:consensus-review.
+    Mock implementation of wfc-consensus-review.
 
     Simulates multi-agent review with configurable behavior.
     """

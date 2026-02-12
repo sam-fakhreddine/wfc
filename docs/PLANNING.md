@@ -91,7 +91,7 @@ WFC Architecture v0.1.0
 
 ### Completed Enhancements (v0.1.0)
 
-✅ **wfc:implement Complete** (Phases 1-3):
+✅ **wfc-implement Complete** (Phases 1-3):
 - Memory system (cross-session learning via ReflexionMemory)
 - Confidence-first implementation (prevent wrong-direction work)
 - Workflow metrics tracking (tokens, time, success rates)
@@ -141,7 +141,7 @@ Planned enhancements:
 
 **How**:
 - Valid frontmatter (only: name, description, license)
-- Hyphenated names (wfc-review, not wfc:review)
+- Hyphenated names (wfc-review, not wfc-review)
 - Comprehensive descriptions (triggers, use cases, anti-use cases)
 - XML prompt generation
 - Progressive disclosure pattern

@@ -1,6 +1,6 @@
 ---
-name: wfc:plan
-description: Adaptive planning system that converts requirements into structured implementation plans. Conducts intelligent interview to understand goals, then generates TASKS.md (with dependencies), PROPERTIES.md (formal properties like SAFETY, PERFORMANCE), and TEST-PLAN.md. Use when starting new features, projects, or refactoring efforts that need structured planning. Triggers on "plan this feature", "break down these requirements", "create implementation plan", or explicit /wfc:plan. Ideal for medium-to-large features requiring coordination. Not for quick bug fixes or single-file changes.
+name: wfc-plan
+description: Adaptive planning system that converts requirements into structured implementation plans. Conducts intelligent interview to understand goals, then generates TASKS.md (with dependencies), PROPERTIES.md (formal properties like SAFETY, PERFORMANCE), and TEST-PLAN.md. Use when starting new features, projects, or refactoring efforts that need structured planning. Triggers on "plan this feature", "break down these requirements", "create implementation plan", or explicit /wfc-plan. Ideal for medium-to-large features requiring coordination. Not for quick bug fixes or single-file changes.
 license: MIT
 user-invocable: true
 disable-model-invocation: false
@@ -22,14 +22,14 @@ Converts requirements into structured implementation plans through adaptive inte
 
 ```bash
 # Default output to ./plan
-/wfc:plan
+/wfc-plan
 
 # Custom output directory
-/wfc:plan path/to/output
+/wfc-plan path/to/output
 
 # With options (future)
-/wfc:plan --interactive  # Step through interview
-/wfc:plan --from-file requirements.md  # Import requirements
+/wfc-plan --interactive  # Step through interview
+/wfc-plan --from-file requirements.md  # Import requirements
 ```
 
 ## Interview Process
@@ -144,14 +144,14 @@ Example:
 
 ## Integration with WFC
 
-### Produces (consumed by wfc:implement)
+### Produces (consumed by wfc-implement)
 - `plan/TASKS.md` → Task orchestration
 - `plan/PROPERTIES.md` → TDD test requirements
 - `plan/TEST-PLAN.md` → Test strategy
 
 ### Consumes (future)
-- `wfc:architecture` for architecture analysis
-- `wfc:security` for threat model properties
+- `wfc-architecture` for architecture analysis
+- `wfc-security` for threat model properties
 
 ## Configuration
 
@@ -178,7 +178,7 @@ Example:
 ## Example Flow
 
 ```
-User runs: /wfc:plan
+User runs: /wfc-plan
 
 [ADAPTIVE INTERVIEW]
 Q: What are you trying to build?
@@ -202,7 +202,7 @@ A: JWT tokens, role-based authorization
   - TEST-PLAN.md
   - interview-results.json
 
-Next: Run `/wfc:implement ./plan/TASKS.md`
+Next: Run `/wfc-implement ./plan/TASKS.md`
 ```
 
 ## Philosophy

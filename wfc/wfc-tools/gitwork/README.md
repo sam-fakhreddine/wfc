@@ -124,10 +124,10 @@ Located at `~/.claude/wfc-gitwork.config.json` or `<project>/wfc-gitwork.config.
 ## Integration with WFC Skills
 
 All WFC skills depend on gitwork:
-- **wfc:implement** - Worktree, branch, commit, merge operations
-- **wfc:architecture** - History audit, drift detection
-- **wfc:security** - History search for secrets
-- **wfc:consensus-review** - Implicit (code exists in branches)
+- **wfc-implement** - Worktree, branch, commit, merge operations
+- **wfc-architecture** - History audit, drift detection
+- **wfc-security** - History search for secrets
+- **wfc-consensus-review** - Implicit (code exists in branches)
 
 ## ELEGANT, MULTI-TIER, PARALLEL
 

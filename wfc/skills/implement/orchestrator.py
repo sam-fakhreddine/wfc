@@ -5,7 +5,7 @@ ELEGANT: Task queue management, agent assignment, dependency execution
 MULTI-TIER: Pure logic, no UI concerns
 PARALLEL: Manages N agents working concurrently
 
-This is the brain of wfc:implement - coordinates everything but doesn't
+This is the brain of wfc-implement - coordinates everything but doesn't
 do the actual implementation (that's the agents' job).
 """
 

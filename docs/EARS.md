@@ -66,9 +66,9 @@ IF <condition>, THEN the <system> shall <action>
 
 ## EARS in WFC Planning
 
-### wfc:plan Integration
+### wfc-plan Integration
 
-When you run `/wfc:plan`, EARS format is automatically applied to:
+When you run `/wfc-plan`, EARS format is automatically applied to:
 
 1. **TASKS.md** - Acceptance criteria use EARS format
 2. **PROPERTIES.md** - Formal properties mapped to EARS templates
@@ -161,10 +161,10 @@ When you run `/wfc:plan`, EARS format is automatically applied to:
 
 ### Automatic (Default)
 
-When you use `/wfc:plan`, EARS is applied automatically:
+When you use `/wfc-plan`, EARS is applied automatically:
 
 ```bash
-/wfc:plan
+/wfc-plan
 
 # Interview process...
 # Requirements gathered...

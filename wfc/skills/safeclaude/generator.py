@@ -36,7 +36,7 @@ class SettingsGenerator:
                 "allowed": [p for p in allowlist.file_patterns if "read-only" not in p],
                 "readonly": [p.replace(" (read-only)", "") for p in allowlist.file_patterns if "read-only" in p]
             },
-            "generated_by": "wfc:safeclaude",
+            "generated_by": "wfc-safeclaude",
             "version": "1.0.0"
         }
         

@@ -1,5 +1,5 @@
 """
-End-to-end test for wfc:implement
+End-to-end test for wfc-implement
 
 Tests the full pipeline: TASKS.md → agents → review → merge
 """
@@ -17,7 +17,7 @@ from wfc.skills.implement import run_implementation
 
 def test_full_pipeline():
     """Test complete implementation pipeline."""
-    print("🧪 Testing wfc:implement end-to-end...")
+    print("🧪 Testing wfc-implement end-to-end...")
     print("=" * 60)
 
     with tempfile.TemporaryDirectory() as tmpdir:

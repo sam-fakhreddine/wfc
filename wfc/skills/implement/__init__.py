@@ -1,5 +1,5 @@
 """
-wfc:implement - Multi-Agent Parallel Implementation Engine
+wfc-implement - Multi-Agent Parallel Implementation Engine
 
 ELEGANT: Simple, effective, maintainable
 MULTI-TIER: Logic separate from presentation

@@ -855,7 +855,7 @@ class WFCAgent:
 
         Verifies properties using:
         1. Test pass/fail status (basic verification)
-        2. wfc:test integration if available
+        2. wfc-test integration if available
         3. Property-specific checks
 
         Returns:
@@ -875,14 +875,14 @@ class WFCAgent:
             if tests_pass:
                 evidence.append("All tests passing")
 
-            # Try to use wfc:test for formal property verification
+            # Try to use wfc-test for formal property verification
             property_verified = self._verify_property_with_wfc_test(prop_id)
             if property_verified is not None:
                 if property_verified:
-                    evidence.append(f"wfc:test verified {prop_id}")
+                    evidence.append(f"wfc-test verified {prop_id}")
                 else:
                     status = "violated"
-                    evidence.append(f"wfc:test found violation of {prop_id}")
+                    evidence.append(f"wfc-test found violation of {prop_id}")
 
             satisfied[prop_id] = {
                 "status": status,
@@ -894,17 +894,17 @@ class WFCAgent:
 
     def _verify_property_with_wfc_test(self, prop_id: str) -> Optional[bool]:
         """
-        Verify property using wfc:test if available.
+        Verify property using wfc-test if available.
 
         Args:
             prop_id: Property ID to verify
 
         Returns:
-            True if verified, False if violated, None if wfc:test unavailable
+            True if verified, False if violated, None if wfc-test unavailable
         """
         try:
-            # Try to import and use wfc:test
-            # This is a placeholder - actual wfc:test integration would go here
+            # Try to import and use wfc-test
+            # This is a placeholder - actual wfc-test integration would go here
             # For now, return None (unavailable)
             return None
 

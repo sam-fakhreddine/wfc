@@ -11,7 +11,7 @@ All WFC skills now comply with the [Agent Skills specification](https://github.c
 **Before** (invalid):
 ```yaml
 ---
-name: wfc:consensus-review
+name: wfc-consensus-review
 description: Multi-agent code review...
 license: MIT
 user-invocable: true
@@ -44,14 +44,14 @@ license: MIT
 
 ### 2. Skill Name Format
 
-**Before**: `wfc:review` (colon not allowed)
+**Before**: `wfc-review` (colon not allowed)
 **After**: `wfc-review` (hyphens only)
 
 All skill names updated:
-- `wfc:consensus-review` → `wfc-review`
-- `wfc:plan` → `wfc-plan`
-- `wfc:implement` → `wfc-implement`
-- `wfc:security` → `wfc-security`
+- `wfc-consensus-review` → `wfc-review`
+- `wfc-plan` → `wfc-plan`
+- `wfc-implement` → `wfc-implement`
+- `wfc-security` → `wfc-security`
 - etc.
 
 ### 3. Comprehensive Descriptions

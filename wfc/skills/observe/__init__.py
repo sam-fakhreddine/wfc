@@ -1,5 +1,5 @@
 """
-wfc:observe - Observability from Properties
+wfc-observe - Observability from Properties
 
 Maps formal properties to observables, generates metrics, alerts, dashboards.
 """

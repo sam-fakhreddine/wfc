@@ -20,7 +20,7 @@ from wfc.skills.implement.orchestrator import run_implementation, RunResult
 
 def cli_implement(args: Optional[list] = None) -> int:
     """
-    CLI entry point for /wfc:implement
+    CLI entry point for /wfc-implement
 
     Args:
         args: Optional command line arguments (for testing)
@@ -42,11 +42,11 @@ def cli_implement(args: Optional[list] = None) -> int:
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 Examples:
-  wfc:implement                        Use TASKS.md from /plan
-  wfc:implement --tasks custom.md      Use custom tasks file
-  wfc:implement --agents 5             Override agent count
-  wfc:implement --strategy smart       Use smart grouping strategy
-  wfc:implement --dry-run              Show plan without executing
+  wfc-implement                        Use TASKS.md from /plan
+  wfc-implement --tasks custom.md      Use custom tasks file
+  wfc-implement --agents 5             Override agent count
+  wfc-implement --strategy smart       Use smart grouping strategy
+  wfc-implement --dry-run              Show plan without executing
 
 Philosophy:
   ELEGANT - Simple and effective over over-engineered
@@ -99,7 +99,7 @@ Philosophy:
         print(f"❌ Error: Tasks file not found: {parsed_args.tasks}")
         print()
         print("Create tasks file with:")
-        print(f"  wfc:plan  (generates TASKS.md)")
+        print(f"  wfc-plan  (generates TASKS.md)")
         print()
         return 1
 

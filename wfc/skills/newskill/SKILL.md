@@ -1,6 +1,6 @@
 ---
-name: wfc:newskill
-description: Meta-skill for creating new WFC skills. Conducts structured interview to understand skill requirements, generates skill prompt and SKILL.md structure, and optionally auto-builds implementation using wfc:plan → wfc:implement workflow. Use when extending WFC with new capabilities or creating custom workflow automations. Triggers on "create a new skill", "build a WFC skill for", "I want to add a skill that", or explicit /wfc:newskill. Ideal for WFC extension and custom automation. Not for general feature implementation or one-off scripts.
+name: wfc-newskill
+description: Meta-skill for creating new WFC skills. Conducts structured interview to understand skill requirements, generates skill prompt and SKILL.md structure, and optionally auto-builds implementation using wfc-plan → wfc-implement workflow. Use when extending WFC with new capabilities or creating custom workflow automations. Triggers on "create a new skill", "build a WFC skill for", "I want to add a skill that", or explicit /wfc-newskill. Ideal for WFC extension and custom automation. Not for general feature implementation or one-off scripts.
 license: MIT
 user-invocable: true
 disable-model-invocation: false
@@ -15,19 +15,19 @@ The skill that builds skills. WFC builds itself.
 
 1. **Interviews** user about the new skill (adaptive questioning)
 2. **Generates** Claude Code agentic prompt following WFC conventions
-3. **Optionally** auto-builds using `wfc:plan` → `wfc:implement`
+3. **Optionally** auto-builds using `wfc-plan` → `wfc-implement`
 
 ## Usage
 
 ```bash
 # Interview mode - generate prompt only
-/wfc:newskill
+/wfc-newskill
 
 # Auto-build mode - generate and build
-/wfc:newskill --build
+/wfc-newskill --build
 
 # Bootstrap from conversation
-/wfc:newskill --from-chat
+/wfc-newskill --from-chat
 ```
 
 ## Interview Domains
@@ -59,8 +59,8 @@ Complete Claude Code agentic prompt following WFC patterns:
 ### Optional: Auto-Build
 
 When `--build` flag is used:
-1. Feeds prompt into `wfc:plan` → generates TASKS.md
-2. Feeds TASKS.md into `wfc:implement` → builds the skill
+1. Feeds prompt into `wfc-plan` → generates TASKS.md
+2. Feeds TASKS.md into `wfc-implement` → builds the skill
 3. Registers new skill as working slash command
 
 ## Meta-Recursive Magic
@@ -69,16 +69,16 @@ WFC can build itself:
 
 ```bash
 # Build a new skill to analyze database schemas
-/wfc:newskill --build
+/wfc-newskill --build
 > What should this skill do?
 > "Analyze database schema and generate data models"
 
 [Interview...]
 
-[Auto-build using wfc:plan → wfc:implement...]
+[Auto-build using wfc-plan → wfc-implement...]
 
 # New skill is ready
-/wfc:db-schema path/to/schema.sql
+/wfc-db-schema path/to/schema.sql
 ```
 
 ## Philosophy

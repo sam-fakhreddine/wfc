@@ -1,5 +1,5 @@
 """
-wfc:isthissmart - Thoughtful Advisor
+wfc-isthissmart - Thoughtful Advisor
 
 Analyzes plans/ideas across 7 dimensions for smart decision-making.
 """

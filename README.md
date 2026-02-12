@@ -38,7 +38,7 @@ Not just review. **Planning, implementation, and review in one system.**
 
 ## The WFC Workflow
 
-### 1. Planning (`/wfc:plan`)
+### 1. Planning (`/wfc-plan`)
 
 Transform requirements into structured implementation plans:
 
@@ -51,7 +51,7 @@ Transform requirements into structured implementation plans:
 
 **Uses [EARS](docs/EARS.md)** (Easy Approach to Requirements Syntax) for unambiguous, testable requirements developed by Rolls-Royce/Airbus for safety-critical systems.
 
-### 2. Implementation (`/wfc:implement`)
+### 2. Implementation (`/wfc-implement`)
 
 Execute tasks with parallel TDD agents:
 
@@ -62,7 +62,7 @@ Execute tasks with parallel TDD agents:
 
 **Each agent:** Understand → Test First → Implement → Refactor → Quality Check → Submit
 
-### 3. Review (`/wfc:review`)
+### 3. Review (`/wfc-review`)
 
 Multi-expert consensus code review:
 
@@ -97,13 +97,13 @@ Choose during installation. [More details](docs/BRANDING.md)
 
 ```bash
 # 1. Plan the feature
-/wfc:plan
+/wfc-plan
 > "Add OAuth2 login with JWT tokens"
 
 # Generates: TASKS.md, PROPERTIES.md, TEST-PLAN.md
 
 # 2. Implement with parallel agents
-/wfc:implement
+/wfc-implement
 
 # Spawns 5 agents, each:
 # - Writes tests first (RED)
@@ -114,7 +114,7 @@ Choose during installation. [More details](docs/BRANDING.md)
 # - Auto-merges or rolls back
 
 # 3. Final verification
-/wfc:review
+/wfc-review
 
 # 54 experts available:
 # - APPSEC_SPECIALIST (OAuth security)
@@ -238,17 +238,17 @@ Works in all Agent Skills platforms.
 
 | Skill | Purpose |
 |-------|---------|
-| `wfc:plan` | Structured task breakdown & planning |
-| `wfc:implement` | Parallel TDD implementation |
-| `wfc:review` | Multi-expert consensus review |
-| `wfc:test` | Property-based test generation |
-| `wfc:security` | STRIDE threat modeling |
-| `wfc:architecture` | C4 diagrams & architecture docs |
-| `wfc:observe` | Observability from properties |
-| `wfc:retro` | AI-powered retrospectives |
-| `wfc:safeclaude` | Safe command allowlist |
-| `wfc:isthissmart` | Critical thinking advisor |
-| `wfc:newskill` | Create new WFC skills |
+| `wfc-plan` | Structured task breakdown & planning |
+| `wfc-implement` | Parallel TDD implementation |
+| `wfc-review` | Multi-expert consensus review |
+| `wfc-test` | Property-based test generation |
+| `wfc-security` | STRIDE threat modeling |
+| `wfc-architecture` | C4 diagrams & architecture docs |
+| `wfc-observe` | Observability from properties |
+| `wfc-retro` | AI-powered retrospectives |
+| `wfc-safeclaude` | Safe command allowlist |
+| `wfc-isthissmart` | Critical thinking advisor |
+| `wfc-newskill` | Create new WFC skills |
 
 ---
 
@@ -257,36 +257,36 @@ Works in all Agent Skills platforms.
 ### New Feature
 
 ```
-1. /wfc:isthissmart "Add OAuth2 login"
+1. /wfc-isthissmart "Add OAuth2 login"
    → Validates approach
 
-2. /wfc:plan
+2. /wfc-plan
    → Generates TASKS.md
 
-3. /wfc:implement
+3. /wfc-implement
    → Parallel TDD execution
 
-4. /wfc:review
+4. /wfc-review
    → Final consensus review
 ```
 
 ### Security Audit
 
 ```
-1. /wfc:security --stride
+1. /wfc-security --stride
    → Threat model
 
-2. /wfc:review --properties SECURITY,SAFETY
+2. /wfc-review --properties SECURITY,SAFETY
    → Security-focused review
 ```
 
 ### Bug Fix
 
 ```
-1. /wfc:review affected-file.py
+1. /wfc-review affected-file.py
    → Expert analysis
 
-2. Fix → /wfc:review
+2. Fix → /wfc-review
    → Verify fix
 ```
 

@@ -1,6 +1,6 @@
 ---
-name: wfc:retro
-description: AI-powered retrospective analysis that examines WFC telemetry data to identify patterns, trends, and bottlenecks. Analyzes agent performance, review quality, task completion times, and common failure modes. Generates actionable recommendations for workflow improvement. Use after completing sprints, major features, or periodically for process improvement. Triggers on "run retrospective", "analyze recent work", "what can we improve", or explicit /wfc:retro. Ideal for team retrospectives and continuous improvement. Not for debugging specific issues or real-time monitoring.
+name: wfc-retro
+description: AI-powered retrospective analysis that examines WFC telemetry data to identify patterns, trends, and bottlenecks. Analyzes agent performance, review quality, task completion times, and common failure modes. Generates actionable recommendations for workflow improvement. Use after completing sprints, major features, or periodically for process improvement. Triggers on "run retrospective", "analyze recent work", "what can we improve", or explicit /wfc-retro. Ideal for team retrospectives and continuous improvement. Not for debugging specific issues or real-time monitoring.
 license: MIT
 user-invocable: true
 disable-model-invocation: false
@@ -22,16 +22,16 @@ Analyzes WFC telemetry to identify improvements and optimize workflows.
 
 ```bash
 # Analyze last 7 days
-/wfc:retro
+/wfc-retro
 
 # Analyze last 30 days
-/wfc:retro --period 30d
+/wfc-retro --period 30d
 
 # Analyze all time
-/wfc:retro --all
+/wfc-retro --all
 
 # Analyze specific skill
-/wfc:retro --skill implement
+/wfc-retro --skill implement
 ```
 
 ## Analysis Dimensions

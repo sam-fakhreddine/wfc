@@ -124,7 +124,7 @@ wfc architecture                 # Architecture docs + C4 diagrams
 
 **Status**: ✅ **COMPLETE** (Phase 1-3: 100%)
 
-wfc:implement is a production-ready multi-agent parallel implementation engine.
+wfc-implement is a production-ready multi-agent parallel implementation engine.
 
 ### Quick Usage
 
@@ -255,7 +255,7 @@ make test-coverage
 
 All 11 WFC skills are Agent Skills compliant:
 - Valid frontmatter (only: name, description, license)
-- Hyphenated names (wfc-review, not wfc:review)
+- Hyphenated names (wfc-review, not wfc-review)
 - Comprehensive descriptions
 - XML prompt generation
 - Progressive disclosure pattern
@@ -304,7 +304,7 @@ All 11 WFC skills are Agent Skills compliant:
 - **NEVER** exceed token budgets without justification
 
 ### Agent Skills Compliance
-- **NEVER** use colons in skill names (use hyphens: `wfc-review` not `wfc:review`)
+- **NEVER** use colons in skill names (use hyphens: `wfc-review` not `wfc-review`)
 - **NEVER** include invalid frontmatter fields (`user-invocable`, `disable-model-invocation`, `argument-hint`)
 - **ALWAYS** validate with skills-ref before commit (`make validate`)
 - **ALWAYS** generate valid XML prompts

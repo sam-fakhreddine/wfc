@@ -213,7 +213,7 @@ def resolve_model_name(model_ref: str) -> str:
 ### End-to-End Review Flow
 
 ```
-User → /wfc:consensus-review TASK-001
+User → /wfc-consensus-review TASK-001
     ↓
 Orchestrator.review(ReviewRequest)
     ↓

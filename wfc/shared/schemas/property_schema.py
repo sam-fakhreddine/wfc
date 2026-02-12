@@ -25,7 +25,7 @@ class Property:
     """
     A formal property that the system must satisfy.
 
-    Used by: wfc:plan, wfc:implement, wfc:test, wfc:observe
+    Used by: wfc-plan, wfc-implement, wfc-test, wfc-observe
     """
     id: str                           # e.g., "PROP-001"
     type: PropertyType                # SAFETY, LIVENESS, INVARIANT, PERFORMANCE
@@ -81,7 +81,7 @@ class PropertySet:
     """
     A collection of properties for a project.
 
-    Used by: wfc:plan (creates), wfc:implement (consumes), wfc:test (verifies)
+    Used by: wfc-plan (creates), wfc-implement (consumes), wfc-test (verifies)
     """
     properties: List[Property] = field(default_factory=list)
 

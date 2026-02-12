@@ -1,6 +1,6 @@
 ---
-name: wfc:test
-description: Intelligent test generation from formal properties and requirements. Creates property-based tests that verify SAFETY, LIVENESS, and INVARIANT properties, generates requirement-based test cases from acceptance criteria, executes test suites, and reports coverage gaps. Use when implementing new features with defined properties or improving test coverage. Triggers on "generate tests", "create tests from properties", "improve test coverage", or explicit /wfc:test. Ideal for TDD workflows, property verification, and quality assurance. Not for debugging failing tests or test infrastructure setup.
+name: wfc-test
+description: Intelligent test generation from formal properties and requirements. Creates property-based tests that verify SAFETY, LIVENESS, and INVARIANT properties, generates requirement-based test cases from acceptance criteria, executes test suites, and reports coverage gaps. Use when implementing new features with defined properties or improving test coverage. Triggers on "generate tests", "create tests from properties", "improve test coverage", or explicit /wfc-test. Ideal for TDD workflows, property verification, and quality assurance. Not for debugging failing tests or test infrastructure setup.
 license: MIT
 user-invocable: true
 disable-model-invocation: false
@@ -22,13 +22,13 @@ Generates comprehensive test suites from formal properties and requirements.
 
 ```bash
 # Generate tests
-/wfc:test --generate
+/wfc-test --generate
 
 # Run tests
-/wfc:test --run
+/wfc-test --run
 
 # Generate and run
-/wfc:test
+/wfc-test
 ```
 
 ## Outputs

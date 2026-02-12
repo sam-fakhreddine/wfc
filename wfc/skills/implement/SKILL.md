@@ -1,13 +1,13 @@
 ---
-name: wfc:implement
-description: Multi-agent parallel implementation engine that orchestrates multiple TDD-style agents in isolated git worktrees. Reads structured TASKS.md, assigns tasks to parallel agents, enforces test-first development, integrates consensus review, and auto-merges with rollback capability. Use when you have a structured plan (TASKS.md) ready to execute, or when implementing multiple related tasks in parallel. Triggers on "implement this plan", "execute these tasks", "start implementation", or explicit /wfc:implement. Ideal for executing wfc:plan outputs or any structured task list. Not for ad-hoc single features without planning.
+name: wfc-implement
+description: Multi-agent parallel implementation engine that orchestrates multiple TDD-style agents in isolated git worktrees. Reads structured TASKS.md, assigns tasks to parallel agents, enforces test-first development, integrates consensus review, and auto-merges with rollback capability. Use when you have a structured plan (TASKS.md) ready to execute, or when implementing multiple related tasks in parallel. Triggers on "implement this plan", "execute these tasks", "start implementation", or explicit /wfc-implement. Ideal for executing wfc-plan outputs or any structured task list. Not for ad-hoc single features without planning.
 license: MIT
 user-invocable: true
 disable-model-invocation: false
 argument-hint: [path/to/TASKS.md or --help]
 ---
 
-# wfc:implement - Multi-Agent Parallel Implementation Engine
+# wfc-implement - Multi-Agent Parallel Implementation Engine
 
 **Core skill #3** - Reads TASKS.md, orchestrates N agents in isolated worktrees, enforces TDD, routes through review, auto-merges, handles rollbacks.
 
@@ -16,7 +16,7 @@ argument-hint: [path/to/TASKS.md or --help]
 🚧 **IN DEVELOPMENT**
 
 - ✅ Shared infrastructure (config, telemetry, schemas, utils)
-- ✅ Mock dependencies (wfc:plan, wfc:consensus-review)
+- ✅ Mock dependencies (wfc-plan, wfc-consensus-review)
 - ✅ Orchestrator logic (task queue, dependency management)
 - 🚧 Agent implementation (TDD workflow)
 - 🚧 Merge engine (rebase, integration tests, rollback)
@@ -74,19 +74,19 @@ Orchestrator
 
 ```bash
 # Default: use TASKS.md in /plan
-/wfc:implement
+/wfc-implement
 
 # Custom tasks file
-/wfc:implement --tasks path/to/TASKS.md
+/wfc-implement --tasks path/to/TASKS.md
 
 # Override agent count
-/wfc:implement --agents 5
+/wfc-implement --agents 5
 
 # Override strategy
-/wfc:implement --strategy smart
+/wfc-implement --strategy smart
 
 # Dry run (show plan, don't execute)
-/wfc:implement --dry-run
+/wfc-implement --dry-run
 ```
 
 ## Configuration
@@ -153,13 +153,13 @@ Orchestrator
 5. SUBMIT
    - Commit to worktree branch
    - Produce agent report
-   - Route to wfc:consensus-review
+   - Route to wfc-consensus-review
 ```
 
 ## Dependencies
 
-- **Consumes**: TASKS.md, PROPERTIES.md, TEST-PLAN.md (from wfc:plan)
-- **Integrates**: wfc:consensus-review (for code review)
+- **Consumes**: TASKS.md, PROPERTIES.md, TEST-PLAN.md (from wfc-plan)
+- **Integrates**: wfc-consensus-review (for code review)
 - **Produces**: Merged code on main, telemetry records, agent reports
 
 ## Philosophy
@@ -173,7 +173,7 @@ Orchestrator
 ### ✅ Done
 - Orchestrator (task queue, dependency management)
 - Shared infrastructure (config, telemetry, schemas, utils)
-- Mock dependencies (wfc:plan, wfc:consensus-review)
+- Mock dependencies (wfc-plan, wfc-consensus-review)
 
 ### 🚧 In Progress
 - Agent TDD workflow
@@ -184,4 +184,4 @@ Orchestrator
 - CLI interface
 - Full integration tests
 - Performance optimization
-- Real wfc:plan and wfc:consensus-review integration
+- Real wfc-plan and wfc-consensus-review integration

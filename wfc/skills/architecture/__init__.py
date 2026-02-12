@@ -1,5 +1,5 @@
 """
-wfc:architecture - Architecture Generation & Analysis
+wfc-architecture - Architecture Generation & Analysis
 
 Generates architecture docs, C4 diagrams, ADRs from plans/code.
 """

@@ -1,5 +1,5 @@
 """
-wfc:safeclaude - Project-Specific Safe Allowlist Generator
+wfc-safeclaude - Project-Specific Safe Allowlist Generator
 
 Scans project, generates safe command allowlist, eliminates approval friction.
 """

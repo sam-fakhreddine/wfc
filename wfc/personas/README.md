@@ -245,7 +245,7 @@ Each persona has:
 
 1. **Subagent Execution** - Run each persona as independent subagent (not role-play)
 2. **Additional Personas** - Expand to ~100 total across all panels
-3. **CLI Commands** - `/wfc:personas list`, `/wfc:personas search`
+3. **CLI Commands** - `/wfc-personas list`, `/wfc-personas search`
 4. **Validation** - Schema validation on persona load
 5. **Analytics** - Track persona selection patterns, effectiveness
 

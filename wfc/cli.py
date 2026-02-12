@@ -183,7 +183,7 @@ def cmd_implement(tasks_file: Optional[str] = None, agents: Optional[int] = None
         print("\nExpected file locations:")
         print("  - plan/TASKS.md (default)")
         print("  - plan/TASKS-*.md")
-        print("\nUse /wfc:plan to generate a tasks file first.")
+        print("\nUse /wfc-plan to generate a tasks file first.")
         sys.exit(1)
 
     print(f"📋 Tasks file: {tasks_file}")

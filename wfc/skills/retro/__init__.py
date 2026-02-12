@@ -1,5 +1,5 @@
 """
-wfc:retro - AI-Powered Retrospectives
+wfc-retro - AI-Powered Retrospectives
 
 Analyzes telemetry, identifies trends, detects bottlenecks, generates recommendations.
 """

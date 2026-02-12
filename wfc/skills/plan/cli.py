@@ -1,5 +1,5 @@
 """
-CLI Presentation Tier for wfc:plan
+CLI Presentation Tier for wfc-plan
 
 Handles user interaction and output formatting.
 """
@@ -18,7 +18,7 @@ from shared.config import get_config
 
 class PlanCLI:
     """
-    CLI interface for wfc:plan.
+    CLI interface for wfc-plan.
 
     MULTI-TIER: Presentation layer only.
     """
@@ -91,7 +91,7 @@ class PlanCLI:
         print()
         print(f"🎯 Goal: {result.interview_result.goal}")
         print()
-        print("Next step: Run `/wfc:implement {result.tasks_file}` to start implementation")
+        print("Next step: Run `/wfc-implement {result.tasks_file}` to start implementation")
         print("=" * 80)
 
     def _print_error(self, message: str) -> None:

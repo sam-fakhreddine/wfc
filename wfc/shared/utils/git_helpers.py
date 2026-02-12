@@ -20,7 +20,7 @@ class GitHelper:
     """
     Simple git operations via subprocess.
 
-    Used by: wfc:implement (worktree management)
+    Used by: wfc-implement (worktree management)
 
     Design philosophy: Thin wrapper around git CLI, nothing fancy.
     """

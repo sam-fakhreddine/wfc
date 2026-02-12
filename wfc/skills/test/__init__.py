@@ -1,5 +1,5 @@
 """
-wfc:test - Test Generation from Properties
+wfc-test - Test Generation from Properties
 
 Property-based and requirement-based test generation.
 """

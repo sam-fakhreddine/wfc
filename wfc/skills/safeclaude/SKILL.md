@@ -1,6 +1,6 @@
 ---
-name: wfc:safeclaude
-description: Project-specific command allowlist generator that creates safe, curated approval settings for Claude Code. Scans project to identify commonly-used commands (git, npm, pytest, etc.), categorizes by risk level, and generates optimized settings.json configuration. Eliminates constant approval prompts without enabling dangerous YOLO mode. Use when setting up new projects or reducing approval friction. Triggers on "reduce approval prompts", "generate safe commands", "create allowlist", or explicit /wfc:safeclaude. Ideal for project onboarding and developer experience. Not for bypassing security controls.
+name: wfc-safeclaude
+description: Project-specific command allowlist generator that creates safe, curated approval settings for Claude Code. Scans project to identify commonly-used commands (git, npm, pytest, etc.), categorizes by risk level, and generates optimized settings.json configuration. Eliminates constant approval prompts without enabling dangerous YOLO mode. Use when setting up new projects or reducing approval friction. Triggers on "reduce approval prompts", "generate safe commands", "create allowlist", or explicit /wfc-safeclaude. Ideal for project onboarding and developer experience. Not for bypassing security controls.
 license: MIT
 user-invocable: true
 disable-model-invocation: false
@@ -28,22 +28,22 @@ Every new Claude Code session in a new project means approving `ls`, `cat`, `gre
 
 ```bash
 # Scan and generate allowlist
-/wfc:safeclaude
+/wfc-safeclaude
 
 # Show current allowlist
-/wfc:safeclaude --show
+/wfc-safeclaude --show
 
 # Strict mode (read-only only)
-/wfc:safeclaude --strict
+/wfc-safeclaude --strict
 
 # Add specific command
-/wfc:safeclaude --add "docker compose up"
+/wfc-safeclaude --add "docker compose up"
 
 # Remove command
-/wfc:safeclaude --remove "rm -rf"
+/wfc-safeclaude --remove "rm -rf"
 
 # Reset and regenerate
-/wfc:safeclaude --reset
+/wfc-safeclaude --reset
 ```
 
 ## Detection
@@ -95,7 +95,7 @@ npm run build, docker ps, docker logs, gh
 ## Strict Mode
 
 ```bash
-/wfc:safeclaude --strict
+/wfc-safeclaude --strict
 ```
 
 Generates **read-only** allowlist:
@@ -120,7 +120,7 @@ Use for: production environments, shared codebases, auditing.
     "allowed": ["src/**", "tests/**"],
     "readonly": [".github/**", ".env"]
   },
-  "generated_by": "wfc:safeclaude",
+  "generated_by": "wfc-safeclaude",
   "version": "1.0.0"
 }
 ```
@@ -141,7 +141,7 @@ Use for: production environments, shared codebases, auditing.
 ## Example Session
 
 ```
-User: /wfc:safeclaude
+User: /wfc-safeclaude
 
 🔍 Scanning project...
 ✅ Detected: Node.js + TypeScript + Jest + Docker + GitHub Actions
@@ -175,9 +175,9 @@ Approve? (y/n/modify): y
 ## Integration
 
 Works with WFC skills:
-- **wfc:implement** - Agents use approved commands without friction
-- **wfc:security** - Audit current allowlist vs best practices
-- **wfc:architecture** - Detect commands needed by architecture
+- **wfc-implement** - Agents use approved commands without friction
+- **wfc-security** - Audit current allowlist vs best practices
+- **wfc-architecture** - Detect commands needed by architecture
 
 ## Philosophy
 

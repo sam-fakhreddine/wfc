@@ -1,7 +1,7 @@
 """
 WFC Task Schema - ELEGANT & SIMPLE
 
-Defines the structure for tasks in TASKS.md (from wfc:plan, consumed by wfc:implement)
+Defines the structure for tasks in TASKS.md (from wfc-plan, consumed by wfc-implement)
 
 Design: Simple dataclasses, clear validation, no over-engineering.
 """
@@ -40,7 +40,7 @@ class Task:
     """
     A single implementation task.
 
-    Used by: wfc:plan (creates), wfc:implement (executes), wfc:architecture (informs)
+    Used by: wfc-plan (creates), wfc-implement (executes), wfc-architecture (informs)
     """
     id: str                                # e.g., "TASK-001"
     title: str                             # Short title
@@ -57,7 +57,7 @@ class Task:
     files_likely_affected: List[str] = field(default_factory=list)
     test_requirements: List[str] = field(default_factory=list)
 
-    # Execution state (populated during wfc:implement)
+    # Execution state (populated during wfc-implement)
     status: TaskStatus = TaskStatus.QUEUED
     assigned_agent: Optional[str] = None
     worktree_path: Optional[str] = None
@@ -114,7 +114,7 @@ class TaskGraph:
     """
     A dependency graph of tasks.
 
-    Used by: wfc:implement (orchestration), wfc:architecture (visualization)
+    Used by: wfc-implement (orchestration), wfc-architecture (visualization)
     """
     tasks: List[Task] = field(default_factory=list)
 

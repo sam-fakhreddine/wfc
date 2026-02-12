@@ -1,8 +1,8 @@
-# wfc:plan - MOCK / STUB
+# wfc-plan - MOCK / STUB
 
-**This is a mock implementation for testing wfc:implement until full wfc:plan is built.**
+**This is a mock implementation for testing wfc-implement until full wfc-plan is built.**
 
-## What wfc:plan Will Do (Real Implementation)
+## What wfc-plan Will Do (Real Implementation)
 
 Adaptive planning that produces:
 - `TASKS.md` - Ordered tasks with dependency graph
@@ -11,7 +11,7 @@ Adaptive planning that produces:
 
 ## Mock Behavior
 
-For testing wfc:implement, this mock provides sample TASKS.md, PROPERTIES.md, and TEST-PLAN.md files.
+For testing wfc-implement, this mock provides sample TASKS.md, PROPERTIES.md, and TEST-PLAN.md files.
 
 ### Mock TASKS.md
 

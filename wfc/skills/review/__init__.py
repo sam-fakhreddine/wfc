@@ -1,5 +1,5 @@
 """
-wfc:consensus-review - Multi-Agent Consensus Code Review
+wfc-consensus-review - Multi-Agent Consensus Code Review
 
 Four specialized agents review code and reach consensus decision.
 """

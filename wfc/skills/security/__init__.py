@@ -1,5 +1,5 @@
 """
-wfc:security - Security Analysis & Threat Modeling
+wfc-security - Security Analysis & Threat Modeling
 
 STRIDE threat modeling, attack surface mapping, dependency scanning.
 """

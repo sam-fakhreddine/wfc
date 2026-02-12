@@ -11,7 +11,7 @@
   },
   "generated": {
     "timestamp": "2026-02-11T00:00:00Z",
-    "generator": "wfc:implement Phase 3 (TASK-010)",
+    "generator": "wfc-implement Phase 3 (TASK-010)",
     "latest_commit": "b15ebf7",
     "version": "1.0.0"
   },

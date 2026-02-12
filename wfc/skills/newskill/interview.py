@@ -13,7 +13,7 @@ class SkillSpec:
     """Specification for a new skill"""
     name: str
     description: str
-    trigger: str  # /wfc:skillname
+    trigger: str  # /wfc-skillname
     purpose: str
     inputs: List[str]
     outputs: List[str]
@@ -29,7 +29,7 @@ class NewSkillInterviewer:
     """
     Interviews user to gather skill requirements.
 
-    Follows same adaptive pattern as wfc:plan.
+    Follows same adaptive pattern as wfc-plan.
     """
 
     def __init__(self):
@@ -41,12 +41,12 @@ class NewSkillInterviewer:
         self.answers = {
             "name": "example-skill",
             "description": "Example skill description",
-            "trigger": "/wfc:example",
+            "trigger": "/wfc-example",
             "purpose": "Does something useful",
             "inputs": "Files, context",
             "outputs": "Reports, code",
             "agents": "No",
-            "integration": "wfc:plan, wfc:implement",
+            "integration": "wfc-plan, wfc-implement",
             "configuration": "output_dir, enable_feature",
             "telemetry": "execution_time, success_rate",
             "properties": "None",
