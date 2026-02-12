@@ -10,6 +10,13 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import List, Dict, Optional
 
+# Add parent to path for wfc imports
+import sys
+wfc_root = Path(__file__).parent.parent.parent
+sys.path.insert(0, str(wfc_root))
+
+from wfc.shared.extended_thinking import ExtendedThinkingDecider, enable_thinking
+
 
 @dataclass
 class BuildSpec:
@@ -301,18 +308,62 @@ class BuildOrchestrator:
         files: List[str],
         behavior: str,
         tech_stack: str,
-        criteria: List[str]
+        criteria: List[str],
+        complexity: str = 'M'  # Default medium complexity
     ) -> str:
         """
         Build prompt for subagent Task tool invocation.
 
         Returns complete instructions for TDD workflow.
+        Enables extended thinking for complex builds.
         """
+        # Decide if extended thinking should be used
+        # For build tasks, enable thinking if:
+        # - Multi-file (3+ files)
+        # - Keywords suggest complexity
+        num_files = len(files)
+        complexity_keywords = ['architecture', 'system', 'refactor', 'complex']
+        has_complexity_keyword = any(
+            keyword in task_description.lower()
+            for keyword in complexity_keywords
+        )
+
+        # Determine complexity
+        if num_files >= 6 or has_complexity_keyword:
+            calculated_complexity = 'L'
+        elif num_files >= 3:
+            calculated_complexity = 'M'
+        else:
+            calculated_complexity = 'S'
+
+        # Get thinking config
+        thinking_config = ExtendedThinkingDecider.should_use_extended_thinking(
+            complexity=calculated_complexity,
+            properties=[],
+            retry_count=0,
+            is_architecture=has_complexity_keyword
+        )
+
+        # Log decision
+        if thinking_config.mode.value != 'normal':
+            print(f"   ⚡ Extended thinking enabled for {agent_id}")
+            print(f"      Reason: {thinking_config.reason}")
+
+        # Build prompt
         prompt_parts = [
             f"You are {agent_id}, a WFC build agent.",
             "",
             "## Task",
             f"{task_description}",
+            f"Complexity: {calculated_complexity}",
+        ]
+
+        # Add extended thinking section if enabled
+        thinking_section = thinking_config.to_prompt_section()
+        if thinking_section:
+            prompt_parts.append(thinking_section)
+
+        prompt_parts.extend([
             "",
             "## Files to Create/Modify",
             '\n'.join(f"- {f}" for f in files),
@@ -328,6 +379,7 @@ class BuildOrchestrator:
             "",
             "## Workflow (TDD - STRICT)",
             "",
+        ])
             "1. UNDERSTAND",
             "   - Read task description above",
             "   - Review existing files (if any)",

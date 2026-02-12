@@ -17,6 +17,7 @@ import json
 
 from wfc.shared.config import WFCConfig
 from wfc.shared.schemas import Task, TaskStatus
+from wfc.shared.extended_thinking import ExtendedThinkingDecider
 
 from .orchestrator import WFCOrchestrator
 from .agent import AgentReport
@@ -122,11 +123,45 @@ class ExecutionEngine:
         2. Follow TDD workflow (TEST_FIRST → IMPLEMENT → REFACTOR)
         3. Run quality checks
         4. Submit agent report
+
+        Enables extended thinking for complex tasks based on:
+        - Task complexity (L, XL)
+        - Critical properties (SAFETY, LIVENESS, SECURITY)
+        - Retry count (failed before, think harder)
         """
+        # Get retry count from tags
+        retry_count = task.tags.count('retry') if hasattr(task, 'tags') else 0
+
+        # Decide if extended thinking should be used
+        thinking_config = ExtendedThinkingDecider.should_use_extended_thinking(
+            complexity=task.complexity.value,
+            properties=task.properties,
+            retry_count=retry_count,
+            has_dependencies=len(task.dependencies) > 0 if hasattr(task, 'dependencies') else False
+        )
+
+        # Log decision
+        if thinking_config.mode.value != 'normal':
+            print(f"   ⚡ Extended thinking enabled for {task.id}")
+            print(f"      Reason: {thinking_config.reason}")
+            if thinking_config.budget_tokens:
+                print(f"      Budget: {thinking_config.budget_tokens} tokens")
+
+        # Build prompt
         prompt_parts = [
             f"You are {agent_id}, a WFC implementation agent.",
             f"Task ID: {task.id}",
+            f"Task Complexity: {task.complexity.value}",
             f"Task Description: {task.description}",
+        ]
+
+        # Add extended thinking section if enabled
+        thinking_section = thinking_config.to_prompt_section()
+        if thinking_section:
+            prompt_parts.append(thinking_section)
+
+        # Add TDD workflow
+        prompt_parts.extend([
             "",
             "Follow the TDD workflow:",
             "1. UNDERSTAND - Read task, properties, test plan, existing code",
@@ -138,7 +173,7 @@ class ExecutionEngine:
             "",
             f"Properties to satisfy: {', '.join(task.properties)}",
             f"Acceptance criteria: {', '.join(task.acceptance_criteria)}",
-        ]
+        ])
 
         return "\n".join(prompt_parts)
 
