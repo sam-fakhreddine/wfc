@@ -1,86 +1,272 @@
 #!/usr/bin/env bash
 set -e
 
-# WFC Universal Installer
-# Installs to Claude Code, Kiro, or both with smart symlinking
+# WFC Universal Installer - Agent Skills Standard Compatible
+# Detects and installs to: Claude Code, Kiro, OpenCode, Cursor, VS Code, Codex, Antigravity
 
-VERSION="0.1.0"
+VERSION="0.2.0"
 BOLD="\033[1m"
 GREEN="\033[0;32m"
 BLUE="\033[0;34m"
 YELLOW="\033[0;33m"
 RED="\033[0;31m"
+CYAN="\033[0;36m"
 RESET="\033[0m"
 
 echo -e "${BOLD}🏆 WFC Universal Installer v${VERSION}${RESET}"
 echo -e "   World Fucking Class - Multi-Agent Framework"
+echo -e "   ${CYAN}Agent Skills Standard Compatible${RESET}"
 echo ""
 
-# Detect available platforms
-CLAUDE_AVAILABLE=false
-KIRO_AVAILABLE=false
+# Platform detection
+declare -A PLATFORMS
+declare -A PLATFORM_PATHS
 
+# Detect all Agent Skills compatible platforms
+echo -e "${BOLD}🔍 Detecting installed platforms...${RESET}"
+echo ""
+
+# Claude Code
 if [ -d "$HOME/.claude" ]; then
-    CLAUDE_AVAILABLE=true
-    echo -e "${GREEN}✓${RESET} Claude Code detected at ~/.claude"
+    PLATFORMS[claude]=true
+    PLATFORM_PATHS[claude]="$HOME/.claude/skills"
+    echo -e "${GREEN}✓${RESET} Claude Code"
+    echo -e "  └─ Skills: ${BLUE}~/.claude/skills/${RESET}"
 fi
 
+# Kiro (AWS)
 if [ -d "$HOME/.kiro" ]; then
-    KIRO_AVAILABLE=true
-    echo -e "${GREEN}✓${RESET} Kiro detected at ~/.kiro"
+    PLATFORMS[kiro]=true
+    PLATFORM_PATHS[kiro]="$HOME/.kiro/skills"
+    echo -e "${GREEN}✓${RESET} Kiro (AWS)"
+    echo -e "  └─ Skills: ${BLUE}~/.kiro/skills/${RESET}"
 fi
 
-if [ "$CLAUDE_AVAILABLE" = false ] && [ "$KIRO_AVAILABLE" = false ]; then
-    echo -e "${RED}✗${RESET} Neither Claude Code nor Kiro found"
-    echo -e "   Install Claude Code: https://claude.ai/download"
-    echo -e "   Install Kiro: https://kiro.dev"
+# OpenCode
+if [ -d "$HOME/.config/opencode" ] || [ -d "$HOME/.opencode" ]; then
+    PLATFORMS[opencode]=true
+    if [ -d "$HOME/.config/opencode" ]; then
+        PLATFORM_PATHS[opencode]="$HOME/.config/opencode/skills"
+    else
+        PLATFORM_PATHS[opencode]="$HOME/.opencode/skills"
+    fi
+    echo -e "${GREEN}✓${RESET} OpenCode"
+    echo -e "  └─ Skills: ${BLUE}${PLATFORM_PATHS[opencode]}${RESET}"
+fi
+
+# Cursor
+if [ -d "$HOME/.cursor" ] || [ -d "$HOME/Library/Application Support/Cursor" ]; then
+    PLATFORMS[cursor]=true
+    if [ -d "$HOME/.cursor" ]; then
+        PLATFORM_PATHS[cursor]="$HOME/.cursor/skills"
+    else
+        PLATFORM_PATHS[cursor]="$HOME/Library/Application Support/Cursor/skills"
+    fi
+    echo -e "${GREEN}✓${RESET} Cursor"
+    echo -e "  └─ Skills: ${BLUE}${PLATFORM_PATHS[cursor]}${RESET}"
+fi
+
+# VS Code
+if [ -d "$HOME/.vscode" ] || [ -d "$HOME/Library/Application Support/Code" ]; then
+    PLATFORMS[vscode]=true
+    if [ -d "$HOME/.vscode" ]; then
+        PLATFORM_PATHS[vscode]="$HOME/.vscode/skills"
+    else
+        PLATFORM_PATHS[vscode]="$HOME/Library/Application Support/Code/User/skills"
+    fi
+    echo -e "${GREEN}✓${RESET} VS Code"
+    echo -e "  └─ Skills: ${BLUE}${PLATFORM_PATHS[vscode]}${RESET}"
+fi
+
+# OpenAI Codex
+if [ -d "$HOME/.codex" ] || [ -d "$HOME/.openai/codex" ]; then
+    PLATFORMS[codex]=true
+    if [ -d "$HOME/.codex" ]; then
+        PLATFORM_PATHS[codex]="$HOME/.codex/skills"
+    else
+        PLATFORM_PATHS[codex]="$HOME/.openai/codex/skills"
+    fi
+    echo -e "${GREEN}✓${RESET} OpenAI Codex"
+    echo -e "  └─ Skills: ${BLUE}${PLATFORM_PATHS[codex]}${RESET}"
+fi
+
+# Google Antigravity
+if [ -d "$HOME/.antigravity" ] || [ -d "$HOME/.config/antigravity" ]; then
+    PLATFORMS[antigravity]=true
+    if [ -d "$HOME/.antigravity" ]; then
+        PLATFORM_PATHS[antigravity]="$HOME/.antigravity/skills"
+    else
+        PLATFORM_PATHS[antigravity]="$HOME/.config/antigravity/skills"
+    fi
+    echo -e "${GREEN}✓${RESET} Google Antigravity"
+    echo -e "  └─ Skills: ${BLUE}${PLATFORM_PATHS[antigravity]}${RESET}"
+fi
+
+# Goose
+if [ -d "$HOME/.config/goose" ]; then
+    PLATFORMS[goose]=true
+    PLATFORM_PATHS[goose]="$HOME/.config/goose/skills"
+    echo -e "${GREEN}✓${RESET} Goose"
+    echo -e "  └─ Skills: ${BLUE}~/.config/goose/skills/${RESET}"
+fi
+
+# Count detected platforms
+DETECTED_COUNT=0
+for platform in "${!PLATFORMS[@]}"; do
+    ((DETECTED_COUNT++))
+done
+
+echo ""
+
+# Handle no platforms detected
+if [ $DETECTED_COUNT -eq 0 ]; then
+    echo -e "${YELLOW}⚠${RESET}  No Agent Skills compatible platforms detected"
+    echo ""
+    echo -e "${BOLD}Install one of these platforms:${RESET}"
+    echo -e "  • Claude Code:       ${CYAN}https://claude.ai/download${RESET}"
+    echo -e "  • Kiro (AWS):        ${CYAN}https://kiro.dev${RESET}"
+    echo -e "  • OpenCode:          ${CYAN}https://opencode.ai${RESET}"
+    echo -e "  • Cursor:            ${CYAN}https://cursor.com${RESET}"
+    echo -e "  • VS Code:           ${CYAN}https://code.visualstudio.com${RESET}"
+    echo -e "  • OpenAI Codex:      ${CYAN}https://developers.openai.com/codex${RESET}"
+    echo -e "  • Google Antigravity:${CYAN}https://antigravity.dev${RESET}"
+    echo ""
+    echo -e "Then re-run this installer."
     exit 1
 fi
 
+# Show summary
+echo -e "${BOLD}📊 Detection Summary:${RESET}"
+echo -e "   ${GREEN}$DETECTED_COUNT${RESET} platform(s) detected"
 echo ""
 
-# Ask user which platform(s) to install to
-echo -e "${BOLD}Where should WFC be installed?${RESET}"
+# Build installation menu
+echo -e "${BOLD}🎯 Where should WFC be installed?${RESET}"
 echo ""
 
-if [ "$CLAUDE_AVAILABLE" = true ] && [ "$KIRO_AVAILABLE" = true ]; then
-    echo "1) Claude Code only"
-    echo "2) Kiro only"
-    echo "3) Both (recommended - uses symlinks)"
-    echo ""
-    read -p "Choose (1-3): " CHOICE
-    case $CHOICE in
-        1) INSTALL_CLAUDE=true; INSTALL_KIRO=false ;;
-        2) INSTALL_CLAUDE=false; INSTALL_KIRO=true ;;
-        3) INSTALL_CLAUDE=true; INSTALL_KIRO=true ;;
-        *) echo "Invalid choice"; exit 1 ;;
-    esac
-elif [ "$CLAUDE_AVAILABLE" = true ]; then
-    INSTALL_CLAUDE=true
-    INSTALL_KIRO=false
-    echo "Installing to Claude Code (Kiro not detected)"
-else
-    INSTALL_CLAUDE=false
-    INSTALL_KIRO=true
-    echo "Installing to Kiro (Claude Code not detected)"
+MENU_OPTIONS=()
+MENU_PLATFORMS=()
+MENU_INDEX=1
+
+# Add individual platform options
+for platform in claude kiro opencode cursor vscode codex antigravity goose; do
+    if [ "${PLATFORMS[$platform]}" = true ]; then
+        case $platform in
+            claude) name="Claude Code" ;;
+            kiro) name="Kiro (AWS)" ;;
+            opencode) name="OpenCode" ;;
+            cursor) name="Cursor" ;;
+            vscode) name="VS Code" ;;
+            codex) name="OpenAI Codex" ;;
+            antigravity) name="Google Antigravity" ;;
+            goose) name="Goose" ;;
+        esac
+        echo -e "${MENU_INDEX}) ${name} only"
+        MENU_OPTIONS[$MENU_INDEX]="$platform"
+        ((MENU_INDEX++))
+    fi
+done
+
+# Add "All detected" option if more than one
+if [ $DETECTED_COUNT -gt 1 ]; then
+    echo -e "${MENU_INDEX}) ${BOLD}All detected platforms${RESET} (recommended - uses symlinks)"
+    MENU_OPTIONS[$MENU_INDEX]="all"
+    ALL_OPTION_INDEX=$MENU_INDEX
+    ((MENU_INDEX++))
+fi
+
+# Add "Custom selection" option if more than two
+if [ $DETECTED_COUNT -gt 2 ]; then
+    echo -e "${MENU_INDEX}) Custom selection"
+    MENU_OPTIONS[$MENU_INDEX]="custom"
+    ((MENU_INDEX++))
 fi
 
 echo ""
+read -p "Choose (1-$((MENU_INDEX-1))): " CHOICE
 
-# Determine installation strategy
-if [ "$INSTALL_CLAUDE" = true ] && [ "$INSTALL_KIRO" = true ]; then
+# Validate choice
+if [ -z "$CHOICE" ] || [ "$CHOICE" -lt 1 ] || [ "$CHOICE" -ge $MENU_INDEX ]; then
+    echo -e "${RED}✗${RESET} Invalid choice"
+    exit 1
+fi
+
+SELECTED_OPTION="${MENU_OPTIONS[$CHOICE]}"
+
+# Process selection
+declare -A INSTALL_TO
+
+if [ "$SELECTED_OPTION" = "all" ]; then
+    # Install to all detected platforms
+    for platform in "${!PLATFORMS[@]}"; do
+        INSTALL_TO[$platform]=true
+    done
     STRATEGY="symlink"
-    echo -e "${BLUE}Strategy:${RESET} Install to ~/.wfc, symlink to both platforms"
-    WFC_ROOT="$HOME/.wfc"
-elif [ "$INSTALL_CLAUDE" = true ]; then
-    STRATEGY="claude"
-    WFC_ROOT="$HOME/.claude/skills/wfc"
+    echo ""
+    echo -e "${BLUE}Strategy:${RESET} Install to ~/.wfc, symlink to all platforms"
+elif [ "$SELECTED_OPTION" = "custom" ]; then
+    # Custom selection
+    echo ""
+    echo -e "${BOLD}Select platforms (space-separated numbers):${RESET}"
+    INDEX=1
+    declare -A CUSTOM_MAP
+    for platform in claude kiro opencode cursor vscode codex antigravity goose; do
+        if [ "${PLATFORMS[$platform]}" = true ]; then
+            case $platform in
+                claude) name="Claude Code" ;;
+                kiro) name="Kiro (AWS)" ;;
+                opencode) name="OpenCode" ;;
+                cursor) name="Cursor" ;;
+                vscode) name="VS Code" ;;
+                codex) name="OpenAI Codex" ;;
+                antigravity) name="Google Antigravity" ;;
+                goose) name="Goose" ;;
+            esac
+            echo -e "${INDEX}) ${name}"
+            CUSTOM_MAP[$INDEX]=$platform
+            ((INDEX++))
+        fi
+    done
+    echo ""
+    read -p "Enter numbers: " -a CUSTOM_CHOICES
+
+    for choice in "${CUSTOM_CHOICES[@]}"; do
+        if [ -n "${CUSTOM_MAP[$choice]}" ]; then
+            INSTALL_TO[${CUSTOM_MAP[$choice]}]=true
+        fi
+    done
+
+    # Determine strategy
+    INSTALL_COUNT=0
+    for platform in "${!INSTALL_TO[@]}"; do
+        ((INSTALL_COUNT++))
+    done
+
+    if [ $INSTALL_COUNT -gt 1 ]; then
+        STRATEGY="symlink"
+    else
+        STRATEGY="direct"
+    fi
 else
-    STRATEGY="kiro"
-    WFC_ROOT="$HOME/.kiro/skills/wfc"
+    # Single platform installation
+    INSTALL_TO[$SELECTED_OPTION]=true
+    STRATEGY="direct"
 fi
 
-echo -e "${BLUE}Installing to:${RESET} $WFC_ROOT"
+echo ""
+
+# Determine installation root
+if [ "$STRATEGY" = "symlink" ]; then
+    WFC_ROOT="$HOME/.wfc"
+    echo -e "${BLUE}Root directory:${RESET} $WFC_ROOT (source of truth)"
+else
+    # Direct install to single platform
+    for platform in "${!INSTALL_TO[@]}"; do
+        WFC_ROOT="${PLATFORM_PATHS[$platform]}/wfc"
+    done
+    echo -e "${BLUE}Installing to:${RESET} $WFC_ROOT"
+fi
+
 echo ""
 
 # Create installation directory
@@ -88,136 +274,231 @@ mkdir -p "$WFC_ROOT"
 
 # Copy WFC files
 echo -e "${BOLD}📦 Installing WFC...${RESET}"
+echo ""
 
-# Core package
-echo "  • Copying core package..."
-cp -r wfc/* "$WFC_ROOT/" 2>/dev/null || true
-
-# Individual skills
-echo "  • Installing skills..."
-mkdir -p "$WFC_ROOT/skills"
-
-# Get current directory
+# Determine source directory
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
-# Find all WFC skills in ~/.claude/skills/
-if [ -d "$HOME/.claude/skills" ]; then
-    for skill_dir in "$HOME/.claude/skills"/wfc-*; do
+# Core package (if exists)
+if [ -d "$SCRIPT_DIR/wfc" ]; then
+    echo "  • Copying core package..."
+    cp -r "$SCRIPT_DIR/wfc"/* "$WFC_ROOT/" 2>/dev/null || true
+fi
+
+# Individual skills (from ~/.claude/skills or local directory)
+echo "  • Installing skills..."
+
+# Create skills directory
+mkdir -p "$WFC_ROOT/skills"
+
+# Find skills
+SKILLS_FOUND=0
+
+# Check local skills directory
+if [ -d "$SCRIPT_DIR/skills" ]; then
+    for skill_dir in "$SCRIPT_DIR/skills"/wfc-*; do
         if [ -d "$skill_dir" ]; then
             skill_name=$(basename "$skill_dir")
-            echo "    - $skill_name"
+            echo "    ├─ $skill_name"
             cp -r "$skill_dir" "$WFC_ROOT/skills/" 2>/dev/null || true
+            ((SKILLS_FOUND++))
         fi
     done
 fi
 
-# Create symlinks if dual installation
-if [ "$STRATEGY" = "symlink" ]; then
-    echo ""
-    echo -e "${BOLD}🔗 Creating symlinks...${RESET}"
-
-    # Symlink for Claude Code
-    if [ "$INSTALL_CLAUDE" = true ]; then
-        mkdir -p "$HOME/.claude/skills"
-
-        # Link each skill individually
-        for skill in "$WFC_ROOT/skills"/wfc-*; do
-            skill_name=$(basename "$skill")
-            target="$HOME/.claude/skills/$skill_name"
-
-            if [ -L "$target" ] || [ -d "$target" ]; then
-                rm -rf "$target"
+# Check ~/.claude/skills for already installed WFC skills
+if [ -d "$HOME/.claude/skills" ]; then
+    for skill_dir in "$HOME/.claude/skills"/wfc-*; do
+        if [ -d "$skill_dir" ]; then
+            skill_name=$(basename "$skill_dir")
+            if [ ! -d "$WFC_ROOT/skills/$skill_name" ]; then
+                echo "    ├─ $skill_name (from ~/.claude/skills)"
+                cp -r "$skill_dir" "$WFC_ROOT/skills/" 2>/dev/null || true
+                ((SKILLS_FOUND++))
             fi
-
-            ln -s "$skill" "$target"
-            echo "  • $skill_name -> Claude Code"
-        done
-
-        # Link shared resources
-        if [ -d "$WFC_ROOT/personas" ]; then
-            target="$HOME/.claude/skills/wfc"
-            mkdir -p "$target"
-            ln -sf "$WFC_ROOT/personas" "$target/personas"
-            ln -sf "$WFC_ROOT/shared" "$target/shared" 2>/dev/null || true
-            echo "  • Shared resources -> Claude Code"
         fi
-    fi
+    done
+fi
 
-    # Symlink for Kiro
-    if [ "$INSTALL_KIRO" = true ]; then
-        mkdir -p "$HOME/.kiro/skills"
+echo "  • Found $SKILLS_FOUND WFC skills"
 
-        # Link each skill individually
-        for skill in "$WFC_ROOT/skills"/wfc-*; do
-            skill_name=$(basename "$skill")
-            target="$HOME/.kiro/skills/$skill_name"
-
-            if [ -L "$target" ] || [ -d "$target" ]; then
-                rm -rf "$target"
-            fi
-
-            ln -s "$skill" "$target"
-            echo "  • $skill_name -> Kiro"
-        done
-
-        # Link shared resources
-        if [ -d "$WFC_ROOT/personas" ]; then
-            target="$HOME/.kiro/skills/wfc"
-            mkdir -p "$target"
-            ln -sf "$WFC_ROOT/personas" "$target/personas"
-            ln -sf "$WFC_ROOT/shared" "$target/shared" 2>/dev/null || true
-            echo "  • Shared resources -> Kiro"
-        fi
-    fi
+# Copy shared resources
+if [ -d "$SCRIPT_DIR/wfc/personas" ] || [ -d "$WFC_ROOT/personas" ]; then
+    echo "  • Shared resources (personas, config)"
 fi
 
 echo ""
+
+# Create symlinks if multi-platform installation
+if [ "$STRATEGY" = "symlink" ]; then
+    echo -e "${BOLD}🔗 Creating symlinks...${RESET}"
+    echo ""
+
+    for platform in "${!INSTALL_TO[@]}"; do
+        platform_path="${PLATFORM_PATHS[$platform]}"
+
+        case $platform in
+            claude) name="Claude Code" ;;
+            kiro) name="Kiro" ;;
+            opencode) name="OpenCode" ;;
+            cursor) name="Cursor" ;;
+            vscode) name="VS Code" ;;
+            codex) name="OpenAI Codex" ;;
+            antigravity) name="Google Antigravity" ;;
+            goose) name="Goose" ;;
+        esac
+
+        echo -e "${CYAN}→ $name${RESET}"
+
+        # Create platform skills directory
+        mkdir -p "$platform_path"
+
+        # Link each skill
+        for skill in "$WFC_ROOT/skills"/wfc-*; do
+            if [ -d "$skill" ]; then
+                skill_name=$(basename "$skill")
+                target="$platform_path/$skill_name"
+
+                # Remove existing
+                if [ -L "$target" ] || [ -d "$target" ]; then
+                    rm -rf "$target"
+                fi
+
+                # Create symlink
+                ln -s "$skill" "$target"
+                echo "  ├─ $skill_name"
+            fi
+        done
+
+        # Link shared resources
+        if [ -d "$WFC_ROOT/personas" ]; then
+            target="$platform_path/wfc"
+            mkdir -p "$target"
+
+            # Remove existing symlinks
+            [ -L "$target/personas" ] && rm "$target/personas"
+            [ -L "$target/shared" ] && rm "$target/shared"
+
+            # Create symlinks
+            ln -sf "$WFC_ROOT/personas" "$target/personas"
+            [ -d "$WFC_ROOT/shared" ] && ln -sf "$WFC_ROOT/shared" "$target/shared"
+
+            echo "  └─ Shared resources"
+        fi
+
+        echo ""
+    done
+fi
+
+# Success!
 echo -e "${GREEN}${BOLD}✓ Installation complete!${RESET}"
 echo ""
 
-# Show what was installed
+# Show installation summary
+echo -e "${BOLD}📋 Installation Summary${RESET}"
+echo ""
+
 if [ "$STRATEGY" = "symlink" ]; then
-    echo -e "${BOLD}Installation Summary:${RESET}"
-    echo -e "  Source: ${BLUE}$WFC_ROOT${RESET}"
-    [ "$INSTALL_CLAUDE" = true ] && echo -e "  Claude Code: ${BLUE}~/.claude/skills/wfc-*${RESET} (symlinked)"
-    [ "$INSTALL_KIRO" = true ] && echo -e "  Kiro: ${BLUE}~/.kiro/skills/wfc-*${RESET} (symlinked)"
+    echo -e "${BLUE}Source:${RESET} $WFC_ROOT"
     echo ""
-    echo -e "${YELLOW}Note:${RESET} Updates to ~/.wfc automatically sync to both platforms"
+    echo -e "${BLUE}Symlinked to:${RESET}"
+    for platform in "${!INSTALL_TO[@]}"; do
+        case $platform in
+            claude) name="Claude Code" ;;
+            kiro) name="Kiro" ;;
+            opencode) name="OpenCode" ;;
+            cursor) name="Cursor" ;;
+            vscode) name="VS Code" ;;
+            codex) name="OpenAI Codex" ;;
+            antigravity) name="Google Antigravity" ;;
+            goose) name="Goose" ;;
+        esac
+        echo -e "  • ${name}: ${PLATFORM_PATHS[$platform]}/wfc-*"
+    done
+    echo ""
+    echo -e "${YELLOW}Note:${RESET} Updates to $WFC_ROOT automatically sync to all platforms"
 else
-    echo -e "${BOLD}Installation Summary:${RESET}"
-    echo -e "  Location: ${BLUE}$WFC_ROOT${RESET}"
+    echo -e "${BLUE}Location:${RESET} $WFC_ROOT"
 fi
 
 echo ""
-echo -e "${BOLD}Available Skills:${RESET}"
-echo "  • /wfc-review       - Multi-agent consensus code review"
-echo "  • /wfc-implement    - Parallel TDD implementation"
-echo "  • /wfc-plan         - Structured task breakdown"
-echo "  • /wfc-test         - Property-based test generation"
-echo "  • /wfc-security     - STRIDE threat modeling"
-echo "  • /wfc-architecture - C4 diagrams & ADRs"
-echo "  • /wfc-observe      - Observability instrumentation"
-echo "  • /wfc-retro        - AI-powered retrospectives"
-echo "  • /wfc-safeclaude   - Safe command allowlist"
-echo "  • /wfc-isthissmart  - Critical thinking advisor"
-echo "  • /wfc-newskill     - Create new WFC skills"
+echo -e "${BOLD}🎯 Available Skills${RESET}"
+echo ""
+echo "  • ${CYAN}/wfc-review${RESET}       - Multi-agent consensus code review"
+echo "  • ${CYAN}/wfc-implement${RESET}    - Parallel TDD implementation"
+echo "  • ${CYAN}/wfc-plan${RESET}         - Structured task breakdown"
+echo "  • ${CYAN}/wfc-test${RESET}         - Property-based test generation"
+echo "  • ${CYAN}/wfc-security${RESET}     - STRIDE threat modeling"
+echo "  • ${CYAN}/wfc-architecture${RESET} - C4 diagrams & ADRs"
+echo "  • ${CYAN}/wfc-observe${RESET}      - Observability instrumentation"
+echo "  • ${CYAN}/wfc-retro${RESET}        - AI-powered retrospectives"
+echo "  • ${CYAN}/wfc-safeclaude${RESET}   - Safe command allowlist"
+echo "  • ${CYAN}/wfc-isthissmart${RESET}  - Critical thinking advisor"
+echo "  • ${CYAN}/wfc-newskill${RESET}     - Create new WFC skills"
 
 echo ""
-echo -e "${BOLD}Quick Start:${RESET}"
-
-if [ "$INSTALL_CLAUDE" = true ]; then
-    echo "  Claude Code: /wfc-review"
-fi
-
-if [ "$INSTALL_KIRO" = true ]; then
-    echo "  Kiro: /wfc-review"
-fi
-
+echo -e "${BOLD}🚀 Next Steps${RESET}"
 echo ""
-echo -e "${BOLD}Documentation:${RESET}"
-echo "  • README: https://github.com/sam-fakhreddine/wfc"
-echo "  • Quick Start: $WFC_ROOT/../QUICKSTART.md"
-echo "  • Personas: $WFC_ROOT/../docs/PERSONAS.md"
+
+for platform in "${!INSTALL_TO[@]}"; do
+    case $platform in
+        claude)
+            echo -e "  ${GREEN}Claude Code:${RESET}"
+            echo -e "    claude"
+            echo -e "    /wfc-review"
+            echo ""
+            ;;
+        kiro)
+            echo -e "  ${GREEN}Kiro:${RESET}"
+            echo -e "    kiro"
+            echo -e "    /wfc-review"
+            echo ""
+            ;;
+        opencode)
+            echo -e "  ${GREEN}OpenCode:${RESET}"
+            echo -e "    opencode"
+            echo -e "    /wfc-review"
+            echo ""
+            ;;
+        cursor)
+            echo -e "  ${GREEN}Cursor:${RESET}"
+            echo -e "    Open Cursor"
+            echo -e "    /wfc-review"
+            echo ""
+            ;;
+        vscode)
+            echo -e "  ${GREEN}VS Code:${RESET}"
+            echo -e "    code ."
+            echo -e "    /wfc-review"
+            echo ""
+            ;;
+        codex)
+            echo -e "  ${GREEN}OpenAI Codex:${RESET}"
+            echo -e "    codex"
+            echo -e "    /wfc-review"
+            echo ""
+            ;;
+        antigravity)
+            echo -e "  ${GREEN}Google Antigravity:${RESET}"
+            echo -e "    antigravity"
+            echo -e "    /wfc-review"
+            echo ""
+            ;;
+        goose)
+            echo -e "  ${GREEN}Goose:${RESET}"
+            echo -e "    goose"
+            echo -e "    /wfc-review"
+            echo ""
+            ;;
+    esac
+done
+
+echo -e "${BOLD}📚 Documentation${RESET}"
+echo ""
+echo -e "  • README:    ${CYAN}https://github.com/sam-fakhreddine/wfc${RESET}"
+echo -e "  • Install:   ${CYAN}$SCRIPT_DIR/docs/UNIVERSAL_INSTALL.md${RESET}"
+echo -e "  • Personas:  ${CYAN}$SCRIPT_DIR/docs/PERSONAS.md${RESET}"
 
 echo ""
 echo -e "${GREEN}${BOLD}This is World Fucking Class.${RESET} 🏆"
+echo -e "${CYAN}Universal. Compatible. Performance-optimized.${RESET}"
