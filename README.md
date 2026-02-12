@@ -87,6 +87,12 @@ cd wfc
 
 **Detects and installs to:** Claude Code, Kiro, OpenCode, Cursor, VS Code, Codex, Antigravity
 
+**Branding Modes:**
+- **SFW** (Safe For Work) → "Workflow Champion" - Professional language
+- **NSFW** (Default) → "World Fucking Class" - No bullshit
+
+Choose during installation. [More details](docs/BRANDING.md)
+
 ### Example: Build a Feature
 
 ```bash
