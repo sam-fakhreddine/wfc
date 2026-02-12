@@ -1,0 +1,45 @@
+{
+  "cli_version": "0.4.2",
+  "checkpoint_id": "99264b93b29f",
+  "strategy": "manual-commit",
+  "branch": "main",
+  "checkpoints_count": 5,
+  "files_touched": [
+    "README.md",
+    "plan/PROPERTIES.md",
+    "plan/TASKS.md",
+    "plan/TEST-PLAN.md",
+    "tests/test_build_complexity.py",
+    "wfc/scripts/skills/build/complexity_assessor.py",
+    "wfc/wfc-tools/gitwork/README.md",
+    "wfc/wfc-tools/gitwork/TOOL.md",
+    "wfc/wfc-tools/gitwork/__init__.py",
+    "wfc/wfc-tools/gitwork/api/__init__.py",
+    "wfc/wfc-tools/gitwork/api/branch.py",
+    "wfc/wfc-tools/gitwork/api/commit.py",
+    "wfc/wfc-tools/gitwork/api/history.py",
+    "wfc/wfc-tools/gitwork/api/hooks.py",
+    "wfc/wfc-tools/gitwork/api/merge.py",
+    "wfc/wfc-tools/gitwork/api/rollback.py",
+    "wfc/wfc-tools/gitwork/api/semver.py",
+    "wfc/wfc-tools/gitwork/api/worktree.py",
+    "wfc/wfc-tools/gitwork/config.py",
+    "wfc/wfc-tools/gitwork/router.py"
+  ],
+  "sessions": [
+    {
+      "metadata": "/99/264b93b29f/0/metadata.json",
+      "transcript": "/99/264b93b29f/0/full.jsonl",
+      "context": "/99/264b93b29f/0/context.md",
+      "content_hash": "/99/264b93b29f/0/content_hash.txt",
+      "prompt": "/99/264b93b29f/0/prompt.txt"
+    }
+  ],
+  "token_usage": {
+    "input_tokens": 4909,
+    "cache_creation_tokens": 166534,
+    "cache_read_tokens": 5402267,
+    "output_tokens": 34937,
+    "api_call_count": 44
+  }
+}
