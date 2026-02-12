@@ -77,6 +77,8 @@ wfc validate                     # Validate skills (after install)
 
 ### Git Workflow Policy (v2.0 - PR-First)
 
+**Versioning:** Use autosemver for automatic semantic versioning (BREAKING CHANGES, feat:, fix:)
+
 **NEW DEFAULT**: WFC creates GitHub PRs for team collaboration.
 
 ```
