@@ -75,31 +75,38 @@ wfc validate                     # Validate skills (after install)
 - Complex dependencies
 - Need formal properties (SAFETY, LIVENESS, etc.)
 
-### Git Safety Policy
+### Git Workflow Policy (v2.0 - PR-First)
 
-**CRITICAL**: WFC NEVER pushes to remote. You must push manually.
+**NEW DEFAULT**: WFC creates GitHub PRs for team collaboration.
 
 ```
-WFC workflow:
-  Build/Plan → Implement → Quality → Review → Merge LOCAL main
-                                                    ↓
-                                            [WFC STOPS HERE]
-                                                    ↓
-                                    You review and push:
-                                        git push origin main
+WFC workflow (NEW):
+  Build/Plan → Implement → Quality → Review → Push Branch → Create GitHub PR
+                                                                    ↓
+                                                          [WFC STOPS HERE]
+                                                                    ↓
+                                            You review PR and merge via GitHub
 ```
 
-**Why:**
-- ✅ You control what goes to remote
-- ✅ Review merged result before push
-- ✅ Respects branch protection rules
-- ✅ Easy to revert before push
-- ✅ You decide: push, PR, or revert
+**What Changed:**
+- ✅ **NEW**: Pushes feature branches to remote
+- ✅ **NEW**: Creates GitHub PRs automatically
+- ✅ **UNCHANGED**: Never pushes to main/master
+- ✅ **UNCHANGED**: User controls final merge (via GitHub)
+- ✅ **LEGACY**: Direct local merge still available (config: `"merge.strategy": "direct"`)
+
+**Why PR Workflow:**
+- ✅ Team collaboration (PR reviews)
+- ✅ CI/CD integration (GitHub Actions)
+- ✅ Audit trail (GitHub history)
+- ✅ Branch protection (required reviews)
+- ✅ Modern workflow (industry standard)
 
 ### When to Use Which Skill
 
 | Task | Skill | Why |
 |------|-------|-----|
+| Brainstorming | **default mode** | wfc-vibe: natural chat, transitions when ready |
 | New feature (small) | `/wfc-build` | Intentional Vibe - fast iteration |
 | New feature (large) | `/wfc-plan` + `/wfc-implement` | Structured approach |
 | Code review | `/wfc-review` | Multi-agent consensus |
@@ -108,6 +115,8 @@ WFC workflow:
 | Generate tests | `/wfc-test` | Property-based tests |
 | Add monitoring | `/wfc-observe` | Observability from properties |
 | Validate idea | `/wfc-isthissmart` | 7-dimension analysis |
+
+**Note:** wfc-vibe is the default conversational mode. Just chat naturally - when you're ready to implement, say "let's plan this" or "let's build this".
 
 ### Example Session
 
@@ -128,20 +137,22 @@ A: 100 requests/minute per user
 Q: Storage?
 A: Redis
 
-# Orchestrator spawns subagent → TDD → Quality → Review → Merge local
+# Orchestrator spawns subagent → TDD → Quality → Review → Push + PR
 
-# YOU review the result:
-git log -1
+# WFC output:
+# ✅ Task complete
+# ✅ Pushed branch: feat/TASK-001-rate-limiting
+# ✅ Created PR #42: https://github.com/user/repo/pull/42
+
+# YOU review the PR on GitHub:
+# - Check code changes
+# - Request changes if needed
+# - Merge when ready
+
+# LEGACY mode (if you set "merge.strategy": "direct"):
+git log -1        # Review local merge
 git diff HEAD~1
-
-# If good:
-git push origin main
-
-# If want PR instead:
-git checkout -b feature/rate-limiting
-git cherry-pick main
-git push origin feature/rate-limiting
-# Then create PR
+git push origin main  # Push when ready
 ```
 
 ### Absolute Rules
@@ -150,15 +161,15 @@ git push origin feature/rate-limiting
 - ✅ Use `/wfc-build` for single features
 - ✅ Use `/wfc-plan` + `/wfc-implement` for complex work
 - ✅ Use `/wfc-review` for all code reviews
-- ✅ Wait for WFC to merge to local main
-- ✅ Review merged result before pushing
-- ✅ Push manually: `git push origin main`
+- ✅ Review PRs on GitHub before merging
+- ✅ Install gh CLI for PR workflow: `brew install gh && gh auth login`
+- ✅ Use legacy mode if needed: config `"merge.strategy": "direct"`
 
 **DON'T:**
 - ❌ Implement features manually without WFC
 - ❌ Skip quality checks
 - ❌ Skip consensus review
-- ❌ Let WFC push to remote (it won't, but don't expect it to)
+- ❌ Let WFC push to main/master (it won't - PRs only)
 - ❌ Force push without understanding changes
 
 ## 📂 Project Structure
