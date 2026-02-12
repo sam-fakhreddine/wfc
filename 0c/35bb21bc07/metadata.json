@@ -1,0 +1,47 @@
+{
+  "cli_version": "0.4.2",
+  "checkpoint_id": "0c35bb21bc07",
+  "strategy": "manual-commit",
+  "branch": "main",
+  "checkpoints_count": 4,
+  "files_touched": [
+    "wfc/scripts/memory/__init__.py",
+    "wfc/scripts/memory/manager.py",
+    "wfc/scripts/memory/metrics.py",
+    "wfc/scripts/memory/ops_tasks.py",
+    "wfc/scripts/memory/pattern_detector.py",
+    "wfc/scripts/memory/reflexion.py",
+    "wfc/scripts/memory/schemas.py",
+    "wfc/scripts/memory_manager.py",
+    "wfc/wfc-tools/gitwork/README.md",
+    "wfc/wfc-tools/gitwork/TOOL.md",
+    "wfc/wfc-tools/gitwork/__init__.py",
+    "wfc/wfc-tools/gitwork/api/__init__.py",
+    "wfc/wfc-tools/gitwork/api/branch.py",
+    "wfc/wfc-tools/gitwork/api/commit.py",
+    "wfc/wfc-tools/gitwork/api/history.py",
+    "wfc/wfc-tools/gitwork/api/hooks.py",
+    "wfc/wfc-tools/gitwork/api/merge.py",
+    "wfc/wfc-tools/gitwork/api/rollback.py",
+    "wfc/wfc-tools/gitwork/api/semver.py",
+    "wfc/wfc-tools/gitwork/api/worktree.py",
+    "wfc/wfc-tools/gitwork/config.py",
+    "wfc/wfc-tools/gitwork/router.py"
+  ],
+  "sessions": [
+    {
+      "metadata": "/0c/35bb21bc07/0/metadata.json",
+      "transcript": "/0c/35bb21bc07/0/full.jsonl",
+      "context": "/0c/35bb21bc07/0/context.md",
+      "content_hash": "/0c/35bb21bc07/0/content_hash.txt",
+      "prompt": "/0c/35bb21bc07/0/prompt.txt"
+    }
+  ],
+  "token_usage": {
+    "input_tokens": 192,
+    "cache_creation_tokens": 33154,
+    "cache_read_tokens": 2826316,
+    "output_tokens": 8616,
+    "api_call_count": 23
+  }
+}
