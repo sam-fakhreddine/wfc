@@ -2,9 +2,10 @@
 Gitwork configuration management
 """
 
-import json
 from pathlib import Path
 from typing import Dict, Any
+
+from wfc.shared.file_io import load_json
 
 
 class GitworkConfig:
@@ -43,15 +44,13 @@ class GitworkConfig:
         # Try project config first
         project_config = Path("wfc-gitwork.config.json")
         if project_config.exists():
-            with open(project_config) as f:
-                self.config.update(json.load(f))
+            self.config.update(load_json(project_config))
             return
-        
+
         # Try global config
         global_config = Path.home() / ".claude" / "wfc-gitwork.config.json"
         if global_config.exists():
-            with open(global_config) as f:
-                self.config.update(json.load(f))
+            self.config.update(load_json(global_config))
     
     def get(self, key: str, default: Any = None) -> Any:
         """Get config value"""
