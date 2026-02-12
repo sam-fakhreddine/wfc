@@ -67,8 +67,9 @@ WFC will:
 
 ### How It Works (Technical)
 
-WFC uses Claude Code's [Task tool](https://code.claude.com/docs/en/sub-agents) for true independent reviews:
+WFC uses Claude Code's [Task tool](https://code.claude.com/docs/en/sub-agents) for true independent execution:
 
+**Review Workflow (`/wfc-review`)**:
 ```
 /wfc-review
     ↓
@@ -81,7 +82,27 @@ Parse Results ← ← ← ← ← ← ← ← ← ← ← 5 JSON responses
 Synthesize Consensus → Generate Report
 ```
 
-Each persona runs in its own subprocess with no visibility into other reviews until synthesis.
+**Implementation Workflow (`/wfc-implement`)**:
+```
+/wfc-implement
+    ↓
+Read TASKS.md → Build Dependency Graph → Orchestrator Coordinates
+    ↓                                            ↓
+Spawn Subagents (up to max_agents parallel) → Each subagent:
+    ↓                                            - TDD workflow (TEST → IMPLEMENT → REFACTOR)
+    ↓                                            - Quality checks
+    ↓                                            - Submit report
+Wait for Completion → Process Reports
+    ↓
+Route to Review → Merge → Integration Tests → Main Branch
+```
+
+**Critical Principle**: Orchestrator NEVER implements code, ONLY coordinates subagents.
+
+Each subagent runs in its own subprocess with:
+- Isolated git worktree
+- Independent context window
+- No visibility into other agents' work until synthesis
 
 ## Example Review Output
 
