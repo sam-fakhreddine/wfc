@@ -27,6 +27,140 @@ wfc validate                     # Validate skills (after install)
 - ✅ `uv pip install`
 - ✅ `uv run python`
 
+## 🎯 WFC Workflow (ALWAYS USE)
+
+**CRITICAL**: Always use WFC skills for feature development. Never implement features manually.
+
+### Complete Workflow
+
+```
+1. Plan → 2. Build/Implement → 3. Review → 4. User Pushes
+```
+
+#### Option A: Quick Features (Intentional Vibe)
+
+```bash
+/wfc-build "add rate limiting to API"
+```
+
+**Use when:**
+- Single feature, clear scope
+- Want to iterate quickly
+- "Just build this and ship"
+
+**What happens:**
+1. Quick adaptive interview (3-5 questions)
+2. Orchestrator assesses complexity (1 agent or N agents)
+3. Subagent(s) implement via TDD in isolated worktrees
+4. Quality checks (formatters, linters, tests)
+5. Consensus review (wfc-review with 5 expert personas)
+6. Merge to local main (integration tests)
+7. **STOP - User reviews and pushes manually**
+
+#### Option B: Complex Features (Full Planning)
+
+```bash
+# Step 1: Create structured plan
+/wfc-plan
+
+# Step 2: Execute plan with parallel agents
+/wfc-implement
+
+# Step 3: Final review (if not already done per-task)
+/wfc-review
+```
+
+**Use when:**
+- Large feature with multiple tasks
+- Complex dependencies
+- Need formal properties (SAFETY, LIVENESS, etc.)
+
+### Git Safety Policy
+
+**CRITICAL**: WFC NEVER pushes to remote. You must push manually.
+
+```
+WFC workflow:
+  Build/Plan → Implement → Quality → Review → Merge LOCAL main
+                                                    ↓
+                                            [WFC STOPS HERE]
+                                                    ↓
+                                    You review and push:
+                                        git push origin main
+```
+
+**Why:**
+- ✅ You control what goes to remote
+- ✅ Review merged result before push
+- ✅ Respects branch protection rules
+- ✅ Easy to revert before push
+- ✅ You decide: push, PR, or revert
+
+### When to Use Which Skill
+
+| Task | Skill | Why |
+|------|-------|-----|
+| New feature (small) | `/wfc-build` | Intentional Vibe - fast iteration |
+| New feature (large) | `/wfc-plan` + `/wfc-implement` | Structured approach |
+| Code review | `/wfc-review` | Multi-agent consensus |
+| Security audit | `/wfc-security` | STRIDE threat modeling |
+| Architecture docs | `/wfc-architecture` | C4 diagrams + ADRs |
+| Generate tests | `/wfc-test` | Property-based tests |
+| Add monitoring | `/wfc-observe` | Observability from properties |
+| Validate idea | `/wfc-isthissmart` | 7-dimension analysis |
+
+### Example Session
+
+```bash
+# User wants to add a feature
+You: "Add rate limiting to the API"
+
+# Claude uses WFC workflow:
+/wfc-build "add rate limiting to API"
+
+# Quick interview:
+Q: Which endpoints?
+A: All /api/* endpoints
+
+Q: Rate limit?
+A: 100 requests/minute per user
+
+Q: Storage?
+A: Redis
+
+# Orchestrator spawns subagent → TDD → Quality → Review → Merge local
+
+# YOU review the result:
+git log -1
+git diff HEAD~1
+
+# If good:
+git push origin main
+
+# If want PR instead:
+git checkout -b feature/rate-limiting
+git cherry-pick main
+git push origin feature/rate-limiting
+# Then create PR
+```
+
+### Absolute Rules
+
+**DO:**
+- ✅ Use `/wfc-build` for single features
+- ✅ Use `/wfc-plan` + `/wfc-implement` for complex work
+- ✅ Use `/wfc-review` for all code reviews
+- ✅ Wait for WFC to merge to local main
+- ✅ Review merged result before pushing
+- ✅ Push manually: `git push origin main`
+
+**DON'T:**
+- ❌ Implement features manually without WFC
+- ❌ Skip quality checks
+- ❌ Skip consensus review
+- ❌ Let WFC push to remote (it won't, but don't expect it to)
+- ❌ Force push without understanding changes
+
 ## 📂 Project Structure
 
 **Current Architecture**: Agent Skills compliant multi-agent review system
