@@ -35,7 +35,7 @@ class WFCConfig:
         "metrics": {
             "enabled": True,
             "directory": str(Path.home() / ".claude" / "metrics"),
-            "format": "jsonl"
+            "format": "jsonl",
         },
         "llm": {
             "default_model": "claude-sonnet-4-20250514",
@@ -43,8 +43,8 @@ class WFCConfig:
             "models": {
                 "sonnet": "claude-sonnet-4-20250514",
                 "opus": "claude-opus-4-20250514",
-                "haiku": "claude-haiku-4-5-20251001"
-            }
+                "haiku": "claude-haiku-4-5-20251001",
+            },
         },
         "personas": {
             "enabled": True,
@@ -56,15 +56,15 @@ class WFCConfig:
                 "consensus_threshold": 3,
                 "weight_by_relevance": True,
                 "detect_unique_insights": True,
-                "detect_divergent_views": True
+                "detect_divergent_views": True,
             },
             "selection": {
                 "tech_stack_weight": 0.4,
                 "property_weight": 0.3,
                 "complexity_weight": 0.15,
                 "task_type_weight": 0.1,
-                "domain_weight": 0.05
-            }
+                "domain_weight": 0.05,
+            },
         },
         "entire_io": {
             "enabled": True,  # ON BY DEFAULT: Privacy-first, local-only session capture
@@ -76,7 +76,7 @@ class WFCConfig:
                 "IMPLEMENT",
                 "REFACTOR",
                 "QUALITY_CHECK",
-                "SUBMIT"
+                "SUBMIT",
             ],
             "privacy": {
                 "redact_secrets": True,
@@ -87,15 +87,33 @@ class WFCConfig:
                     "*.pem",
                     "*secret*",
                     "*credential*",
-                    ".claude/*"
+                    ".claude/*",
                 ],
-                "capture_env": False
+                "capture_env": False,
             },
-            "retention": {
-                "max_sessions": 100,
-                "auto_cleanup": True
-            }
-        }
+            "retention": {"max_sessions": 100, "auto_cleanup": True},
+        },
+        "merge": {
+            "strategy": "pr",  # NEW DEFAULT (Phase 2): "pr" = GitHub PR workflow, "direct" = local merge
+            "pr": {
+                "enabled": True,  # PR workflow enabled by default
+                "base_branch": "main",  # Target branch for PRs
+                "draft": True,  # Create draft PRs by default
+                "auto_push": True,  # Automatically push branch before creating PR
+                "require_gh_cli": True,  # Fail if gh CLI not available
+            },
+            "direct": {
+                "enabled": True,  # Direct merge still available as fallback
+                "cleanup_worktree": True,  # Clean up worktree after successful merge
+            },
+        },
+        "workflow_enforcement": {
+            "enabled": True,  # Workflow enforcement enabled by default
+            "mode": "warning",  # "warning" = soft enforcement (warn, don't block), "strict" = block violations
+            "track_violations": True,  # Log violations to telemetry
+            "protected_branches": ["main", "master"],  # Branches that trigger warnings
+            "require_wfc_origin": False,  # Don't enforce WFC-only commits (yet)
+        },
     }
 
     def __init__(self, project_root: Optional[Path] = None):
@@ -192,7 +210,7 @@ class WFCConfig:
             return None
 
         try:
-            with open(path, 'r') as f:
+            with open(path, "r") as f:
                 return json.load(f)
         except (json.JSONDecodeError, IOError) as e:
             print(f"Warning: Failed to load config from {path}: {e}")

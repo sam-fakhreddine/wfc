@@ -37,13 +37,15 @@ class FailureSeverity(Enum):
     - ERROR: Blocks submission (broken code, failing tests)
     - CRITICAL: Immediate failure (security, data loss)
     """
-    WARNING = "warning"      # Do NOT block
-    ERROR = "error"          # BLOCK submission
-    CRITICAL = "critical"    # IMMEDIATE failure
+
+    WARNING = "warning"  # Do NOT block
+    ERROR = "error"  # BLOCK submission
+    CRITICAL = "critical"  # IMMEDIATE failure
 
 
 class MergeStatus(Enum):
     """Merge operation status."""
+
     PENDING = "pending"
     REBASING = "rebasing"
     TESTING = "testing"
@@ -58,6 +60,7 @@ class MergeResult:
     """
     Result of a merge operation - ELEGANT data structure.
     """
+
     task_id: str
     status: MergeStatus
     merge_sha: Optional[str] = None
@@ -88,6 +91,12 @@ class MergeResult:
     worktree_preserved: bool = False
     worktree_path: Optional[str] = None
 
+    # PR info (NEW - Phase 2)
+    pr_created: bool = False
+    pr_url: Optional[str] = None
+    pr_number: Optional[int] = None
+    branch_pushed: bool = False
+
     def to_dict(self) -> Dict[str, Any]:
         """Convert to dictionary."""
         return {
@@ -107,7 +116,11 @@ class MergeResult:
             "retry_count": self.retry_count,
             "max_retries": self.max_retries,
             "worktree_preserved": self.worktree_preserved,
-            "worktree_path": self.worktree_path
+            "worktree_path": self.worktree_path,
+            "pr_created": self.pr_created,
+            "pr_url": self.pr_url,
+            "pr_number": self.pr_number,
+            "branch_pushed": self.branch_pushed,
         }
 
 
@@ -164,7 +177,7 @@ class MergeEngine:
             task_id=task.id,
             status=MergeStatus.PENDING,
             retry_count=task.tags.count("retry"),
-            worktree_path=str(worktree_path)
+            worktree_path=str(worktree_path),
         )
 
         try:
@@ -217,11 +230,9 @@ class MergeEngine:
                 # Step 5: ROLLBACK - Main must be kept clean
                 result.status = MergeStatus.FAILED
                 result.rollback_reason = f"Integration tests failed: {len(failed_tests)} tests"
-                result.failure_severity = self._classify_test_failure({
-                    "passed": False,
-                    "failures": failed_tests,
-                    "output": test_output
-                })
+                result.failure_severity = self._classify_test_failure(
+                    {"passed": False, "failures": failed_tests, "output": test_output}
+                )
 
                 # Perform atomic rollback
                 self._rollback(merge_sha, result)
@@ -247,6 +258,157 @@ class MergeEngine:
         except Exception as e:
             result.status = MergeStatus.FAILED
             result.rollback_reason = f"Merge error: {str(e)}"
+            result.failure_severity = FailureSeverity.CRITICAL
+            result.worktree_preserved = True
+            result.should_retry = False
+            return result
+        finally:
+            # Record duration
+            result.integration_test_duration_ms = int((time.time() - start_time) * 1000)
+
+    def create_pr(
+        self,
+        task: Task,
+        branch: str,
+        worktree_path: Path,
+        review_report: Optional[Dict[str, Any]] = None,
+    ) -> MergeResult:
+        """
+        Create GitHub PR workflow (NEW in Phase 2).
+
+        This is the new default workflow that replaces direct merge.
+
+        Args:
+            task: Task being submitted
+            branch: Branch to push and create PR for
+            worktree_path: Path to worktree
+            review_report: Optional consensus review report
+
+        Returns:
+            MergeResult with PR creation status
+
+        Process:
+        1. Rebase onto latest main (in worktree)
+        2. Run tests in worktree (verify pass)
+        3. Push branch to remote
+        4. Create GitHub PR via gh CLI
+        5. Preserve worktree for user review
+
+        NOTE: This does NOT merge to main. User reviews PR and merges via GitHub.
+        """
+        start_time = time.time()
+        result = MergeResult(
+            task_id=task.id,
+            status=MergeStatus.PENDING,
+            retry_count=task.tags.count("retry"),
+            worktree_path=str(worktree_path),
+        )
+
+        try:
+            # Step 1: Rebase onto latest main
+            result.status = MergeStatus.REBASING
+            rebase_success = self._rebase(worktree_path, branch)
+            result.rebase_required = True
+
+            if not rebase_success:
+                result.status = MergeStatus.FAILED
+                result.rollback_reason = "Rebase failed with conflicts"
+                result.failure_severity = FailureSeverity.ERROR
+                result.worktree_preserved = True
+                result.should_retry = False
+                return result
+
+            # Step 2: Run tests in worktree after rebase
+            test_result = self._run_worktree_tests(worktree_path)
+            if not test_result["passed"]:
+                result.status = MergeStatus.FAILED
+                result.rollback_reason = f"Tests failed after rebase: {test_result['failures']}"
+                result.failure_severity = self._classify_test_failure(test_result)
+                result.worktree_preserved = True
+                result.should_retry = self._should_retry(result)
+                return result
+
+            result.integration_tests_passed = True
+
+            # Step 3 & 4: Push branch and create PR
+            from wfc.wfc_tools.gitwork.api.pr import get_pr_operations
+
+            pr_ops = get_pr_operations(self.project_root)
+
+            # Get PR config
+            pr_config = self.config.get("merge.pr", {})
+            base_branch = pr_config.get("base_branch", "main")
+            draft = pr_config.get("draft", True)
+            auto_push = pr_config.get("auto_push", True)
+
+            # Create task dict for PR
+            task_dict = {
+                "id": task.id,
+                "title": task.title,
+                "description": task.description,
+                "acceptance_criteria": task.acceptance_criteria,
+                "properties_verified": (
+                    task.properties_verified if hasattr(task, "properties_verified") else []
+                ),
+            }
+
+            # Create PR
+            pr_result = pr_ops.create_pr(
+                branch=branch,
+                task=task_dict,
+                review_report=review_report,
+                base=base_branch,
+                draft=draft,
+                auto_push=auto_push,
+            )
+
+            # Update result with PR info
+            result.pr_created = pr_result.success
+            result.pr_url = pr_result.pr_url
+            result.pr_number = pr_result.pr_number
+            result.branch_pushed = pr_result.pushed
+
+            # Log PR creation telemetry (Phase 6)
+            try:
+                from wfc.shared.telemetry_auto import log_event
+
+                log_event(
+                    "pr_created",
+                    {
+                        "task_id": task.id,
+                        "pr_url": pr_result.pr_url,
+                        "pr_number": pr_result.pr_number,
+                        "branch": branch,
+                        "success": pr_result.success,
+                        "pushed": pr_result.pushed,
+                        "draft": draft,
+                        "base_branch": base_branch,
+                        "review_score": (
+                            review_report.get("overall_score") if review_report else None
+                        ),
+                    },
+                )
+            except Exception:
+                # Telemetry failure should not break workflow
+                pass
+
+            if pr_result.success:
+                result.status = (
+                    MergeStatus.MERGED
+                )  # Consider PR creation as "merge" workflow complete
+                result.worktree_preserved = True  # Keep worktree for user review
+            else:
+                result.status = MergeStatus.FAILED
+                result.rollback_reason = f"PR creation failed: {pr_result.message}"
+                result.failure_severity = FailureSeverity.ERROR
+                result.worktree_preserved = True
+                result.should_retry = False
+
+            return result
+
+        except Exception as e:
+            result.status = MergeStatus.FAILED
+            result.rollback_reason = f"PR workflow error: {str(e)}"
             result.failure_severity = FailureSeverity.CRITICAL
             result.worktree_preserved = True
             result.should_retry = False
@@ -300,7 +462,7 @@ class MergeEngine:
                 cwd=worktree_path,
                 capture_output=True,
                 text=True,
-                timeout=300  # 5 minutes
+                timeout=300,  # 5 minutes
             )
 
             passed = result.returncode == 0
@@ -309,18 +471,14 @@ class MergeEngine:
             return {
                 "passed": passed,
                 "failures": self._parse_test_failures(output) if not passed else [],
-                "output": output
+                "output": output,
             }
 
         except FileNotFoundError:
             # No pytest - assume pass
             return {"passed": True, "failures": [], "output": "No test runner"}
         except subprocess.TimeoutExpired:
-            return {
-                "passed": False,
-                "failures": ["Test timeout (>5 minutes)"],
-                "output": "Timeout"
-            }
+            return {"passed": False, "failures": ["Test timeout (>5 minutes)"], "output": "Timeout"}
 
     def _merge_to_main(self, branch: str) -> str:
         """
@@ -364,7 +522,7 @@ class MergeEngine:
                 cwd=self.project_root,
                 capture_output=True,
                 text=True,
-                timeout=timeout
+                timeout=timeout,
             )
 
             duration_ms = int((time.time() - start_time) * 1000)
@@ -385,8 +543,8 @@ class MergeEngine:
     def _parse_test_failures(self, output: str) -> List[str]:
         """Parse test output to extract failures."""
         failures = []
-        for line in output.split('\n'):
-            if 'FAILED' in line or 'ERROR' in line:
+        for line in output.split("\n"):
+            if "FAILED" in line or "ERROR" in line:
                 failures.append(line.strip())
         return failures[:20]  # Limit to first 20
 
@@ -440,8 +598,14 @@ class MergeEngine:
 
         # Check for critical failures
         critical_keywords = [
-            "security", "vulnerability", "CVE-", "SQL injection",
-            "data loss", "corruption", "segfault", "fatal"
+            "security",
+            "vulnerability",
+            "CVE-",
+            "SQL injection",
+            "data loss",
+            "corruption",
+            "segfault",
+            "fatal",
         ]
 
         for keyword in critical_keywords:
@@ -449,8 +613,7 @@ class MergeEngine:
                 return FailureSeverity.CRITICAL
 
         # Check if it's just warnings (should not block)
-        if all("warning" in f.lower() or "deprecated" in f.lower()
-               for f in failures):
+        if all("warning" in f.lower() or "deprecated" in f.lower() for f in failures):
             return FailureSeverity.WARNING
 
         # Default: ERROR (blocks but retryable)
@@ -497,7 +660,7 @@ class MergeEngine:
                 ["git", "worktree", "remove", str(worktree_path), "--force"],
                 cwd=self.project_root,
                 capture_output=True,
-                timeout=30
+                timeout=30,
             )
         except Exception:
             # Cleanup failed - not critical, will be cleaned up later
@@ -513,7 +676,7 @@ class MergeEngine:
         severity_emoji = {
             FailureSeverity.WARNING: "⚠️",
             FailureSeverity.ERROR: "❌",
-            FailureSeverity.CRITICAL: "🚨"
+            FailureSeverity.CRITICAL: "🚨",
         }
 
         plan = f"""# Recovery Plan: {result.task_id}
@@ -607,7 +770,7 @@ def log_merge_operation(result: MergeResult, telemetry_file: Path) -> None:
     log_entry = {
         "timestamp": time.strftime("%Y-%m-%d %H:%M:%S"),
         "event": "merge",
-        **result.to_dict()
+        **result.to_dict(),
     }
 
     # Append to telemetry file
@@ -628,7 +791,7 @@ if __name__ == "__main__":
         status=MergeStatus.MERGED,
         merge_sha="abc123",
         rebase_required=True,
-        integration_tests_passed=True
+        integration_tests_passed=True,
     )
     print(f"   Status: {result.status.value}")
     print(f"   Merge SHA: {result.merge_sha}")
@@ -644,14 +807,13 @@ if __name__ == "__main__":
         retry_count=0,
         max_retries=2,
         worktree_preserved=True,
-        worktree_path="/tmp/worktree-002"
+        worktree_path="/tmp/worktree-002",
     )
 
     engine = None  # Would need real engine for _should_retry
     # Manually test retry logic
     should_retry = (
-        result.retry_count < result.max_retries and
-        result.failure_severity == FailureSeverity.ERROR
+        result.retry_count < result.max_retries and result.failure_severity == FailureSeverity.ERROR
     )
     result.should_retry = should_retry
 
@@ -669,7 +831,7 @@ if __name__ == "__main__":
         description="Test",
         acceptance_criteria=["Works"],
         complexity=TaskComplexity.M,
-        status=TaskStatus.FAILED
+        status=TaskStatus.FAILED,
     )
 
     updated_task = prepare_task_for_retry(task)
@@ -684,7 +846,7 @@ if __name__ == "__main__":
     test_result = {
         "passed": False,
         "failures": ["DeprecationWarning: old API", "PendingDeprecationWarning"],
-        "output": "WARNING: Deprecated"
+        "output": "WARNING: Deprecated",
     }
     # Would call engine._classify_test_failure(test_result)
     print("      Expected: WARNING")
@@ -693,7 +855,7 @@ if __name__ == "__main__":
     test_result = {
         "passed": False,
         "failures": ["FAILED test_feature.py::test_logic"],
-        "output": "AssertionError: Expected 5 got 4"
+        "output": "AssertionError: Expected 5 got 4",
     }
     print("      Expected: ERROR")
 
@@ -701,7 +863,7 @@ if __name__ == "__main__":
     test_result = {
         "passed": False,
         "failures": ["FAILED test_security.py::test_sql_injection"],
-        "output": "CRITICAL: SQL injection vulnerability detected"
+        "output": "CRITICAL: SQL injection vulnerability detected",
     }
     print("      Expected: CRITICAL")
 

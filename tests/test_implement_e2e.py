@@ -85,8 +85,8 @@ class TestE2EBasicWorkflow:
         task_graph = parse_tasks(plan_dir / "TASKS.md")
 
         assert len(task_graph.tasks) == 1
-        assert task_graph.tasks[0].task_id == "TASK-001"
-        assert task_graph.tasks[0].complexity == "S"
+        assert task_graph.tasks[0].id == "TASK-001"
+        assert task_graph.tasks[0].complexity.value == "S"
 
 
 class TestQualityGateIntegration:
@@ -133,28 +133,38 @@ class TestConfidenceWorkflow:
 
     def test_high_confidence_proceeds(self):
         """Test that high confidence tasks proceed to implementation."""
+        import tempfile
         from wfc.scripts.confidence_checker import ConfidenceChecker
 
-        checker = ConfidenceChecker(Path.cwd())
+        # Create temp directory with example files
+        with tempfile.TemporaryDirectory() as tmpdir:
+            project_root = Path(tmpdir)
 
-        task = {
-            "id": "TASK-001",
-            "description": "Add logging to existing function",
-            "acceptance_criteria": [
-                "Logs function entry",
-                "Logs function exit",
-                "Uses Python logging module",
-            ],
-            "complexity": "S",
-            "files_likely_affected": ["src/utils.py"],
-            "test_requirements": ["Test logging output"],
-        }
+            # Create directory structure that task references
+            src_dir = project_root / "src"
+            src_dir.mkdir()
+            (src_dir / "utils.py").write_text("# Existing file")
 
-        assessment = checker.assess(task)
+            checker = ConfidenceChecker(project_root)
 
-        # High confidence should proceed
-        assert assessment.should_proceed is True
-        assert assessment.confidence_score >= 90
+            task = {
+                "id": "TASK-001",
+                "description": "Add logging to existing function",
+                "acceptance_criteria": [
+                    "Logs function entry",
+                    "Logs function exit",
+                    "Uses Python logging module",
+                ],
+                "complexity": "S",
+                "files_likely_affected": ["src/utils.py"],
+                "test_requirements": ["Test logging output"],
+            }
+
+            assessment = checker.assess(task)
+
+            # High confidence should proceed
+            assert assessment.should_proceed is True
+            assert assessment.confidence_score >= 90
 
     def test_low_confidence_stops(self):
         """Test that low confidence tasks do not proceed."""
@@ -229,9 +239,8 @@ class TestRollbackScenarios:
         assert FailureSeverity.CRITICAL.value == "critical"
 
         # Verify the status enum exists
-        assert MergeStatus.SUCCESS.value == "success"
-        assert MergeStatus.FAILED_REBASE.value == "failed_rebase"
-        assert MergeStatus.FAILED_TESTS.value == "failed_tests"
+        assert MergeStatus.MERGED.value == "merged"
+        assert MergeStatus.FAILED.value == "failed"
         assert MergeStatus.ROLLED_BACK.value == "rolled_back"
 
     def test_worktree_preservation_on_failure(self):
@@ -325,15 +334,15 @@ class TestParallelExecution:
             task_graph = parse_tasks(tasks_file)
 
             # TASK-001 should have no dependencies
-            task1 = next(t for t in task_graph.tasks if t.task_id == "TASK-001")
+            task1 = next(t for t in task_graph.tasks if t.id == "TASK-001")
             assert len(task1.dependencies) == 0
 
             # TASK-002 should depend on TASK-001
-            task2 = next(t for t in task_graph.tasks if t.task_id == "TASK-002")
+            task2 = next(t for t in task_graph.tasks if t.id == "TASK-002")
             assert "TASK-001" in task2.dependencies
 
             # TASK-003 should be independent
-            task3 = next(t for t in task_graph.tasks if t.task_id == "TASK-003")
+            task3 = next(t for t in task_graph.tasks if t.id == "TASK-003")
             assert len(task3.dependencies) == 0
 
             # TASK-001 and TASK-003 can run in parallel
@@ -354,10 +363,15 @@ class TestParallelExecution:
         # For now, just verify we can import the necessary components
         from wfc.shared.config.wfc_config import WFCConfig
 
-        config = WFCConfig.load()
+        config = WFCConfig().load()
 
-        # Should have orchestration settings
-        assert hasattr(config, "orchestration") or config.get("orchestration") is not None
+        # Verify config loaded successfully
+        assert config is not None
+        assert isinstance(config, dict)
+
+        # Verify it has expected sections
+        assert "merge" in config
+        assert "metrics" in config
 
 
 class TestTDDWorkflow:

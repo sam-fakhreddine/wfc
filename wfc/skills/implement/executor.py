@@ -130,18 +130,18 @@ class ExecutionEngine:
         - Retry count (failed before, think harder)
         """
         # Get retry count from tags
-        retry_count = task.tags.count('retry') if hasattr(task, 'tags') else 0
+        retry_count = task.tags.count("retry") if hasattr(task, "tags") else 0
 
         # Decide if extended thinking should be used
         thinking_config = ExtendedThinkingDecider.should_use_extended_thinking(
             complexity=task.complexity.value,
             properties=task.properties,
             retry_count=retry_count,
-            has_dependencies=len(task.dependencies) > 0 if hasattr(task, 'dependencies') else False
+            has_dependencies=len(task.dependencies) > 0 if hasattr(task, "dependencies") else False,
         )
 
         # Log decision
-        if thinking_config.mode.value != 'normal':
+        if thinking_config.mode.value != "normal":
             print(f"   ⚡ Extended thinking enabled for {task.id}")
             print(f"      Reason: {thinking_config.reason}")
             if thinking_config.budget_tokens:
@@ -161,45 +161,47 @@ class ExecutionEngine:
             prompt_parts.append(thinking_section)
 
         # Add TDD workflow with systematic debugging
-        prompt_parts.extend([
-            "",
-            "Follow the TDD workflow:",
-            "1. UNDERSTAND - Read task, properties, test plan, existing code",
-            "2. TEST_FIRST - Write tests BEFORE implementation",
-            "3. IMPLEMENT - Write minimum code to pass tests",
-            "",
-            "   IF BUGS DETECTED (during implementation or testing):",
-            "   3a. ROOT_CAUSE_INVESTIGATION (REQUIRED)",
-            "       - NO FIXES WITHOUT ROOT CAUSE FIRST",
-            "       - Read error messages carefully, reproduce consistently",
-            "       - Trace data flow, identify root cause",
-            "       - Document: WHAT (symptom), WHY (cause), WHERE (location)",
-            "",
-            "   3b. PATTERN_ANALYSIS",
-            "       - Find similar working code",
-            "       - Compare line-by-line, map dependencies",
-            "",
-            "   3c. HYPOTHESIS_TESTING",
-            "       - Form ONE clear hypothesis",
-            "       - Test with minimal change",
-            "       - Verify results before proceeding",
-            "",
-            "   3d. FIX_IMPLEMENTATION",
-            "       - Write test that reproduces bug (fails before fix)",
-            "       - Implement minimal fix addressing root cause",
-            "       - Verify all tests pass",
-            "       - Apply 3-strikes rule (max 3 fix attempts)",
-            "",
-            "4. REFACTOR - Clean up while keeping tests passing",
-            "5. QUALITY_CHECK - Run formatters, linters, tests",
-            "6. SUBMIT - Produce agent report with root cause documentation",
-            "",
-            "CRITICAL: For all bug fixes, include root cause analysis (WHAT, WHY, WHERE, FIX).",
-            "See wfc/skills/implement/DEBUGGING.md for complete methodology.",
-            "",
-            f"Properties to satisfy: {', '.join(task.properties)}",
-            f"Acceptance criteria: {', '.join(task.acceptance_criteria)}",
-        ])
+        prompt_parts.extend(
+            [
+                "",
+                "Follow the TDD workflow:",
+                "1. UNDERSTAND - Read task, properties, test plan, existing code",
+                "2. TEST_FIRST - Write tests BEFORE implementation",
+                "3. IMPLEMENT - Write minimum code to pass tests",
+                "",
+                "   IF BUGS DETECTED (during implementation or testing):",
+                "   3a. ROOT_CAUSE_INVESTIGATION (REQUIRED)",
+                "       - NO FIXES WITHOUT ROOT CAUSE FIRST",
+                "       - Read error messages carefully, reproduce consistently",
+                "       - Trace data flow, identify root cause",
+                "       - Document: WHAT (symptom), WHY (cause), WHERE (location)",
+                "",
+                "   3b. PATTERN_ANALYSIS",
+                "       - Find similar working code",
+                "       - Compare line-by-line, map dependencies",
+                "",
+                "   3c. HYPOTHESIS_TESTING",
+                "       - Form ONE clear hypothesis",
+                "       - Test with minimal change",
+                "       - Verify results before proceeding",
+                "",
+                "   3d. FIX_IMPLEMENTATION",
+                "       - Write test that reproduces bug (fails before fix)",
+                "       - Implement minimal fix addressing root cause",
+                "       - Verify all tests pass",
+                "       - Apply 3-strikes rule (max 3 fix attempts)",
+                "",
+                "4. REFACTOR - Clean up while keeping tests passing",
+                "5. QUALITY_CHECK - Run formatters, linters, tests",
+                "6. SUBMIT - Produce agent report with root cause documentation",
+                "",
+                "CRITICAL: For all bug fixes, include root cause analysis (WHAT, WHY, WHERE, FIX).",
+                "See wfc/skills/implement/DEBUGGING.md for complete methodology.",
+                "",
+                f"Properties to satisfy: {', '.join(task.properties)}",
+                f"Acceptance criteria: {', '.join(task.acceptance_criteria)}",
+            ]
+        )
 
         return "\n".join(prompt_parts)
 
@@ -222,14 +224,10 @@ class ExecutionEngine:
             status="success",
             branch=f"wfc-task-{task_id}",
             worktree_path=f".worktrees/{task_id}",
-            commits=[{
-                "sha": "mock123",
-                "message": f"Implement {task_id}",
-                "files_changed": []
-            }],
+            commits=[{"sha": "mock123", "message": f"Implement {task_id}", "files_changed": []}],
             properties_satisfied={},
             tests_passed=True,
-            test_results={}
+            test_results={},
         )
 
     def _process_report(self, report: AgentReport, task: Task) -> None:
@@ -239,7 +237,7 @@ class ExecutionEngine:
             return
 
         # Route through review (using mock for now)
-        review_passed = self._review(report)
+        review_passed, review_report = self._review(report)
 
         if not review_passed:
             # Phase 1: Mark as failed
@@ -247,35 +245,65 @@ class ExecutionEngine:
             self.orchestrator.mark_task_failed(task.id)
             return
 
-        # Merge
-        merge_result = self.merge_engine.merge(
-            task_id=task.id,
-            branch=report.branch,
-            worktree_path=Path(report.worktree_path)
-        )
+        # Route to PR workflow or direct merge based on config
+        merge_strategy = self.config.get("merge.strategy", "pr")  # Default to PR workflow
 
-        # Track rollbacks
-        from .merge_engine import MergeStatus
-        if merge_result.status == MergeStatus.ROLLED_BACK:
-            self.orchestrator.rollback_count += 1
+        if merge_strategy == "pr":
+            # NEW: PR workflow (push branch + create GitHub PR)
+            merge_result = self.merge_engine.create_pr(
+                task=task,
+                branch=report.branch,
+                worktree_path=Path(report.worktree_path),
+                review_report=review_report,
+            )
 
-        if merge_result.integration_tests_passed:
-            self.orchestrator.mark_task_complete(task.id, report.to_dict())
+            # Track PR creation
+            if merge_result.pr_created:
+                self.orchestrator.mark_task_complete(
+                    task.id,
+                    {
+                        **report.to_dict(),
+                        "pr_url": merge_result.pr_url,
+                        "pr_number": merge_result.pr_number,
+                    },
+                )
+            else:
+                self.orchestrator.mark_task_failed(task.id)
+
         else:
-            self.orchestrator.mark_task_failed(task.id)
+            # LEGACY: Direct merge to local main
+            merge_result = self.merge_engine.merge(
+                task=task, branch=report.branch, worktree_path=Path(report.worktree_path)
+            )
 
-    def _review(self, report: AgentReport) -> bool:
-        """Run review (using mock for now)."""
+            # Track rollbacks
+            from .merge_engine import MergeStatus
+
+            if merge_result.status == MergeStatus.ROLLED_BACK:
+                self.orchestrator.rollback_count += 1
+
+            if merge_result.integration_tests_passed:
+                self.orchestrator.mark_task_complete(task.id, report.to_dict())
+            else:
+                self.orchestrator.mark_task_failed(task.id)
+
+    def _review(self, report: AgentReport) -> tuple[bool, Optional[Dict]]:
+        """
+        Run review (using mock for now).
+
+        Returns:
+            Tuple of (passed: bool, review_report: Optional[Dict])
+        """
         from wfc.skills.review.mock import mock_review
 
         result = mock_review(
             files=report.commits[0]["files_changed"] if report.commits else [],
             properties=list(report.properties_satisfied.keys()),
             task_id=report.task_id,
-            mode="pass"  # For now, always pass
+            mode="pass",  # For now, always pass
         )
 
-        return result["passed"]
+        return result["passed"], result
 
     def _is_complete(self) -> bool:
         """Check if execution is complete."""

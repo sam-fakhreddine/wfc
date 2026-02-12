@@ -1,241 +1,521 @@
-# WFC Git Safety Policy
+# WFC Git Workflow Policy
 
-**CRITICAL PRINCIPLE:** WFC NEVER pushes to remote repositories. User must manually push after review.
+**NEW PHILOSOPHY (v2.0):** WFC creates GitHub PRs by default for team review and collaboration.
 
-## The Rule
+This document outlines WFC's git workflow policy, representing a fundamental shift from local-only development to GitHub-integrated collaboration.
 
-### ❌ WFC NEVER DOES
+---
 
-- `git push` to any remote
-- `git push --force` to any remote
-- `git push origin main`
-- `git push origin <branch>`
-- Any automatic remote pushing
+## The New Rule
 
-### ✅ WFC ONLY DOES
+### ✅ WFC DEFAULT WORKFLOW
 
-- `git merge` to **local main**
-- `git commit` in worktrees
-- `git rebase` in worktrees
-- `git revert` for rollback (local only)
+WFC now follows industry-standard GitHub PR workflow:
 
-## Why This Rule Exists
+1. **Agent Implementation** - Code implemented in isolated worktree
+2. **Quality Checks** - Formatting, linting, tests pass
+3. **Consensus Review** - Multi-agent expert review (APPROVED)
+4. **Push to Remote** ⭐ **NEW** - Branch pushed to origin
+5. **Create GitHub PR** ⭐ **NEW** - Draft PR created automatically
+6. **User Reviews** - Review PR on GitHub, request changes if needed
+7. **Merge via GitHub** - User or team merges PR when ready
 
-1. **User Control** - User has final say before code goes to remote
-2. **Review Opportunity** - User can inspect merged result before push
-3. **Branch Protection** - Respects branch protection rules (PRs, etc.)
-4. **Safety Net** - Easy to undo local operations before push
-5. **Multi-Environment** - User controls which remote and when
+### What Changed from v1.0?
 
-## WFC Workflow
+| Old (v1.0) | New (v2.0) |
+|------------|------------|
+| ❌ Never push to remote | ✅ Push feature branches |
+| ❌ Local merge only | ✅ GitHub PR creation |
+| ❌ Manual PR creation | ✅ Automatic PR creation |
+| ❌ No CI/CD integration | ✅ Full GitHub Actions support |
+| ✅ User controls merge | ✅ User controls merge (via GitHub) |
 
-```
-WFC builds/implements
-    ↓
-Quality checks pass
-    ↓
-Consensus review: APPROVED
-    ↓
-WFC merges to LOCAL main
-    ↓
-Integration tests pass
-    ↓
-[WFC STOPS HERE] ← User reviews local result
-    ↓
-User manually: git push origin main
-```
+---
 
-## Modes and Safety
+## Why PR Workflow?
 
-| Mode | Builds Code | Merges Local | Pushes Remote |
-|------|-------------|--------------|---------------|
-| `wfc-build` | ✅ Via subagent | ✅ After review | ❌ NEVER |
-| `wfc-implement` | ✅ Via subagents | ✅ After review | ❌ NEVER |
-| `wfc-plan` | ❌ Only plans | ❌ No merge | ❌ NEVER |
-| `wfc-review` | ❌ Only reviews | ❌ No merge | ❌ NEVER |
+### Benefits
 
-## Review Requirements
+1. **Team Collaboration** - PRs enable code review by teammates
+2. **CI/CD Integration** - GitHub Actions run on every PR
+3. **Audit Trail** - All changes tracked in GitHub history
+4. **Branch Protection** - Enforce required reviews, status checks
+5. **Modern Workflow** - Industry standard practice
+6. **Better Context** - PR descriptions preserve decision rationale
+7. **Discussion** - Inline comments and conversations
 
-WFC only merges to local main if:
+### Still Safe
 
-1. **Quality checks pass** - Formatters, linters, tests
-2. **Consensus review APPROVED** - Multi-agent review passes
-3. **Integration tests pass** - Tests pass on local main after merge
-4. **No critical issues** - No security vulnerabilities, data loss risks
+- WFC never pushes directly to `main`/`master`
+- All changes go through PR review process
+- User has final approval before merge
+- Respects branch protection rules
+- Easy to close PR if not ready
 
-If any fail:
-- Automatic rollback (local revert)
-- Worktree preserved for investigation
-- User notified of failure
+---
 
-## User Push Workflow
+## WFC Can Do (NEW)
 
-After WFC merges locally, user decides:
+### ✅ Allowed Operations
 
-### Option 1: Push Immediately
-```bash
-git push origin main
-```
+| Operation | Description | Safety Level |
+|-----------|-------------|--------------|
+| `git push origin <branch>` | Push feature branches | ✅ Safe |
+| `gh pr create` | Create GitHub PRs | ✅ Safe |
+| `git checkout -b <branch>` | Create feature branches | ✅ Safe |
+| `git commit` | Commit to feature branches | ✅ Safe |
+| `git merge <branch>` (local) | Merge to local main (legacy mode) | ⚠️ Requires config |
 
-### Option 2: Review First
-```bash
-# Review what was merged
-git log --oneline -5
-git diff origin/main
+### ⚠️ Protected Operations
 
-# If good:
-git push origin main
+| Operation | Status | Reason |
+|-----------|--------|--------|
+| `git push origin main` | ❌ BLOCKED | Never push directly to protected branches |
+| `git push --force origin main` | ❌ BLOCKED | Never force push to protected branches |
+| `git push --force <feature>` | ⚠️ REQUIRES EXPLICIT REQUEST | Destructive, use `--force-with-lease` instead |
 
-# If not good:
-git revert HEAD  # Undo WFC's merge
-```
-
-### Option 3: Create PR
-```bash
-# Push to feature branch instead
-git checkout -b feature/wfc-implemented
-git cherry-pick main  # Take WFC's merge
-git push origin feature/wfc-implemented
-
-# Then create PR via GitHub/GitLab
-```
-
-## Safety Mechanisms
-
-### 1. Consensus Review Gating
-
-Merge only happens if `wfc-review` returns:
-```json
-{
-  "consensus": {
-    "passed": true,
-    "overall_score": 8.5,
-    "decision": "APPROVED"
-  }
-}
-```
-
-### 2. Integration Test Gating
-
-Merge only happens if integration tests pass on local main:
-```python
-test_passed, duration, failed_tests, output = self._run_integration_tests()
-
-if not test_passed:
-    self._rollback(merge_sha, result)  # Revert local merge
-    result.status = MergeStatus.ROLLED_BACK
-```
-
-### 3. Automatic Rollback
-
-If merge breaks main locally:
-- Immediate `git revert <merge_sha>`
-- Main restored to passing state
-- Worktree preserved for investigation
-- Task re-queued for retry (if retryable)
-
-### 4. Worktree Isolation
-
-All agent work happens in isolated worktrees:
-```
-.worktrees/
-├── task-001/  # Agent 1 works here (isolated)
-├── task-002/  # Agent 2 works here (isolated)
-└── task-003/  # Agent 3 works here (isolated)
-
-main/          # Only touched after review passes
-```
+---
 
 ## Configuration
 
-No configuration can override this rule. The following setting does NOT exist:
+### Default PR Workflow
 
 ```json
 {
   "merge": {
-    "auto_push": false  // This setting doesn't exist - push is NEVER automatic
+    "strategy": "pr",
+    "pr": {
+      "enabled": true,
+      "base_branch": "main",
+      "draft": true,
+      "auto_push": true
+    }
   }
 }
 ```
 
-## Error Messages
+**What happens:**
+1. Code passes quality checks
+2. Branch pushed to `origin`
+3. Draft PR created on GitHub
+4. You review PR and merge when ready
 
-If user somehow triggers push behavior:
+### Legacy Direct Merge
 
+If you prefer local-only workflow (solo projects, no CI/CD):
+
+```json
+{
+  "merge": {
+    "strategy": "direct"
+  }
+}
 ```
-❌ ERROR: WFC does not push to remote repositories
 
-This is a safety principle.
+**What happens:**
+1. Code passes quality checks
+2. Merged to local `main` branch
+3. You manually push when ready: `git push origin main`
 
-After WFC merges to local main, YOU must decide when to push:
-  git push origin main
+---
 
-This gives you a chance to:
-  1. Review the merged result
-  2. Run additional tests
-  3. Create a PR instead of direct push
-  4. Revert if you change your mind
+## Requirements
+
+### GitHub CLI Installation
+
+PR workflow requires `gh` CLI installed and authenticated.
+
+**Install:**
+
+```bash
+# macOS
+brew install gh
+
+# Ubuntu/Debian
+sudo apt install gh
+
+# Windows
+winget install --id GitHub.cli
 ```
 
-## Comparison: CI/CD vs WFC
+**Authenticate:**
 
-| System | Builds | Tests | Merges | Pushes |
-|--------|--------|-------|--------|--------|
-| **GitHub Actions** | ✅ | ✅ | ✅ | ✅ Auto-push |
-| **Jenkins** | ✅ | ✅ | ✅ | ✅ Auto-push |
-| **WFC** | ✅ | ✅ | ✅ | ❌ **User pushes** |
-
-**Why different?**
-- CI/CD runs on remote servers (already in GitHub)
-- WFC runs locally (user's machine)
-- Local changes = user control before remote
-
-## Enforcement
-
-This rule is enforced by:
-
-1. **No push code** - Codebase has zero `git push` calls in orchestrators/merge engines
-2. **Documentation** - All docs emphasize user push
-3. **Error handling** - If push attempted, error and block
-4. **Code review** - Any PR adding auto-push will be rejected
-
-## Exception: NONE
-
-There are **NO exceptions** to this rule.
-
-Even if:
-- User requests it
-- Tests pass
-- Review approves
-- Configuration enables it
-
-**WFC NEVER pushes to remote.**
-
-## Summary
-
+```bash
+gh auth login
 ```
-┌──────────────────────────────────────┐
-│  WFC's Responsibility                │
-│  - Build code (via subagents)        │
-│  - Run quality checks                │
-│  - Get consensus review              │
-│  - Merge to LOCAL main               │
-│  - Run integration tests             │
-│  - Rollback if tests fail            │
-└──────────────────────────────────────┘
-                 ↓
-        [WFC STOPS HERE]
-                 ↓
-┌──────────────────────────────────────┐
-│  User's Responsibility               │
-│  - Review merged result              │
-│  - Decide: push, PR, or revert       │
-│  - git push origin main              │
-└──────────────────────────────────────┘
+
+### Verification
+
+Check if ready for PR workflow:
+
+```bash
+gh auth status
+```
+
+Should show:
+```
+✓ Logged in to github.com as <username>
+✓ Git operations for github.com configured to use ssh protocol.
+✓ Token: *******************
 ```
 
 ---
 
-**CRITICAL:** WFC coordinates. User controls remote.
+## Workflow Examples
 
-This is **World Fucking Class** safety. 🏆
+### Example 1: Feature Implementation (PR Workflow)
+
+```bash
+# WFC implements feature
+wfc implement plan/TASKS.md
+
+# WFC output:
+# ✅ Task TASK-001 complete
+# ✅ Quality checks passed
+# ✅ Consensus review: APPROVED (8.5/10)
+# ✅ Pushed branch: feat/TASK-001-add-auth
+# ✅ Created PR #42: https://github.com/user/repo/pull/42
+
+# You review PR on GitHub
+# Request changes if needed
+# Merge when ready
+```
+
+### Example 2: Legacy Local Workflow
+
+```bash
+# Set config to direct merge
+echo '{"merge": {"strategy": "direct"}}' > wfc.config.json
+
+# WFC implements feature
+wfc implement plan/TASKS.md
+
+# WFC output:
+# ✅ Task TASK-001 complete
+# ✅ Merged to local main
+# ⚠️  Remember to push: git push origin main
+
+# You review local changes
+git log -1
+git diff HEAD~1
+
+# Push when ready
+git push origin main
+```
+
+### Example 3: Create PR from Existing Branch
+
+You can also create PRs for existing branches:
+
+```bash
+# Using gh CLI directly
+gh pr create \
+  --title "TASK-001: Add authentication" \
+  --body "Implements user authentication system" \
+  --base main \
+  --draft
+
+# Or let WFC handle it (if it has PR data)
+wfc pr create feat/TASK-001-add-auth
+```
+
+---
+
+## Safety Guarantees
+
+### What WFC Never Does
+
+1. ❌ **Never** pushes directly to `main`/`master`
+2. ❌ **Never** force-pushes to protected branches
+3. ❌ **Never** bypasses branch protection rules
+4. ❌ **Never** merges PRs automatically (you control merge)
+5. ❌ **Never** pushes without passing quality checks
+6. ❌ **Never** pushes sensitive files (`.env`, secrets, credentials)
+
+### What You Control
+
+1. ✅ **Review PR** before merging (always)
+2. ✅ **Request changes** if needed
+3. ✅ **Close PR** if you change your mind
+4. ✅ **Revert PR** after merge if needed
+5. ✅ **Choose workflow** (PR vs direct merge)
+6. ✅ **Override config** per-project or globally
+
+---
+
+## Git Hooks Integration
+
+WFC installs optional git hooks for workflow enforcement.
+
+### Installation
+
+```bash
+# Install WFC git hooks
+wfc hooks install
+
+# Check status
+wfc hooks status
+
+# Uninstall
+wfc hooks uninstall
+```
+
+### Hooks Installed
+
+| Hook | Purpose | Enforcement |
+|------|---------|-------------|
+| `pre-commit` | Warn about direct commits to `main` | ⚠️ Warning only |
+| `commit-msg` | Validate commit message format | ⚠️ Warning only |
+| `pre-push` | Warn about pushing to protected branches | ⚠️ Warning only |
+
+### Hook Behavior
+
+**Soft Enforcement (Default):**
+- Hooks **warn** but **don't block**
+- Violations logged to telemetry
+- Developer experience prioritized
+
+**Example:**
+
+```bash
+git checkout main
+touch test.txt
+git add test.txt
+git commit -m "test"
+
+# Output:
+# ⚠️  WARNING: Committing directly to main
+# Consider: git checkout -b feat/TASK-XXX-description
+# ✅ Commit successful
+```
+
+---
+
+## Migration Guide
+
+### From v1.0 to v2.0
+
+If you're upgrading from WFC v1.0 (local-only workflow):
+
+**Breaking Changes:**
+1. Default workflow changed from `direct` to `pr`
+2. Requires `gh` CLI installed and authenticated
+3. Pushes to remote (previously never pushed)
+
+**Migration Steps:**
+
+#### Step 1: Install gh CLI
+
+```bash
+# macOS
+brew install gh
+
+# Ubuntu
+sudo apt install gh
+
+# Authenticate
+gh auth login
+```
+
+#### Step 2: Update Config (Optional)
+
+If you want to keep old behavior (local-only):
+
+```bash
+# Project-specific
+cat > wfc.config.json << EOF
+{
+  "merge": {
+    "strategy": "direct"
+  }
+}
+EOF
+
+# Or global
+mkdir -p ~/.claude
+cat > ~/.claude/wfc.config.json << EOF
+{
+  "merge": {
+    "strategy": "direct"
+  }
+}
+EOF
+```
+
+#### Step 3: Test PR Workflow
+
+```bash
+# Try new PR workflow
+wfc implement test-task
+
+# Check GitHub for new PR
+gh pr list
+
+# If good, nothing else needed!
+```
+
+#### Step 4: Install Hooks (Optional)
+
+```bash
+# Install git hooks for warnings
+wfc hooks install
+```
+
+---
+
+## Troubleshooting
+
+### PR Creation Fails
+
+**Error: `gh CLI not found`**
+
+```bash
+# Install gh CLI
+brew install gh  # macOS
+sudo apt install gh  # Ubuntu
+
+# Authenticate
+gh auth login
+```
+
+**Error: `gh not authenticated`**
+
+```bash
+gh auth login
+# Follow prompts to authenticate
+```
+
+**Error: `Push failed`**
+
+```bash
+# Check remote exists
+git remote -v
+
+# Add remote if missing
+git remote add origin https://github.com/user/repo.git
+
+# Try manual push
+git push -u origin <branch>
+```
+
+### Hooks Not Working
+
+**Check installation:**
+
+```bash
+wfc hooks status
+```
+
+**Reinstall hooks:**
+
+```bash
+wfc hooks uninstall
+wfc hooks install
+```
+
+---
+
+## Workflow Enforcement
+
+WFC tracks workflow compliance via telemetry.
+
+### Metrics Tracked
+
+- Direct commits to `main` (warning)
+- Non-conventional commit messages (warning)
+- Force pushes (warning)
+- PR creation success rate
+- Average PR review time
+
+### Compliance Dashboard
+
+```bash
+# View workflow metrics
+wfc metrics workflow
+
+# Example output:
+# Workflow Compliance (Last 30 Days)
+# ===================================
+# PR Creation Success: 95% (38/40)
+# Direct Main Commits: 2 warnings
+# Force Pushes: 0 warnings
+# Conventional Commits: 90% (36/40)
+```
+
+---
+
+## FAQ
+
+### Q: Will WFC ever push without asking?
+
+**A:** WFC pushes branches automatically in PR workflow (configurable via `merge.pr.auto_push`). It **never** pushes to protected branches (`main`/`master`).
+
+### Q: Can I review before PR creation?
+
+**A:** Yes! Set `merge.pr.auto_push: false` to review before push:
+
+```json
+{
+  "merge": {
+    "pr": {
+      "auto_push": false
+    }
+  }
+}
+```
+
+Then manually push when ready:
+
+```bash
+git push -u origin <branch>
+wfc pr create <branch>
+```
+
+### Q: What if I don't have GitHub?
+
+**A:** Use legacy direct merge workflow:
+
+```json
+{
+  "merge": {
+    "strategy": "direct"
+  }
+}
+```
+
+### Q: Can I use GitLab/Bitbucket?
+
+**A:** Not yet. PR workflow currently supports GitHub only. Use direct merge for other platforms. GitLab/Bitbucket support planned for future release.
+
+### Q: Are hooks required?
+
+**A:** No. Hooks are optional and provide warnings only. You can disable them entirely:
+
+```bash
+wfc hooks uninstall
+```
+
+---
+
+## Summary
+
+### New Workflow (v2.0)
+
+✅ **PR-first** - GitHub integration by default
+✅ **Team collaboration** - Built for team development
+✅ **CI/CD ready** - GitHub Actions run on PRs
+✅ **Audit trail** - All changes tracked
+✅ **User controlled** - You approve all merges
+✅ **Backward compatible** - Legacy mode available
+
+### Safety Unchanged
+
+✅ **Never push to main** directly
+✅ **Quality checks** before submission
+✅ **Consensus review** by experts
+✅ **User approval** required for merge
+✅ **Easy rollback** - Just close the PR
+
+---
+
+**This is World Fucking Class.** 🚀

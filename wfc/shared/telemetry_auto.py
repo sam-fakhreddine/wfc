@@ -18,6 +18,7 @@ import os
 @dataclass
 class TaskMetrics:
     """Metrics for a single task execution"""
+
     task_id: str
     complexity: str  # S, M, L, XL
     status: str  # success, failed, in_progress
@@ -83,7 +84,9 @@ class AutoTelemetry:
         self.storage_dir.mkdir(parents=True, exist_ok=True)
 
         # Metrics file for current session
-        self.session_file = self.storage_dir / f"session-{datetime.now().strftime('%Y%m%d-%H%M%S')}.jsonl"
+        self.session_file = (
+            self.storage_dir / f"session-{datetime.now().strftime('%Y%m%d-%H%M%S')}.jsonl"
+        )
 
         # Aggregated metrics file
         self.aggregate_file = self.storage_dir / "aggregate.json"
@@ -94,7 +97,7 @@ class AutoTelemetry:
         complexity: str,
         properties: List[str],
         thinking_budget: int,
-        thinking_mode: str
+        thinking_mode: str,
     ) -> None:
         """Log task start - creates initial metrics entry"""
         metrics = TaskMetrics(
@@ -107,7 +110,7 @@ class AutoTelemetry:
             thinking_truncated=False,
             thinking_mode=thinking_mode,
             retry_count=0,
-            properties=properties
+            properties=properties,
         )
 
         self._append_metrics(metrics)
@@ -132,7 +135,7 @@ class AutoTelemetry:
         bugs_fixed: int = 0,
         review_score: Optional[float] = None,
         review_passed: Optional[bool] = None,
-        properties_satisfied: Optional[Dict[str, bool]] = None
+        properties_satisfied: Optional[Dict[str, bool]] = None,
     ) -> None:
         """Log task completion - updates metrics entry"""
 
@@ -186,7 +189,7 @@ class AutoTelemetry:
                 bugs_fixed=bugs_fixed,
                 review_score=review_score,
                 review_passed=review_passed,
-                properties_satisfied=properties_satisfied or {}
+                properties_satisfied=properties_satisfied or {},
             )
 
         self._append_metrics(metrics)
@@ -197,8 +200,8 @@ class AutoTelemetry:
 
     def _append_metrics(self, metrics: TaskMetrics) -> None:
         """Append metrics to session file (JSONL format)"""
-        with open(self.session_file, 'a') as f:
-            f.write(json.dumps(asdict(metrics)) + '\n')
+        with open(self.session_file, "a") as f:
+            f.write(json.dumps(asdict(metrics)) + "\n")
 
     def _update_aggregate(self, metrics: TaskMetrics) -> None:
         """Update aggregated metrics file"""
@@ -215,7 +218,7 @@ class AutoTelemetry:
                 "total_duration_seconds": 0,
                 "truncation_count": 0,
                 "avg_retries": 0,
-                "tasks": []
+                "tasks": [],
             }
 
         # Update aggregate stats
@@ -244,7 +247,7 @@ class AutoTelemetry:
             "timestamp": metrics.timestamp,
             "retry_count": metrics.retry_count,
             "truncated": metrics.thinking_truncated,
-            "tokens": metrics.tokens_total
+            "tokens": metrics.tokens_total,
         }
 
         # Remove old entry if exists
@@ -255,7 +258,7 @@ class AutoTelemetry:
         aggregate["tasks"] = aggregate["tasks"][-100:]
 
         # Save aggregate
-        with open(self.aggregate_file, 'w') as f:
+        with open(self.aggregate_file, "w") as f:
             json.dump(aggregate, f, indent=2)
 
     def _find_task_metrics(self, task_id: str) -> Optional[TaskMetrics]:
@@ -275,17 +278,27 @@ class AutoTelemetry:
 
     def _print_task_summary(self, metrics: TaskMetrics) -> None:
         """Print task completion summary"""
-        print("\n" + "="*60)
+        print("\n" + "=" * 60)
         print(f"📊 WFC TASK METRICS: {metrics.task_id}")
-        print("="*60)
+        print("=" * 60)
         print(f"Status: {metrics.status.upper()}")
         print(f"Complexity: {metrics.complexity}")
-        print(f"Duration: {metrics.duration_seconds:.1f}s" if metrics.duration_seconds else "Duration: N/A")
+        print(
+            f"Duration: {metrics.duration_seconds:.1f}s"
+            if metrics.duration_seconds
+            else "Duration: N/A"
+        )
         print(f"\nThinking:")
         print(f"  Mode: {metrics.thinking_mode}")
-        print(f"  Budget: {metrics.thinking_budget_used}/{metrics.thinking_budget_allocated} tokens")
+        print(
+            f"  Budget: {metrics.thinking_budget_used}/{metrics.thinking_budget_allocated} tokens"
+        )
         print(f"  Truncated: {'⚠️ YES' if metrics.thinking_truncated else '✅ No'}")
-        print(f"  Utilization: {(metrics.thinking_budget_used/metrics.thinking_budget_allocated*100):.1f}%" if metrics.thinking_budget_allocated > 0 else "  Utilization: N/A")
+        print(
+            f"  Utilization: {(metrics.thinking_budget_used/metrics.thinking_budget_allocated*100):.1f}%"
+            if metrics.thinking_budget_allocated > 0
+            else "  Utilization: N/A"
+        )
 
         print(f"\nRetries: {metrics.retry_count}/{metrics.max_retries}")
 
@@ -303,16 +316,20 @@ class AutoTelemetry:
             if metrics.debugging_time_min:
                 print(f"  Time spent: {metrics.debugging_time_min:.1f} min")
             if metrics.root_cause_documented is not None:
-                print(f"  Root cause documented: {'✅ Yes' if metrics.root_cause_documented else '❌ No'}")
+                print(
+                    f"  Root cause documented: {'✅ Yes' if metrics.root_cause_documented else '❌ No'}"
+                )
 
         if metrics.review_score:
             print(f"\nReview:")
             print(f"  Score: {metrics.review_score:.1f}/10")
             print(f"  Status: {'✅ Passed' if metrics.review_passed else '❌ Failed'}")
 
-        print(f"\nTokens: {metrics.tokens_total:,} ({metrics.tokens_input:,} in, {metrics.tokens_output:,} out)")
+        print(
+            f"\nTokens: {metrics.tokens_total:,} ({metrics.tokens_input:,} in, {metrics.tokens_output:,} out)"
+        )
         print(f"Metrics saved to: {self.storage_dir}")
-        print("="*60 + "\n")
+        print("=" * 60 + "\n")
 
     def view_task_metrics(self, task_id: str) -> Optional[TaskMetrics]:
         """View metrics for a specific task"""
@@ -333,24 +350,33 @@ class AutoTelemetry:
         with open(self.aggregate_file) as f:
             aggregate = json.load(f)
 
-        print("\n" + "="*60)
+        print("\n" + "=" * 60)
         print("📊 WFC AGGREGATE METRICS")
-        print("="*60)
+        print("=" * 60)
         print(f"Total Tasks: {aggregate['total_tasks']}")
-        print(f"Success Rate: {(aggregate['successful_tasks']/aggregate['total_tasks']*100):.1f}%" if aggregate['total_tasks'] > 0 else "Success Rate: N/A")
+        print(
+            f"Success Rate: {(aggregate['successful_tasks']/aggregate['total_tasks']*100):.1f}%"
+            if aggregate["total_tasks"] > 0
+            else "Success Rate: N/A"
+        )
         print(f"  ✅ Successful: {aggregate['successful_tasks']}")
         print(f"  ❌ Failed: {aggregate['failed_tasks']}")
         print(f"\nAverage Retries: {aggregate['avg_retries']:.2f}")
         print(f"Truncation Events: {aggregate['truncation_count']}")
         print(f"Total Tokens Used: {aggregate['total_tokens']:,}")
-        print(f"Total Duration: {aggregate['total_duration_seconds']/60:.1f} min" if aggregate['total_duration_seconds'] > 0 else "Total Duration: N/A")
-        print("="*60 + "\n")
+        print(
+            f"Total Duration: {aggregate['total_duration_seconds']/60:.1f} min"
+            if aggregate["total_duration_seconds"] > 0
+            else "Total Duration: N/A"
+        )
+        print("=" * 60 + "\n")
 
         return aggregate
 
 
 # Global instance for easy access
 _telemetry = None
+
 
 def get_telemetry() -> AutoTelemetry:
     """Get global telemetry instance"""
@@ -361,7 +387,9 @@ def get_telemetry() -> AutoTelemetry:
 
 
 # Convenience functions
-def log_task_start(task_id: str, complexity: str, properties: List[str], thinking_budget: int, thinking_mode: str):
+def log_task_start(
+    task_id: str, complexity: str, properties: List[str], thinking_budget: int, thinking_mode: str
+):
     """Log task start"""
     get_telemetry().log_task_start(task_id, complexity, properties, thinking_budget, thinking_mode)
 
@@ -378,7 +406,7 @@ def log_task_complete(
     tests_run: int,
     tests_passed: int,
     tests_failed: int,
-    **kwargs
+    **kwargs,
 ):
     """Log task completion"""
     get_telemetry().log_task_complete(
@@ -393,7 +421,7 @@ def log_task_complete(
         tests_run=tests_run,
         tests_passed=tests_passed,
         tests_failed=tests_failed,
-        **kwargs
+        **kwargs,
     )
 
 
@@ -404,6 +432,176 @@ def view_metrics(task_id: Optional[str] = None):
         return telemetry.view_task_metrics(task_id)
     else:
         return telemetry.view_aggregate_metrics()
+
+
+# Generic event logging for hooks, PR creation, etc.
+def log_event(event_type: str, data: Dict[str, Any]) -> None:
+    """
+    Log generic event to telemetry (NEW in Phase 6).
+
+    Supports event types:
+    - pr_created: PR creation events
+    - hook_warning: Git hook violation warnings
+    - workflow_violation: Workflow compliance violations
+    - merge_complete: Merge operation completion
+    - Any custom event type
+
+    Args:
+        event_type: Event type identifier
+        data: Event data dictionary
+
+    Example:
+        log_event("pr_created", {
+            "pr_url": "https://github.com/user/repo/pull/42",
+            "task_id": "TASK-001",
+            "success": True
+        })
+    """
+    try:
+        telemetry = get_telemetry()
+
+        # Create event entry
+        event = {
+            "event": event_type,
+            "timestamp": datetime.now().isoformat(),
+            **data,
+        }
+
+        # Append to events file
+        events_file = telemetry.storage_dir / "events.jsonl"
+        with open(events_file, "a") as f:
+            f.write(json.dumps(event) + "\n")
+    except Exception as e:
+        # Telemetry failure should not break workflow - fail silently
+        pass
+
+
+def get_workflow_metrics(days: int = 30) -> Dict[str, Any]:
+    """
+    Get workflow compliance metrics (NEW in Phase 6).
+
+    Args:
+        days: Number of days to look back (default: 30)
+
+    Returns:
+        Dict with workflow metrics:
+            - pr_creation_success_rate
+            - direct_main_commits
+            - force_pushes
+            - conventional_commits
+            - hook_warnings
+    """
+    telemetry = get_telemetry()
+    events_file = telemetry.storage_dir / "events.jsonl"
+
+    if not events_file.exists():
+        return {
+            "pr_creation_success_rate": 0,
+            "total_prs": 0,
+            "successful_prs": 0,
+            "direct_main_commits": 0,
+            "force_pushes": 0,
+            "conventional_commits": 0,
+            "total_commits": 0,
+            "hook_warnings": [],
+        }
+
+    # Parse events
+    from datetime import datetime, timedelta
+
+    cutoff = datetime.now() - timedelta(days=days)
+
+    pr_events = []
+    hook_warnings = []
+    commit_events = []
+
+    try:
+        with open(events_file) as f:
+            for line in f:
+                event = json.loads(line)
+                event_time = datetime.fromisoformat(event["timestamp"])
+
+                if event_time < cutoff:
+                    continue
+
+                if event["event"] == "pr_created":
+                    pr_events.append(event)
+                elif event["event"] == "hook_warning":
+                    hook_warnings.append(event)
+                elif event["event"] == "commit_with_task":
+                    commit_events.append(event)
+
+    except Exception:
+        pass
+
+    # Calculate metrics
+    total_prs = len(pr_events)
+    successful_prs = sum(1 for e in pr_events if e.get("success", False))
+
+    direct_main_commits = sum(
+        1 for e in hook_warnings if e.get("violation") == "direct_commit_to_protected"
+    )
+
+    force_pushes = sum(1 for e in hook_warnings if e.get("violation") == "force_push")
+
+    conventional_commits = sum(
+        1 for e in hook_warnings if e.get("violation") != "non_conventional_commit"
+    )
+    total_commits = len(commit_events) + len(
+        [e for e in hook_warnings if "commit" in e.get("violation", "")]
+    )
+
+    return {
+        "pr_creation_success_rate": (successful_prs / total_prs * 100) if total_prs > 0 else 0,
+        "total_prs": total_prs,
+        "successful_prs": successful_prs,
+        "direct_main_commits": direct_main_commits,
+        "force_pushes": force_pushes,
+        "conventional_commits": conventional_commits,
+        "total_commits": total_commits,
+        "hook_warnings": hook_warnings[:20],  # Last 20
+    }
+
+
+def print_workflow_metrics(days: int = 30) -> None:
+    """
+    Print workflow compliance metrics (NEW in Phase 6).
+
+    Args:
+        days: Number of days to look back (default: 30)
+    """
+    metrics = get_workflow_metrics(days)
+
+    print(f"\n{'=' * 60}")
+    print(f"📊 WFC WORKFLOW METRICS (Last {days} Days)")
+    print(f"{'=' * 60}")
+
+    # PR Creation
+    print(f"\nPR Creation:")
+    print(f"  Total PRs: {metrics['total_prs']}")
+    print(f"  Successful: {metrics['successful_prs']}")
+    print(f"  Success Rate: {metrics['pr_creation_success_rate']:.1f}%")
+
+    # Workflow Compliance
+    print(f"\nWorkflow Compliance:")
+    print(f"  Direct Main Commits: {metrics['direct_main_commits']} warnings")
+    print(f"  Force Pushes: {metrics['force_pushes']} warnings")
+    print(
+        f"  Conventional Commits: {metrics['conventional_commits']}/{metrics['total_commits']} "
+        f"({metrics['conventional_commits']/metrics['total_commits']*100:.1f}%)"
+        if metrics["total_commits"] > 0
+        else "  Conventional Commits: N/A"
+    )
+
+    # Recent Warnings
+    if metrics["hook_warnings"]:
+        print(f"\nRecent Hook Warnings ({len(metrics['hook_warnings'])}):")
+        for warning in metrics["hook_warnings"][:5]:
+            hook = warning.get("hook", "unknown")
+            violation = warning.get("violation", "unknown")
+            print(f"  - [{hook}] {violation}")
+
+    print(f"{'=' * 60}\n")
 
 
 # CLI entry point
