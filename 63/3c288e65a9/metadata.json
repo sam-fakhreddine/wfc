@@ -1,0 +1,27 @@
+{
+  "cli_version": "0.4.2",
+  "checkpoint_id": "633c288e65a9",
+  "strategy": "manual-commit",
+  "branch": "main",
+  "checkpoints_count": 1,
+  "files_touched": [
+    "docs/UNIVERSAL_INSTALL.md",
+    "install-universal.sh"
+  ],
+  "sessions": [
+    {
+      "metadata": "/63/3c288e65a9/0/metadata.json",
+      "transcript": "/63/3c288e65a9/0/full.jsonl",
+      "context": "/63/3c288e65a9/0/context.md",
+      "content_hash": "/63/3c288e65a9/0/content_hash.txt",
+      "prompt": "/63/3c288e65a9/0/prompt.txt"
+    }
+  ],
+  "token_usage": {
+    "input_tokens": 114,
+    "cache_creation_tokens": 8327,
+    "cache_read_tokens": 1945271,
+    "output_tokens": 1683,
+    "api_call_count": 14
+  }
+}
