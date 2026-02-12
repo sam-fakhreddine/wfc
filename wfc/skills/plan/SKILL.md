@@ -21,16 +21,83 @@ Converts requirements into structured implementation plans through adaptive inte
 ## Usage
 
 ```bash
-# Default output to ./plan
+# Default (creates timestamped plan with history)
 /wfc-plan
+# → Generates: plans/plan_oauth2_authentication_20260211_143022/
+#              plans/HISTORY.md
+#              plans/HISTORY.json
 
-# Custom output directory
+# Custom output directory (disables history)
 /wfc-plan path/to/output
 
 # With options (future)
 /wfc-plan --interactive  # Step through interview
 /wfc-plan --from-file requirements.md  # Import requirements
 ```
+
+## Plan History
+
+**Each plan gets a unique timestamped directory.**
+
+### Directory Structure
+
+```
+plans/
+├── HISTORY.md                                    # Human-readable history
+├── HISTORY.json                                  # Machine-readable index
+├── plan_oauth2_authentication_20260211_143022/  # Timestamped plan
+│   ├── TASKS.md
+│   ├── PROPERTIES.md
+│   ├── TEST-PLAN.md
+│   └── interview-results.json
+├── plan_caching_layer_20260211_150135/
+│   ├── TASKS.md
+│   ├── PROPERTIES.md
+│   ├── TEST-PLAN.md
+│   └── interview-results.json
+└── plan_user_dashboard_20260212_091523/
+    ├── TASKS.md
+    ├── PROPERTIES.md
+    ├── TEST-PLAN.md
+    └── interview-results.json
+```
+
+### History File
+
+**plans/HISTORY.md** contains a searchable record:
+
+```markdown
+# Plan History
+
+**Total Plans:** 3
+
+---
+
+## plan_user_dashboard_20260212_091523
+- **Created:** 2026-02-12T09:15:23
+- **Goal:** Build user analytics dashboard
+- **Context:** Product team needs visibility into user behavior
+- **Directory:** `plans/plan_user_dashboard_20260212_091523`
+- **Tasks:** 7
+- **Properties:** 4
+- **Tests:** 15
+
+## plan_caching_layer_20260211_150135
+- **Created:** 2026-02-11T15:01:35
+- **Goal:** Implement caching layer for API
+- **Context:** Reduce database load and improve response times
+- **Directory:** `plans/plan_caching_layer_20260211_150135`
+- **Tasks:** 3
+- **Properties:** 2
+- **Tests:** 8
+```
+
+### Benefits
+
+- **Version control** - Never lose old plans
+- **Searchable** - Find plans by goal or date
+- **Traceable** - See evolution of project planning
+- **Reference** - Compare approaches across time
 
 ## Interview Process
 
