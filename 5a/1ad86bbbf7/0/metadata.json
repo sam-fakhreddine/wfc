@@ -1,0 +1,46 @@
+{
+  "cli_version": "0.4.2",
+  "checkpoint_id": "5a1ad86bbbf7",
+  "session_id": "a42eecef-aa74-47d3-b8a9-739da191e235",
+  "strategy": "manual-commit",
+  "created_at": "2026-02-12T23:41:55.423044Z",
+  "branch": "main",
+  "checkpoints_count": 2,
+  "files_touched": [
+    "CLAUDE.md",
+    "wfc/wfc-tools/gitwork/README.md",
+    "wfc/wfc-tools/gitwork/TOOL.md",
+    "wfc/wfc-tools/gitwork/__init__.py",
+    "wfc/wfc-tools/gitwork/api/__init__.py",
+    "wfc/wfc-tools/gitwork/api/branch.py",
+    "wfc/wfc-tools/gitwork/api/commit.py",
+    "wfc/wfc-tools/gitwork/api/history.py",
+    "wfc/wfc-tools/gitwork/api/hooks.py",
+    "wfc/wfc-tools/gitwork/api/merge.py",
+    "wfc/wfc-tools/gitwork/api/rollback.py",
+    "wfc/wfc-tools/gitwork/api/semver.py",
+    "wfc/wfc-tools/gitwork/api/worktree.py",
+    "wfc/wfc-tools/gitwork/config.py",
+    "wfc/wfc-tools/gitwork/router.py"
+  ],
+  "agent": "Claude Code",
+  "transcript_identifier_at_start": "f55780ec-4081-4e75-a35f-86af33bead26",
+  "checkpoint_transcript_start": 1365,
+  "transcript_lines_at_start": 1365,
+  "token_usage": {
+    "input_tokens": 39,
+    "cache_creation_tokens": 3091,
+    "cache_read_tokens": 798550,
+    "output_tokens": 19,
+    "api_call_count": 5
+  },
+  "initial_attribution": {
+    "calculated_at": "2026-02-12T23:41:55.182366Z",
+    "agent_lines": 0,
+    "human_added": 3460,
+    "human_modified": 1446,
+    "human_removed": 0,
+    "total_committed": 3462,
+    "agent_percentage": 0
+  }
+}
