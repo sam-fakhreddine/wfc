@@ -89,6 +89,11 @@ class AgentReport:
     # Format: {"description": str, "severity": "warning"|"error"|"critical"}
     discoveries: List[Dict[str, str]] = field(default_factory=list)
 
+    # Root cause analysis for bug fixes (systematic debugging)
+    # Format: {"what": str, "why": str, "where": str, "fix": str, "tests": str}
+    # Required when bugs are fixed during implementation
+    root_cause: Optional[Dict[str, str]] = None
+
     # Model and performance
     model: str = ""
     provider: str = ""
@@ -112,6 +117,7 @@ class AgentReport:
             "quality_check": self.quality_check,
             "confidence": self.confidence,
             "discoveries": self.discoveries,
+            "root_cause": self.root_cause,
             "model": self.model,
             "provider": self.provider,
             "tokens": self.tokens,

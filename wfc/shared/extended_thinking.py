@@ -112,8 +112,15 @@ class ExtendedThinkingDecider:
             mode = ThinkingMode.EXTENDED
 
         # Retry - failed before, think harder
-        if retry_count > 0:
-            reasons.append(f"Retry #{retry_count} - think harder to avoid previous failures")
+        # After 3 retries, escalate to UNLIMITED thinking mode
+        # Hard limit: Maximum 4 total retries (5 attempts total)
+        if retry_count >= 3:
+            if retry_count > 4:
+                # Exceeded maximum retry limit - should not happen
+                # Orchestrator should stop task before reaching this point
+                reasons.append(f"⚠️ EXCEEDED MAX RETRIES (4 total) - task should be abandoned")
+            else:
+                reasons.append(f"Retry #{retry_count} - think harder to avoid previous failures")
             mode = ThinkingMode.UNLIMITED  # No budget on retries
 
         # Architecture decisions
@@ -136,7 +143,9 @@ class ExtendedThinkingDecider:
         budget = None
         if mode == ThinkingMode.EXTENDED:
             # Budget based on complexity
-            budget_map = {'S': 500, 'M': 1000, 'L': 2500, 'XL': 5000}
+            # Context window is 200k tokens - allocate 1-10% for extended thinking
+            # S=1%, M=2.5%, L=5%, XL=10% of context
+            budget_map = {'S': 2000, 'M': 5000, 'L': 10000, 'XL': 20000}
             budget = budget_map.get(complexity, 1000)
         elif mode == ThinkingMode.UNLIMITED:
             budget = None  # Unlimited
