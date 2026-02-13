@@ -44,6 +44,7 @@ class ExecutionEngine:
 
         # Active subagent tasks (task_id -> agent_task_id mapping)
         self.active_subagents: Dict[str, str] = {}
+        self.agent_prompts: Dict[str, str] = {}
         self.agent_counter = 0
 
     def execute(self) -> None:
@@ -101,7 +102,7 @@ class ExecutionEngine:
         agent_id = f"agent-{self.agent_counter}"
 
         # Build prompt for subagent
-        self._build_agent_prompt(task, agent_id)
+        prompt = self._build_agent_prompt(task, agent_id)
 
         # Spawn subagent via Task tool (would be actual tool call in production)
         # For now, we'll use a placeholder that simulates the delegation
@@ -109,6 +110,7 @@ class ExecutionEngine:
 
         # Track active subagent
         self.active_subagents[task.id] = agent_id
+        self.agent_prompts[task.id] = prompt
         self.orchestrator.in_progress[task.id] = task
         task.status = TaskStatus.IN_PROGRESS
 
