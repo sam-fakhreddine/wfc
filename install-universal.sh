@@ -765,6 +765,8 @@ echo "  • ${CYAN}/wfc-retro${RESET}        - AI-powered retrospectives"
 echo "  • ${CYAN}/wfc-safeclaude${RESET}   - Safe command allowlist"
 echo "  • ${CYAN}/wfc-isthissmart${RESET}  - Critical thinking advisor"
 echo "  • ${CYAN}/wfc-newskill${RESET}     - Create new WFC skills"
+echo "  • ${CYAN}/wfc-init${RESET}        - Project initialization tool"
+echo "  • ${CYAN}/wfc-vibe${RESET}         - Natural brainstorming mode"
 
 echo ""
 echo -e "${BOLD}🚀 Next Steps${RESET}"
