@@ -1,0 +1,21 @@
+# Dockerfile for alpine:latest
+FROM alpine:latest
+
+# Set working directory
+WORKDIR /wfc
+
+# Install basic dependencies and test requirements
+# Alpine specific setup
+RUN apk add --no-cache     curl     git     python3     py3-pip     bash     && rm -rf /var/cache/apk/*
+
+# Copy WFC source code
+COPY . /
+
+# Create Claude Code directory structure
+RUN mkdir -p /home/sambou/.claude/skills
+
+# Create test environment setup script
+RUN echo '#!/bin/bash' > /test-setup.sh &&     echo 'export HOME=/home/sambou' >> /test-setup.sh &&     echo 'echo "Test environment initialized"' >> /test-setup.sh &&     chmod +x /test-setup.sh
+
+# Run the installer with test setup
+CMD ["/bin/bash", "-c", "source /test-setup.sh && /install-universal.sh --ci && echo 'Installation completed successfully'"]

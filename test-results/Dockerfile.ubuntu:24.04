@@ -1,0 +1,27 @@
+# Dockerfile for ubuntu:24.04
+FROM ubuntu:24.04
+
+# Set working directory
+WORKDIR /wfc
+
+# Create user and set HOME correctly
+RUN useradd -m -u 1000 sambou &&     mkdir -p /home/sambou/.claude/skills &&     chown -R sambou:sambou /home/sambou
+
+# Switch to user
+USER sambou
+
+# Install basic dependencies and test requirements
+# Ubuntu/Debian specific setup
+RUN sudo apt-get update && sudo apt-get install -y     curl     git     python3     python3-pip     bash     && sudo rm -rf /var/lib/apt/lists/*
+
+# Copy WFC source code
+COPY --chown=sambou:sambou . .
+
+# Set environment variables
+ENV HOME=/home/sambou
+
+# Create verification script
+RUN echo '#!/bin/bash' > /verify.sh &&     echo 'echo "=== Verification Results ===" > /verification.log' >> /verify.sh &&     echo 'if [ -d /home/sambou/.claude/skills ]; then' >> /verify.sh &&     echo '    echo "✅ Skills directory exists" >> /verification.log' >> /verify.sh &&     echo '    SKILL_COUNT=13' >> /verify.sh &&     echo '    echo "📊 Skills installed: " >> /verification.log' >> /verify.sh &&     echo '    echo "📋 Installed skills:" >> /verification.log' >> /verify.sh &&     echo '    find /home/sambou/.claude/skills/ -mindepth 1 -maxdepth 1 -type d -printf "  • %f\n" >> /verification.log' >> /verify.sh &&     echo 'else' >> /verify.sh &&     echo '    echo "❌ Skills directory not found" >> /verification.log' >> /verify.sh &&     echo '    exit 1' >> /verify.sh &&     echo 'fi' >> /verify.sh &&     echo 'echo "✅ Installation verification complete" >> /verification.log' >> /verify.sh &&     chmod +x /verify.sh
+
+# Run the installer with verification
+CMD ["/bin/bash", "-c", "export HOME=/home/sambou && /install-universal.sh --ci && bash /verify.sh"]

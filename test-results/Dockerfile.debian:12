@@ -1,0 +1,21 @@
+# Dockerfile for debian:12
+FROM debian:12
+
+# Set working directory
+WORKDIR /wfc
+
+# Install basic dependencies and test requirements
+# Ubuntu/Debian specific setup
+RUN apt-get update && apt-get install -y     curl     git     python3     python3-pip     bash     && rm -rf /var/lib/apt/lists/*
+
+# Copy WFC source code
+COPY . /
+
+# Create Claude Code directory structure
+RUN mkdir -p /home/sambou/.claude/skills
+
+# Create test environment setup script
+RUN echo '#!/bin/bash' > /test-setup.sh &&     echo 'export HOME=/home/sambou' >> /test-setup.sh &&     echo 'echo "Test environment initialized"' >> /test-setup.sh &&     chmod +x /test-setup.sh
+
+# Run the installer with test setup
+CMD ["/bin/bash", "-c", "source /test-setup.sh && /install-universal.sh --ci && echo 'Installation completed successfully'"]
