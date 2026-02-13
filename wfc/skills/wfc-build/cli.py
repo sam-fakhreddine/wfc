@@ -28,7 +28,7 @@ def main():
     # Get description from args
     description = None
     if len(sys.argv) > 1:
-        description = ' '.join(sys.argv[1:])
+        description = " ".join(sys.argv[1:])
 
     # Get project root (current directory)
     project_root = Path.cwd()
@@ -43,9 +43,9 @@ def main():
         result = orchestrator.run(description)
 
         # Display result
-        print("\n" + "="*60)
+        print("\n" + "=" * 60)
         print("✅ BUILD INITIATED")
-        print("="*60)
+        print("=" * 60)
         print(f"Status: {result['status']}")
         print(f"Agents: {result['agents']}")
         print(f"Complexity: {result['spec'].complexity}")
@@ -65,9 +65,10 @@ def main():
     except Exception as e:
         print(f"\n\n❌ Error: {e}")
         import traceback
+
         traceback.print_exc()
         return 1
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     sys.exit(main())

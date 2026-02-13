@@ -45,13 +45,13 @@ class TestQuickInterview:
         """TEST-004: Structured output has all required fields"""
         result = self.interviewer.conduct(feature_hint="Test feature")
 
-        assert hasattr(result, 'feature_description')
-        assert hasattr(result, 'scope')
-        assert hasattr(result, 'files_affected')
-        assert hasattr(result, 'loc_estimate')
-        assert hasattr(result, 'new_dependencies')
-        assert hasattr(result, 'constraints')
-        assert hasattr(result, 'test_context')
+        assert hasattr(result, "feature_description")
+        assert hasattr(result, "scope")
+        assert hasattr(result, "files_affected")
+        assert hasattr(result, "loc_estimate")
+        assert hasattr(result, "new_dependencies")
+        assert hasattr(result, "constraints")
+        assert hasattr(result, "test_context")
 
     def test_scope_types(self):
         """Test valid scope types"""
@@ -109,11 +109,11 @@ class TestInterviewAdaptiveFlow:
         """Test few_files scope asks for file list"""
         # This would test the adaptive flow
         # For now, verify the structure exists
-        assert hasattr(self.interviewer, '_ask_which_files')
+        assert hasattr(self.interviewer, "_ask_which_files")
 
     def test_new_module_flow(self):
         """Test new_module scope asks about structure"""
-        assert hasattr(self.interviewer, '_ask_module_structure')
+        assert hasattr(self.interviewer, "_ask_module_structure")
 
 
 class TestLOCEstimation:

@@ -29,15 +29,15 @@ class MetricsCollector:
                 "start_date": datetime.now().isoformat(),
                 "status": "in_progress",
                 "tasks_completed": 0,
-                "tasks_target": 10
+                "tasks_target": 10,
             },
             "tasks": [],
-            "aggregated_metrics": {}
+            "aggregated_metrics": {},
         }
 
     def _save_metrics(self):
         """Save metrics to file"""
-        with open(self.metrics_file, 'w') as f:
+        with open(self.metrics_file, "w") as f:
             json.dump(self.data, f, indent=2)
 
     def add_task_result(
@@ -51,7 +51,7 @@ class MetricsCollector:
         truncated: bool,
         retry_count: int,
         debugging_time_min: Optional[float] = None,
-        root_cause_documented: Optional[bool] = None
+        root_cause_documented: Optional[bool] = None,
     ):
         """Add individual task result"""
         task_data = {
@@ -63,14 +63,16 @@ class MetricsCollector:
                 "budget_used": thinking_budget_used,
                 "budget_total": thinking_budget_total,
                 "truncated": truncated,
-                "utilization": thinking_budget_used / thinking_budget_total if thinking_budget_total > 0 else 0
+                "utilization": (
+                    thinking_budget_used / thinking_budget_total if thinking_budget_total > 0 else 0
+                ),
             },
             "retries": retry_count,
             "debugging": {
                 "time_min": debugging_time_min,
-                "root_cause_documented": root_cause_documented
+                "root_cause_documented": root_cause_documented,
             },
-            "timestamp": datetime.now().isoformat()
+            "timestamp": datetime.now().isoformat(),
         }
 
         self.data["tasks"].append(task_data)
@@ -108,12 +110,17 @@ class MetricsCollector:
         # Root cause compliance
         bug_fixes = [t for t in tasks if t["debugging"]["root_cause_documented"] is not None]
         if bug_fixes:
-            root_cause_compliance = (sum(1 for t in bug_fixes if t["debugging"]["root_cause_documented"]) / len(bug_fixes)) * 100
+            root_cause_compliance = (
+                sum(1 for t in bug_fixes if t["debugging"]["root_cause_documented"])
+                / len(bug_fixes)
+            ) * 100
         else:
             root_cause_compliance = None
 
         # Debugging time
-        debug_times = [t["debugging"]["time_min"] for t in tasks if t["debugging"]["time_min"] is not None]
+        debug_times = [
+            t["debugging"]["time_min"] for t in tasks if t["debugging"]["time_min"] is not None
+        ]
         avg_debug_time = sum(debug_times) / len(debug_times) if debug_times else None
 
         self.data["aggregated_metrics"] = {
@@ -122,8 +129,10 @@ class MetricsCollector:
             "avg_retries": round(avg_retries, 2),
             "zero_retry_rate": round((zero_retries / total) * 100, 1),
             "unlimited_retry_rate": round((unlimited_retries / total) * 100, 1),
-            "root_cause_compliance": round(root_cause_compliance, 1) if root_cause_compliance is not None else None,
-            "avg_debug_time_min": round(avg_debug_time, 1) if avg_debug_time else None
+            "root_cause_compliance": (
+                round(root_cause_compliance, 1) if root_cause_compliance is not None else None
+            ),
+            "avg_debug_time_min": round(avg_debug_time, 1) if avg_debug_time else None,
         }
 
         self._save_metrics()
@@ -147,23 +156,35 @@ class MetricsCollector:
         completed = self.data["validation_metadata"]["tasks_completed"]
         target = self.data["validation_metadata"]["tasks_target"]
 
-        print("\n" + "="*60)
+        print("\n" + "=" * 60)
         print("WFC VALIDATION REPORT SUMMARY")
-        print("="*60)
+        print("=" * 60)
         print(f"\nProgress: {completed}/{target} tasks completed")
-        print(f"\nSuccess Rate: {metrics['success_rate']}% {'✅' if metrics['success_rate'] >= 85 else '❌'}")
-        print(f"Truncation Rate: {metrics['truncation_rate']}% {'✅' if metrics['truncation_rate'] < 5 else '❌'}")
-        print(f"Avg Retries: {metrics['avg_retries']} {'✅' if metrics['avg_retries'] < 1 else '⚠️'}")
+        print(
+            f"\nSuccess Rate: {metrics['success_rate']}% {'✅' if metrics['success_rate'] >= 85 else '❌'}"
+        )
+        print(
+            f"Truncation Rate: {metrics['truncation_rate']}% {'✅' if metrics['truncation_rate'] < 5 else '❌'}"
+        )
+        print(
+            f"Avg Retries: {metrics['avg_retries']} {'✅' if metrics['avg_retries'] < 1 else '⚠️'}"
+        )
 
-        if metrics.get('root_cause_compliance'):
-            print(f"Root Cause Compliance: {metrics['root_cause_compliance']}% {'✅' if metrics['root_cause_compliance'] == 100 else '❌'}")
+        if metrics.get("root_cause_compliance"):
+            print(
+                f"Root Cause Compliance: {metrics['root_cause_compliance']}% {'✅' if metrics['root_cause_compliance'] == 100 else '❌'}"
+            )
 
         # GO/NO-GO decision
         if completed >= target:
             go_criteria = [
-                metrics['success_rate'] >= 85,
-                metrics['truncation_rate'] < 30,  # Improvement metric
-                metrics.get('root_cause_compliance', 0) == 100 if metrics.get('root_cause_compliance') is not None else True
+                metrics["success_rate"] >= 85,
+                metrics["truncation_rate"] < 30,  # Improvement metric
+                (
+                    metrics.get("root_cause_compliance", 0) == 100
+                    if metrics.get("root_cause_compliance") is not None
+                    else True
+                ),
             ]
 
             if all(go_criteria):
@@ -173,7 +194,7 @@ class MetricsCollector:
         else:
             print(f"\n⏳ PENDING: Complete {target - completed} more tasks")
 
-        print("="*60)
+        print("=" * 60)
 
 
 def main():
@@ -199,8 +220,14 @@ def main():
         truncated = sys.argv[8].lower() == "true"
         retry_count = int(sys.argv[9])
 
-        debugging_time = float(sys.argv[10]) if len(sys.argv) > 10 and sys.argv[10] != "None" else None
-        root_cause = sys.argv[11].lower() == "true" if len(sys.argv) > 11 and sys.argv[11] != "None" else None
+        debugging_time = (
+            float(sys.argv[10]) if len(sys.argv) > 10 and sys.argv[10] != "None" else None
+        )
+        root_cause = (
+            sys.argv[11].lower() == "true"
+            if len(sys.argv) > 11 and sys.argv[11] != "None"
+            else None
+        )
 
         collector.add_task_result(
             task_id=task_id,
@@ -212,7 +239,7 @@ def main():
             truncated=truncated,
             retry_count=retry_count,
             debugging_time_min=debugging_time,
-            root_cause_documented=root_cause
+            root_cause_documented=root_cause,
         )
 
     elif command == "report":

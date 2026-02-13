@@ -6,7 +6,9 @@ Verifies command detection and workflow orchestration (PROP-004)
 
 import pytest
 from wfc.scripts.skills.vibe.transitions import (
-    TransitionHandler, TransitionOrchestrator, TransitionResult
+    TransitionHandler,
+    TransitionOrchestrator,
+    TransitionResult,
 )
 from wfc.scripts.skills.vibe.summarizer import Message
 from wfc.scripts.skills.vibe.detector import ScopeDetector
@@ -41,7 +43,7 @@ class TestTransitionHandler:
             "ready to implement",
             "let's make this real",
             "start planning",
-            "begin implementation"
+            "begin implementation",
         ]
 
         for phrase in phrases:
@@ -53,7 +55,7 @@ class TestTransitionHandler:
             "I'm thinking about this",
             "What do you think?",
             "This is interesting",
-            "Let's discuss more"
+            "Let's discuss more",
         ]
 
         for msg in messages:
@@ -61,9 +63,7 @@ class TestTransitionHandler:
 
     def test_prepare_transition_simple(self):
         """TEST-043: Prepares transition for simple feature"""
-        messages = [
-            Message("user", "I want to add logging")
-        ]
+        messages = [Message("user", "I want to add logging")]
 
         result = self.handler.prepare_transition(messages)
 
@@ -77,7 +77,7 @@ class TestTransitionHandler:
         """TEST-044: Prepares transition for complex feature"""
         messages = [
             Message("user", "Build complete system"),
-            Message("user", "With auth, RBAC, logging, email, API, dashboard")
+            Message("user", "With auth, RBAC, logging, email, API, dashboard"),
         ]
 
         result = self.handler.prepare_transition(messages)
@@ -89,9 +89,7 @@ class TestTransitionHandler:
 
     def test_preview_contains_key_info(self):
         """TEST-045: Preview contains goal, features, complexity"""
-        messages = [
-            Message("user", "Build API with auth and RBAC")
-        ]
+        messages = [Message("user", "Build API with auth and RBAC")]
 
         result = self.handler.prepare_transition(messages)
 
@@ -113,7 +111,7 @@ class TestTransitionHandler:
             "ok",
             "okay",
             "let's go",
-            "proceed"
+            "proceed",
         ]
 
         for response in positive_responses:
@@ -121,15 +119,7 @@ class TestTransitionHandler:
 
     def test_parse_confirmation_negative(self):
         """TEST-047: Parses negative confirmations"""
-        negative_responses = [
-            "no",
-            "n",
-            "nope",
-            "nah",
-            "cancel",
-            "not yet",
-            "wait"
-        ]
+        negative_responses = ["no", "n", "nope", "nah", "cancel", "not yet", "wait"]
 
         for response in negative_responses:
             assert self.handler.parse_confirmation(response) == False
@@ -145,7 +135,7 @@ class TestTransitionHandler:
             tech_stack=[],
             files_mentioned=[],
             estimated_complexity="S",
-            scope_size=1
+            scope_size=1,
         )
 
         input_text = self.handler.format_workflow_input(context)
@@ -163,7 +153,7 @@ class TestTransitionHandler:
             tech_stack=["python", "fastapi"],
             files_mentioned=[],
             estimated_complexity="L",
-            scope_size=3
+            scope_size=3,
         )
 
         input_text = self.handler.format_workflow_input(context)
@@ -184,24 +174,16 @@ class TestTransitionOrchestrator:
         """TEST-050: Normal messages continue vibe"""
         messages = [Message("user", "I'm thinking about this")]
 
-        should_respond, response = self.orchestrator.process_message(
-            "What do you think?",
-            messages
-        )
+        should_respond, response = self.orchestrator.process_message("What do you think?", messages)
 
         assert should_respond == False
         assert response is None
 
     def test_transition_command_shows_preview(self):
         """TEST-051: Transition command shows preview"""
-        messages = [
-            Message("user", "I want to build an API with auth")
-        ]
+        messages = [Message("user", "I want to build an API with auth")]
 
-        should_respond, response = self.orchestrator.process_message(
-            "let's plan this",
-            messages
-        )
+        should_respond, response = self.orchestrator.process_message("let's plan this", messages)
 
         assert should_respond == True
         assert response is not None
@@ -216,10 +198,7 @@ class TestTransitionOrchestrator:
         self.orchestrator.process_message("let's plan this", messages)
 
         # Then: confirm
-        should_respond, response = self.orchestrator.process_message(
-            "yes",
-            messages
-        )
+        should_respond, response = self.orchestrator.process_message("yes", messages)
 
         assert should_respond == True
         assert "Transitioning" in response or "transition" in response.lower()
@@ -233,10 +212,7 @@ class TestTransitionOrchestrator:
         self.orchestrator.process_message("let's plan this", messages)
 
         # Then: decline
-        should_respond, response = self.orchestrator.process_message(
-            "no",
-            messages
-        )
+        should_respond, response = self.orchestrator.process_message("no", messages)
 
         assert should_respond == True
         assert "brainstorm" in response.lower() or "vibe" in response.lower()
@@ -255,9 +231,7 @@ class TestIntegration:
         # Populate detector
         detector.analyze_message("Need auth, RBAC, logging, email")
 
-        messages = [
-            Message("user", "Need auth, RBAC, logging, email")
-        ]
+        messages = [Message("user", "Need auth, RBAC, logging, email")]
 
         result = handler.prepare_transition(messages, scope_detector=detector)
 

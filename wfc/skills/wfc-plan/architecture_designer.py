@@ -114,12 +114,40 @@ class ArchitectureDesigner:
         if context:
             # Common technology terms to detect in context
             known_techs = [
-                "react", "vue", "angular", "django", "flask", "fastapi",
-                "node", "express", "redis", "postgres", "postgresql", "mysql",
-                "mongodb", "docker", "kubernetes", "k8s", "graphql", "rest",
-                "grpc", "kafka", "rabbitmq", "aws", "gcp", "azure",
-                "terraform", "celery", "sqlalchemy", "prisma", "nextjs",
-                "typescript", "python", "go", "rust", "java",
+                "react",
+                "vue",
+                "angular",
+                "django",
+                "flask",
+                "fastapi",
+                "node",
+                "express",
+                "redis",
+                "postgres",
+                "postgresql",
+                "mysql",
+                "mongodb",
+                "docker",
+                "kubernetes",
+                "k8s",
+                "graphql",
+                "rest",
+                "grpc",
+                "kafka",
+                "rabbitmq",
+                "aws",
+                "gcp",
+                "azure",
+                "terraform",
+                "celery",
+                "sqlalchemy",
+                "prisma",
+                "nextjs",
+                "typescript",
+                "python",
+                "go",
+                "rust",
+                "java",
             ]
             context_lower = context.lower()
             tech_keywords = [t for t in known_techs if t in context_lower]
@@ -158,9 +186,7 @@ class ArchitectureDesigner:
 
         return approaches
 
-    def format_comparison(
-        self, approaches: List[ArchitectureApproach]
-    ) -> str:
+    def format_comparison(self, approaches: List[ArchitectureApproach]) -> str:
         """Format approaches as markdown comparison for user selection."""
         lines = [
             "## Architecture Approaches",
@@ -170,13 +196,15 @@ class ArchitectureDesigner:
         ]
 
         for i, approach in enumerate(approaches, 1):
-            lines.extend([
-                f"### Option {i}: {approach.name}",
-                f"**Summary**: {approach.summary}",
-                f"**Effort**: {approach.effort} | **Risk**: {approach.risk}",
-                "",
-                "**Pros:**",
-            ])
+            lines.extend(
+                [
+                    f"### Option {i}: {approach.name}",
+                    f"**Summary**: {approach.summary}",
+                    f"**Effort**: {approach.effort} | **Risk**: {approach.risk}",
+                    "",
+                    "**Pros:**",
+                ]
+            )
             for pro in approach.pros:
                 lines.append(f"- {pro}")
 
@@ -199,28 +227,18 @@ class ArchitectureDesigner:
 
             lines.append("")
 
-        lines.extend([
-            "---",
-            "",
-            "| Aspect | "
-            + " | ".join(a.name for a in approaches)
-            + " |",
-            "| --- | "
-            + " | ".join("---" for _ in approaches)
-            + " |",
-            "| Effort | "
-            + " | ".join(a.effort for a in approaches)
-            + " |",
-            "| Risk | "
-            + " | ".join(a.risk for a in approaches)
-            + " |",
-            "| Pros | "
-            + " | ".join(str(len(a.pros)) for a in approaches)
-            + " |",
-            "| Cons | "
-            + " | ".join(str(len(a.cons)) for a in approaches)
-            + " |",
-            "",
-        ])
+        lines.extend(
+            [
+                "---",
+                "",
+                "| Aspect | " + " | ".join(a.name for a in approaches) + " |",
+                "| --- | " + " | ".join("---" for _ in approaches) + " |",
+                "| Effort | " + " | ".join(a.effort for a in approaches) + " |",
+                "| Risk | " + " | ".join(a.risk for a in approaches) + " |",
+                "| Pros | " + " | ".join(str(len(a.pros)) for a in approaches) + " |",
+                "| Cons | " + " | ".join(str(len(a.cons)) for a in approaches) + " |",
+                "",
+            ]
+        )
 
         return "\n".join(lines)

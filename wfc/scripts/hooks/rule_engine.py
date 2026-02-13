@@ -53,9 +53,7 @@ def _compile_regex(pattern: str) -> Optional[re.Pattern]:
         return None
 
 
-def _get_field_value(
-    field_name: str, tool_name: str, tool_input: dict
-) -> Optional[str]:
+def _get_field_value(field_name: str, tool_name: str, tool_input: dict) -> Optional[str]:
     """
     Resolve a rule condition field to the actual value from tool_input.
 
@@ -79,9 +77,7 @@ def _get_field_value(
     return str(value) if value is not None else None
 
 
-def _evaluate_condition(
-    condition: dict, tool_name: str, tool_input: dict
-) -> bool:
+def _evaluate_condition(condition: dict, tool_name: str, tool_input: dict) -> bool:
     """
     Evaluate a single rule condition against tool input.
 

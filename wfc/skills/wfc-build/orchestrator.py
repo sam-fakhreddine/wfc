@@ -12,6 +12,7 @@ from typing import List, Dict, Optional
 
 # Add parent to path for wfc imports
 import sys
+
 wfc_root = Path(__file__).parent.parent.parent
 sys.path.insert(0, str(wfc_root))
 
@@ -21,6 +22,7 @@ from wfc.shared.extended_thinking import ExtendedThinkingDecider  # noqa: E402
 @dataclass
 class BuildSpec:
     """Specification for what to build (from adaptive interview)"""
+
     goal: str
     files_affected: List[str]
     expected_behavior: str
@@ -58,7 +60,7 @@ class AdaptiveInterviewer:
 
         # Q2: Which files should this touch?
         files = input("\nQ2: Which files/directories should this affect?\n→ ")
-        files_affected = [f.strip() for f in files.split(',') if f.strip()]
+        files_affected = [f.strip() for f in files.split(",") if f.strip()]
 
         # Q3: Expected behavior?
         expected_behavior = input("\nQ3: What's the expected behavior?\n→ ")
@@ -71,14 +73,14 @@ class AdaptiveInterviewer:
         criteria_input = input("→ ")
 
         if criteria_input:
-            acceptance_criteria = [c.strip() for c in criteria_input.split(',')]
+            acceptance_criteria = [c.strip() for c in criteria_input.split(",")]
         else:
             # Auto-generate basic criteria
             acceptance_criteria = [
                 f"Implements: {goal}",
                 "All tests pass",
                 "Quality checks pass (formatters, linters)",
-                f"Follows {tech_stack} patterns"
+                f"Follows {tech_stack} patterns",
             ]
 
         return BuildSpec(
@@ -87,8 +89,8 @@ class AdaptiveInterviewer:
             expected_behavior=expected_behavior,
             tech_stack=tech_stack,
             acceptance_criteria=acceptance_criteria,
-            complexity='unknown',  # Will be assessed
-            estimated_agents=0  # Will be determined
+            complexity="unknown",  # Will be assessed
+            estimated_agents=0,  # Will be determined
         )
 
 
@@ -127,9 +129,15 @@ class ComplexityAssessor:
 
         # Keywords in goal
         complex_keywords = [
-            'system', 'architecture', 'refactor', 'multiple',
-            'dashboard', 'authentication', 'authorization',
-            'integration', 'infrastructure'
+            "system",
+            "architecture",
+            "refactor",
+            "multiple",
+            "dashboard",
+            "authentication",
+            "authorization",
+            "integration",
+            "infrastructure",
         ]
 
         goal_lower = spec.goal.lower()
@@ -139,15 +147,15 @@ class ComplexityAssessor:
                 break
 
         # Multiple tech stacks
-        if ' and ' in spec.tech_stack.lower() or '/' in spec.tech_stack:
+        if " and " in spec.tech_stack.lower() or "/" in spec.tech_stack:
             complexity_score += 1
 
         # Determine complexity
         if complexity_score >= 4:
-            spec.complexity = 'complex'
+            spec.complexity = "complex"
             spec.estimated_agents = min(3, max(2, file_count // 3))
         else:
-            spec.complexity = 'simple'
+            spec.complexity = "simple"
             spec.estimated_agents = 1
 
         print(f"   Complexity: {spec.complexity.upper()}")
@@ -183,9 +191,9 @@ class BuildOrchestrator:
         Returns:
             Result dict with status and details
         """
-        print("\n" + "="*60)
+        print("\n" + "=" * 60)
         print("WFC:BUILD - Intentional Vibe Coding")
-        print("="*60)
+        print("=" * 60)
 
         # Step 1: Adaptive interview
         spec = self.interviewer.run_interview(description)
@@ -224,7 +232,7 @@ class BuildOrchestrator:
             files=spec.files_affected,
             behavior=spec.expected_behavior,
             tech_stack=spec.tech_stack,
-            criteria=spec.acceptance_criteria
+            criteria=spec.acceptance_criteria,
         )
 
         print("\n🤖 Subagent instructions prepared")
@@ -243,12 +251,7 @@ class BuildOrchestrator:
         print("\n⏳ Waiting for subagent to complete...")
         print("   (In production: polling TaskOutput)")
 
-        return {
-            'status': 'spawned',
-            'agents': 1,
-            'spec': spec,
-            'prompt': agent_prompt
-        }
+        return {"status": "spawned", "agents": 1, "spec": spec, "prompt": agent_prompt}
 
     def _spawn_multi_agents(self, spec: BuildSpec) -> Dict:
         """
@@ -271,11 +274,11 @@ class BuildOrchestrator:
         for i, task in enumerate(tasks, 1):
             agent_prompt = self._build_agent_prompt(
                 agent_id=f"agent-{i}",
-                task_description=task['description'],
-                files=task['files'],
+                task_description=task["description"],
+                files=task["files"],
                 behavior=spec.expected_behavior,
                 tech_stack=spec.tech_stack,
-                criteria=task['criteria']
+                criteria=task["criteria"],
             )
             prompts.append(agent_prompt)
 
@@ -294,11 +297,11 @@ class BuildOrchestrator:
         print("   (In production: polling TaskOutput for each)")
 
         return {
-            'status': 'spawned',
-            'agents': len(tasks),
-            'spec': spec,
-            'tasks': tasks,
-            'prompts': prompts
+            "status": "spawned",
+            "agents": len(tasks),
+            "spec": spec,
+            "tasks": tasks,
+            "prompts": prompts,
         }
 
     def _build_agent_prompt(
@@ -309,7 +312,7 @@ class BuildOrchestrator:
         behavior: str,
         tech_stack: str,
         criteria: List[str],
-        complexity: str = 'M'  # Default medium complexity
+        complexity: str = "M",  # Default medium complexity
     ) -> str:
         """
         Build prompt for subagent Task tool invocation.
@@ -322,30 +325,29 @@ class BuildOrchestrator:
         # - Multi-file (3+ files)
         # - Keywords suggest complexity
         num_files = len(files)
-        complexity_keywords = ['architecture', 'system', 'refactor', 'complex']
+        complexity_keywords = ["architecture", "system", "refactor", "complex"]
         has_complexity_keyword = any(
-            keyword in task_description.lower()
-            for keyword in complexity_keywords
+            keyword in task_description.lower() for keyword in complexity_keywords
         )
 
         # Determine complexity
         if num_files >= 6 or has_complexity_keyword:
-            calculated_complexity = 'L'
+            calculated_complexity = "L"
         elif num_files >= 3:
-            calculated_complexity = 'M'
+            calculated_complexity = "M"
         else:
-            calculated_complexity = 'S'
+            calculated_complexity = "S"
 
         # Get thinking config
         thinking_config = ExtendedThinkingDecider.should_use_extended_thinking(
             complexity=calculated_complexity,
             properties=[],
             retry_count=0,
-            is_architecture=has_complexity_keyword
+            is_architecture=has_complexity_keyword,
         )
 
         # Log decision
-        if thinking_config.mode.value != 'normal':
+        if thinking_config.mode.value != "normal":
             print(f"   ⚡ Extended thinking enabled for {agent_id}")
             print(f"      Reason: {thinking_config.reason}")
 
@@ -363,55 +365,57 @@ class BuildOrchestrator:
         if thinking_section:
             prompt_parts.append(thinking_section)
 
-        prompt_parts.extend([
-            "",
-            "## Files to Create/Modify",
-            '\n'.join(f"- {f}" for f in files),
-            "",
-            "## Expected Behavior",
-            behavior,
-            "",
-            "## Tech Stack/Patterns",
-            tech_stack,
-            "",
-            "## Acceptance Criteria",
-            '\n'.join(f"- {c}" for c in criteria),
-            "",
-            "## Workflow (TDD - STRICT)",
-            "",
-            "1. UNDERSTAND",
-            "   - Read task description above",
-            "   - Review existing files (if any)",
-            "   - Understand expected behavior",
-            "",
-            "2. TEST_FIRST (RED)",
-            "   - Write tests BEFORE implementation",
-            "   - Tests must cover acceptance criteria",
-            "   - Run tests → they MUST FAIL",
-            "",
-            "3. IMPLEMENT (GREEN)",
-            "   - Write minimum code to pass tests",
-            f"   - Follow {tech_stack} patterns",
-            "   - Run tests → they MUST PASS",
-            "",
-            "4. REFACTOR",
-            "   - Clean up code without changing behavior",
-            "   - Maintain SOLID & DRY principles",
-            "   - Run tests → still PASS",
-            "",
-            "5. QUALITY_CHECK",
-            "   - Run formatters (black, prettier, etc.)",
-            "   - Run linters (ruff, eslint, etc.)",
-            "   - Run all tests",
-            "   - BLOCKS if any check fails",
-            "",
-            "6. SUBMIT",
-            "   - Verify all acceptance criteria met",
-            "   - Produce agent report",
-            "   - Include: files changed, tests added, quality check results",
-        ])
+        prompt_parts.extend(
+            [
+                "",
+                "## Files to Create/Modify",
+                "\n".join(f"- {f}" for f in files),
+                "",
+                "## Expected Behavior",
+                behavior,
+                "",
+                "## Tech Stack/Patterns",
+                tech_stack,
+                "",
+                "## Acceptance Criteria",
+                "\n".join(f"- {c}" for c in criteria),
+                "",
+                "## Workflow (TDD - STRICT)",
+                "",
+                "1. UNDERSTAND",
+                "   - Read task description above",
+                "   - Review existing files (if any)",
+                "   - Understand expected behavior",
+                "",
+                "2. TEST_FIRST (RED)",
+                "   - Write tests BEFORE implementation",
+                "   - Tests must cover acceptance criteria",
+                "   - Run tests → they MUST FAIL",
+                "",
+                "3. IMPLEMENT (GREEN)",
+                "   - Write minimum code to pass tests",
+                f"   - Follow {tech_stack} patterns",
+                "   - Run tests → they MUST PASS",
+                "",
+                "4. REFACTOR",
+                "   - Clean up code without changing behavior",
+                "   - Maintain SOLID & DRY principles",
+                "   - Run tests → still PASS",
+                "",
+                "5. QUALITY_CHECK",
+                "   - Run formatters (black, prettier, etc.)",
+                "   - Run linters (ruff, eslint, etc.)",
+                "   - Run all tests",
+                "   - BLOCKS if any check fails",
+                "",
+                "6. SUBMIT",
+                "   - Verify all acceptance criteria met",
+                "   - Produce agent report",
+                "   - Include: files changed, tests added, quality check results",
+            ]
+        )
 
-        return '\n'.join(prompt_parts)
+        return "\n".join(prompt_parts)
 
     def _decompose_task(self, spec: BuildSpec) -> List[Dict]:
         """
@@ -427,8 +431,8 @@ class BuildOrchestrator:
         file_groups = {}
         for file_path in spec.files_affected:
             # Get first directory component
-            parts = file_path.split('/')
-            group = parts[0] if len(parts) > 1 else 'root'
+            parts = file_path.split("/")
+            group = parts[0] if len(parts) > 1 else "root"
 
             if group not in file_groups:
                 file_groups[group] = []
@@ -437,16 +441,18 @@ class BuildOrchestrator:
         # Create tasks from groups
         tasks = []
         for i, (group, files) in enumerate(file_groups.items(), 1):
-            tasks.append({
-                'id': f'subtask-{i}',
-                'description': f"{spec.goal} - {group} component",
-                'files': files,
-                'criteria': [
-                    f"Implements {group} component for: {spec.goal}",
-                    "All tests pass",
-                    "Quality checks pass"
-                ]
-            })
+            tasks.append(
+                {
+                    "id": f"subtask-{i}",
+                    "description": f"{spec.goal} - {group} component",
+                    "files": files,
+                    "criteria": [
+                        f"Implements {group} component for: {spec.goal}",
+                        "All tests pass",
+                        "Quality checks pass",
+                    ],
+                }
+            )
 
         return tasks
 
@@ -457,16 +463,17 @@ def main():
     orchestrator = BuildOrchestrator(Path.cwd())
 
     import sys
-    description = ' '.join(sys.argv[1:]) if len(sys.argv) > 1 else None
+
+    description = " ".join(sys.argv[1:]) if len(sys.argv) > 1 else None
 
     result = orchestrator.run(description)
 
-    print("\n" + "="*60)
+    print("\n" + "=" * 60)
     print("✅ Orchestrator completed")
     print(f"   Status: {result['status']}")
     print(f"   Agents spawned: {result['agents']}")
-    print("="*60)
+    print("=" * 60)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

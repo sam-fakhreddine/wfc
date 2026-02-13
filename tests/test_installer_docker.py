@@ -15,17 +15,27 @@ class TestInstaller:
 
         def cleanup():
             if container_id:
-                subprocess.run(["docker", "rm", "-f", container_id],
-                              capture_output=True, stderr=subprocess.DEVNULL)
+                subprocess.run(
+                    ["docker", "rm", "-f", container_id],
+                    capture_output=True,
+                    stderr=subprocess.DEVNULL,
+                )
 
         request.addfinalizer(cleanup)
 
         # Build image first
         result = subprocess.run(
-            ["docker", "build", "-t", "wfc-installer-test",
-             "-f", "tests/Dockerfile.installer-test", "."],
+            [
+                "docker",
+                "build",
+                "-t",
+                "wfc-installer-test",
+                "-f",
+                "tests/Dockerfile.installer-test",
+                ".",
+            ],
             capture_output=True,
-            text=True
+            text=True,
         )
 
         if result.returncode != 0:
@@ -36,10 +46,17 @@ class TestInstaller:
     def test_installer_executable(self, docker_container):
         """Test that install-universal.sh is executable."""
         result = subprocess.run(
-            ["docker", "run", "--rm", docker_container,
-             "bash", "-c", "test -x /wfc/install-universal.sh"],
+            [
+                "docker",
+                "run",
+                "--rm",
+                docker_container,
+                "bash",
+                "-c",
+                "test -x /wfc/install-universal.sh",
+            ],
             capture_output=True,
-            text=True
+            text=True,
         )
 
         assert result.returncode == 0, "install-universal.sh not executable"
@@ -48,10 +65,17 @@ class TestInstaller:
     def test_help_flag(self, docker_container):
         """Test --help flag works."""
         result = subprocess.run(
-            ["docker", "run", "--rm", docker_container,
-             "bash", "-c", "cd /wfc && ./install-universal.sh --help | grep WFC"],
+            [
+                "docker",
+                "run",
+                "--rm",
+                docker_container,
+                "bash",
+                "-c",
+                "cd /wfc && ./install-universal.sh --help | grep WFC",
+            ],
             capture_output=True,
-            text=True
+            text=True,
         )
 
         assert result.returncode == 0, "Help flag failed"
@@ -61,10 +85,17 @@ class TestInstaller:
     def test_version_defined(self, docker_container):
         """Test VERSION is defined in installer."""
         result = subprocess.run(
-            ["docker", "run", "--rm", docker_container,
-             "bash", "-c", "grep 'VERSION=' /wfc/install-universal.sh | cut -d'\"' -f2"],
+            [
+                "docker",
+                "run",
+                "--rm",
+                docker_container,
+                "bash",
+                "-c",
+                "grep 'VERSION=' /wfc/install-universal.sh | cut -d'\"' -f2",
+            ],
             capture_output=True,
-            text=True
+            text=True,
         )
 
         assert result.returncode == 0, "Version check failed"
@@ -75,10 +106,17 @@ class TestInstaller:
     def test_skills_source_path(self, docker_container):
         """Test skills source path is wfc/skills."""
         result = subprocess.run(
-            ["docker", "run", "--rm", docker_container,
-             "bash", "-c", "grep -q 'wfc/skills.*wfc-' /wfc/install-universal.sh"],
+            [
+                "docker",
+                "run",
+                "--rm",
+                docker_container,
+                "bash",
+                "-c",
+                "grep -q 'wfc/skills.*wfc-' /wfc/install-universal.sh",
+            ],
             capture_output=True,
-            text=True
+            text=True,
         )
 
         assert result.returncode == 0, "Skills source path incorrect"
@@ -87,10 +125,17 @@ class TestInstaller:
     def test_ci_mode_logic(self, docker_container):
         """Test CI mode logic exists in installer."""
         result = subprocess.run(
-            ["docker", "run", "--rm", docker_container,
-             "bash", "-c", "grep -q '\\[ \"\\$CI_MODE\" = true \\]' /wfc/install-universal.sh"],
+            [
+                "docker",
+                "run",
+                "--rm",
+                docker_container,
+                "bash",
+                "-c",
+                "grep -q '\\[ \"\\$CI_MODE\" = true \\]' /wfc/install-universal.sh",
+            ],
             capture_output=True,
-            text=True
+            text=True,
         )
 
         assert result.returncode == 0, "CI mode logic missing"
@@ -99,30 +144,52 @@ class TestInstaller:
     def test_docker_ci_install(self, docker_container):
         """Test CI mode installation in Docker."""
         result = subprocess.run(
-            ["docker", "run", "--rm", docker_container,
-             "bash", "-c", "cd /wfc && ./install-universal.sh --ci"],
+            [
+                "docker",
+                "run",
+                "--rm",
+                docker_container,
+                "bash",
+                "-c",
+                "cd /wfc && ./install-universal.sh --ci",
+            ],
             capture_output=True,
-            text=True
+            text=True,
         )
 
         # Check for "Installation complete" message
         assert result.returncode == 0, f"CI install failed: {result.stderr}"
-        assert "Installation complete" in result.stdout or "✓ Installation complete" in result.stdout, \
-            "Installation completion message missing"
+        assert (
+            "Installation complete" in result.stdout or "✓ Installation complete" in result.stdout
+        ), "Installation completion message missing"
         print("✓ CI mode installation successful")
 
     def test_skills_installed(self, docker_container):
         """Test skills are installed to correct location."""
-        skills = ["wfc-review", "wfc-implement", "wfc-plan", "wfc-architecture",
-                 "wfc-test", "wfc-security", "wfc-observe"]
+        skills = [
+            "wfc-review",
+            "wfc-implement",
+            "wfc-plan",
+            "wfc-architecture",
+            "wfc-test",
+            "wfc-security",
+            "wfc-observe",
+        ]
 
         missing_skills = []
         for skill in skills:
             result = subprocess.run(
-                ["docker", "run", "--rm", docker_container,
-                 "bash", "-c", f"[ -d /root/.claude/skills/{skill} ] && echo 'exists'"],
+                [
+                    "docker",
+                    "run",
+                    "--rm",
+                    docker_container,
+                    "bash",
+                    "-c",
+                    f"[ -d /root/.claude/skills/{skill} ] && echo 'exists'",
+                ],
                 capture_output=True,
-                text=True
+                text=True,
             )
 
             if result.stdout.strip() != "exists":
@@ -136,10 +203,17 @@ class TestInstaller:
     def test_no_nested_structure(self, docker_container):
         """Test that skills are not nested in wfc/skills/."""
         result = subprocess.run(
-            ["docker", "run", "--rm", docker_container,
-             "bash", "-c", "[ ! -d /root/.claude/skills/wfc/skills ] && echo 'no-nested' || echo 'nested'"],
+            [
+                "docker",
+                "run",
+                "--rm",
+                docker_container,
+                "bash",
+                "-c",
+                "[ ! -d /root/.claude/skills/wfc/skills ] && echo 'no-nested' || echo 'nested'",
+            ],
             capture_output=True,
-            text=True
+            text=True,
         )
 
         assert result.stdout.strip() == "no-nested", "Nested structure bug found!"
@@ -148,10 +222,17 @@ class TestInstaller:
     def test_shared_personas(self, docker_container):
         """Test shared personas directory exists."""
         result = subprocess.run(
-            ["docker", "run", "--rm", docker_container,
-             "bash", "-c", "[ -d /root/.claude/skills/wfc/personas ] && echo 'exists' || echo 'missing'"],
+            [
+                "docker",
+                "run",
+                "--rm",
+                docker_container,
+                "bash",
+                "-c",
+                "[ -d /root/.claude/skills/wfc/personas ] && echo 'exists' || echo 'missing'",
+            ],
             capture_output=True,
-            text=True
+            text=True,
         )
 
         assert result.stdout.strip() == "exists", "Shared personas missing"
@@ -160,10 +241,17 @@ class TestInstaller:
     def test_branding_config(self, docker_container):
         """Test branding config file is created."""
         result = subprocess.run(
-            ["docker", "run", "--rm", docker_container,
-             "bash", "-c", "[ -f /root/.claude/skills/.wfc_branding ] && grep -q 'mode=' /root/.claude/skills/.wfc_branding"],
+            [
+                "docker",
+                "run",
+                "--rm",
+                docker_container,
+                "bash",
+                "-c",
+                "[ -f /root/.claude/skills/.wfc_branding ] && grep -q 'mode=' /root/.claude/skills/.wfc_branding",
+            ],
             capture_output=True,
-            text=True
+            text=True,
         )
 
         assert result.returncode == 0, "Branding config not created"
@@ -172,10 +260,17 @@ class TestInstaller:
     def test_skill_count(self, docker_container):
         """Test all 12 skills are installed."""
         result = subprocess.run(
-            ["docker", "run", "--rm", docker_container,
-             "bash", "-c", "find /root/.claude/skills/wfc-*/SKILL.md -type f | wc -l"],
+            [
+                "docker",
+                "run",
+                "--rm",
+                docker_container,
+                "bash",
+                "-c",
+                "find /root/.claude/skills/wfc-*/SKILL.md -type f | wc -l",
+            ],
             capture_output=True,
-            text=True
+            text=True,
         )
 
         skill_count = int(result.stdout.strip())

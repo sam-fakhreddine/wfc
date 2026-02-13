@@ -12,10 +12,9 @@ def docker_installer_image(request):
 
     dockerfile = Path(__file__).parent / "Dockerfile.installer-test"
     result = subprocess.run(
-        ["docker", "build", "-t", "wfc-installer-test",
-         "-f", dockerfile, "."],
+        ["docker", "build", "-t", "wfc-installer-test", "-f", dockerfile, "."],
         capture_output=True,
-        text=True
+        text=True,
     )
 
     if result.returncode != 0:
@@ -29,8 +28,7 @@ def docker_installer_image(request):
     def cleanup():
         print("\n🧹 Cleaning up Docker resources...")
         # Stop any running containers
-        subprocess.run(["docker", "ps", "-aq", "--filter", "name=wfc-test"],
-                      capture_output=True)
+        subprocess.run(["docker", "ps", "-aq", "--filter", "name=wfc-test"], capture_output=True)
         # Remove containers
         for cid in container_ids:
             subprocess.run(["docker", "rm", "-f", cid], capture_output=True)
@@ -52,12 +50,19 @@ def docker_container(docker_installer_image):
     """Create a Docker container for testing."""
     container_name = f"wfc-test-{pytest.root.nodeid}"
     result = subprocess.run(
-        ["docker", "run", "-d", "--name", container_name,
-         "-v", f"{Path.cwd()}:/wfc",
-         docker_installer_image()],
+        [
+            "docker",
+            "run",
+            "-d",
+            "--name",
+            container_name,
+            "-v",
+            f"{Path.cwd()}:/wfc",
+            docker_installer_image(),
+        ],
         capture_output=True,
-        text=True
-        )
+        text=True,
+    )
 
     if result.returncode != 0:
         pytest.fail(f"Failed to start container: {result.stderr}")

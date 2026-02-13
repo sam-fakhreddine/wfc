@@ -17,6 +17,7 @@ try:
     from wfc.scripts.personas.token_manager import TokenCounter
     from wfc.scripts.personas.ultra_minimal_prompts import build_ultra_minimal_prompt
     from wfc.scripts.personas.persona_executor import build_persona_system_prompt
+
     TOKEN_MANAGER_AVAILABLE = True
 except ImportError:
     TOKEN_MANAGER_AVAILABLE = False
@@ -53,7 +54,7 @@ def benchmark_persona_prompt(persona: Dict, sample_files: List[str]) -> Tuple[in
     # Sample properties
     properties = [
         {"type": "SAFETY", "statement": "No unsafe operations"},
-        {"type": "PERFORMANCE", "statement": "O(n) complexity or better"}
+        {"type": "PERFORMANCE", "statement": "O(n) complexity or better"},
     ]
 
     # 1. Ultra-minimal prompt
@@ -65,7 +66,7 @@ def benchmark_persona_prompt(persona: Dict, sample_files: List[str]) -> Tuple[in
         persona_name=persona["name"],
         top_skills=top_skills,
         focus=focus,
-        properties_focus=properties_focus
+        properties_focus=properties_focus,
     )
 
     ultra_tokens = counter.count(ultra_minimal)
@@ -88,11 +89,7 @@ def main(compare: bool = False):
     print(f"Persona: {persona_name}\n")
 
     # Sample files (just paths, not content)
-    sample_files = [
-        "/path/to/file1.py",
-        "/path/to/file2.py",
-        "/path/to/file3.py"
-    ]
+    sample_files = ["/path/to/file1.py", "/path/to/file2.py", "/path/to/file3.py"]
 
     # Run benchmark
     ultra_tokens, legacy_tokens = benchmark_persona_prompt(persona, sample_files)
@@ -114,7 +111,9 @@ def main(compare: bool = False):
     print(f"For 5 personas:")
     print(f"  Ultra-minimal:  {total_ultra:,} tokens")
     print(f"  Legacy:         {total_legacy:,} tokens")
-    print(f"  Savings:        {total_reduction:,} tokens ({((total_reduction/total_legacy)*100):.1f}%)")
+    print(
+        f"  Savings:        {total_reduction:,} tokens ({((total_reduction/total_legacy)*100):.1f}%)"
+    )
     print()
 
     # File reference architecture savings

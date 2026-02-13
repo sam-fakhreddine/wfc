@@ -31,9 +31,7 @@ class PlanResult:
     def __str__(self) -> str:
         arch_line = ""
         if self.architecture_approach:
-            arch_line = (
-                f"\nArchitecture: {self.architecture_approach}"
-            )
+            arch_line = f"\nArchitecture: {self.architecture_approach}"
         return f"""
 Plan Complete!
 

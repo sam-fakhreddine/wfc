@@ -6,9 +6,7 @@ Verifies context extraction and complexity estimation (PROP-005, PROP-007)
 
 import pytest
 import time
-from wfc.scripts.skills.vibe.summarizer import (
-    ContextSummarizer, Message, PlanningContext
-)
+from wfc.scripts.skills.vibe.summarizer import ContextSummarizer, Message, PlanningContext
 from wfc.scripts.skills.vibe.detector import ScopeDetector
 
 
@@ -24,7 +22,7 @@ class TestContextSummarizer:
         messages = [
             Message("user", "I want to build a REST API for user management"),
             Message("assistant", "What features do you need?"),
-            Message("user", "Authentication and RBAC")
+            Message("user", "Authentication and RBAC"),
         ]
 
         context = self.summarizer.summarize(messages)
@@ -36,7 +34,7 @@ class TestContextSummarizer:
         messages = [
             Message("user", "I need authentication"),
             Message("user", "Also RBAC and audit logging"),
-            Message("user", "Plus email notifications")
+            Message("user", "Plus email notifications"),
         ]
 
         context = self.summarizer.summarize(messages)
@@ -50,7 +48,7 @@ class TestContextSummarizer:
         messages = [
             Message("user", "Using Python with FastAPI"),
             Message("user", "PostgreSQL for database"),
-            Message("user", "Redis for caching")
+            Message("user", "Redis for caching"),
         ]
 
         context = self.summarizer.summarize(messages)
@@ -63,7 +61,7 @@ class TestContextSummarizer:
         messages = [
             Message("user", "It must be secure"),
             Message("user", "Performance is critical"),
-            Message("user", "Need backward compatibility")
+            Message("user", "Need backward compatibility"),
         ]
 
         context = self.summarizer.summarize(messages)
@@ -72,9 +70,7 @@ class TestContextSummarizer:
 
     def test_complexity_estimation_simple(self):
         """TEST-026: Estimates S complexity correctly"""
-        messages = [
-            Message("user", "Add logging to one file")
-        ]
+        messages = [Message("user", "Add logging to one file")]
 
         context = self.summarizer.summarize(messages)
 
@@ -82,9 +78,7 @@ class TestContextSummarizer:
 
     def test_complexity_estimation_medium(self):
         """TEST-027: Estimates M complexity correctly"""
-        messages = [
-            Message("user", "Add auth, RBAC, and logging")
-        ]
+        messages = [Message("user", "Add auth, RBAC, and logging")]
 
         context = self.summarizer.summarize(messages)
 
@@ -94,7 +88,7 @@ class TestContextSummarizer:
         """TEST-028: Estimates L/XL complexity correctly"""
         messages = [
             Message("user", "Build complete user management system"),
-            Message("user", "With auth, RBAC, logging, email, dashboard, API")
+            Message("user", "With auth, RBAC, logging, email, dashboard, API"),
         ]
 
         context = self.summarizer.summarize(messages)
@@ -110,7 +104,7 @@ class TestContextSummarizer:
             tech_stack=[],
             files_mentioned=[],
             estimated_complexity="S",
-            scope_size=1
+            scope_size=1,
         )
 
         assert self.summarizer.should_route_to_plan(context) == False
@@ -124,7 +118,7 @@ class TestContextSummarizer:
             tech_stack=[],
             files_mentioned=[],
             estimated_complexity="L",
-            scope_size=6
+            scope_size=6,
         )
 
         assert self.summarizer.should_route_to_plan(context) == True
@@ -138,7 +132,7 @@ class TestContextSummarizer:
             tech_stack=["python", "fastapi"],
             files_mentioned=[],
             estimated_complexity="M",
-            scope_size=2
+            scope_size=2,
         )
 
         preview = self.summarizer.format_preview(context)
@@ -155,7 +149,7 @@ class TestContextSummarizer:
             Message("user", "I want to build an API"),
             Message("user", "Haha that's funny"),
             Message("user", "By the way, how's the weather?"),
-            Message("user", "Need authentication and RBAC")
+            Message("user", "Need authentication and RBAC"),
         ]
 
         context = self.summarizer.summarize(messages)
@@ -174,7 +168,7 @@ class TestContextSummarizer:
 
         messages = [
             Message("user", "Need auth, RBAC, and logging"),
-            Message("user", "Files: auth.py, user.py, role.py")
+            Message("user", "Files: auth.py, user.py, role.py"),
         ]
 
         context = self.summarizer.summarize(messages, scope_detector=detector)

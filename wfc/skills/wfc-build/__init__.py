@@ -6,4 +6,4 @@ Quick adaptive interview → delegate to subagent(s) → quality + review → sh
 
 from .orchestrator import BuildOrchestrator, BuildSpec
 
-__all__ = ['BuildOrchestrator', 'BuildSpec']
+__all__ = ["BuildOrchestrator", "BuildSpec"]

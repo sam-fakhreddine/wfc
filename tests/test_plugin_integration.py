@@ -25,15 +25,9 @@ from wfc.scripts.skills.review.agents import AgentReview, AgentType
 
 # Import architecture_designer from hyphenated directory via importlib
 _arch_designer_path = (
-    Path(__file__).parent.parent
-    / "wfc"
-    / "skills"
-    / "wfc-plan"
-    / "architecture_designer.py"
+    Path(__file__).parent.parent / "wfc" / "skills" / "wfc-plan" / "architecture_designer.py"
 )
-_spec = importlib.util.spec_from_file_location(
-    "architecture_designer", _arch_designer_path
-)
+_spec = importlib.util.spec_from_file_location("architecture_designer", _arch_designer_path)
 _arch_mod = importlib.util.module_from_spec(_spec)
 _spec.loader.exec_module(_arch_mod)
 ArchitectureDesigner = _arch_mod.ArchitectureDesigner
@@ -93,25 +87,29 @@ class TestSecurityHook:
 
     def test_blocks_eval(self):
         """Write tool with eval() content should return block."""
-        result = security_check({
-            "tool_name": "Write",
-            "tool_input": {
-                "file_path": "script.py",
-                "content": "result = eval(user_input)",
-            },
-        })
+        result = security_check(
+            {
+                "tool_name": "Write",
+                "tool_input": {
+                    "file_path": "script.py",
+                    "content": "result = eval(user_input)",
+                },
+            }
+        )
         assert result.get("decision") == "block"
         assert "eval" in result.get("reason", "").lower()
 
     def test_blocks_os_system(self):
         """Write tool with os.system() should return block."""
-        result = security_check({
-            "tool_name": "Write",
-            "tool_input": {
-                "file_path": "script.py",
-                "content": "import os\nos.system('ls -la')",
-            },
-        })
+        result = security_check(
+            {
+                "tool_name": "Write",
+                "tool_input": {
+                    "file_path": "script.py",
+                    "content": "import os\nos.system('ls -la')",
+                },
+            }
+        )
         assert result.get("decision") == "block"
         assert "os.system" in result.get("reason", "").lower()
 
@@ -124,7 +122,7 @@ class TestSecurityHook:
                     "tool_name": "Write",
                     "tool_input": {
                         "file_path": "app.js",
-                        "content": 'element.innerHTML = userContent;',
+                        "content": "element.innerHTML = userContent;",
                     },
                 },
                 state=state,
@@ -155,34 +153,40 @@ class TestSecurityHook:
 
     def test_blocks_rm_rf_root(self):
         """Bash tool with 'rm -rf /' should return block."""
-        result = security_check({
-            "tool_name": "Bash",
-            "tool_input": {
-                "command": "rm -rf /etc",
-            },
-        })
+        result = security_check(
+            {
+                "tool_name": "Bash",
+                "tool_input": {
+                    "command": "rm -rf /etc",
+                },
+            }
+        )
         assert result.get("decision") == "block"
 
     def test_allows_safe_code(self):
         """Write tool with normal Python should return empty dict."""
-        result = security_check({
-            "tool_name": "Write",
-            "tool_input": {
-                "file_path": "safe.py",
-                "content": "def hello():\n    return 'world'\n",
-            },
-        })
+        result = security_check(
+            {
+                "tool_name": "Write",
+                "tool_input": {
+                    "file_path": "safe.py",
+                    "content": "def hello():\n    return 'world'\n",
+                },
+            }
+        )
         assert result == {}
 
     def test_blocks_subprocess_shell(self):
         """subprocess with shell=True should block."""
-        result = security_check({
-            "tool_name": "Write",
-            "tool_input": {
-                "file_path": "runner.py",
-                "content": "subprocess.run(cmd, shell=True)",
-            },
-        })
+        result = security_check(
+            {
+                "tool_name": "Write",
+                "tool_input": {
+                    "file_path": "runner.py",
+                    "content": "subprocess.run(cmd, shell=True)",
+                },
+            }
+        )
         assert result.get("decision") == "block"
 
     def test_warns_hardcoded_secret(self):
@@ -369,24 +373,28 @@ class TestPreToolUseDispatcher:
 
     def test_security_block_exits_2(self):
         """Pipe eval() JSON to dispatcher, verify exit code 2."""
-        result = self._run_dispatcher({
-            "tool_name": "Write",
-            "tool_input": {
-                "file_path": "evil.py",
-                "content": "result = eval(user_input)",
-            },
-        })
+        result = self._run_dispatcher(
+            {
+                "tool_name": "Write",
+                "tool_input": {
+                    "file_path": "evil.py",
+                    "content": "result = eval(user_input)",
+                },
+            }
+        )
         assert result.returncode == 2
 
     def test_safe_code_exits_0(self):
         """Pipe safe code JSON, verify exit code 0."""
-        result = self._run_dispatcher({
-            "tool_name": "Write",
-            "tool_input": {
-                "file_path": "safe.py",
-                "content": "def hello():\n    return 'world'\n",
-            },
-        })
+        result = self._run_dispatcher(
+            {
+                "tool_name": "Write",
+                "tool_input": {
+                    "file_path": "safe.py",
+                    "content": "def hello():\n    return 'world'\n",
+                },
+            }
+        )
         assert result.returncode == 0
 
 
@@ -531,16 +539,28 @@ class TestConfidenceFiltering:
         """filtered_count is correct."""
         comments = [
             ReviewComment(
-                file="a.py", line=1, severity="low", message="m1",
-                suggestion="s1", confidence=10,
+                file="a.py",
+                line=1,
+                severity="low",
+                message="m1",
+                suggestion="s1",
+                confidence=10,
             ),
             ReviewComment(
-                file="b.py", line=2, severity="medium", message="m2",
-                suggestion="s2", confidence=20,
+                file="b.py",
+                line=2,
+                severity="medium",
+                message="m2",
+                suggestion="s2",
+                confidence=20,
             ),
             ReviewComment(
-                file="c.py", line=3, severity="high", message="m3",
-                suggestion="s3", confidence=90,
+                file="c.py",
+                line=3,
+                severity="high",
+                message="m3",
+                suggestion="s3",
+                confidence=90,
             ),
         ]
 
@@ -586,20 +606,32 @@ class TestConfidenceFiltering:
         """to_dict has filtered_count."""
         reviews = [
             AgentReview(
-                agent=AgentType.CR, score=8.0, passed=True,
-                comments=[], summary="OK",
+                agent=AgentType.CR,
+                score=8.0,
+                passed=True,
+                comments=[],
+                summary="OK",
             ),
             AgentReview(
-                agent=AgentType.SEC, score=9.0, passed=True,
-                comments=[], summary="OK",
+                agent=AgentType.SEC,
+                score=9.0,
+                passed=True,
+                comments=[],
+                summary="OK",
             ),
             AgentReview(
-                agent=AgentType.PERF, score=8.5, passed=True,
-                comments=[], summary="OK",
+                agent=AgentType.PERF,
+                score=8.5,
+                passed=True,
+                comments=[],
+                summary="OK",
             ),
             AgentReview(
-                agent=AgentType.COMP, score=9.0, passed=True,
-                comments=[], summary="OK",
+                agent=AgentType.COMP,
+                score=9.0,
+                passed=True,
+                comments=[],
+                summary="OK",
             ),
         ]
 
@@ -673,9 +705,16 @@ class TestNewPersonas:
         data = json.loads(path.read_text(encoding="utf-8"))
 
         required_fields = [
-            "id", "name", "panel", "skills", "lens",
-            "domain_knowledge", "selection_criteria", "tags",
-            "version", "enabled",
+            "id",
+            "name",
+            "panel",
+            "skills",
+            "lens",
+            "domain_knowledge",
+            "selection_criteria",
+            "tags",
+            "version",
+            "enabled",
         ]
         for field in required_fields:
             assert field in data, f"Missing required field: {field}"
@@ -686,9 +725,16 @@ class TestNewPersonas:
         data = json.loads(path.read_text(encoding="utf-8"))
 
         required_fields = [
-            "id", "name", "panel", "skills", "lens",
-            "domain_knowledge", "selection_criteria", "tags",
-            "version", "enabled",
+            "id",
+            "name",
+            "panel",
+            "skills",
+            "lens",
+            "domain_knowledge",
+            "selection_criteria",
+            "tags",
+            "version",
+            "enabled",
         ]
         for field in required_fields:
             assert field in data, f"Missing required field: {field}"

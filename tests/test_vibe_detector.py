@@ -28,7 +28,7 @@ class TestScopeDetector:
             "I want to add user authentication",
             "We also need role-based access control",
             "Plus audit logging would be good",
-            "And email notifications"
+            "And email notifications",
         ]
 
         for msg in messages:
@@ -41,7 +41,7 @@ class TestScopeDetector:
         """TEST-013: Detects architecture discussion"""
         messages = [
             "We need to integrate with the existing system",
-            "The architecture should support microservices"
+            "The architecture should support microservices",
         ]
 
         for msg in messages:
@@ -55,7 +55,7 @@ class TestScopeDetector:
         messages = [
             "We need auth.py for authentication",
             "Also user.py, role.py, and permission.py",
-            "Plus middleware.py and database.py"
+            "Plus middleware.py and database.py",
         ]
 
         for msg in messages:
@@ -66,10 +66,7 @@ class TestScopeDetector:
 
     def test_detect_complexity_indicators(self):
         """TEST-015: Detects complexity indicators"""
-        messages = [
-            "We should refactor the entire auth system",
-            "And migrate to a new database"
-        ]
+        messages = ["We should refactor the entire auth system", "And migrate to a new database"]
 
         for msg in messages:
             self.detector.analyze_message(msg)
@@ -79,11 +76,7 @@ class TestScopeDetector:
 
     def test_no_false_positives_simple_chat(self):
         """TEST-016: No false positives on simple conversation"""
-        messages = [
-            "Hello, how are you?",
-            "I'm thinking about my project",
-            "Just exploring ideas"
-        ]
+        messages = ["Hello, how are you?", "I'm thinking about my project", "Just exploring ideas"]
 
         for msg in messages:
             self.detector.analyze_message(msg)

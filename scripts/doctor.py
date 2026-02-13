@@ -77,10 +77,7 @@ class WFCDoctor:
         self._print_results()
 
         # Return overall health
-        critical_failures = [
-            c for c in self.checks
-            if not c.passed and c.severity == "error"
-        ]
+        critical_failures = [c for c in self.checks if not c.passed and c.severity == "error"]
 
         return len(critical_failures) == 0
 
@@ -107,10 +104,7 @@ class WFCDoctor:
             # Try to get version
             try:
                 result = subprocess.run(
-                    ["wfc", "--version"],
-                    capture_output=True,
-                    text=True,
-                    timeout=5
+                    ["wfc", "--version"], capture_output=True, text=True, timeout=5
                 )
 
                 if result.returncode == 0:
@@ -121,9 +115,7 @@ class WFCDoctor:
             except Exception:
                 check.pass_check(f"wfc command at {wfc_cmd}")
         else:
-            check.fail_check(
-                "wfc command not found - run: pip install -e ."
-            )
+            check.fail_check("wfc command not found - run: pip install -e .")
 
     def _check_project_structure(self):
         """Check project structure is intact."""
@@ -145,9 +137,7 @@ class WFCDoctor:
         if not missing:
             check.pass_check(f"All {len(required_dirs)} core directories present")
         else:
-            check.fail_check(
-                f"Missing directories: {', '.join(missing)}"
-            )
+            check.fail_check(f"Missing directories: {', '.join(missing)}")
 
     def _check_optional_dependencies(self):
         """Check optional dependencies."""
@@ -156,11 +146,11 @@ class WFCDoctor:
 
         try:
             import tiktoken
+
             check_tiktoken.pass_check(f"tiktoken {tiktoken.__version__}")
         except ImportError:
             check_tiktoken.fail_check(
-                "Install with: pip install -e '.[tokens]'",
-                severity="warning"
+                "Install with: pip install -e '.[tokens]'", severity="warning"
             )
 
     def _check_dev_dependencies(self):
@@ -179,10 +169,7 @@ class WFCDoctor:
                 version = getattr(module, "__version__", "installed")
                 check.pass_check(f"{version}")
             except ImportError:
-                check.fail_check(
-                    f"Install with: pip install -e '.[dev]'",
-                    severity="warning"
-                )
+                check.fail_check(f"Install with: pip install -e '.[dev]'", severity="warning")
 
     def _check_external_tools(self):
         """Check external tools."""
@@ -192,10 +179,7 @@ class WFCDoctor:
         if shutil.which("trunk"):
             try:
                 result = subprocess.run(
-                    ["trunk", "version"],
-                    capture_output=True,
-                    text=True,
-                    timeout=5
+                    ["trunk", "version"], capture_output=True, text=True, timeout=5
                 )
                 version = result.stdout.strip() if result.returncode == 0 else "installed"
                 check_trunk.pass_check(version)
@@ -203,8 +187,7 @@ class WFCDoctor:
                 check_trunk.pass_check("installed")
         else:
             check_trunk.fail_check(
-                "Install: curl https://get.trunk.io -fsSL | bash",
-                severity="warning"
+                "Install: curl https://get.trunk.io -fsSL | bash", severity="warning"
             )
 
         # skills-ref (for validation)
@@ -220,12 +203,11 @@ class WFCDoctor:
             else:
                 check_skills_ref.fail_check(
                     f"Found but venv missing - run: cd {skills_ref_path} && uv venv && uv pip install -e .",
-                    severity="warning"
+                    severity="warning",
                 )
         else:
             check_skills_ref.fail_check(
-                f"Clone to: ~/repos/agentskills/skills-ref",
-                severity="warning"
+                f"Clone to: ~/repos/agentskills/skills-ref", severity="warning"
             )
 
     def _check_skills_installation(self):
@@ -235,10 +217,7 @@ class WFCDoctor:
         claude_skills_dir = Path.home() / ".claude/skills"
 
         if not claude_skills_dir.exists():
-            check.fail_check(
-                "~/.claude/skills directory not found",
-                severity="error"
-            )
+            check.fail_check("~/.claude/skills directory not found", severity="error")
             return
 
         # List of expected WFC skills
@@ -253,7 +232,7 @@ class WFCDoctor:
             "wfc-retro",
             "wfc-safeclaude",
             "wfc-isthissmart",
-            "wfc-newskill"
+            "wfc-newskill",
         ]
 
         installed = []
@@ -271,7 +250,7 @@ class WFCDoctor:
         else:
             check.fail_check(
                 f"{len(installed)}/{len(expected_skills)} installed - Missing: {', '.join(missing)}",
-                severity="warning"
+                severity="warning",
             )
 
     def _check_configuration_files(self):
@@ -291,10 +270,7 @@ class WFCDoctor:
                 break
 
         if not found:
-            check_config.fail_check(
-                "No config found - will use defaults",
-                severity="info"
-            )
+            check_config.fail_check("No config found - will use defaults", severity="info")
 
         # Check PROJECT_INDEX.json
         check_index = self.add_check("PROJECT_INDEX.json", "Configuration")
@@ -304,10 +280,7 @@ class WFCDoctor:
         if index_path.exists():
             check_index.pass_check("Project index available")
         else:
-            check_index.fail_check(
-                "Not found - run: wfc implement (TASK-010)",
-                severity="warning"
-            )
+            check_index.fail_check("Not found - run: wfc implement (TASK-010)", severity="warning")
 
     def _check_token_manager(self):
         """Check token manager is functional."""
@@ -325,15 +298,9 @@ class WFCDoctor:
             if budget.budget_total == 1000:  # Medium complexity default
                 check.pass_check("Functional (default budgets working)")
             else:
-                check.fail_check(
-                    "Budget calculation incorrect",
-                    severity="warning"
-                )
+                check.fail_check("Budget calculation incorrect", severity="warning")
         except Exception as e:
-            check.fail_check(
-                f"Error: {str(e)}",
-                severity="warning"
-            )
+            check.fail_check(f"Error: {str(e)}", severity="warning")
 
     def _print_results(self):
         """Print health check results."""

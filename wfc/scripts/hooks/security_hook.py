@@ -123,9 +123,7 @@ def _extract_content(tool_name: str, tool_input: dict) -> tuple[str, str, str]:
         (content_to_check, file_path, event_type)
     """
     if tool_name in FILE_WRITE_TOOLS:
-        file_path = tool_input.get("file_path", "") or tool_input.get(
-            "notebook_path", ""
-        )
+        file_path = tool_input.get("file_path", "") or tool_input.get("notebook_path", "")
         # Write tool: content field
         # Edit tool: new_string field
         # NotebookEdit: new_source field
@@ -199,9 +197,7 @@ def _check_impl(input_data: dict, state: Optional[HookState] = None) -> dict:
             if languages and not file_language and not file_patterns:
                 # Unknown language and pattern requires specific languages - skip
                 continue
-            if file_patterns and file_path and not _matches_file_pattern(
-                file_path, file_patterns
-            ):
+            if file_patterns and file_path and not _matches_file_pattern(file_path, file_patterns):
                 continue
             if file_patterns and not file_path:
                 continue

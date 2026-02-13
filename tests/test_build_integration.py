@@ -77,10 +77,7 @@ class TestSafetyPropertyEnforcement:
 
     def test_prop_001_never_bypass_quality(self):
         """TEST-033: PROP-001 - Never bypasses quality gates"""
-        result = self.orchestrator.execute(
-            feature_hint="Test feature",
-            dry_run=False
-        )
+        result = self.orchestrator.execute(feature_hint="Test feature", dry_run=False)
 
         if result.get("implementation"):
             impl = result["implementation"]
@@ -88,10 +85,7 @@ class TestSafetyPropertyEnforcement:
 
     def test_prop_002_never_skip_review(self):
         """TEST-034: PROP-002 - Never skips consensus review"""
-        result = self.orchestrator.execute(
-            feature_hint="Test feature",
-            dry_run=False
-        )
+        result = self.orchestrator.execute(feature_hint="Test feature", dry_run=False)
 
         if result.get("implementation"):
             impl = result["implementation"]
@@ -99,10 +93,7 @@ class TestSafetyPropertyEnforcement:
 
     def test_prop_003_never_auto_push(self):
         """TEST-035: PROP-003 - Never auto-pushes to remote"""
-        result = self.orchestrator.execute(
-            feature_hint="Test feature",
-            dry_run=False
-        )
+        result = self.orchestrator.execute(feature_hint="Test feature", dry_run=False)
 
         if result.get("implementation"):
             impl = result["implementation"]
@@ -110,10 +101,7 @@ class TestSafetyPropertyEnforcement:
 
     def test_prop_007_tdd_enforced(self):
         """TEST-036: PROP-007 - TDD workflow enforced"""
-        result = self.orchestrator.execute(
-            feature_hint="Test feature",
-            dry_run=False
-        )
+        result = self.orchestrator.execute(feature_hint="Test feature", dry_run=False)
 
         if result.get("implementation"):
             impl = result["implementation"]
