@@ -211,3 +211,11 @@ fix thre lint errors
 ---
 
 and there are unresolved comments on the PR still, only grab unresolved
+
+---
+
+please run black against our entire folder
+
+---
+
+make lint should run black.

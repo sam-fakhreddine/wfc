@@ -40,3 +40,11 @@ fix thre lint errors
 
 and there are unresolved comments on the PR still, only grab unresolved
 
+### Prompt 8
+
+please run black against our entire folder
+
+### Prompt 9
+
+make lint should run black.
+
