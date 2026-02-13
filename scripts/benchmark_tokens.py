@@ -68,11 +68,11 @@ def benchmark_persona_prompt(persona: Dict, sample_files: List[str]) -> Tuple[in
         properties_focus=properties_focus
     )
 
-    ultra_tokens = counter.count_tokens(ultra_minimal)
+    ultra_tokens = counter.count(ultra_minimal)
 
     # 2. Legacy prompt (full system prompt)
     legacy_prompt = build_persona_system_prompt(persona, sample_files, properties)
-    legacy_tokens = counter.count_tokens(legacy_prompt)
+    legacy_tokens = counter.count(legacy_prompt)
 
     return ultra_tokens, legacy_tokens
 
