@@ -77,6 +77,7 @@ services:
 
     # Container capabilities — only what's actually needed
     # Security boundary is the FIREWALL, not container restrictions
+    # Uncomment additional capabilities below if your workflow requires them
     cap_add:
       - SYS_PTRACE    # Debugging (gdb, strace)
       - NET_ADMIN     # Network configuration (iptables firewall)
@@ -85,6 +86,11 @@ services:
       - SYS_RESOURCE  # Resource limits (ulimit)
       - AUDIT_WRITE   # Firewall audit logging
       - AUDIT_CONTROL # Firewall audit control
+      # - SYS_CHROOT    # chroot()
+      # - MKNOD         # Device node creation
+      # - SYS_MODULE    # Kernel module loading
+      # - SYS_RAWIO     # Raw I/O operations
+      # - SYS_TIME      # System clock
 
     # Keep container running
     tty: true
