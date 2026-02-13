@@ -17,7 +17,19 @@ set -e
 #   - Progressive disclosure (92% token reduction)
 #   - Symlink support for multi-platform sync
 
-VERSION="0.6.0"
+# Check ~/.claude/skills for already installed WFC skills
+    if [ -d "$HOME/.claude/skills" ]; then
+        for skill_dir in "$HOME/.claude/skills"/wfc-*; do
+            if [ -d "$skill_dir" ]; then
+                skill_name=$(basename "$skill_dir")
+                if [ ! -d "$WFC_ROOT/skills/$skill_name" ]; then
+                    echo "    ├─ $skill_name (from ~/.claude/skills)"
+                    cp -r "$skill_dir" "$WFC_ROOT/skills/"
+                    SKILLS_FOUND=$((SKILLS_FOUND + 1))
+                fi
+            fi
+        done
+    fi
 
 # Non-interactive mode flag
 CI_MODE=false
