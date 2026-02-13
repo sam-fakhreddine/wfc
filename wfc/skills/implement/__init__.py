@@ -16,10 +16,18 @@ from .parser import parse_tasks, TasksParser
 from .executor import ExecutionEngine
 
 __all__ = [
-    "WFCOrchestrator", "run_implementation", "RunResult", "AgentStrategy",
-    "WFCAgent", "AgentReport", "AgentPhase",
-    "MergeEngine", "MergeResult", "MergeStatus",
+    "WFCOrchestrator",
+    "run_implementation",
+    "RunResult",
+    "AgentStrategy",
+    "WFCAgent",
+    "AgentReport",
+    "AgentPhase",
+    "MergeEngine",
+    "MergeResult",
+    "MergeStatus",
     "cli_implement",
-    "parse_tasks", "TasksParser",
-    "ExecutionEngine"
+    "parse_tasks",
+    "TasksParser",
+    "ExecutionEngine",
 ]

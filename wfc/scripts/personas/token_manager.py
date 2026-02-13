@@ -18,7 +18,6 @@ DESIGN PRINCIPLES:
 from dataclasses import dataclass
 from typing import List, Dict, Any, Optional, Tuple
 from pathlib import Path
-import re
 import logging
 
 logger = logging.getLogger(__name__)
@@ -26,6 +25,7 @@ logger = logging.getLogger(__name__)
 # Try to import tiktoken for accurate token counting
 try:
     import tiktoken
+
     TIKTOKEN_AVAILABLE = True
 except ImportError:
     TIKTOKEN_AVAILABLE = False
@@ -35,6 +35,7 @@ except ImportError:
 @dataclass
 class TokenBudget:
     """Token budget allocation for a persona review"""
+
     total: int = 150000  # Conservative limit (models support 200k but leave buffer)
     system_prompt: int = 1000  # ULTRA-MINIMAL persona prompt (~200 tokens)
     properties: int = 1000  # Properties and metadata
@@ -124,31 +125,29 @@ class FileCondenser:
         3. For functions >20 lines, show signature + docstring + "..." for body
         4. Keep short functions (<20 lines) in full
         """
-        lines = content.split('\n')
+        lines = content.split("\n")
         condensed = []
         current_tokens = 0
 
         in_function = False
-        in_class = False
         function_start = 0
         indent_level = 0
 
         for i, line in enumerate(lines):
             # Always keep imports
-            if line.strip().startswith(('import ', 'from ')):
+            if line.strip().startswith(("import ", "from ")):
                 condensed.append(line)
                 current_tokens += token_counter.count(line)
                 continue
 
             # Keep class definitions
-            if line.strip().startswith('class '):
+            if line.strip().startswith("class "):
                 condensed.append(line)
                 current_tokens += token_counter.count(line)
-                in_class = True
                 continue
 
             # Keep function definitions
-            if line.strip().startswith('def ') or line.strip().startswith('async def '):
+            if line.strip().startswith("def ") or line.strip().startswith("async def "):
                 function_start = i
                 in_function = True
                 indent_level = len(line) - len(line.lstrip())
@@ -168,7 +167,9 @@ class FileCondenser:
                 if line.strip() and (len(line) - len(line.lstrip())) <= indent_level:
                     in_function = False
                     if i - function_start > 20:
-                        condensed.append(' ' * (indent_level + 4) + '# ... [body truncated for token budget]')
+                        condensed.append(
+                            " " * (indent_level + 4) + "# ... [body truncated for token budget]"
+                        )
                     continue
 
                 # Keep short functions fully
@@ -182,10 +183,10 @@ class FileCondenser:
 
             # Stop if we exceed budget
             if current_tokens > max_tokens:
-                condensed.append('\n# ... [File truncated to fit token budget]')
+                condensed.append("\n# ... [File truncated to fit token budget]")
                 break
 
-        return '\n'.join(condensed)
+        return "\n".join(condensed)
 
     @staticmethod
     def condense_generic(content: str, max_tokens: int, token_counter: TokenCounter) -> str:
@@ -203,7 +204,7 @@ class FileCondenser:
             return content
 
         # Calculate split points
-        lines = content.split('\n')
+        lines = content.split("\n")
         total_lines = len(lines)
 
         # Take first 70% and last 30% of available space
@@ -232,14 +233,16 @@ class FileCondenser:
 
         # Combine with gap indicator
         gap_lines = total_lines - len(first_chunk) - len(last_chunk)
-        result = '\n'.join(first_chunk)
-        result += f'\n\n... [{gap_lines} lines truncated to fit token budget] ...\n\n'
-        result += '\n'.join(last_chunk)
+        result = "\n".join(first_chunk)
+        result += f"\n\n... [{gap_lines} lines truncated to fit token budget] ...\n\n"
+        result += "\n".join(last_chunk)
 
         return result
 
     @classmethod
-    def condense(cls, filepath: str, content: str, max_tokens: int, token_counter: TokenCounter) -> str:
+    def condense(
+        cls, filepath: str, content: str, max_tokens: int, token_counter: TokenCounter
+    ) -> str:
         """
         Condense file content to fit token budget.
 
@@ -258,7 +261,7 @@ class FileCondenser:
             return content
 
         # Choose strategy based on file type
-        if filepath.endswith('.py'):
+        if filepath.endswith(".py"):
             return cls.condense_python(content, max_tokens, token_counter)
         else:
             return cls.condense_generic(content, max_tokens, token_counter)
@@ -286,7 +289,7 @@ class PersonaPromptCompressor:
         lens: Dict,
         personality: Dict,
         system_additions: str,
-        properties_focus: str
+        properties_focus: str,
     ) -> str:
         """
         Build ULTRA-MINIMAL persona system prompt.
@@ -296,13 +299,10 @@ class PersonaPromptCompressor:
         """
         # Top 3 skills only
         top_skills = skills[:3]
-        skills_text = " | ".join([
-            f"{s['name']} ({s['level']})"
-            for s in top_skills
-        ])
+        skills_text = " | ".join([f"{s['name']} ({s['level']})" for s in top_skills])
 
         # One-line focus (truncate if too long)
-        focus = lens.get('focus', 'Code quality')
+        focus = lens.get("focus", "Code quality")
         if len(focus) > 80:
             focus = focus[:77] + "..."
 
@@ -357,7 +357,7 @@ class TokenBudgetManager:
         persona: Dict,
         files: List[str],
         properties: List[Dict[str, Any]],
-        budget: Optional[TokenBudget] = None
+        budget: Optional[TokenBudget] = None,
     ) -> Tuple[str, Dict[str, Any]]:
         """
         Prepare optimized persona prompt that fits token budget.
@@ -383,7 +383,7 @@ class TokenBudgetManager:
             lens=persona.get("lens", {}),
             personality=persona.get("personality", {}),
             system_additions=persona.get("system_prompt_additions", ""),
-            properties_focus=properties_focus
+            properties_focus=properties_focus,
         )
 
         system_tokens = self.counter.count(system_prompt)
@@ -402,7 +402,7 @@ class TokenBudgetManager:
 
         for filepath in files:
             try:
-                with open(filepath, 'r') as f:
+                with open(filepath, "r") as f:
                     content = f.read()
 
                 file_tokens = self.counter.count(content)
@@ -413,13 +413,13 @@ class TokenBudgetManager:
                         filepath=filepath,
                         content=content,
                         max_tokens=tokens_per_file,
-                        token_counter=self.counter
+                        token_counter=self.counter,
                     )
                     condensed_files.append(filepath)
                     file_tokens = self.counter.count(content)
 
                 # Format file
-                ext = Path(filepath).suffix.lstrip('.')
+                ext = Path(filepath).suffix.lstrip(".")
                 file_block = f"\n## File: {filepath}\n```{ext}\n{content}\n```\n"
                 files_text.append(file_block)
                 files_tokens += self.counter.count(file_block)
@@ -452,7 +452,7 @@ Respond with JSON only."""
             "num_files": len(files),
             "num_condensed": len(condensed_files),
             "condensed_files": condensed_files,
-            "fits_budget": budget.fits(system_tokens, properties_tokens, files_tokens)
+            "fits_budget": budget.fits(system_tokens, properties_tokens, files_tokens),
         }
 
         return full_prompt, metrics

@@ -100,7 +100,7 @@ def commit_msg_hook(commit_msg_file: str) -> int:
         print(f"   Suggestion: {validation.get('suggestion', 'N/A')}")
 
         if "examples" in validation:
-            print(f"\n   Examples:")
+            print("\n   Examples:")
             for example in validation["examples"]:
                 print(f"     - {example}")
 
@@ -117,7 +117,7 @@ def commit_msg_hook(commit_msg_file: str) -> int:
             },
         )
 
-        print(f"✅ Commit allowed (soft enforcement - message format warning)\n")
+        print("✅ Commit allowed (soft enforcement - message format warning)\n")
 
     # Extract and log task ID if present
     task_id = extract_task_id(message)

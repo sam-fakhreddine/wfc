@@ -11,17 +11,15 @@ They ONLY coordinate. All actual work is done by subagents via Task tool.
 """
 
 from pathlib import Path
-from typing import Dict, List, Optional
+from typing import Dict, Optional
 import time
-import json
 
-from wfc.shared.config import WFCConfig
 from wfc.shared.schemas import Task, TaskStatus
 from wfc.shared.extended_thinking import ExtendedThinkingDecider
 
 from .orchestrator import WFCOrchestrator
 from .agent import AgentReport
-from .merge_engine import MergeEngine, MergeResult
+from .merge_engine import MergeEngine
 
 
 class ExecutionEngine:
@@ -103,7 +101,7 @@ class ExecutionEngine:
         agent_id = f"agent-{self.agent_counter}"
 
         # Build prompt for subagent
-        agent_prompt = self._build_agent_prompt(task, agent_id)
+        self._build_agent_prompt(task, agent_id)
 
         # Spawn subagent via Task tool (would be actual tool call in production)
         # For now, we'll use a placeholder that simulates the delegation

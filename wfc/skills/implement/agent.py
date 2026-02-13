@@ -27,9 +27,9 @@ from typing import List, Dict, Any, Optional
 import time
 
 from wfc.shared.config import WFCConfig
-from wfc.shared.schemas import Task, Property, TaskComplexity
+from wfc.shared.schemas import Task, TaskComplexity
 from wfc.shared.utils import GitHelper, ModelConfig
-from wfc.scripts.token_manager import TokenManager, TokenBudget
+from wfc.scripts.token_manager import TokenManager
 
 
 class IssueSeverity(Enum):
@@ -41,6 +41,7 @@ class IssueSeverity(Enum):
     - ERROR: Blocks submission (broken code, failing tests)
     - CRITICAL: Immediate failure (security, data loss)
     """
+
     WARNING = "warning"
     ERROR = "error"
     CRITICAL = "critical"
@@ -48,6 +49,7 @@ class IssueSeverity(Enum):
 
 class AgentPhase(Enum):
     """TDD workflow phases."""
+
     UNDERSTAND = "understand"
     TEST_FIRST = "test_first"
     IMPLEMENT = "implement"
@@ -64,6 +66,7 @@ class AgentReport:
     This is what agents return to the orchestrator.
     MULTI-TIER: Pure data, no rendering logic.
     """
+
     task_id: str
     agent_id: str
     status: str  # "ready_for_review", "blocked", "failed"
@@ -122,7 +125,7 @@ class AgentReport:
             "provider": self.provider,
             "tokens": self.tokens,
             "duration_ms": self.duration_ms,
-            "entire_session": self.entire_session
+            "entire_session": self.entire_session,
         }
 
 
@@ -142,8 +145,7 @@ class WFCAgent:
     TOKEN-AWARE: Quality gate saves 50%+ review tokens by catching issues early
     """
 
-    def __init__(self, agent_id: str, task: Task,
-                 project_root: Path, config: WFCConfig):
+    def __init__(self, agent_id: str, task: Task, project_root: Path, config: WFCConfig):
         """
         Initialize agent.
 
@@ -177,10 +179,7 @@ class WFCAgent:
 
         # Token tracking
         token_manager = TokenManager()
-        self.token_budget = token_manager.create_budget(
-            task_id=task.id,
-            complexity=task.complexity
-        )
+        self.token_budget = token_manager.create_budget(task_id=task.id, complexity=task.complexity)
 
         # Git helper (will be initialized when worktree created)
         self.git: Optional[GitHelper] = None
@@ -235,15 +234,19 @@ class WFCAgent:
                     "output": self.token_budget.actual_output,
                     "total": self.token_budget.actual_total,
                     "budget": self.token_budget.budget_total,
-                    "usage_pct": self.token_budget.get_usage_percentage()
+                    "usage_pct": self.token_budget.get_usage_percentage(),
                 },
                 duration_ms=duration_ms,
-                entire_session={
-                    "session_id": self.entire_session_id,
-                    "checkpoints": self.checkpoints,
-                    "local_only": True,
-                    "branch": "entire/checkpoints/v1"
-                } if self.entire_enabled else None
+                entire_session=(
+                    {
+                        "session_id": self.entire_session_id,
+                        "checkpoints": self.checkpoints,
+                        "local_only": True,
+                        "branch": "entire/checkpoints/v1",
+                    }
+                    if self.entire_enabled
+                    else None
+                ),
             )
 
         except Exception as e:
@@ -260,11 +263,10 @@ class WFCAgent:
                 worktree_path=str(self.worktree_path),
                 branch=self.branch_name,
                 commits=self.commits,
-                discoveries=[{
-                    "description": f"Implementation failed: {str(e)}",
-                    "severity": "critical"
-                }],
-                duration_ms=duration_ms
+                discoveries=[
+                    {"description": f"Implementation failed: {str(e)}", "severity": "critical"}
+                ],
+                duration_ms=duration_ms,
             )
 
     def _setup_worktree(self) -> None:
@@ -284,6 +286,7 @@ class WFCAgent:
 
         # Write task definition
         import json
+
         (task_dir / "task.json").write_text(json.dumps(self.task.to_dict(), indent=2))
 
         # Note: Properties and test-plan are written by orchestrator
@@ -311,6 +314,7 @@ class WFCAgent:
         task_file = task_dir / "task.json"
         if task_file.exists():
             import json
+
             task_data = json.loads(task_file.read_text())
             self.task_context = task_data
 
@@ -318,6 +322,7 @@ class WFCAgent:
         props_file = task_dir / "properties.json"
         if props_file.exists():
             import json
+
             self.properties_context = json.loads(props_file.read_text())
         else:
             self.properties_context = {}
@@ -326,6 +331,7 @@ class WFCAgent:
         test_plan_file = task_dir / "test-plan.json"
         if test_plan_file.exists():
             import json
+
             self.test_plan_context = json.loads(test_plan_file.read_text())
         else:
             self.test_plan_context = {}
@@ -346,11 +352,13 @@ class WFCAgent:
             questions = self.confidence_assessment.get("questions", [])
 
             # Add to discoveries
-            self.discoveries.append({
-                "description": f"Low confidence ({confidence_score}%) - cannot proceed without clarification",
-                "severity": "critical",
-                "questions": questions
-            })
+            self.discoveries.append(
+                {
+                    "description": f"Low confidence ({confidence_score}%) - cannot proceed without clarification",
+                    "severity": "critical",
+                    "questions": questions,
+                }
+            )
 
             # STOP - raise exception to prevent wrong-direction work
             raise Exception(
@@ -367,11 +375,14 @@ class WFCAgent:
         self._track_tokens(input_tokens=100, output_tokens=50)
 
         # Create checkpoint for UNDERSTAND phase
-        self._create_checkpoint("UNDERSTAND", {
-            "confidence_score": self.confidence_assessment.get("confidence_score", 0),
-            "affected_files": self.affected_files,
-            "should_proceed": self.confidence_assessment.get("should_proceed", False)
-        })
+        self._create_checkpoint(
+            "UNDERSTAND",
+            {
+                "confidence_score": self.confidence_assessment.get("confidence_score", 0),
+                "affected_files": self.affected_files,
+                "should_proceed": self.confidence_assessment.get("should_proceed", False),
+            },
+        )
 
     def _phase_test_first(self) -> None:
         """
@@ -390,9 +401,7 @@ class WFCAgent:
         # NOTE: In real execution, this would call the Task tool
         # For now, we simulate the workflow
         test_files = self._execute_claude_task(
-            description="Write tests for task",
-            prompt=prompt,
-            phase="TEST_FIRST"
+            description="Write tests for task", prompt=prompt, phase="TEST_FIRST"
         )
 
         # Verify tests exist and fail (RED phase)
@@ -400,27 +409,30 @@ class WFCAgent:
             test_result = self._run_tests()
             if test_result.get("passed", False):
                 # Tests should FAIL in RED phase
-                self.discoveries.append({
-                    "description": "Warning: Tests passed in RED phase - should fail initially",
-                    "severity": "medium"
-                })
+                self.discoveries.append(
+                    {
+                        "description": "Warning: Tests passed in RED phase - should fail initially",
+                        "severity": "medium",
+                    }
+                )
 
         # Commit test files
         if self.git and test_files:
-            self._make_commit(
-                f"test: add tests for {self.task.id}",
-                test_files,
-                "test"
-            )
+            self._make_commit(f"test: add tests for {self.task.id}", test_files, "test")
 
         # Track tokens used in TEST_FIRST phase
         self._track_tokens(input_tokens=150, output_tokens=200)
 
         # Create checkpoint for TEST_FIRST phase
-        self._create_checkpoint("TEST_FIRST", {
-            "test_files_created": test_files if test_files else [],
-            "tests_initially_failed": not test_result.get("passed", True) if test_files else True
-        })
+        self._create_checkpoint(
+            "TEST_FIRST",
+            {
+                "test_files_created": test_files if test_files else [],
+                "tests_initially_failed": (
+                    not test_result.get("passed", True) if test_files else True
+                ),
+            },
+        )
 
     def _phase_implement(self) -> None:
         """
@@ -437,9 +449,7 @@ class WFCAgent:
 
         # Use Claude Code Task tool to implement
         impl_files = self._execute_claude_task(
-            description="Implement task to pass tests",
-            prompt=prompt,
-            phase="IMPLEMENT"
+            description="Implement task to pass tests", prompt=prompt, phase="IMPLEMENT"
         )
 
         # Verify tests now pass (GREEN phase)
@@ -447,27 +457,28 @@ class WFCAgent:
             test_result = self._run_tests()
             if not test_result.get("passed", False):
                 # Tests should PASS in GREEN phase
-                self.discoveries.append({
-                    "description": f"Warning: Tests failed in GREEN phase - implementation incomplete: {test_result.get('failures', [])}",
-                    "severity": "high"
-                })
+                self.discoveries.append(
+                    {
+                        "description": f"Warning: Tests failed in GREEN phase - implementation incomplete: {test_result.get('failures', [])}",
+                        "severity": "high",
+                    }
+                )
 
         # Commit implementation
         if self.git and impl_files:
-            self._make_commit(
-                f"feat: implement {self.task.title}",
-                impl_files,
-                "implementation"
-            )
+            self._make_commit(f"feat: implement {self.task.title}", impl_files, "implementation")
 
         # Track tokens used in IMPLEMENT phase
         self._track_tokens(input_tokens=200, output_tokens=300)
 
         # Create checkpoint for IMPLEMENT phase
-        self._create_checkpoint("IMPLEMENT", {
-            "implementation_files": impl_files if impl_files else [],
-            "tests_passed": test_result.get("passed", False) if impl_files else False
-        })
+        self._create_checkpoint(
+            "IMPLEMENT",
+            {
+                "implementation_files": impl_files if impl_files else [],
+                "tests_passed": test_result.get("passed", False) if impl_files else False,
+            },
+        )
 
     def _phase_refactor(self) -> None:
         """
@@ -486,9 +497,7 @@ class WFCAgent:
 
             # Use Claude Code Task tool to refactor
             refactored_files = self._execute_claude_task(
-                description="Refactor implementation for clarity",
-                prompt=prompt,
-                phase="REFACTOR"
+                description="Refactor implementation for clarity", prompt=prompt, phase="REFACTOR"
             )
 
             # Verify tests still pass after refactoring
@@ -496,10 +505,12 @@ class WFCAgent:
                 test_result = self._run_tests()
                 if not test_result.get("passed", False):
                     # Tests must still pass after refactoring
-                    self.discoveries.append({
-                        "description": "Critical: Tests failed after refactoring - behavior changed",
-                        "severity": "critical"
-                    })
+                    self.discoveries.append(
+                        {
+                            "description": "Critical: Tests failed after refactoring - behavior changed",
+                            "severity": "critical",
+                        }
+                    )
                     # Rollback refactoring
                     if self.git:
                         self._rollback_last_change()
@@ -509,7 +520,7 @@ class WFCAgent:
                     self._make_commit(
                         f"refactor: improve code quality for {self.task.id}",
                         refactored_files,
-                        "refactor"
+                        "refactor",
                     )
         else:
             # Skip refactoring for simple tasks (S, M complexity)
@@ -519,10 +530,13 @@ class WFCAgent:
         self._track_tokens(input_tokens=100, output_tokens=150)
 
         # Create checkpoint for REFACTOR phase
-        self._create_checkpoint("REFACTOR", {
-            "refactored": self.task.complexity in [TaskComplexity.L, TaskComplexity.XL],
-            "complexity": self.task.complexity.value if self.task.complexity else "unknown"
-        })
+        self._create_checkpoint(
+            "REFACTOR",
+            {
+                "refactored": self.task.complexity in [TaskComplexity.L, TaskComplexity.XL],
+                "complexity": self.task.complexity.value if self.task.complexity else "unknown",
+            },
+        )
 
     def _phase_quality_check(self) -> None:
         """
@@ -550,7 +564,7 @@ class WFCAgent:
                 "tool": "none",
                 "message": "No files changed",
                 "issues_found": 0,
-                "fixable_issues": 0
+                "fixable_issues": 0,
             }
             return
 
@@ -567,17 +581,19 @@ class WFCAgent:
                 "output": result.output,
                 "issues_found": result.issues_found,
                 "fixable_issues": result.fixable_issues,
-                "files_checked": result.files_checked
+                "files_checked": result.files_checked,
             }
 
             if not result.passed:
                 # Quality check failed - add to discoveries
-                self.discoveries.append({
-                    "description": f"Quality check failed: {result.issues_found} issues found",
-                    "severity": "high",
-                    "fixable": result.fixable_issues > 0,
-                    "fix_command": "trunk check --fix" if result.fixable_issues > 0 else None
-                })
+                self.discoveries.append(
+                    {
+                        "description": f"Quality check failed: {result.issues_found} issues found",
+                        "severity": "high",
+                        "fixable": result.fixable_issues > 0,
+                        "fix_command": "trunk check --fix" if result.fixable_issues > 0 else None,
+                    }
+                )
 
         except ImportError:
             # Trunk not available, fall back to language-specific tools
@@ -594,7 +610,7 @@ class WFCAgent:
             from wfc.scripts.quality_checker import QualityChecker
 
             # Filter for Python files (primary WFC language)
-            python_files = [f for f in files if f.endswith('.py')]
+            python_files = [f for f in files if f.endswith(".py")]
 
             if not python_files:
                 self.quality_check_result = {
@@ -602,7 +618,7 @@ class WFCAgent:
                     "tool": "none",
                     "message": "No Python files to check",
                     "issues_found": 0,
-                    "fixable_issues": 0
+                    "fixable_issues": 0,
                 }
                 return
 
@@ -617,23 +633,25 @@ class WFCAgent:
                         "name": check.name,
                         "passed": check.passed,
                         "message": check.message,
-                        "fix_command": check.fix_command
+                        "fix_command": check.fix_command,
                     }
                     for check in report.checks
                 ],
-                "files_checked": len(python_files)
+                "files_checked": len(python_files),
             }
 
             if not report.passed:
                 # Add failures to discoveries
                 for check in report.checks:
                     if not check.passed:
-                        self.discoveries.append({
-                            "description": f"{check.name} failed: {check.message}",
-                            "severity": "high",
-                            "fixable": check.fix_command is not None,
-                            "fix_command": check.fix_command
-                        })
+                        self.discoveries.append(
+                            {
+                                "description": f"{check.name} failed: {check.message}",
+                                "severity": "high",
+                                "fixable": check.fix_command is not None,
+                                "fix_command": check.fix_command,
+                            }
+                        )
 
         except ImportError:
             # No quality checker available
@@ -642,18 +660,21 @@ class WFCAgent:
                 "tool": "none",
                 "message": "No quality checker available (install Trunk or quality_checker)",
                 "issues_found": 0,
-                "fixable_issues": 0
+                "fixable_issues": 0,
             }
 
         # Track tokens used in QUALITY_CHECK phase
         self._track_tokens(input_tokens=50, output_tokens=100)
 
         # Create checkpoint for QUALITY_CHECK phase
-        self._create_checkpoint("QUALITY_CHECK", {
-            "quality_passed": self.quality_check_result.get("passed", True),
-            "tool_used": self.quality_check_result.get("tool", "none"),
-            "issues_found": self.quality_check_result.get("issues_found", 0)
-        })
+        self._create_checkpoint(
+            "QUALITY_CHECK",
+            {
+                "quality_passed": self.quality_check_result.get("passed", True),
+                "tool_used": self.quality_check_result.get("tool", "none"),
+                "issues_found": self.quality_check_result.get("issues_found", 0),
+            },
+        )
 
     def _phase_submit(self) -> None:
         """
@@ -675,10 +696,12 @@ class WFCAgent:
             # Check if issues are just warnings (should not block)
             if self._are_quality_issues_warnings():
                 # Warnings don't block - just log
-                self.discoveries.append({
-                    "description": f"Quality check found {issues} warnings (not blocking)",
-                    "severity": "warning"
-                })
+                self.discoveries.append(
+                    {
+                        "description": f"Quality check found {issues} warnings (not blocking)",
+                        "severity": "warning",
+                    }
+                )
             else:
                 # Errors/critical issues block submission
                 raise Exception(
@@ -703,15 +726,15 @@ class WFCAgent:
         properties_report = self._get_properties_satisfied()
         for prop_id, prop_status in properties_report.items():
             if prop_status["status"] == "violated":
-                raise Exception(
-                    f"Property {prop_id} violated: {prop_status['evidence']}"
-                )
+                raise Exception(f"Property {prop_id} violated: {prop_status['evidence']}")
             elif prop_status["status"] == "not_verified":
                 # Warn but don't fail
-                self.discoveries.append({
-                    "description": f"Property {prop_id} not verified (tests failed)",
-                    "severity": "warning"
-                })
+                self.discoveries.append(
+                    {
+                        "description": f"Property {prop_id} not verified (tests failed)",
+                        "severity": "warning",
+                    }
+                )
 
         # 5. Check for regressions (all existing tests still pass)
         # This is already covered by _run_tests() which runs ALL tests
@@ -721,18 +744,21 @@ class WFCAgent:
             self._make_commit(
                 f"feat: complete {self.task.id} - {self.task.title}",
                 self._get_all_modified_files(),
-                "final"
+                "final",
             )
 
         # Track tokens used in SUBMIT phase
         self._track_tokens(input_tokens=50, output_tokens=50)
 
         # Create checkpoint for SUBMIT phase (final checkpoint)
-        self._create_checkpoint("SUBMIT", {
-            "final_commit_count": len(self.commits),
-            "properties_status": "all_verified",
-            "ready_for_review": True
-        })
+        self._create_checkpoint(
+            "SUBMIT",
+            {
+                "final_commit_count": len(self.commits),
+                "properties_status": "all_verified",
+                "ready_for_review": True,
+            },
+        )
 
     def _make_commit(self, message: str, files: List[str], commit_type: str) -> None:
         """
@@ -753,25 +779,22 @@ class WFCAgent:
                         ["git", "add", file],
                         cwd=self.worktree_path,
                         check=True,
-                        capture_output=True
+                        capture_output=True,
                     )
             else:
                 # Stage all changes if no specific files
                 subprocess.run(
-                    ["git", "add", "-A"],
-                    cwd=self.worktree_path,
-                    check=True,
-                    capture_output=True
+                    ["git", "add", "-A"], cwd=self.worktree_path, check=True, capture_output=True
                 )
 
             # Create commit with task ID in message
             commit_message = f"{message} [{self.task.id}]"
-            result = subprocess.run(
+            subprocess.run(
                 ["git", "commit", "-m", commit_message],
                 cwd=self.worktree_path,
                 check=True,
                 capture_output=True,
-                text=True
+                text=True,
             )
 
             # Get the commit SHA
@@ -780,30 +803,33 @@ class WFCAgent:
                 cwd=self.worktree_path,
                 check=True,
                 capture_output=True,
-                text=True
+                text=True,
             )
             commit_sha = sha_result.stdout.strip()
 
             # Record commit
-            self.commits.append({
-                "sha": commit_sha,
-                "message": commit_message,
-                "files_changed": files,
-                "type": commit_type
-            })
+            self.commits.append(
+                {
+                    "sha": commit_sha,
+                    "message": commit_message,
+                    "files_changed": files,
+                    "type": commit_type,
+                }
+            )
 
         except subprocess.CalledProcessError as e:
             # If commit fails (e.g., nothing to commit), record without SHA
-            self.discoveries.append({
-                "description": f"Git commit failed: {e.stderr}",
-                "severity": "warning"
-            })
-            self.commits.append({
-                "sha": "no-commit",
-                "message": message,
-                "files_changed": files,
-                "type": commit_type
-            })
+            self.discoveries.append(
+                {"description": f"Git commit failed: {e.stderr}", "severity": "warning"}
+            )
+            self.commits.append(
+                {
+                    "sha": "no-commit",
+                    "message": message,
+                    "files_changed": files,
+                    "type": commit_type,
+                }
+            )
 
     def _get_test_results(self) -> Dict[str, Any]:
         """Get test results by running actual tests.
@@ -812,7 +838,6 @@ class WFCAgent:
             Dict with test counts, pass/fail status, and coverage
         """
         import subprocess
-        import re
 
         try:
             # Run pytest with coverage if available
@@ -821,13 +846,13 @@ class WFCAgent:
                 cwd=self.worktree_path,
                 capture_output=True,
                 text=True,
-                timeout=60
+                timeout=60,
             )
 
             # Parse test count from pytest collection output
             test_count = 0
-            for line in result.stdout.split('\n'):
-                if 'test' in line.lower():
+            for line in result.stdout.split("\n"):
+                if "test" in line.lower():
                     test_count += 1
 
             # Run tests for real
@@ -843,7 +868,7 @@ class WFCAgent:
                 "existing_tests_passing": test_result.get("passed", True),
                 "existing_tests_total": max(0, test_count - new_tests_written),
                 "coverage_delta": "+0.0%",  # TODO: Parse from pytest-cov output
-                "test_output": test_result.get("output", "")[:500]  # First 500 chars
+                "test_output": test_result.get("output", "")[:500],  # First 500 chars
             }
 
         except (FileNotFoundError, subprocess.TimeoutExpired):
@@ -853,7 +878,7 @@ class WFCAgent:
                 "new_tests_passing": 0,
                 "existing_tests_passing": True,
                 "existing_tests_total": 0,
-                "coverage_delta": "+0.0%"
+                "coverage_delta": "+0.0%",
             }
 
     def _get_properties_satisfied(self) -> Dict[str, Dict[str, Any]]:
@@ -893,7 +918,7 @@ class WFCAgent:
             satisfied[prop_id] = {
                 "status": status,
                 "evidence": "; ".join(evidence) if evidence else f"Tests verify {prop_id}",
-                "verified_by_wfc_test": property_verified is not None
+                "verified_by_wfc_test": property_verified is not None,
             }
 
         return satisfied
@@ -947,7 +972,7 @@ class WFCAgent:
             context = {
                 "properties": self.properties_context,
                 "test_plan": self.test_plan_context,
-                "affected_files": self.affected_files
+                "affected_files": self.affected_files,
             }
 
             # Assess confidence
@@ -961,17 +986,18 @@ class WFCAgent:
             confidence_level = assessment.confidence_level.value
 
             if assessment.should_proceed:
-                self.discoveries.append({
-                    "description": f"Confidence check: {confidence_score}% ({confidence_level}) - proceeding",
-                    "severity": "info"
-                })
+                self.discoveries.append(
+                    {
+                        "description": f"Confidence check: {confidence_score}% ({confidence_level}) - proceeding",
+                        "severity": "info",
+                    }
+                )
             else:
                 # Add questions to discoveries
                 for question in assessment.questions:
-                    self.discoveries.append({
-                        "description": f"Clarifying question: {question}",
-                        "severity": "warning"
-                    })
+                    self.discoveries.append(
+                        {"description": f"Clarifying question: {question}", "severity": "warning"}
+                    )
 
         except ImportError:
             # Confidence checker not available - proceed with warning
@@ -979,13 +1005,15 @@ class WFCAgent:
                 "confidence_score": 75,
                 "confidence_level": "medium",
                 "should_proceed": True,
-                "recommendation": "Confidence checker not available - proceeding with caution"
+                "recommendation": "Confidence checker not available - proceeding with caution",
             }
 
-            self.discoveries.append({
-                "description": "Confidence checker not available - proceeding without assessment",
-                "severity": "warning"
-            })
+            self.discoveries.append(
+                {
+                    "description": "Confidence checker not available - proceeding without assessment",
+                    "severity": "warning",
+                }
+            )
 
     def _search_past_errors(self) -> None:
         """
@@ -1003,18 +1031,16 @@ class WFCAgent:
             similar_errors = memory.search_similar_errors(task_description, max_results=3)
 
             if similar_errors:
-                self.discoveries.append({
-                    "description": f"Found {len(similar_errors)} similar past errors - review before starting",
-                    "severity": "info",
-                    "similar_errors": [
-                        {
-                            "mistake": e.mistake,
-                            "fix": e.fix,
-                            "rule": e.rule
-                        }
-                        for e in similar_errors
-                    ]
-                })
+                self.discoveries.append(
+                    {
+                        "description": f"Found {len(similar_errors)} similar past errors - review before starting",
+                        "severity": "info",
+                        "similar_errors": [
+                            {"mistake": e.mistake, "fix": e.fix, "rule": e.rule}
+                            for e in similar_errors
+                        ],
+                    }
+                )
 
         except ImportError:
             # Memory manager not available - proceed without history
@@ -1033,16 +1059,17 @@ class WFCAgent:
         # Get files changed compared to main branch
         try:
             import subprocess
+
             result = subprocess.run(
                 ["git", "diff", "--name-only", "main"],
                 cwd=self.worktree_path,
                 capture_output=True,
                 text=True,
-                timeout=10
+                timeout=10,
             )
 
             if result.returncode == 0:
-                files = [f.strip() for f in result.stdout.split('\n') if f.strip()]
+                files = [f.strip() for f in result.stdout.split("\n") if f.strip()]
                 # Convert to absolute paths for quality checker
                 return [str(self.worktree_path / f) for f in files]
 
@@ -1198,7 +1225,7 @@ Refactor the implementation now. Keep behavior identical.
                 cwd=self.worktree_path,
                 capture_output=True,
                 text=True,
-                timeout=300  # 5 minutes max
+                timeout=300,  # 5 minutes max
             )
 
             passed = result.returncode == 0
@@ -1206,7 +1233,7 @@ Refactor the implementation now. Keep behavior identical.
             return {
                 "passed": passed,
                 "output": result.stdout + result.stderr,
-                "failures": self._parse_test_failures(result.stdout) if not passed else []
+                "failures": self._parse_test_failures(result.stdout) if not passed else [],
             }
 
         except FileNotFoundError:
@@ -1214,21 +1241,21 @@ Refactor the implementation now. Keep behavior identical.
             return {
                 "passed": True,  # Don't block if no test runner
                 "output": "No test runner available",
-                "failures": []
+                "failures": [],
             }
 
         except subprocess.TimeoutExpired:
             return {
                 "passed": False,
                 "output": "Tests timed out (>5 minutes)",
-                "failures": ["Timeout"]
+                "failures": ["Timeout"],
             }
 
     def _parse_test_failures(self, output: str) -> List[str]:
         """Parse pytest output to extract test failures."""
         failures = []
-        for line in output.split('\n'):
-            if 'FAILED' in line:
+        for line in output.split("\n"):
+            if "FAILED" in line:
                 failures.append(line.strip())
         return failures
 
@@ -1237,10 +1264,9 @@ Refactor the implementation now. Keep behavior identical.
         if self.git:
             try:
                 import subprocess
+
                 subprocess.run(
-                    ["git", "reset", "--hard", "HEAD~1"],
-                    cwd=self.worktree_path,
-                    timeout=10
+                    ["git", "reset", "--hard", "HEAD~1"], cwd=self.worktree_path, timeout=10
                 )
             except Exception:
                 pass
@@ -1290,7 +1316,7 @@ Refactor the implementation now. Keep behavior identical.
                 evidence=error_message[:500],  # Limit evidence length
                 fix=fix,
                 rule=rule,
-                severity="high"
+                severity="high",
             )
 
             memory.log_reflexion(entry)
@@ -1314,8 +1340,13 @@ Refactor the implementation now. Keep behavior identical.
 
         # Check for error indicators
         error_keywords = [
-            "error:", "failed", "syntax error", "fatal",
-            "broken", "exception", "traceback"
+            "error:",
+            "failed",
+            "syntax error",
+            "fatal",
+            "broken",
+            "exception",
+            "traceback",
         ]
 
         for keyword in error_keywords:
@@ -1323,9 +1354,7 @@ Refactor the implementation now. Keep behavior identical.
                 return False  # Has errors, not just warnings
 
         # If only warnings mentioned, it's just warnings
-        if "warning" in output.lower() and not any(
-            kw in output.lower() for kw in error_keywords
-        ):
+        if "warning" in output.lower() and not any(kw in output.lower() for kw in error_keywords):
             return True
 
         # Default: treat as errors (safe default)
@@ -1343,22 +1372,23 @@ Refactor the implementation now. Keep behavior identical.
 
         token_manager = TokenManager()
         self.token_budget = token_manager.update_usage(
-            self.token_budget,
-            input_tokens,
-            output_tokens
+            self.token_budget, input_tokens, output_tokens
         )
 
         # Check for warnings
         warning = token_manager.get_warning_message(self.token_budget)
         if warning:
-            self.discoveries.append({
-                "description": warning,
-                "severity": "warning" if not self.token_budget.exceeded else "error"
-            })
+            self.discoveries.append(
+                {
+                    "description": warning,
+                    "severity": "warning" if not self.token_budget.exceeded else "error",
+                }
+            )
 
     def _get_model(self) -> ModelConfig:
         """Get model configuration for this task."""
         from wfc.shared.utils import get_selector
+
         selector = get_selector()
         return selector.select(self.task.complexity.value)
 
@@ -1366,9 +1396,10 @@ Refactor the implementation now. Keep behavior identical.
     def _slugify(text: str) -> str:
         """Convert text to slug."""
         import re
+
         text = text.lower()
-        text = re.sub(r'[^\w\s-]', '', text)
-        text = re.sub(r'[-\s]+', '-', text)
+        text = re.sub(r"[^\w\s-]", "", text)
+        text = re.sub(r"[-\s]+", "-", text)
         return text[:50]
 
     # ======================================================================
@@ -1395,11 +1426,7 @@ Refactor the implementation now. Keep behavior identical.
 
         try:
             # Check if entire CLI is available
-            result = subprocess.run(
-                ["entire", "--version"],
-                capture_output=True,
-                timeout=5
-            )
+            result = subprocess.run(["entire", "--version"], capture_output=True, timeout=5)
 
             if result.returncode != 0:
                 self.entire_enabled = False
@@ -1414,7 +1441,7 @@ Refactor the implementation now. Keep behavior identical.
                 cwd=self.worktree_path,
                 check=True,
                 capture_output=True,
-                timeout=10
+                timeout=10,
             )
 
             # Configure privacy settings
@@ -1447,15 +1474,8 @@ Refactor the implementation now. Keep behavior identical.
             "max_file_size": self.config.get("entire_io.privacy.max_file_size", 100000),
             "exclude_patterns": self.config.get(
                 "entire_io.privacy.exclude_patterns",
-                [
-                    "*.env",
-                    "*.key",
-                    "*.pem",
-                    "*secret*",
-                    "*credential*",
-                    ".claude/*"
-                ]
-            )
+                ["*.env", "*.key", "*.pem", "*secret*", "*credential*", ".claude/*"],
+            ),
         }
 
         # Write config to worktree
@@ -1476,7 +1496,6 @@ Refactor the implementation now. Keep behavior identical.
         """
         import subprocess
         import json
-        import re
 
         # Skip if entire.io not enabled or phase not configured for checkpointing
         if not self.entire_enabled:
@@ -1484,7 +1503,7 @@ Refactor the implementation now. Keep behavior identical.
 
         checkpoint_phases = self.config.get(
             "entire_io.checkpoint_phases",
-            ["UNDERSTAND", "TEST_FIRST", "IMPLEMENT", "REFACTOR", "QUALITY_CHECK", "SUBMIT"]
+            ["UNDERSTAND", "TEST_FIRST", "IMPLEMENT", "REFACTOR", "QUALITY_CHECK", "SUBMIT"],
         )
 
         if phase not in checkpoint_phases:
@@ -1497,15 +1516,18 @@ Refactor the implementation now. Keep behavior identical.
             # Create checkpoint (LOCAL ONLY)
             result = subprocess.run(
                 [
-                    "entire", "checkpoint",
-                    "--message", f"{phase} phase complete",
-                    "--metadata", json.dumps(safe_metadata)
+                    "entire",
+                    "checkpoint",
+                    "--message",
+                    f"{phase} phase complete",
+                    "--metadata",
+                    json.dumps(safe_metadata),
                 ],
                 cwd=self.worktree_path,
                 capture_output=True,
                 text=True,
                 check=True,
-                timeout=10
+                timeout=10,
             )
 
             # Extract checkpoint ID from output
@@ -1519,10 +1541,12 @@ Refactor the implementation now. Keep behavior identical.
 
         except (subprocess.CalledProcessError, subprocess.TimeoutExpired) as e:
             # Checkpoint failed - log but don't block agent
-            self.discoveries.append({
-                "description": f"Entire.io checkpoint failed for {phase}: {str(e)}",
-                "severity": "warning"
-            })
+            self.discoveries.append(
+                {
+                    "description": f"Entire.io checkpoint failed for {phase}: {str(e)}",
+                    "severity": "warning",
+                }
+            )
             return None
 
     def _sanitize_metadata(self, metadata: Dict[str, Any]) -> Dict[str, Any]:
@@ -1539,12 +1563,12 @@ Refactor the implementation now. Keep behavior identical.
 
         # Patterns to identify sensitive keys
         SENSITIVE_PATTERNS = [
-            r'api[_-]?key',
-            r'token',
-            r'secret',
-            r'password',
-            r'credential',
-            r'auth'
+            r"api[_-]?key",
+            r"token",
+            r"secret",
+            r"password",
+            r"credential",
+            r"auth",
         ]
 
         safe = {}
@@ -1577,12 +1601,12 @@ Refactor the implementation now. Keep behavior identical.
         import re
 
         # Look for checkpoint ID pattern (e.g., "checkpoint: abc123def")
-        match = re.search(r'checkpoint[:\s]+([a-f0-9]+)', output, re.IGNORECASE)
+        match = re.search(r"checkpoint[:\s]+([a-f0-9]+)", output, re.IGNORECASE)
         if match:
             return match.group(1)
 
         # Alternative pattern (e.g., "Created checkpoint abc123def")
-        match = re.search(r'created[:\s]+checkpoint[:\s]+([a-f0-9]+)', output, re.IGNORECASE)
+        match = re.search(r"created[:\s]+checkpoint[:\s]+([a-f0-9]+)", output, re.IGNORECASE)
         if match:
             return match.group(1)
 
@@ -1601,7 +1625,7 @@ if __name__ == "__main__":
         title="Test Task",
         description="Test implementation",
         acceptance_criteria=["Works"],
-        complexity=TaskComplexity.M
+        complexity=TaskComplexity.M,
     )
 
     print(f"Task: {task.id} - {task.title}")

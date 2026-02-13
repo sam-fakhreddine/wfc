@@ -21,15 +21,17 @@ import json
 
 class TaskComplexity(Enum):
     """Task complexity levels."""
-    S = "S"    # Small
-    M = "M"    # Medium
-    L = "L"    # Large
+
+    S = "S"  # Small
+    M = "M"  # Medium
+    L = "L"  # Large
     XL = "XL"  # Extra Large
 
 
 @dataclass
 class TokenBudget:
     """Token budget for a task."""
+
     task_id: str
     complexity: TaskComplexity
     budget_total: int
@@ -72,7 +74,7 @@ class TokenBudget:
             "actual_total": self.actual_total,
             "usage_percentage": self.get_usage_percentage(),
             "warned": self.warned,
-            "exceeded": self.exceeded
+            "exceeded": self.exceeded,
         }
 
 
@@ -96,7 +98,7 @@ class TokenManager:
         TaskComplexity.S: {"input": 150, "output": 50, "total": 200},
         TaskComplexity.M: {"input": 700, "output": 300, "total": 1000},
         TaskComplexity.L: {"input": 1750, "output": 750, "total": 2500},
-        TaskComplexity.XL: {"input": 3500, "output": 1500, "total": 5000}
+        TaskComplexity.XL: {"input": 3500, "output": 1500, "total": 5000},
     }
 
     def __init__(self, memory_dir: Optional[Path] = None):
@@ -115,8 +117,9 @@ class TokenManager:
         self.memory_dir.mkdir(parents=True, exist_ok=True)
         self.metrics_file = self.memory_dir / "workflow_metrics.jsonl"
 
-    def create_budget(self, task_id: str, complexity: TaskComplexity,
-                     use_history: bool = True) -> TokenBudget:
+    def create_budget(
+        self, task_id: str, complexity: TaskComplexity, use_history: bool = True
+    ) -> TokenBudget:
         """
         Create token budget for a task.
 
@@ -140,11 +143,12 @@ class TokenManager:
             complexity=complexity,
             budget_total=budgets["total"],
             budget_input=budgets["input"],
-            budget_output=budgets["output"]
+            budget_output=budgets["output"],
         )
 
-    def update_usage(self, budget: TokenBudget, input_tokens: int,
-                    output_tokens: int) -> TokenBudget:
+    def update_usage(
+        self, budget: TokenBudget, input_tokens: int, output_tokens: int
+    ) -> TokenBudget:
         """
         Update actual token usage.
 
@@ -222,8 +226,9 @@ class TokenManager:
                     try:
                         metric = json.loads(line.strip())
 
-                        if (metric.get("complexity") == complexity.value and
-                           metric.get("success", False)):
+                        if metric.get("complexity") == complexity.value and metric.get(
+                            "success", False
+                        ):
                             total_input += metric.get("tokens_input", 0)
                             total_output += metric.get("tokens_output", 0)
                             count += 1
@@ -245,7 +250,7 @@ class TokenManager:
         return {
             "input": int(avg_input * 1.2),
             "output": int(avg_output * 1.2),
-            "total": int((avg_input + avg_output) * 1.2)
+            "total": int((avg_input + avg_output) * 1.2),
         }
 
     def get_budget_recommendation(self, complexity: TaskComplexity) -> str:
@@ -264,7 +269,7 @@ class TokenManager:
             TaskComplexity.S: "Simple",
             TaskComplexity.M: "Medium",
             TaskComplexity.L: "Large",
-            TaskComplexity.XL: "Extra Large"
+            TaskComplexity.XL: "Extra Large",
         }
 
         return (
@@ -284,8 +289,7 @@ if __name__ == "__main__":
 
     # Test 1: Create budgets for each complexity
     print("\n1. Testing budget creation:")
-    for complexity in [TaskComplexity.S, TaskComplexity.M,
-                      TaskComplexity.L, TaskComplexity.XL]:
+    for complexity in [TaskComplexity.S, TaskComplexity.M, TaskComplexity.L, TaskComplexity.XL]:
         budget = manager.create_budget(f"TASK-{complexity.value}", complexity)
         print(f"   {complexity.value}: {budget.budget_total:,} tokens")
         print(f"      Recommendation: {manager.get_budget_recommendation(complexity)}")

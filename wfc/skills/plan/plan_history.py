@@ -15,6 +15,7 @@ from dataclasses import dataclass, asdict
 @dataclass
 class PlanMetadata:
     """Metadata for a single plan"""
+
     plan_id: str  # e.g., "plan_20260211_143022"
     timestamp: str  # ISO format
     goal: str
@@ -59,8 +60,8 @@ class PlanHistory:
         if goal:
             # Sanitize goal for directory name
             sanitized = goal.lower()
-            sanitized = ''.join(c if c.isalnum() or c == ' ' else '' for c in sanitized)
-            sanitized = '_'.join(sanitized.split())[:30]  # Max 30 chars
+            sanitized = "".join(c if c.isalnum() or c == " " else "" for c in sanitized)
+            sanitized = "_".join(sanitized.split())[:30]  # Max 30 chars
             return f"plan_{sanitized}_{timestamp}"
         else:
             return f"plan_{timestamp}"
@@ -90,7 +91,7 @@ class PlanHistory:
         history = self.load_history()
         history.append(asdict(metadata))
 
-        with open(self.history_file, 'w') as f:
+        with open(self.history_file, "w") as f:
             json.dump(history, f, indent=2)
 
     def load_history(self) -> List[Dict]:
@@ -140,10 +141,7 @@ class PlanHistory:
             List of matching plan metadata
         """
         history = self.load_history()
-        return [
-            plan for plan in history
-            if goal_substring.lower() in plan.get('goal', '').lower()
-        ]
+        return [plan for plan in history if goal_substring.lower() in plan.get("goal", "").lower()]
 
     def get_plan_path(self, plan_id: str) -> Optional[Path]:
         """
@@ -180,17 +178,23 @@ class PlanHistory:
         ]
 
         for plan in reversed(history):  # Most recent first
-            lines.extend([
-                f"## {plan['plan_id']}",
-                f"- **Created:** {plan['timestamp']}",
-                f"- **Goal:** {plan['goal']}",
-                f"- **Context:** {plan['context'][:100]}..." if len(plan.get('context', '')) > 100 else f"- **Context:** {plan.get('context', 'N/A')}",
-                f"- **Directory:** `{plan['directory']}`",
-                f"- **Tasks:** {plan['task_count']}",
-                f"- **Properties:** {plan['property_count']}",
-                f"- **Tests:** {plan['test_count']}",
-                "",
-            ])
+            lines.extend(
+                [
+                    f"## {plan['plan_id']}",
+                    f"- **Created:** {plan['timestamp']}",
+                    f"- **Goal:** {plan['goal']}",
+                    (
+                        f"- **Context:** {plan['context'][:100]}..."
+                        if len(plan.get("context", "")) > 100
+                        else f"- **Context:** {plan.get('context', 'N/A')}"
+                    ),
+                    f"- **Directory:** `{plan['directory']}`",
+                    f"- **Tasks:** {plan['task_count']}",
+                    f"- **Properties:** {plan['property_count']}",
+                    f"- **Tests:** {plan['test_count']}",
+                    "",
+                ]
+            )
 
         return "\n".join(lines)
 
@@ -202,7 +206,7 @@ def create_plan_metadata(
     context: str,
     task_count: int,
     property_count: int,
-    test_count: int
+    test_count: int,
 ) -> PlanMetadata:
     """
     Create plan metadata.
@@ -227,7 +231,7 @@ def create_plan_metadata(
         directory=str(directory),
         task_count=task_count,
         property_count=property_count,
-        test_count=test_count
+        test_count=test_count,
     )
 
 
@@ -252,7 +256,7 @@ if __name__ == "__main__":
         context="Security requirement for production",
         task_count=5,
         property_count=3,
-        test_count=12
+        test_count=12,
     )
     history.add_to_history(metadata1)
 
@@ -263,7 +267,7 @@ if __name__ == "__main__":
         context="Performance optimization for API",
         task_count=3,
         property_count=2,
-        test_count=8
+        test_count=8,
     )
     history.add_to_history(metadata2)
 

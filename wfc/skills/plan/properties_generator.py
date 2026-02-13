@@ -14,6 +14,7 @@ from .ears import EARSPropertyMapper, EARSFormatter
 @dataclass
 class Property:
     """Single formal property"""
+
     id: str
     type: str  # SAFETY, LIVENESS, INVARIANT, PERFORMANCE
     statement: str
@@ -44,35 +45,41 @@ class PropertiesGenerator:
 
         # Properties from interview
         for prop_data in self.result.properties:
-            self.properties.append(Property(
-                id=self._next_id(),
-                type=prop_data.get("type", "INVARIANT"),
-                statement=prop_data.get("statement", ""),
-                rationale=f"User requirement: {prop_data.get('statement', '')}",
-                priority=prop_data.get("priority", "medium"),
-                observables=self._suggest_observables(prop_data.get("type", "INVARIANT"))
-            ))
+            self.properties.append(
+                Property(
+                    id=self._next_id(),
+                    type=prop_data.get("type", "INVARIANT"),
+                    statement=prop_data.get("statement", ""),
+                    rationale=f"User requirement: {prop_data.get('statement', '')}",
+                    priority=prop_data.get("priority", "medium"),
+                    observables=self._suggest_observables(prop_data.get("type", "INVARIANT")),
+                )
+            )
 
         # Infer additional properties from constraints
         for constraint in self.result.constraints:
             if "Performance" in constraint:
-                self.properties.append(Property(
-                    id=self._next_id(),
-                    type="PERFORMANCE",
-                    statement=constraint,
-                    rationale="Performance requirement",
-                    priority="high",
-                    observables=["response_time_ms", "throughput_rps"]
-                ))
+                self.properties.append(
+                    Property(
+                        id=self._next_id(),
+                        type="PERFORMANCE",
+                        statement=constraint,
+                        rationale="Performance requirement",
+                        priority="high",
+                        observables=["response_time_ms", "throughput_rps"],
+                    )
+                )
             elif "Security" in constraint:
-                self.properties.append(Property(
-                    id=self._next_id(),
-                    type="SAFETY",
-                    statement=constraint,
-                    rationale="Security requirement",
-                    priority="critical",
-                    observables=["auth_failures", "unauthorized_access_attempts"]
-                ))
+                self.properties.append(
+                    Property(
+                        id=self._next_id(),
+                        type="SAFETY",
+                        statement=constraint,
+                        rationale="Security requirement",
+                        priority="critical",
+                        observables=["auth_failures", "unauthorized_access_attempts"],
+                    )
+                )
 
     def _next_id(self) -> str:
         """Generate next property ID"""
@@ -108,24 +115,26 @@ class PropertiesGenerator:
             ears_req = EARSPropertyMapper.map_to_ears(
                 prop.type,
                 prop.statement,
-                system=self.result.goal if hasattr(self.result, 'goal') else "system"
+                system=self.result.goal if hasattr(self.result, "goal") else "system",
             )
             ears_formatted = EARSFormatter.format(ears_req)
 
-            lines.extend([
-                f"## {prop.id}: {prop.type}",
-                f"- **EARS Statement**: {ears_formatted}",
-                f"- **Original**: {prop.statement}",
-                f"- **Rationale**: {prop.rationale}",
-                f"- **Priority**: {prop.priority}",
-                f"- **Observables**: {', '.join(prop.observables)}",
-                "",
-            ])
+            lines.extend(
+                [
+                    f"## {prop.id}: {prop.type}",
+                    f"- **EARS Statement**: {ears_formatted}",
+                    f"- **Original**: {prop.statement}",
+                    f"- **Rationale**: {prop.rationale}",
+                    f"- **Priority**: {prop.priority}",
+                    f"- **Observables**: {', '.join(prop.observables)}",
+                    "",
+                ]
+            )
 
         return "\n".join(lines)
 
     def save(self, path: Path) -> None:
         """Save PROPERTIES.md to file"""
         content = self.generate()
-        with open(path, 'w') as f:
+        with open(path, "w") as f:
             f.write(content)

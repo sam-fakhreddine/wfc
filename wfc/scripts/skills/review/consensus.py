@@ -23,6 +23,7 @@ except ImportError:
 @dataclass
 class ConsensusResult:
     """Result of consensus algorithm"""
+
     overall_score: float
     passed: bool  # True if consensus is to accept
     agent_reviews: Dict[str, AgentReview]
@@ -42,12 +43,12 @@ class ConsensusResult:
                     "score": review.score,
                     "passed": review.passed,
                     "summary": review.summary,
-                    "comment_count": len(review.comments)
+                    "comment_count": len(review.comments),
                 }
                 for agent_type, review in self.agent_reviews.items()
             },
             "total_comments": len(self.all_comments),
-            "summary": self.summary
+            "summary": self.summary,
         }
 
         if self.consensus_areas:
@@ -77,17 +78,17 @@ class ConsensusAlgorithm:
 
     # Agent weights for legacy mode (sum = 1.0)
     WEIGHTS = {
-        "CR": 0.3,    # Code review: 30%
+        "CR": 0.3,  # Code review: 30%
         "SEC": 0.35,  # Security: 35% (highest priority)
-        "PERF": 0.20, # Performance: 20%
-        "COMP": 0.15, # Complexity: 15%
+        "PERF": 0.20,  # Performance: 20%
+        "COMP": 0.15,  # Complexity: 15%
     }
 
     def calculate(
         self,
         reviews: List[AgentReview],
         relevance_scores: Optional[Dict[str, float]] = None,
-        weight_by_relevance: bool = False
+        weight_by_relevance: bool = False,
     ) -> ConsensusResult:
         """
         Calculate consensus from agent reviews.
@@ -102,10 +103,7 @@ class ConsensusAlgorithm:
         """
 
         # Organize by agent type
-        agent_reviews = {
-            review.agent.name: review
-            for review in reviews
-        }
+        agent_reviews = {review.agent.name: review for review in reviews}
 
         # Calculate weighted score
         if weight_by_relevance and relevance_scores:
@@ -119,10 +117,7 @@ class ConsensusAlgorithm:
             all_comments.extend(review.comments)
 
         # Check for critical issues
-        has_critical = any(
-            comment.severity == "critical"
-            for comment in all_comments
-        )
+        has_critical = any(comment.severity == "critical" for comment in all_comments)
 
         # Determine if passed
         all_agents_passed = all(review.passed for review in reviews)
@@ -149,20 +144,15 @@ class ConsensusAlgorithm:
             summary=summary,
             consensus_areas=consensus_areas,
             unique_insights=unique_insights,
-            divergent_views=divergent_views
+            divergent_views=divergent_views,
         )
 
     def _calculate_fixed_weighted_score(self, reviews: List[AgentReview]) -> float:
         """Calculate score using fixed weights (legacy mode)"""
-        return sum(
-            review.score * self.WEIGHTS.get(review.agent.name, 0.25)
-            for review in reviews
-        )
+        return sum(review.score * self.WEIGHTS.get(review.agent.name, 0.25) for review in reviews)
 
     def _calculate_relevance_weighted_score(
-        self,
-        reviews: List[AgentReview],
-        relevance_scores: Dict[str, float]
+        self, reviews: List[AgentReview], relevance_scores: Dict[str, float]
     ) -> float:
         """Calculate score using relevance-based weights"""
         # Normalize relevance scores to sum to 1.0
@@ -189,10 +179,7 @@ class ConsensusAlgorithm:
 
         # Find consensus (mentioned by at least 3 reviewers or half, whichever is smaller)
         threshold = min(3, num_reviewers // 2)
-        consensus = [
-            msg for msg, count in message_counts.items()
-            if count >= threshold
-        ]
+        consensus = [msg for msg, count in message_counts.items() if count >= threshold]
 
         return consensus if consensus else None
 
@@ -210,7 +197,8 @@ class ConsensusAlgorithm:
 
         # Find unique (mentioned only once)
         unique = [
-            message_examples[msg].message for msg, count in message_counts.items()
+            message_examples[msg].message
+            for msg, count in message_counts.items()
             if count == 1 and message_examples[msg].severity in ["high", "critical"]
         ]
 
@@ -227,12 +215,15 @@ class ConsensusAlgorithm:
             variance = sum((s - mean_score) ** 2 for s in scores) / len(scores)
 
             if variance > 4.0:  # High variance (std dev > 2.0)
-                divergent.append(f"Reviewers disagree on overall quality (scores range: {min(scores):.1f}-{max(scores):.1f})")
+                divergent.append(
+                    f"Reviewers disagree on overall quality (scores range: {min(scores):.1f}-{max(scores):.1f})"
+                )
 
         return divergent if divergent else None
 
-    def _generate_summary(self, reviews: List[AgentReview], score: float,
-                          passed: bool, has_critical: bool) -> str:
+    def _generate_summary(
+        self, reviews: List[AgentReview], score: float, passed: bool, has_critical: bool
+    ) -> str:
         """Generate consensus summary"""
         if has_critical:
             return "❌ REJECTED: Critical issues found"

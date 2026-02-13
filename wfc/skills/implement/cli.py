@@ -15,7 +15,7 @@ from pathlib import Path
 from typing import Optional
 
 from wfc.shared.config import get_config
-from wfc.skills.implement.orchestrator import run_implementation, RunResult
+from wfc.skills.implement.orchestrator import run_implementation
 
 
 def cli_implement(args: Optional[list] = None) -> int:
@@ -52,39 +52,33 @@ Philosophy:
   ELEGANT - Simple and effective over over-engineered
   MULTI-TIER - Any front-end on any application
   PARALLEL - Work in parallel always
-        """
+        """,
     )
 
     parser.add_argument(
         "--tasks",
         type=Path,
         default=Path("plan/TASKS.md"),
-        help="Path to TASKS.md (default: plan/TASKS.md)"
+        help="Path to TASKS.md (default: plan/TASKS.md)",
     )
 
-    parser.add_argument(
-        "--agents",
-        type=int,
-        help="Number of concurrent agents (overrides config)"
-    )
+    parser.add_argument("--agents", type=int, help="Number of concurrent agents (overrides config)")
 
     parser.add_argument(
         "--strategy",
         choices=["one_per_task", "pool", "smart"],
-        help="Agent assignment strategy (overrides config)"
+        help="Agent assignment strategy (overrides config)",
     )
 
     parser.add_argument(
-        "--dry-run",
-        action="store_true",
-        help="Show what would happen without executing"
+        "--dry-run", action="store_true", help="Show what would happen without executing"
     )
 
     parser.add_argument(
         "--project",
         type=Path,
         default=Path.cwd(),
-        help="Project root directory (default: current directory)"
+        help="Project root directory (default: current directory)",
     )
 
     parsed_args = parser.parse_args(args)
@@ -99,7 +93,7 @@ Philosophy:
         print(f"❌ Error: Tasks file not found: {parsed_args.tasks}")
         print()
         print("Create tasks file with:")
-        print(f"  wfc-plan  (generates TASKS.md)")
+        print("  wfc-plan  (generates TASKS.md)")
         print()
         return 1
 
@@ -134,16 +128,14 @@ Philosophy:
     try:
         # LOGIC TIER: Run implementation (all business logic here)
         result = run_implementation(
-            tasks_file=parsed_args.tasks,
-            config=config,
-            project_root=parsed_args.project
+            tasks_file=parsed_args.tasks, config=config, project_root=parsed_args.project
         )
 
         # PRESENTATION: Format and display results
         print()
         print("✅ Implementation complete!")
         print()
-        print(f"📊 Results:")
+        print("📊 Results:")
         print(f"   Tasks completed: {result.tasks_completed}")
         print(f"   Tasks failed: {result.tasks_failed}")
         print(f"   Tasks rolled back: {result.tasks_rolled_back}")

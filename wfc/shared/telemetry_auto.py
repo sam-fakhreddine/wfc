@@ -12,7 +12,6 @@ from pathlib import Path
 from datetime import datetime
 from typing import Dict, Any, Optional, List
 from dataclasses import dataclass, asdict
-import os
 
 
 @dataclass
@@ -288,7 +287,7 @@ class AutoTelemetry:
             if metrics.duration_seconds
             else "Duration: N/A"
         )
-        print(f"\nThinking:")
+        print("\nThinking:")
         print(f"  Mode: {metrics.thinking_mode}")
         print(
             f"  Budget: {metrics.thinking_budget_used}/{metrics.thinking_budget_allocated} tokens"
@@ -303,7 +302,7 @@ class AutoTelemetry:
         print(f"\nRetries: {metrics.retry_count}/{metrics.max_retries}")
 
         if metrics.tests_run > 0:
-            print(f"\nTests:")
+            print("\nTests:")
             print(f"  Run: {metrics.tests_run}")
             print(f"  Passed: {metrics.tests_passed}")
             print(f"  Failed: {metrics.tests_failed}")
@@ -311,7 +310,7 @@ class AutoTelemetry:
                 print(f"  Coverage: {metrics.coverage_percent:.1f}%")
 
         if metrics.bugs_fixed > 0:
-            print(f"\nDebugging:")
+            print("\nDebugging:")
             print(f"  Bugs fixed: {metrics.bugs_fixed}")
             if metrics.debugging_time_min:
                 print(f"  Time spent: {metrics.debugging_time_min:.1f} min")
@@ -321,7 +320,7 @@ class AutoTelemetry:
                 )
 
         if metrics.review_score:
-            print(f"\nReview:")
+            print("\nReview:")
             print(f"  Score: {metrics.review_score:.1f}/10")
             print(f"  Status: {'✅ Passed' if metrics.review_passed else '❌ Failed'}")
 
@@ -471,7 +470,7 @@ def log_event(event_type: str, data: Dict[str, Any]) -> None:
         events_file = telemetry.storage_dir / "events.jsonl"
         with open(events_file, "a") as f:
             f.write(json.dumps(event) + "\n")
-    except Exception as e:
+    except Exception:
         # Telemetry failure should not break workflow - fail silently
         pass
 
@@ -577,13 +576,13 @@ def print_workflow_metrics(days: int = 30) -> None:
     print(f"{'=' * 60}")
 
     # PR Creation
-    print(f"\nPR Creation:")
+    print("\nPR Creation:")
     print(f"  Total PRs: {metrics['total_prs']}")
     print(f"  Successful: {metrics['successful_prs']}")
     print(f"  Success Rate: {metrics['pr_creation_success_rate']:.1f}%")
 
     # Workflow Compliance
-    print(f"\nWorkflow Compliance:")
+    print("\nWorkflow Compliance:")
     print(f"  Direct Main Commits: {metrics['direct_main_commits']} warnings")
     print(f"  Force Pushes: {metrics['force_pushes']} warnings")
     print(

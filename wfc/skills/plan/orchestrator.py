@@ -19,6 +19,7 @@ from .plan_history import PlanHistory, create_plan_metadata
 @dataclass
 class PlanResult:
     """Result of planning process"""
+
     interview_result: InterviewResult
     tasks_file: Path
     properties_file: Path
@@ -84,9 +85,7 @@ class PlanOrchestrator:
         # Determine output directory
         if self.use_history:
             # Generate timestamped directory
-            self.output_dir = self.plan_history.get_next_plan_dir(
-                goal=interview_result.goal
-            )
+            self.output_dir = self.plan_history.get_next_plan_dir(goal=interview_result.goal)
             print(f"\n📁 Plan directory: {self.output_dir.name}")
         else:
             # Use fixed directory
@@ -114,9 +113,9 @@ class PlanOrchestrator:
         # Step 5: Record in history (if enabled)
         if self.use_history:
             # Count tasks, properties, tests
-            task_count = len([line for line in open(tasks_file) if line.startswith('## TASK-')])
-            prop_count = len([line for line in open(props_file) if line.startswith('## PROP-')])
-            test_count = len([line for line in open(test_file) if line.startswith('### TEST-')])
+            task_count = len([line for line in open(tasks_file) if line.startswith("## TASK-")])
+            prop_count = len([line for line in open(props_file) if line.startswith("## PROP-")])
+            test_count = len([line for line in open(test_file) if line.startswith("### TEST-")])
 
             metadata = create_plan_metadata(
                 plan_id=self.output_dir.name,
@@ -125,14 +124,14 @@ class PlanOrchestrator:
                 context=interview_result.context,
                 task_count=task_count,
                 property_count=prop_count,
-                test_count=test_count
+                test_count=test_count,
             )
             self.plan_history.add_to_history(metadata)
 
             # Generate history markdown
             history_md = self.plan_history.generate_history_markdown()
             history_file = self.plan_history.base_dir / "HISTORY.md"
-            with open(history_file, 'w') as f:
+            with open(history_file, "w") as f:
                 f.write(history_md)
 
             print(f"✓ Added to plan history ({len(self.plan_history.load_history())} total plans)")
@@ -142,7 +141,7 @@ class PlanOrchestrator:
             tasks_file=tasks_file,
             properties_file=props_file,
             test_plan_file=test_file,
-            output_dir=self.output_dir
+            output_dir=self.output_dir,
         )
 
 

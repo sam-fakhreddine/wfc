@@ -11,7 +11,7 @@ import sys
 import logging
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Dict, List, Optional, Set
+from typing import Dict, List, Optional
 from collections import defaultdict
 
 logger = logging.getLogger(__name__)
@@ -20,18 +20,22 @@ logger = logging.getLogger(__name__)
 try:
     sys.path.insert(0, str(Path.home() / ".claude/skills/wfc"))
     from shared.config.wfc_config import WFCConfig
+
     config = WFCConfig()
-    MODEL_MAPPING = config.get("llm.models", {
-        "opus": "claude-opus-4-20250514",
-        "sonnet": "claude-sonnet-4-20250514",
-        "haiku": "claude-haiku-4-5-20251001"
-    })
-except:
+    MODEL_MAPPING = config.get(
+        "llm.models",
+        {
+            "opus": "claude-opus-4-20250514",
+            "sonnet": "claude-sonnet-4-20250514",
+            "haiku": "claude-haiku-4-5-20251001",
+        },
+    )
+except Exception:
     # Fallback if config not available
     MODEL_MAPPING = {
         "opus": "claude-opus-4-20250514",
         "sonnet": "claude-sonnet-4-20250514",
-        "haiku": "claude-haiku-4-5-20251001"
+        "haiku": "claude-haiku-4-5-20251001",
     }
 
 
@@ -60,6 +64,7 @@ def resolve_model_name(model_ref: str) -> str:
 @dataclass
 class Persona:
     """Represents an expert persona for code review"""
+
     id: str
     name: str
     panel: str
@@ -92,7 +97,7 @@ class Persona:
             system_prompt_additions=data["system_prompt_additions"],
             tags=data["tags"],
             version=data["version"],
-            enabled=data["enabled"]
+            enabled=data["enabled"],
         )
 
     def to_dict(self) -> Dict:
@@ -111,13 +116,14 @@ class Persona:
             "system_prompt_additions": self.system_prompt_additions,
             "tags": self.tags,
             "version": self.version,
-            "enabled": self.enabled
+            "enabled": self.enabled,
         }
 
 
 @dataclass
 class PersonaSelectionContext:
     """Context information for persona selection"""
+
     task_id: str
     files: List[str] = field(default_factory=list)
     tech_stack: List[str] = field(default_factory=list)
@@ -132,6 +138,7 @@ class PersonaSelectionContext:
 @dataclass
 class SelectedPersona:
     """A persona selected for review with relevance score"""
+
     persona: Persona
     relevance_score: float
     selection_reasons: List[str] = field(default_factory=list)
@@ -172,7 +179,9 @@ class PersonaRegistry:
 
         # Fallback to references if old path doesn't exist
         if not panels_dir.exists():
-            panels_dir = Path(str(self.personas_dir).replace("/personas", "/references/personas")) / "panels"
+            panels_dir = (
+                Path(str(self.personas_dir).replace("/personas", "/references/personas")) / "panels"
+            )
 
         if not panels_dir.exists():
             raise FileNotFoundError(f"Panels directory not found: {panels_dir}")
@@ -185,7 +194,7 @@ class PersonaRegistry:
             # Load all JSON files in this panel
             for persona_file in panel_dir.glob("*.json"):
                 try:
-                    with open(persona_file, 'r') as f:
+                    with open(persona_file, "r") as f:
                         data = json.load(f)
 
                     persona = Persona.from_dict(data)
@@ -195,14 +204,16 @@ class PersonaRegistry:
                         self.personas[persona.id] = persona
 
                 except (json.JSONDecodeError, KeyError, FileNotFoundError) as e:
-                    logger.warning("Failed to load persona from %s: %s", persona_file, e, exc_info=True)
+                    logger.warning(
+                        "Failed to load persona from %s: %s", persona_file, e, exc_info=True
+                    )
 
         # Also load custom personas if they exist
         custom_dir = self.personas_dir / "custom"
         if custom_dir.exists():
             for persona_file in custom_dir.glob("*.json"):
                 try:
-                    with open(persona_file, 'r') as f:
+                    with open(persona_file, "r") as f:
                         data = json.load(f)
 
                     persona = Persona.from_dict(data)
@@ -211,7 +222,9 @@ class PersonaRegistry:
                         self.personas[persona.id] = persona
 
                 except (json.JSONDecodeError, KeyError, FileNotFoundError) as e:
-                    logger.warning("Failed to load custom persona from %s: %s", persona_file, e, exc_info=True)
+                    logger.warning(
+                        "Failed to load custom persona from %s: %s", persona_file, e, exc_info=True
+                    )
 
     def _build_indexes(self):
         """Build indexes for fast lookup"""
@@ -337,24 +350,23 @@ class PersonaRegistry:
                 "by_tag": {k: list(v) for k, v in self.by_tag.items()},
                 "by_tech_stack": {k: list(v) for k, v in self.by_tech_stack.items()},
                 "by_complexity": {k: list(v) for k, v in self.by_complexity.items()},
-                "by_property": {k: list(v) for k, v in self.by_property.items()}
-            }
+                "by_property": {k: list(v) for k, v in self.by_property.items()},
+            },
         }
 
         # Build panels section
         for panel, persona_ids in self.by_panel.items():
             # Get panel description from first persona in panel
             if persona_ids:
-                first_persona = self.personas[persona_ids[0]]
                 registry["panels"][panel] = {
                     "description": f"Expert panel for {panel}",
                     "count": len(persona_ids),
-                    "personas": persona_ids
+                    "personas": persona_ids,
                 }
 
         # Write registry file
         registry_path = self.personas_dir / "registry.json"
-        with open(registry_path, 'w') as f:
+        with open(registry_path, "w") as f:
             json.dump(registry, f, indent=2)
 
         return registry_path
@@ -386,7 +398,7 @@ class PersonaSelector:
         context: PersonaSelectionContext,
         num_personas: int = 5,
         require_diversity: bool = True,
-        min_relevance: float = 0.3
+        min_relevance: float = 0.3,
     ) -> List[SelectedPersona]:
         """
         Select personas for a review based on context.
@@ -410,11 +422,11 @@ class PersonaSelector:
             score, reasons = self._score_persona(persona, context)
 
             if score >= min_relevance:
-                scored_personas.append(SelectedPersona(
-                    persona=persona,
-                    relevance_score=score,
-                    selection_reasons=reasons
-                ))
+                scored_personas.append(
+                    SelectedPersona(
+                        persona=persona, relevance_score=score, selection_reasons=reasons
+                    )
+                )
 
         # Sort by relevance score
         scored_personas.sort(key=lambda x: x.relevance_score, reverse=True)
@@ -433,17 +445,15 @@ class PersonaSelector:
         for persona_id in persona_ids:
             persona = self.registry.get_persona(persona_id)
             if persona:
-                selected.append(SelectedPersona(
-                    persona=persona,
-                    relevance_score=1.0,
-                    selection_reasons=["Manual selection"]
-                ))
+                selected.append(
+                    SelectedPersona(
+                        persona=persona, relevance_score=1.0, selection_reasons=["Manual selection"]
+                    )
+                )
         return selected
 
     def _score_persona(
-        self,
-        persona: Persona,
-        context: PersonaSelectionContext
+        self, persona: Persona, context: PersonaSelectionContext
     ) -> tuple[float, List[str]]:
         """
         Score a persona's relevance to the context.
@@ -457,19 +467,13 @@ class PersonaSelector:
         criteria = persona.selection_criteria
 
         # Tech stack matching (40% weight)
-        tech_match = self._match_tech_stack(
-            criteria.get("tech_stacks", []),
-            context.tech_stack
-        )
+        tech_match = self._match_tech_stack(criteria.get("tech_stacks", []), context.tech_stack)
         if tech_match > 0:
             score += tech_match * 0.4
             reasons.append(f"Tech stack match: {tech_match:.2f}")
 
         # Property alignment (30% weight)
-        prop_match = self._match_properties(
-            criteria.get("properties", []),
-            context.properties
-        )
+        prop_match = self._match_properties(criteria.get("properties", []), context.properties)
         if prop_match > 0:
             score += prop_match * 0.3
             reasons.append(f"Property alignment: {prop_match:.2f}")
@@ -485,10 +489,7 @@ class PersonaSelector:
             reasons.append(f"Task type: {context.task_type}")
 
         # Domain context (5% weight)
-        domain_match = self._match_domain(
-            persona.domain_knowledge,
-            context.domain_context
-        )
+        domain_match = self._match_domain(persona.domain_knowledge, context.domain_context)
         if domain_match > 0:
             score += domain_match * 0.05
             reasons.append(f"Domain expertise: {domain_match:.2f}")
@@ -529,9 +530,7 @@ class PersonaSelector:
         return len(matches) / len(context_domain_lower) if context_domain_lower else 0.0
 
     def _enforce_diversity(
-        self,
-        scored_personas: List[SelectedPersona],
-        num_personas: int
+        self, scored_personas: List[SelectedPersona], num_personas: int
     ) -> List[SelectedPersona]:
         """
         Enforce panel diversity in selection.
@@ -596,7 +595,7 @@ def extract_tech_stack_from_files(files: List[str]) -> List[str]:
         ".css": "css",
         ".scss": "scss",
         ".vue": "vue",
-        ".svelte": "svelte"
+        ".svelte": "svelte",
     }
 
     for file_path in files:

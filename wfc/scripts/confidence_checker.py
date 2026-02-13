@@ -16,15 +16,16 @@ This is the single highest-ROI feature for token efficiency.
 from dataclasses import dataclass
 from enum import Enum
 from pathlib import Path
-from typing import List, Dict, Any, Optional, Tuple
+from typing import List, Dict, Any, Optional
 import json
 
 
 class ConfidenceLevel(Enum):
     """Confidence level thresholds."""
-    HIGH = "high"        # ≥90% - Proceed
-    MEDIUM = "medium"    # 70-89% - Ask questions
-    LOW = "low"          # <70% - Stop and investigate
+
+    HIGH = "high"  # ≥90% - Proceed
+    MEDIUM = "medium"  # 70-89% - Ask questions
+    LOW = "low"  # <70% - Stop and investigate
 
 
 @dataclass
@@ -34,6 +35,7 @@ class ConfidenceAssessment:
 
     This is what the agent produces before starting work.
     """
+
     task_id: str
     confidence_score: int  # 0-100
     confidence_level: ConfidenceLevel
@@ -73,7 +75,7 @@ class ConfidenceAssessment:
             "questions": self.questions,
             "alternatives": self.alternatives,
             "should_proceed": self.should_proceed,
-            "recommendation": self.recommendation
+            "recommendation": self.recommendation,
         }
 
 
@@ -96,7 +98,9 @@ class ConfidenceChecker:
         """
         self.project_root = Path(project_root)
 
-    def assess(self, task: Dict[str, Any], context: Optional[Dict[str, Any]] = None) -> ConfidenceAssessment:
+    def assess(
+        self, task: Dict[str, Any], context: Optional[Dict[str, Any]] = None
+    ) -> ConfidenceAssessment:
         """
         Assess confidence for a task.
 
@@ -124,7 +128,7 @@ class ConfidenceChecker:
             has_examples=has_examples,
             understands_architecture=understands_architecture,
             knows_dependencies=knows_dependencies,
-            can_verify_success=can_verify_success
+            can_verify_success=can_verify_success,
         )
 
         # Determine confidence level
@@ -142,9 +146,12 @@ class ConfidenceChecker:
         questions = []
         if confidence_level != ConfidenceLevel.HIGH:
             questions = self._generate_clarifying_questions(
-                task, clear_requirements, has_examples,
-                understands_architecture, knows_dependencies,
-                can_verify_success
+                task,
+                clear_requirements,
+                has_examples,
+                understands_architecture,
+                knows_dependencies,
+                can_verify_success,
             )
 
         # Generate alternatives (if medium confidence)
@@ -173,7 +180,7 @@ class ConfidenceChecker:
             questions=questions,
             alternatives=alternatives,
             should_proceed=should_proceed,
-            recommendation=recommendation
+            recommendation=recommendation,
         )
 
     def _assess_requirements_clarity(self, task: Dict[str, Any]) -> bool:
@@ -202,8 +209,9 @@ class ConfidenceChecker:
 
         return True
 
-    def _assess_examples_available(self, task: Dict[str, Any],
-                                   context: Optional[Dict[str, Any]]) -> bool:
+    def _assess_examples_available(
+        self, task: Dict[str, Any], context: Optional[Dict[str, Any]]
+    ) -> bool:
         """
         Assess if examples or similar code exists.
 
@@ -224,8 +232,9 @@ class ConfidenceChecker:
 
         return False
 
-    def _assess_architecture_understanding(self, task: Dict[str, Any],
-                                          context: Optional[Dict[str, Any]]) -> bool:
+    def _assess_architecture_understanding(
+        self, task: Dict[str, Any], context: Optional[Dict[str, Any]]
+    ) -> bool:
         """
         Assess if architecture is understood.
 
@@ -248,8 +257,9 @@ class ConfidenceChecker:
 
         return True
 
-    def _assess_dependencies_clear(self, task: Dict[str, Any],
-                                   context: Optional[Dict[str, Any]]) -> bool:
+    def _assess_dependencies_clear(
+        self, task: Dict[str, Any], context: Optional[Dict[str, Any]]
+    ) -> bool:
         """
         Assess if dependencies are clear.
 
@@ -286,18 +296,20 @@ class ConfidenceChecker:
         if acceptance_criteria and len(acceptance_criteria) > 0:
             # Check if criteria are verifiable (not vague)
             for criterion in acceptance_criteria:
-                if any(word in criterion.lower()
-                      for word in ["works", "good", "better", "nice"]):
+                if any(word in criterion.lower() for word in ["works", "good", "better", "nice"]):
                     return False
             return True
 
         return False
 
-    def _calculate_confidence_score(self, clear_requirements: bool,
-                                    has_examples: bool,
-                                    understands_architecture: bool,
-                                    knows_dependencies: bool,
-                                    can_verify_success: bool) -> int:
+    def _calculate_confidence_score(
+        self,
+        clear_requirements: bool,
+        has_examples: bool,
+        understands_architecture: bool,
+        knows_dependencies: bool,
+        can_verify_success: bool,
+    ) -> int:
         """
         Calculate overall confidence score (0-100).
 
@@ -326,8 +338,7 @@ class ConfidenceChecker:
 
         return score
 
-    def _identify_risks(self, task: Dict[str, Any],
-                       confidence_score: int) -> List[Dict[str, str]]:
+    def _identify_risks(self, task: Dict[str, Any], confidence_score: int) -> List[Dict[str, str]]:
         """
         Identify risks based on task and confidence.
 
@@ -338,35 +349,31 @@ class ConfidenceChecker:
 
         # Low confidence = high risk
         if confidence_score < 70:
-            risks.append({
-                "risk": "Low confidence - may implement wrong solution",
-                "severity": "high"
-            })
+            risks.append(
+                {"risk": "Low confidence - may implement wrong solution", "severity": "high"}
+            )
 
         # Check for complexity without examples
         complexity = task.get("complexity", "M")
         if complexity in ["L", "XL"] and confidence_score < 80:
-            risks.append({
-                "risk": "High complexity with unclear requirements",
-                "severity": "high"
-            })
+            risks.append({"risk": "High complexity with unclear requirements", "severity": "high"})
 
         # Check for dependencies without clear understanding
         dependencies = task.get("dependencies", [])
         if len(dependencies) > 2 and confidence_score < 85:
-            risks.append({
-                "risk": "Multiple dependencies - integration risk",
-                "severity": "medium"
-            })
+            risks.append({"risk": "Multiple dependencies - integration risk", "severity": "medium"})
 
         return risks
 
-    def _generate_clarifying_questions(self, task: Dict[str, Any],
-                                       clear_requirements: bool,
-                                       has_examples: bool,
-                                       understands_architecture: bool,
-                                       knows_dependencies: bool,
-                                       can_verify_success: bool) -> List[str]:
+    def _generate_clarifying_questions(
+        self,
+        task: Dict[str, Any],
+        clear_requirements: bool,
+        has_examples: bool,
+        understands_architecture: bool,
+        knows_dependencies: bool,
+        can_verify_success: bool,
+    ) -> List[str]:
         """
         Generate clarifying questions for medium/low confidence.
 
@@ -379,14 +386,10 @@ class ConfidenceChecker:
             questions.append(
                 "Can you clarify the requirements? What exactly should the implementation do?"
             )
-            questions.append(
-                "Are there any edge cases or constraints I should be aware of?"
-            )
+            questions.append("Are there any edge cases or constraints I should be aware of?")
 
         if not has_examples:
-            questions.append(
-                "Are there any existing examples or similar code I can reference?"
-            )
+            questions.append("Are there any existing examples or similar code I can reference?")
 
         if not understands_architecture:
             questions.append(
@@ -405,8 +408,9 @@ class ConfidenceChecker:
 
         return questions
 
-    def _generate_alternatives(self, task: Dict[str, Any],
-                              context: Optional[Dict[str, Any]]) -> List[Dict[str, str]]:
+    def _generate_alternatives(
+        self, task: Dict[str, Any], context: Optional[Dict[str, Any]]
+    ) -> List[Dict[str, str]]:
         """
         Generate alternative approaches for medium confidence.
 
@@ -419,19 +423,22 @@ class ConfidenceChecker:
             {
                 "approach": "Option 1: Minimal implementation",
                 "pros": "Quick to implement, easy to test",
-                "cons": "May lack features"
+                "cons": "May lack features",
             },
             {
                 "approach": "Option 2: Full-featured implementation",
                 "pros": "Complete solution, handles edge cases",
-                "cons": "More complex, takes longer"
-            }
+                "cons": "More complex, takes longer",
+            },
         ]
 
-    def _generate_recommendation(self, confidence_level: ConfidenceLevel,
-                                confidence_score: int,
-                                risks: List[Dict[str, str]],
-                                questions: List[str]) -> str:
+    def _generate_recommendation(
+        self,
+        confidence_level: ConfidenceLevel,
+        confidence_score: int,
+        risks: List[Dict[str, str]],
+        questions: List[str],
+    ) -> str:
         """
         Generate recommendation based on confidence.
 
@@ -460,8 +467,7 @@ class ConfidenceChecker:
             )
 
 
-def log_confidence_assessment(assessment: ConfidenceAssessment,
-                              telemetry_file: Path) -> None:
+def log_confidence_assessment(assessment: ConfidenceAssessment, telemetry_file: Path) -> None:
     """
     Log confidence assessment to telemetry.
 
@@ -469,13 +475,12 @@ def log_confidence_assessment(assessment: ConfidenceAssessment,
         assessment: ConfidenceAssessment to log
         telemetry_file: Path to telemetry file
     """
-    import json
     import time
 
     log_entry = {
         "timestamp": time.strftime("%Y-%m-%d %H:%M:%S"),
         "event": "confidence_assessment",
-        **assessment.to_dict()
+        **assessment.to_dict(),
     }
 
     # Append to telemetry file
@@ -496,11 +501,11 @@ if __name__ == "__main__":
         "acceptance_criteria": [
             "Endpoint responds to GET requests",
             "Returns JSON array of user objects",
-            "Returns 200 status code on success"
+            "Returns 200 status code on success",
         ],
         "complexity": "M",
         "files_likely_affected": ["src/api/users.py"],
-        "test_requirements": ["Test endpoint returns 200", "Test JSON format"]
+        "test_requirements": ["Test endpoint returns 200", "Test JSON format"],
     }
 
     checker = ConfidenceChecker(Path.cwd())
@@ -515,12 +520,9 @@ if __name__ == "__main__":
     medium_confidence_task = {
         "id": "TASK-002",
         "description": "Improve the authentication system",
-        "acceptance_criteria": [
-            "Authentication is better",
-            "Users can log in"
-        ],
+        "acceptance_criteria": ["Authentication is better", "Users can log in"],
         "complexity": "L",
-        "dependencies": ["TASK-001", "TASK-003"]
+        "dependencies": ["TASK-001", "TASK-003"],
     }
 
     assessment = checker.assess(medium_confidence_task)
@@ -537,7 +539,7 @@ if __name__ == "__main__":
     low_confidence_task = {
         "id": "TASK-003",
         "description": "Fix the bug",
-        "acceptance_criteria": []
+        "acceptance_criteria": [],
     }
 
     assessment = checker.assess(low_confidence_task)

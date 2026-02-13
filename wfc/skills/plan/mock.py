@@ -5,8 +5,6 @@ ELEGANT: Simple mock, does one thing well
 """
 
 from pathlib import Path
-from typing import Optional
-
 
 MOCK_TASKS = """# Implementation Tasks
 
@@ -234,14 +232,15 @@ def generate_mock_plan(output_dir: Path, project_name: str = "Mock Project") -> 
     (output_dir / "TEST-PLAN.md").write_text(MOCK_TEST_PLAN)
 
     print(f"✅ Mock plan files generated in {output_dir}")
-    print(f"   - TASKS.md (3 tasks)")
-    print(f"   - PROPERTIES.md (2 properties)")
-    print(f"   - TEST-PLAN.md (3 test cases)")
+    print("   - TASKS.md (3 tasks)")
+    print("   - PROPERTIES.md (2 properties)")
+    print("   - TEST-PLAN.md (3 test cases)")
 
 
 if __name__ == "__main__":
     # Test mock generation
     import tempfile
+
     with tempfile.TemporaryDirectory() as tmpdir:
         generate_mock_plan(Path(tmpdir) / "plan")
         print("\n✅ Mock generation test passed")

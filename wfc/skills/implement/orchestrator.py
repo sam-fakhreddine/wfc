@@ -23,14 +23,16 @@ from wfc.shared.utils import get_git, get_selector
 
 class AgentStrategy(Enum):
     """Agent assignment strategies."""
+
     ONE_PER_TASK = "one_per_task"  # One agent per task, max N parallel
-    POOL = "pool"                   # N agents pick from queue
-    SMART = "smart"                 # Group by file overlap
+    POOL = "pool"  # N agents pick from queue
+    SMART = "smart"  # Group by file overlap
 
 
 @dataclass
 class RunResult:
     """Result of an implementation run - ELEGANT data structure."""
+
     run_id: str
     tasks_completed: int
     tasks_failed: int
@@ -46,7 +48,7 @@ class RunResult:
             "tasks_failed": self.tasks_failed,
             "tasks_rolled_back": self.tasks_rolled_back,
             "duration_ms": self.duration_ms,
-            "total_tokens": self.total_tokens
+            "total_tokens": self.total_tokens,
         }
 
 
@@ -66,8 +68,7 @@ class WFCOrchestrator:
     - Implement code (that's agents)
     """
 
-    def __init__(self, config: Optional[WFCConfig] = None,
-                 project_root: Optional[Path] = None):
+    def __init__(self, config: Optional[WFCConfig] = None, project_root: Optional[Path] = None):
         """
         Initialize orchestrator.
 
@@ -117,6 +118,7 @@ class WFCOrchestrator:
 
         # Execute with execution engine
         from .executor import ExecutionEngine
+
         executor = ExecutionEngine(self)
         executor.execute()
 
@@ -141,8 +143,8 @@ class WFCOrchestrator:
             total_tokens={
                 "input": total_input,
                 "output": total_output,
-                "total": total_input + total_output
-            }
+                "total": total_input + total_output,
+            },
         )
 
         # Aggregate session metadata (if any agents used Entire.io)
@@ -159,6 +161,7 @@ class WFCOrchestrator:
     def _load_tasks(self, tasks_file: Path) -> None:
         """Load tasks from TASKS.md."""
         from .parser import parse_tasks
+
         self.task_graph = parse_tasks(tasks_file)
 
     def _validate_dag(self) -> None:
@@ -185,6 +188,7 @@ class WFCOrchestrator:
     def _generate_run_id(self) -> str:
         """Generate unique run ID."""
         import uuid
+
         return f"run-{uuid.uuid4().hex[:8]}"
 
     def get_next_task(self) -> Optional[Task]:
@@ -198,7 +202,9 @@ class WFCOrchestrator:
             return None
         return self.ready_queue.pop(0)
 
-    def mark_task_complete(self, task_id: str, agent_report: Optional[Dict[str, Any]] = None) -> None:
+    def mark_task_complete(
+        self, task_id: str, agent_report: Optional[Dict[str, Any]] = None
+    ) -> None:
         """
         Mark task as complete and promote dependent tasks.
 
@@ -239,10 +245,12 @@ class WFCOrchestrator:
 
         for task in self.task_graph.tasks:
             # Skip if already processed
-            if (task.id in self.completed or
-                task.id in self.failed or
-                task.id in self.in_progress or
-                task in self.ready_queue):
+            if (
+                task.id in self.completed
+                or task.id in self.failed
+                or task.id in self.in_progress
+                or task in self.ready_queue
+            ):
                 continue
 
             # Check if all dependencies are completed
@@ -266,15 +274,16 @@ class WFCOrchestrator:
                     "session_id": entire_session.get("session_id"),
                     "checkpoints": list(entire_session.get("checkpoints", {}).keys()),
                     "local_only": True,  # Emphasize no remote push
-                    "branch": "entire/checkpoints/v1"
+                    "branch": "entire/checkpoints/v1",
                 }
 
         return sessions
 
 
 # Convenience function for presentation tier
-def run_implementation(tasks_file: Path, config: Optional[WFCConfig] = None,
-                      project_root: Optional[Path] = None) -> RunResult:
+def run_implementation(
+    tasks_file: Path, config: Optional[WFCConfig] = None, project_root: Optional[Path] = None
+) -> RunResult:
     """
     Run implementation (convenience function for CLI/API).
 
@@ -303,7 +312,7 @@ if __name__ == "__main__":
         title="Setup",
         description="Setup project",
         acceptance_criteria=["Directory created"],
-        complexity=TaskComplexity.S
+        complexity=TaskComplexity.S,
     )
 
     task2 = Task(
@@ -312,7 +321,7 @@ if __name__ == "__main__":
         description="Implement feature",
         acceptance_criteria=["Feature works"],
         complexity=TaskComplexity.M,
-        dependencies=["TASK-001"]
+        dependencies=["TASK-001"],
     )
 
     orchestrator = WFCOrchestrator()

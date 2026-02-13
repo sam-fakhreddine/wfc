@@ -13,14 +13,16 @@ from dataclasses import dataclass
 
 class ModelTier(Enum):
     """Model tiers for different task complexities."""
-    HAIKU = "haiku"    # Fast, cheap, simple tasks
+
+    HAIKU = "haiku"  # Fast, cheap, simple tasks
     SONNET = "sonnet"  # Balanced, most tasks
-    OPUS = "opus"      # Powerful, complex tasks
+    OPUS = "opus"  # Powerful, complex tasks
 
 
 @dataclass
 class ModelConfig:
     """Model configuration."""
+
     tier: ModelTier
     model_id: str
     provider: str
@@ -46,30 +48,30 @@ class ModelSelector:
             model_id="claude-haiku-4-5-20251001",
             provider="anthropic",
             tokens_per_second=100,
-            cost_per_million=1.0
+            cost_per_million=1.0,
         ),
         ModelTier.SONNET: ModelConfig(
             tier=ModelTier.SONNET,
             model_id="claude-sonnet-4-20250514",
             provider="anthropic",
             tokens_per_second=60,
-            cost_per_million=3.0
+            cost_per_million=3.0,
         ),
         ModelTier.OPUS: ModelConfig(
             tier=ModelTier.OPUS,
             model_id="claude-opus-4-20250514",
             provider="anthropic",
             tokens_per_second=30,
-            cost_per_million=15.0
-        )
+            cost_per_million=15.0,
+        ),
     }
 
     # Complexity to model tier mapping
     COMPLEXITY_MAP: Dict[str, ModelTier] = {
-        "S": ModelTier.HAIKU,   # Small: simple, fast model
+        "S": ModelTier.HAIKU,  # Small: simple, fast model
         "M": ModelTier.SONNET,  # Medium: balanced model
-        "L": ModelTier.OPUS,    # Large: powerful model
-        "XL": ModelTier.OPUS    # Extra Large: powerful model
+        "L": ModelTier.OPUS,  # Large: powerful model
+        "XL": ModelTier.OPUS,  # Extra Large: powerful model
     }
 
     def __init__(self, model_overrides: Optional[Dict[str, ModelConfig]] = None):

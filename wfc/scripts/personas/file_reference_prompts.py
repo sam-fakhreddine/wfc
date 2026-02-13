@@ -29,15 +29,15 @@ BENEFITS:
 """
 
 from pathlib import Path
-from typing import List, Dict, Any
+from typing import List
 
 
 def count_file_lines(filepath: str) -> int:
     """Count lines in a file"""
     try:
-        with open(filepath, 'r') as f:
+        with open(filepath, "r") as f:
             return sum(1 for _ in f)
-    except:
+    except Exception:
         return 0
 
 
@@ -153,7 +153,7 @@ def build_file_reference_prompt(
     focus: str,
     properties_focus: str,
     files: List[str],
-    persona_id: str = ""
+    persona_id: str = "",
 ) -> str:
     """
     Build ultra-minimal prompt with file references + domain guidance.
@@ -180,7 +180,7 @@ def build_file_reference_prompt(
         # Show relative path if possible
         try:
             rel_path = str(Path(filepath).relative_to(Path.cwd()))
-        except:
+        except Exception:
             rel_path = filepath
 
         file_lines.append(f"  • {rel_path} ({line_count} lines)")
@@ -247,7 +247,7 @@ def estimate_token_savings():
     current = {
         "system_prompt": 206,
         "file_contents": num_files * avg_lines * 4,  # ~4 chars/token
-        "total": 0
+        "total": 0,
     }
     current["total"] = current["system_prompt"] + current["file_contents"]
 
@@ -256,9 +256,11 @@ def estimate_token_savings():
         "system_prompt": 206,
         "file_metadata": 100,  # Just paths + line counts
         "selective_reads": 1200,  # Persona reads ~3 files worth
-        "total": 0
+        "total": 0,
     }
-    file_ref["total"] = file_ref["system_prompt"] + file_ref["file_metadata"] + file_ref["selective_reads"]
+    file_ref["total"] = (
+        file_ref["system_prompt"] + file_ref["file_metadata"] + file_ref["selective_reads"]
+    )
 
     reduction_pct = ((current["total"] - file_ref["total"]) / current["total"]) * 100
 
@@ -266,7 +268,7 @@ def estimate_token_savings():
         "current": current,
         "file_ref": file_ref,
         "savings": current["total"] - file_ref["total"],
-        "reduction_pct": reduction_pct
+        "reduction_pct": reduction_pct,
     }
 
 
@@ -276,12 +278,12 @@ if __name__ == "__main__":
 
     print("File Reference Prompts - Token Savings")
     print("=" * 60)
-    print(f"\nCurrent approach (full contents):")
+    print("\nCurrent approach (full contents):")
     print(f"  System prompt: {savings['current']['system_prompt']:,} tokens")
     print(f"  File contents: {savings['current']['file_contents']:,} tokens")
     print(f"  Total: {savings['current']['total']:,} tokens")
 
-    print(f"\nFile reference approach:")
+    print("\nFile reference approach:")
     print(f"  System prompt: {savings['file_ref']['system_prompt']:,} tokens")
     print(f"  File metadata: {savings['file_ref']['file_metadata']:,} tokens")
     print(f"  Selective reads: {savings['file_ref']['selective_reads']:,} tokens")
@@ -301,8 +303,8 @@ if __name__ == "__main__":
         files=[
             "/Users/sam/repos/wfc/wfc/personas/token_manager.py",
             "/Users/sam/repos/wfc/wfc/personas/ultra_minimal_prompts.py",
-            "/Users/sam/repos/wfc/pyproject.toml"
-        ]
+            "/Users/sam/repos/wfc/pyproject.toml",
+        ],
     )
 
     print(prompt)

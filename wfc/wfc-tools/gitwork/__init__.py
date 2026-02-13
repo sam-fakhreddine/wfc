@@ -13,7 +13,7 @@ from .router import ModelRouter
 
 __all__ = [
     "branch",
-    "commit", 
+    "commit",
     "worktree",
     "merge",
     "rollback",

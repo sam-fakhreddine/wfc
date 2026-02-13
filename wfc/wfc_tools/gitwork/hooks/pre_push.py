@@ -102,9 +102,9 @@ def pre_push_hook() -> int:
             print(f"   Local branch: {local_branch}")
             if remote_url:
                 print(f"   Remote: {remote_url}")
-            print(f"\n   Consider:")
-            print(f"     1. Create a PR instead")
-            print(f"     2. Use WFC PR workflow (default)")
+            print("\n   Consider:")
+            print("     1. Create a PR instead")
+            print("     2. Use WFC PR workflow (default)")
             print(f"     3. Ensure you have permission to push to {remote_branch}")
             print()
 
@@ -131,9 +131,9 @@ def pre_push_hook() -> int:
 
     # Check 2: Force push warning (if detectable)
     if is_force_push():
-        print(f"\n⚠️  WARNING: Force push detected")
-        print(f"   Force pushes can overwrite remote history")
-        print(f"   Consider using --force-with-lease for safety")
+        print("\n⚠️  WARNING: Force push detected")
+        print("   Force pushes can overwrite remote history")
+        print("   Consider using --force-with-lease for safety")
         print()
 
         violations.append({"type": "force_push", "severity": "warning"})

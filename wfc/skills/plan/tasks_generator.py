@@ -5,7 +5,7 @@ Converts interview results into structured TASKS.md file.
 """
 
 from dataclasses import dataclass
-from typing import List, Dict, Any
+from typing import List
 from pathlib import Path
 from .interview import InterviewResult
 from .ears import generate_acceptance_criteria_ears
@@ -14,6 +14,7 @@ from .ears import generate_acceptance_criteria_ears
 @dataclass
 class Task:
     """Single task in implementation plan"""
+
     id: str
     title: str
     description: str
@@ -55,52 +56,58 @@ class TasksGenerator:
         """Create task list from requirements"""
 
         # Initial setup task (always first)
-        self.tasks.append(Task(
-            id=self._next_id(),
-            title="Setup project structure",
-            description="Create initial project structure, dependencies, and configuration",
-            complexity="S",
-            dependencies=[],
-            properties=[],
-            files=["README.md", "requirements.txt", "pyproject.toml"],
-            acceptance_criteria=[
-                "Project structure follows best practices",
-                "All dependencies documented",
-                "Configuration files present"
-            ]
-        ))
+        self.tasks.append(
+            Task(
+                id=self._next_id(),
+                title="Setup project structure",
+                description="Create initial project structure, dependencies, and configuration",
+                complexity="S",
+                dependencies=[],
+                properties=[],
+                files=["README.md", "requirements.txt", "pyproject.toml"],
+                acceptance_criteria=[
+                    "Project structure follows best practices",
+                    "All dependencies documented",
+                    "Configuration files present",
+                ],
+            )
+        )
 
         # Generate tasks from requirements
         for idx, req in enumerate(self.result.requirements, start=1):
             if req.startswith("[Nice-to-have]"):
                 continue  # Skip nice-to-have for initial plan
 
-            self.tasks.append(Task(
-                id=self._next_id(),
-                title=f"Implement {req[:50]}...",
-                description=req,
-                complexity=self._estimate_complexity(req),
-                dependencies=[self.tasks[0].id],  # Depend on setup
-                properties=self._match_properties(req),
-                files=[],  # Would be inferred
-                acceptance_criteria=self._generate_acceptance_criteria(req)
-            ))
+            self.tasks.append(
+                Task(
+                    id=self._next_id(),
+                    title=f"Implement {req[:50]}...",
+                    description=req,
+                    complexity=self._estimate_complexity(req),
+                    dependencies=[self.tasks[0].id],  # Depend on setup
+                    properties=self._match_properties(req),
+                    files=[],  # Would be inferred
+                    acceptance_criteria=self._generate_acceptance_criteria(req),
+                )
+            )
 
         # Final testing task
-        self.tasks.append(Task(
-            id=self._next_id(),
-            title="End-to-end testing",
-            description="Run complete integration and e2e tests",
-            complexity="M",
-            dependencies=[t.id for t in self.tasks[1:]],  # Depends on all implementation tasks
-            properties=[],
-            files=["tests/"],
-            acceptance_criteria=[
-                "All tests pass",
-                "Coverage meets target",
-                "No critical issues"
-            ]
-        ))
+        self.tasks.append(
+            Task(
+                id=self._next_id(),
+                title="End-to-end testing",
+                description="Run complete integration and e2e tests",
+                complexity="M",
+                dependencies=[t.id for t in self.tasks[1:]],  # Depends on all implementation tasks
+                properties=[],
+                files=["tests/"],
+                acceptance_criteria=[
+                    "All tests pass",
+                    "Coverage meets target",
+                    "No critical issues",
+                ],
+            )
+        )
 
     def _next_id(self) -> str:
         """Generate next task ID"""
@@ -126,7 +133,9 @@ class TasksGenerator:
         matched = []
         for prop in self.result.properties:
             # Simple keyword matching - real implementation would be smarter
-            if any(word in requirement.lower() for word in prop.get("statement", "").lower().split()):
+            if any(
+                word in requirement.lower() for word in prop.get("statement", "").lower().split()
+            ):
                 matched.append(f"PROP-{len(matched)+1:03d}")
         return matched
 
@@ -149,15 +158,17 @@ class TasksGenerator:
         ]
 
         for task in self.tasks:
-            lines.extend([
-                f"## {task.id}: {task.title}",
-                f"- **Complexity**: {task.complexity}",
-                f"- **Dependencies**: [{', '.join(task.dependencies)}]",
-                f"- **Properties**: [{', '.join(task.properties)}]",
-                f"- **Files**: {', '.join(task.files) if task.files else 'TBD'}",
-                f"- **Description**: {task.description}",
-                "- **Acceptance Criteria**:",
-            ])
+            lines.extend(
+                [
+                    f"## {task.id}: {task.title}",
+                    f"- **Complexity**: {task.complexity}",
+                    f"- **Dependencies**: [{', '.join(task.dependencies)}]",
+                    f"- **Properties**: [{', '.join(task.properties)}]",
+                    f"- **Files**: {', '.join(task.files) if task.files else 'TBD'}",
+                    f"- **Description**: {task.description}",
+                    "- **Acceptance Criteria**:",
+                ]
+            )
             for criterion in task.acceptance_criteria:
                 lines.append(f"  - [ ] {criterion}")
             lines.append("")
@@ -167,7 +178,7 @@ class TasksGenerator:
     def save(self, path: Path) -> None:
         """Save TASKS.md to file"""
         content = self.generate()
-        with open(path, 'w') as f:
+        with open(path, "w") as f:
             f.write(content)
 
 

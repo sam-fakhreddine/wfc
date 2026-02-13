@@ -5,6 +5,8 @@ Generates Claude Code agentic prompts for new skills.
 """
 
 from pathlib import Path
+from typing import Any, Dict, List
+
 from .interview import SkillSpec
 
 
@@ -87,13 +89,13 @@ Tracks:
 
     def _format_list(self, items: List[str]) -> str:
         """Format list of items"""
-        return '\n'.join(f"- {item.strip()}" for item in items if item.strip())
+        return "\n".join(f"- {item.strip()}" for item in items if item.strip())
 
     def _format_config(self, config: Dict[str, Any]) -> str:
         """Format configuration"""
         if not config:
             return '    "enabled": true'
-        return '\n'.join(f'    "{k}": "{v}"' for k, v in config.items())
+        return "\n".join(f'    "{k}": "{v}"' for k, v in config.items())
 
     def _format_agents(self, agents: Dict[str, Any]) -> str:
         """Format agent architecture"""
@@ -104,5 +106,5 @@ Tracks:
     def save(self, spec: SkillSpec, path: Path) -> None:
         """Save generated prompt to file"""
         content = self.generate(spec)
-        with open(path, 'w') as f:
+        with open(path, "w") as f:
             f.write(content)

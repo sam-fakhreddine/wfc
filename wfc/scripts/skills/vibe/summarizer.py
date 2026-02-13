@@ -4,13 +4,14 @@ WFC Vibe - Context Summarization
 SOLID: Single Responsibility - Extract relevant planning context from conversations
 """
 
-from typing import List, Dict, Any, Optional
+from typing import List, Any, Optional
 from dataclasses import dataclass
 
 
 @dataclass
 class Message:
     """Simple message structure"""
+
     role: str  # "user" or "assistant"
     content: str
 
@@ -18,6 +19,7 @@ class Message:
 @dataclass
 class PlanningContext:
     """Structured planning context extracted from conversation"""
+
     goal: str
     features: List[str]
     constraints: List[str]
@@ -39,22 +41,45 @@ class ContextSummarizer:
 
     def __init__(self):
         self.tech_keywords = [
-            "python", "javascript", "typescript", "react", "vue", "django",
-            "flask", "fastapi", "postgresql", "mysql", "redis", "mongodb",
-            "docker", "kubernetes", "aws", "gcp", "azure",
-            "jwt", "oauth", "graphql", "rest", "grpc"
+            "python",
+            "javascript",
+            "typescript",
+            "react",
+            "vue",
+            "django",
+            "flask",
+            "fastapi",
+            "postgresql",
+            "mysql",
+            "redis",
+            "mongodb",
+            "docker",
+            "kubernetes",
+            "aws",
+            "gcp",
+            "azure",
+            "jwt",
+            "oauth",
+            "graphql",
+            "rest",
+            "grpc",
         ]
 
         self.constraint_keywords = [
-            "performance", "security", "scalability", "reliability",
-            "compatibility", "backward compatible", "migration",
-            "deadline", "budget", "team size"
+            "performance",
+            "security",
+            "scalability",
+            "reliability",
+            "compatibility",
+            "backward compatible",
+            "migration",
+            "deadline",
+            "budget",
+            "team size",
         ]
 
     def summarize(
-        self,
-        messages: List[Message],
-        scope_detector: Optional[Any] = None
+        self, messages: List[Message], scope_detector: Optional[Any] = None
     ) -> PlanningContext:
         """
         Extract planning context from conversation.
@@ -93,7 +118,7 @@ class ContextSummarizer:
             tech_stack=tech_stack,
             files_mentioned=files,
             estimated_complexity=complexity,
-            scope_size=len(features)
+            scope_size=len(features),
         )
 
     def _extract_goal(self, messages: List[Message]) -> str:
@@ -127,8 +152,12 @@ class ContextSummarizer:
         """Clean up goal statement (remove filler, keep essence)"""
         # Remove common filler phrases
         fillers = [
-            "I want to", "I'd like to", "We need to", "Can you help me",
-            "I'm thinking about", "I was wondering if"
+            "I want to",
+            "I'd like to",
+            "We need to",
+            "Can you help me",
+            "I'm thinking about",
+            "I was wondering if",
         ]
 
         cleaned = text
@@ -142,9 +171,7 @@ class ContextSummarizer:
         return cleaned[:200]  # Limit length
 
     def _extract_features(
-        self,
-        messages: List[Message],
-        scope_detector: Optional[Any]
+        self, messages: List[Message], scope_detector: Optional[Any]
     ) -> List[str]:
         """
         Extract feature list from conversation.
@@ -159,14 +186,35 @@ class ContextSummarizer:
 
         # Also extract from messages directly
         feature_keywords = [
-            "authentication", "auth", "authorization", "login",
-            "logging", "audit", "monitoring",
-            "email", "notification", "alert",
-            "rbac", "role", "permission", "access",
-            "dashboard", "admin", "panel",
-            "api", "endpoint", "rest", "graphql",
-            "database", "storage", "cache", "redis",
-            "search", "filter", "sort", "pagination"
+            "authentication",
+            "auth",
+            "authorization",
+            "login",
+            "logging",
+            "audit",
+            "monitoring",
+            "email",
+            "notification",
+            "alert",
+            "rbac",
+            "role",
+            "permission",
+            "access",
+            "dashboard",
+            "admin",
+            "panel",
+            "api",
+            "endpoint",
+            "rest",
+            "graphql",
+            "database",
+            "storage",
+            "cache",
+            "redis",
+            "search",
+            "filter",
+            "sort",
+            "pagination",
         ]
 
         for msg in messages:
@@ -220,11 +268,7 @@ class ContextSummarizer:
 
         return list(tech)[:8]  # Limit to top 8
 
-    def _extract_files(
-        self,
-        messages: List[Message],
-        scope_detector: Optional[Any]
-    ) -> List[str]:
+    def _extract_files(self, messages: List[Message], scope_detector: Optional[Any]) -> List[str]:
         """Extract file/module mentions"""
         files = set()
 

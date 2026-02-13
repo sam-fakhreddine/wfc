@@ -11,6 +11,7 @@ from enum import Enum
 
 class EARSType(Enum):
     """EARS requirement types"""
+
     UBIQUITOUS = "ubiquitous"  # Always active
     EVENT_DRIVEN = "event_driven"  # Triggered by event
     STATE_DRIVEN = "state_driven"  # Depends on state
@@ -21,6 +22,7 @@ class EARSType(Enum):
 @dataclass
 class EARSRequirement:
     """Structured EARS requirement"""
+
     type: EARSType
     system: str
     action: str
@@ -83,12 +85,16 @@ class EARSFormatter:
                     parts = text.split(keyword, 1)
                     if len(parts) == 2:
                         trigger = parts[1].split(",")[0].strip()
-                        action = parts[1].split(",", 1)[1].strip() if "," in parts[1] else parts[1].strip()
+                        action = (
+                            parts[1].split(",", 1)[1].strip()
+                            if "," in parts[1]
+                            else parts[1].strip()
+                        )
                         return EARSRequirement(
                             type=EARSType.EVENT_DRIVEN,
                             system=system,
                             trigger=trigger,
-                            action=action
+                            action=action,
                         )
 
         # Detect state-driven (while, during, as long as)
@@ -98,58 +104,57 @@ class EARSFormatter:
                     parts = text.split(keyword, 1)
                     if len(parts) == 2:
                         state = parts[1].split(",")[0].strip()
-                        action = parts[1].split(",", 1)[1].strip() if "," in parts[1] else parts[1].strip()
+                        action = (
+                            parts[1].split(",", 1)[1].strip()
+                            if "," in parts[1]
+                            else parts[1].strip()
+                        )
                         return EARSRequirement(
-                            type=EARSType.STATE_DRIVEN,
-                            system=system,
-                            state=state,
-                            action=action
+                            type=EARSType.STATE_DRIVEN, system=system, state=state, action=action
                         )
 
         # Detect unwanted (if, prevent, must not, should not)
-        if any(keyword in text_lower for keyword in ["if ", "prevent ", "must not ", "should not "]):
+        if any(
+            keyword in text_lower for keyword in ["if ", "prevent ", "must not ", "should not "]
+        ):
             # This is a constraint/prevention
             if "if " in text_lower:
                 parts = text.split("if ", 1)
                 if len(parts) == 2:
                     condition = parts[1].split(",")[0].split(" then")[0].strip()
-                    action = parts[1].split("then", 1)[1].strip() if "then" in parts[1] else "prevent"
+                    action = (
+                        parts[1].split("then", 1)[1].strip() if "then" in parts[1] else "prevent"
+                    )
                     return EARSRequirement(
-                        type=EARSType.UNWANTED,
-                        system=system,
-                        condition=condition,
-                        action=action
+                        type=EARSType.UNWANTED, system=system, condition=condition, action=action
                     )
 
             # Generic prevention
             return EARSRequirement(
-                type=EARSType.UNWANTED,
-                system=system,
-                condition="violation occurs",
-                action=text
+                type=EARSType.UNWANTED, system=system, condition="violation occurs", action=text
             )
 
         # Detect optional (if available, where supported, optional)
-        if any(keyword in text_lower for keyword in ["if available", "where ", "optional", "if enabled"]):
+        if any(
+            keyword in text_lower
+            for keyword in ["if available", "where ", "optional", "if enabled"]
+        ):
             for keyword in ["where ", "if available", "if enabled"]:
                 if keyword in text_lower:
                     parts = text.split(keyword, 1)
                     if len(parts) == 2:
                         feature = parts[1].split(",")[0].strip()
-                        action = parts[1].split(",", 1)[1].strip() if "," in parts[1] else parts[1].strip()
+                        action = (
+                            parts[1].split(",", 1)[1].strip()
+                            if "," in parts[1]
+                            else parts[1].strip()
+                        )
                         return EARSRequirement(
-                            type=EARSType.OPTIONAL,
-                            system=system,
-                            feature=feature,
-                            action=action
+                            type=EARSType.OPTIONAL, system=system, feature=feature, action=action
                         )
 
         # Default: ubiquitous
-        return EARSRequirement(
-            type=EARSType.UBIQUITOUS,
-            system=system,
-            action=text
-        )
+        return EARSRequirement(type=EARSType.UBIQUITOUS, system=system, action=text)
 
 
 class EARSPropertyMapper:
@@ -180,7 +185,7 @@ class EARSPropertyMapper:
                 system=system,
                 condition=statement,
                 action="prevent and log violation",
-                priority="critical"
+                priority="critical",
             )
 
         elif prop_type == "LIVENESS":
@@ -190,7 +195,7 @@ class EARSPropertyMapper:
                 system=system,
                 trigger="required condition occurs",
                 action=statement,
-                priority="high"
+                priority="high",
             )
 
         elif prop_type == "INVARIANT":
@@ -200,24 +205,17 @@ class EARSPropertyMapper:
                 system=system,
                 state="system is running",
                 action=f"maintain {statement}",
-                priority="high"
+                priority="high",
             )
 
         elif prop_type == "PERFORMANCE":
             # PERFORMANCE → UBIQUITOUS or STATE_DRIVEN
             return EARSRequirement(
-                type=EARSType.UBIQUITOUS,
-                system=system,
-                action=statement,
-                priority="medium"
+                type=EARSType.UBIQUITOUS, system=system, action=statement, priority="medium"
             )
 
         # Default: ubiquitous
-        return EARSRequirement(
-            type=EARSType.UBIQUITOUS,
-            system=system,
-            action=statement
-        )
+        return EARSRequirement(type=EARSType.UBIQUITOUS, system=system, action=statement)
 
 
 def generate_acceptance_criteria_ears(requirement: str, system: str = "system") -> List[str]:

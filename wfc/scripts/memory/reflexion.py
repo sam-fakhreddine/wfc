@@ -6,7 +6,7 @@ SOLID: Single Responsibility - Only handles reflexion entries
 
 import json
 from pathlib import Path
-from typing import List, Optional
+from typing import List
 from .schemas import ReflexionEntry
 
 

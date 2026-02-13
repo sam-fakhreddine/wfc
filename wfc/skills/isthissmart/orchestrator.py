@@ -21,8 +21,9 @@ class IsThisSmartOrchestrator:
     def __init__(self):
         self.analyzer = IsThisSmartAnalyzer()
 
-    def analyze(self, subject: str, content: Optional[str] = None,
-                output_dir: Optional[Path] = None) -> SmartAnalysis:
+    def analyze(
+        self, subject: str, content: Optional[str] = None, output_dir: Optional[Path] = None
+    ) -> SmartAnalysis:
         """
         Perform analysis and generate report.
 
@@ -70,43 +71,51 @@ class IsThisSmartOrchestrator:
         ]
 
         for dim in analysis.dimensions:
-            lines.extend([
-                f"### {dim.dimension} — Score: {dim.score}/10",
-                "",
-                "**Strengths:**",
-            ])
+            lines.extend(
+                [
+                    f"### {dim.dimension} — Score: {dim.score}/10",
+                    "",
+                    "**Strengths:**",
+                ]
+            )
             for strength in dim.strengths:
                 lines.append(f"- {strength}")
             lines.append("")
             lines.append("**Concerns:**")
             for concern in dim.concerns:
                 lines.append(f"- {concern}")
-            lines.extend([
-                "",
-                f"**Recommendation:** {dim.recommendation}",
-                "",
-            ])
+            lines.extend(
+                [
+                    "",
+                    f"**Recommendation:** {dim.recommendation}",
+                    "",
+                ]
+            )
 
         if analysis.alternatives:
-            lines.extend([
-                "---",
-                "",
-                "## Simpler Alternatives",
-                "",
-            ])
+            lines.extend(
+                [
+                    "---",
+                    "",
+                    "## Simpler Alternatives",
+                    "",
+                ]
+            )
             for alt in analysis.alternatives:
                 lines.append(f"- {alt}")
             lines.append("")
 
-        lines.extend([
-            "---",
-            "",
-            "## Final Recommendation",
-            "",
-            analysis.final_recommendation,
-            "",
-        ])
+        lines.extend(
+            [
+                "---",
+                "",
+                "## Final Recommendation",
+                "",
+                analysis.final_recommendation,
+                "",
+            ]
+        )
 
         path.parent.mkdir(parents=True, exist_ok=True)
-        with open(path, 'w') as f:
-            f.write('\n'.join(lines))
+        with open(path, "w") as f:
+            f.write("\n".join(lines))

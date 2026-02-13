@@ -21,6 +21,7 @@ from dataclasses import dataclass
 @dataclass
 class PersonaSummary:
     """Lightweight persona metadata for registry"""
+
     id: str
     name: str
     panel: str
@@ -109,7 +110,7 @@ class ProgressiveRegistry:
                         name=full_persona["name"],
                         panel=panel_name,
                         skills=full_persona.get("skills", [])[:3],  # First 3 skills only
-                        description=summary_desc[:100]  # Max 100 chars
+                        description=summary_desc[:100],  # Max 100 chars
                     )
 
                     registry[persona_id] = summary
@@ -188,9 +189,11 @@ class ProgressiveRegistry:
         matches = []
         for summary in summaries.values():
             # Check if query matches
-            if (query_lower in summary.name.lower() or
-                query_lower in summary.description.lower() or
-                any(query_lower in skill.lower() for skill in summary.skills)):
+            if (
+                query_lower in summary.name.lower()
+                or query_lower in summary.description.lower()
+                or any(query_lower in skill.lower() for skill in summary.skills)
+            ):
                 matches.append(summary)
 
         return matches[:max_results]
@@ -215,7 +218,7 @@ class ProgressiveRegistry:
             "summaries_only": summary_tokens,
             "all_full_personas": full_tokens,
             "savings": full_tokens - summary_tokens,
-            "savings_percent": round((1 - summary_tokens / full_tokens) * 100, 1)
+            "savings_percent": round((1 - summary_tokens / full_tokens) * 100, 1),
         }
 
 
@@ -238,10 +241,10 @@ def generate_static_registry(output_path: Path):
                 "name": s.name,
                 "panel": s.panel,
                 "skills": s.skills,
-                "description": s.description
+                "description": s.description,
             }
             for pid, s in summaries.items()
-        }
+        },
     }
 
     with open(output_path, "w") as f:
@@ -264,5 +267,10 @@ if __name__ == "__main__":
     print(f"   Savings:        ~{savings['savings']} tokens ({savings['savings_percent']}%)")
 
     # Generate static registry
-    output = Path(__file__).parent.parent.parent / "references" / "personas" / "registry-progressive.json"
+    output = (
+        Path(__file__).parent.parent.parent
+        / "references"
+        / "personas"
+        / "registry-progressive.json"
+    )
     generate_static_registry(output)

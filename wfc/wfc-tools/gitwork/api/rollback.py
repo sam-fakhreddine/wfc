@@ -11,29 +11,22 @@ from typing import Dict
 def revert(merge_sha: str) -> Dict:
     """Atomic revert of merge commit"""
     try:
-        subprocess.run(
-            ["git", "revert", "--no-edit", merge_sha],
-            check=True,
-            capture_output=True
-        )
-        
+        subprocess.run(["git", "revert", "--no-edit", merge_sha], check=True, capture_output=True)
+
         # Get revert SHA
         result = subprocess.run(
-            ["git", "rev-parse", "HEAD"],
-            check=True,
-            capture_output=True,
-            text=True
+            ["git", "rev-parse", "HEAD"], check=True, capture_output=True, text=True
         )
-        
+
         return {
             "success": True,
             "revert_sha": result.stdout.strip(),
-            "message": f"Reverted {merge_sha}"
+            "message": f"Reverted {merge_sha}",
         }
     except subprocess.CalledProcessError as e:
         return {
             "success": False,
-            "message": f"Revert failed: {e.stderr.decode() if e.stderr else str(e)}"
+            "message": f"Revert failed: {e.stderr.decode() if e.stderr else str(e)}",
         }
 
 
@@ -42,23 +35,20 @@ def verify() -> Dict:
     try:
         # Run tests or checks
         result = subprocess.run(
-            ["git", "status", "--porcelain"],
-            check=True,
-            capture_output=True,
-            text=True
+            ["git", "status", "--porcelain"], check=True, capture_output=True, text=True
         )
-        
+
         clean = len(result.stdout.strip()) == 0
-        
+
         return {
             "success": True,
             "clean": clean,
-            "message": "Main is clean" if clean else "Main has uncommitted changes"
+            "message": "Main is clean" if clean else "Main has uncommitted changes",
         }
     except subprocess.CalledProcessError as e:
         return {
             "success": False,
-            "message": f"Verification failed: {e.stderr.decode() if e.stderr else str(e)}"
+            "message": f"Verification failed: {e.stderr.decode() if e.stderr else str(e)}",
         }
 
 

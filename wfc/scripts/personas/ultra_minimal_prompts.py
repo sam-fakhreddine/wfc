@@ -82,10 +82,7 @@ def extract_persona_essentials(persona: Dict) -> Dict[str, Any]:
     """
     # Get top 3 skills
     skills = persona.get("skills", [])[:3]
-    skill_names = [
-        f"{s['name']} ({s['level']})"
-        for s in skills
-    ]
+    skill_names = [f"{s['name']} ({s['level']})" for s in skills]
 
     # Get one-line focus
     lens = persona.get("lens", {})
@@ -95,16 +92,12 @@ def extract_persona_essentials(persona: Dict) -> Dict[str, Any]:
     if len(focus) > 80:
         focus = focus[:77] + "..."
 
-    return {
-        "name": persona.get("name", "Expert Reviewer"),
-        "skills": skill_names,
-        "focus": focus
-    }
+    return {"name": persona.get("name", "Expert Reviewer"), "skills": skill_names, "focus": focus}
 
 
 def build_ultra_minimal_user_prompt(
     properties: List[Dict[str, Any]],
-    file_summaries: List[Dict[str, str]]  # [{"path": "...", "summary": "..."}]
+    file_summaries: List[Dict[str, str]],  # [{"path": "...", "summary": "..."}]
 ) -> str:
     """
     Build ultra-minimal user prompt with file summaries.
@@ -130,7 +123,7 @@ def build_ultra_minimal_user_prompt(
     parts.append("FILES:")
     for fs in file_summaries:
         parts.append(f"\n{fs['path']} ({fs.get('lines', 0)} lines)")
-        parts.append(fs['summary'])
+        parts.append(fs["summary"])
 
     return "\n".join(parts)
 
@@ -145,7 +138,7 @@ def estimate_token_reduction():
         "dimensions": 200,
         "guidelines": 400,
         "examples": 600,
-        "TOTAL": 4000
+        "TOTAL": 4000,
     }
 
     minimal_breakdown = {
@@ -155,17 +148,18 @@ def estimate_token_reduction():
         "json_format": 150,
         "severity_guide": 100,
         "instructions": 50,
-        "TOTAL": 500
+        "TOTAL": 500,
     }
 
-    reduction_pct = ((verbose_breakdown["TOTAL"] - minimal_breakdown["TOTAL"])
-                     / verbose_breakdown["TOTAL"] * 100)
+    reduction_pct = (
+        (verbose_breakdown["TOTAL"] - minimal_breakdown["TOTAL"]) / verbose_breakdown["TOTAL"] * 100
+    )
 
     return {
         "verbose": verbose_breakdown,
         "minimal": minimal_breakdown,
         "reduction_tokens": verbose_breakdown["TOTAL"] - minimal_breakdown["TOTAL"],
-        "reduction_pct": reduction_pct
+        "reduction_pct": reduction_pct,
     }
 
 
@@ -177,7 +171,9 @@ if __name__ == "__main__":
     print("=" * 60)
     print(f"\nVerbose prompt: {savings['verbose']['TOTAL']:,} tokens")
     print(f"Minimal prompt: {savings['minimal']['TOTAL']:,} tokens")
-    print(f"Savings: {savings['reduction_tokens']:,} tokens ({savings['reduction_pct']:.0f}% reduction)")
+    print(
+        f"Savings: {savings['reduction_tokens']:,} tokens ({savings['reduction_pct']:.0f}% reduction)"
+    )
 
     print("\n" + "=" * 60)
     print("Example ultra-minimal prompt:")
@@ -187,7 +183,7 @@ if __name__ == "__main__":
         persona_name="Alice Chen, Security Architect",
         top_skills=["AppSec (Expert)", "Threat Modeling (Expert)", "Cryptography (Advanced)"],
         focus="Security vulnerabilities and attack vectors",
-        properties_focus="SECURITY, DATA_PROTECTION"
+        properties_focus="SECURITY, DATA_PROTECTION",
     )
 
     print(prompt)

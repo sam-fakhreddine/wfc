@@ -795,7 +795,7 @@ if __name__ == "__main__":
     )
     print(f"   Status: {result.status.value}")
     print(f"   Merge SHA: {result.merge_sha}")
-    print(f"   ✅ Success")
+    print("   ✅ Success")
 
     # Test 2: Failed merge with retry
     print("\n2. Testing failed merge (ERROR severity, retryable):")
@@ -821,7 +821,7 @@ if __name__ == "__main__":
     print(f"   Severity: {result.failure_severity.value}")
     print(f"   Should retry: {result.should_retry}")
     print(f"   Retry count: {result.retry_count}/{result.max_retries}")
-    print(f"   ✅ Retry logic correct")
+    print("   ✅ Retry logic correct")
 
     # Test 3: Task retry preparation
     print("\n3. Testing task retry preparation:")
@@ -837,7 +837,7 @@ if __name__ == "__main__":
     updated_task = prepare_task_for_retry(task)
     print(f"   Status: {updated_task.status.value}")
     print(f"   Retry tags: {updated_task.tags.count('retry')}")
-    print(f"   ✅ Task prepared for retry")
+    print("   ✅ Task prepared for retry")
 
     # Test 4: Failure classification
     print("\n4. Testing failure classification:")

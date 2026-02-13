@@ -6,7 +6,7 @@ Supports both SFW (Safe For Work) and NSFW modes.
 """
 
 from pathlib import Path
-from typing import Dict, Optional
+from typing import Optional
 
 
 class WFCBranding:
@@ -83,28 +83,25 @@ class WFCBranding:
         messages = {
             "tagline": {
                 "sfw": "This is Workflow Champion.",
-                "nsfw": "This is World Fucking Class."
+                "nsfw": "This is World Fucking Class.",
             },
             "success": {
                 "sfw": "Success! Workflow Champion is ready.",
-                "nsfw": "Success! World Fucking Class is ready."
+                "nsfw": "Success! World Fucking Class is ready.",
             },
             "error": {
                 "sfw": "Error: Workflow Champion encountered an issue.",
-                "nsfw": "Error: WFC doesn't tolerate failures."
+                "nsfw": "Error: WFC doesn't tolerate failures.",
             },
-            "complete": {
-                "sfw": "Task completed successfully.",
-                "nsfw": "Done. No bullshit."
-            },
+            "complete": {"sfw": "Task completed successfully.", "nsfw": "Done. No bullshit."},
             "quality_fail": {
                 "sfw": "Quality checks failed. Please address issues.",
-                "nsfw": "Quality checks failed. Fix your shit."
+                "nsfw": "Quality checks failed. Fix your shit.",
             },
             "review_fail": {
                 "sfw": "Review did not approve. Revisions needed.",
-                "nsfw": "Review rejected. Back to the drawing board."
-            }
+                "nsfw": "Review rejected. Back to the drawing board.",
+            },
         }
 
         if key in messages:

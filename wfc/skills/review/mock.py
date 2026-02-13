@@ -6,7 +6,6 @@ ELEGANT: Minimal mock that simulates real review behavior
 
 import os
 import random
-from pathlib import Path
 from typing import Dict, List, Any
 
 
@@ -26,8 +25,9 @@ class MockReview:
         """
         self.mode = mode or os.getenv("WFC_MOCK_REVIEW_MODE", "pass")
 
-    def review(self, files: List[str], properties: List[str],
-               task_id: str = "TASK-XXX") -> Dict[str, Any]:
+    def review(
+        self, files: List[str], properties: List[str], task_id: str = "TASK-XXX"
+    ) -> Dict[str, Any]:
         """
         Perform mock review.
 
@@ -49,8 +49,9 @@ class MockReview:
         # Default: passing review
         return self._passing_review(files, properties, task_id)
 
-    def _passing_review(self, files: List[str], properties: List[str],
-                       task_id: str) -> Dict[str, Any]:
+    def _passing_review(
+        self, files: List[str], properties: List[str], task_id: str
+    ) -> Dict[str, Any]:
         """Generate passing review report."""
         return {
             "review_id": f"review-{task_id}-pass",
@@ -63,40 +64,41 @@ class MockReview:
                     "findings": [
                         "Code logic is sound",
                         "Edge cases handled appropriately",
-                        "Follows ELEGANT principles"
-                    ]
+                        "Follows ELEGANT principles",
+                    ],
                 },
                 "SEC": {
                     "score": 8.0,
                     "findings": [
                         "No critical vulnerabilities detected",
-                        "Suggestion: Consider additional input validation"
-                    ]
+                        "Suggestion: Consider additional input validation",
+                    ],
                 },
                 "PERF": {
                     "score": 8.5,
                     "findings": [
                         "Performance is acceptable",
-                        "Minor optimization opportunity in loop"
-                    ]
+                        "Minor optimization opportunity in loop",
+                    ],
                 },
                 "COMP": {
                     "score": 9.0,
                     "findings": [
                         "All acceptance criteria met",
-                        f"All {len(properties)} properties satisfied"
-                    ]
-                }
+                        f"All {len(properties)} properties satisfied",
+                    ],
+                },
             },
             "files_reviewed": files,
             "properties_verified": properties,
             "consensus": "Code meets quality standards. Ready to merge.",
             "passed": True,
-            "retry_count": 0
+            "retry_count": 0,
         }
 
-    def _failing_review(self, files: List[str], properties: List[str],
-                       task_id: str) -> Dict[str, Any]:
+    def _failing_review(
+        self, files: List[str], properties: List[str], task_id: str
+    ) -> Dict[str, Any]:
         """Generate failing review report."""
         return {
             "review_id": f"review-{task_id}-fail",
@@ -108,30 +110,27 @@ class MockReview:
                     "score": 7.0,
                     "findings": [
                         "Logic issue in edge case handling",
-                        "Missing null check in function"
-                    ]
+                        "Missing null check in function",
+                    ],
                 },
                 "SEC": {
                     "score": 5.0,
                     "findings": [
                         "CRITICAL: Potential SQL injection vector",
-                        "Input validation insufficient"
-                    ]
+                        "Input validation insufficient",
+                    ],
                 },
                 "PERF": {
                     "score": 7.0,
-                    "findings": [
-                        "Nested loop could be optimized",
-                        "Consider caching result"
-                    ]
+                    "findings": ["Nested loop could be optimized", "Consider caching result"],
                 },
                 "COMP": {
                     "score": 5.0,
                     "findings": [
                         f"Property {properties[0] if properties else 'PROP-001'} not verified",
-                        "Missing test case for negative scenario"
-                    ]
-                }
+                        "Missing test case for negative scenario",
+                    ],
+                },
             },
             "files_reviewed": files,
             "properties_verified": properties,
@@ -141,14 +140,15 @@ class MockReview:
             "required_fixes": [
                 "Add null check in core function",
                 "Fix SQL injection vulnerability",
-                f"Add test for property {properties[0] if properties else 'PROP-001'}"
-            ]
+                f"Add test for property {properties[0] if properties else 'PROP-001'}",
+            ],
         }
 
 
 # Convenience function
-def mock_review(files: List[str], properties: List[str],
-               task_id: str = "TASK-XXX", mode: str = "pass") -> Dict[str, Any]:
+def mock_review(
+    files: List[str], properties: List[str], task_id: str = "TASK-XXX", mode: str = "pass"
+) -> Dict[str, Any]:
     """
     Perform mock review (convenience function).
 
@@ -175,16 +175,13 @@ if __name__ == "__main__":
         files=["src/core.py", "tests/test_core.py"],
         properties=["PROP-001", "PROP-002"],
         task_id="TASK-002",
-        mode="pass"
+        mode="pass",
     )
     print(f"Pass mode: {result['status']} (score: {result['score']})")
 
     # Test failing review
     result = mock_review(
-        files=["src/core.py"],
-        properties=["PROP-001"],
-        task_id="TASK-002",
-        mode="fail"
+        files=["src/core.py"], properties=["PROP-001"], task_id="TASK-002", mode="fail"
     )
     print(f"Fail mode: {result['status']} (score: {result['score']})")
     print()

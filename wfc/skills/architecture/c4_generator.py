@@ -13,6 +13,7 @@ from pathlib import Path
 @dataclass
 class C4Element:
     """C4 architecture element."""
+
     id: str
     name: str
     type: str  # person, system, container, component
@@ -24,6 +25,7 @@ class C4Element:
 @dataclass
 class C4Relationship:
     """Relationship between C4 elements."""
+
     from_id: str
     to_id: str
     description: str
@@ -47,16 +49,11 @@ class EnhancedC4Generator:
         self.elements: List[C4Element] = []
         self.relationships: List[C4Relationship] = []
 
-    def generate_context_diagram(self, system_name: str,
-                                 external_systems: List[Dict[str, Any]],
-                                 users: List[Dict[str, Any]]) -> str:
+    def generate_context_diagram(
+        self, system_name: str, external_systems: List[Dict[str, Any]], users: List[Dict[str, Any]]
+    ) -> str:
         """Generate C4 Context diagram."""
-        lines = [
-            "```mermaid",
-            "C4Context",
-            f"  title System Context for {system_name}",
-            ""
-        ]
+        lines = ["```mermaid", "C4Context", f"  title System Context for {system_name}", ""]
 
         # Add users (actors)
         for user in users:
@@ -65,7 +62,7 @@ class EnhancedC4Generator:
         lines.append("")
 
         # Add main system
-        lines.append(f"  System(system, \"{system_name}\", \"Core system\")")
+        lines.append(f'  System(system, "{system_name}", "Core system")')
         lines.append("")
 
         # Add external systems
@@ -75,68 +72,68 @@ class EnhancedC4Generator:
         lines.append("")
 
         # Add relationships
-        lines.append("  BiRel(user, system, \"Uses\")")
+        lines.append('  BiRel(user, system, "Uses")')
         for ext in external_systems:
-            direction = ext.get('direction', 'to')
-            if direction == 'to':
-                lines.append(f"  Rel(system, {ext['id']}, \"{ext.get('interaction', 'Integrates with')}\")")
+            direction = ext.get("direction", "to")
+            if direction == "to":
+                lines.append(
+                    f"  Rel(system, {ext['id']}, \"{ext.get('interaction', 'Integrates with')}\")"
+                )
             else:
-                lines.append(f"  Rel({ext['id']}, system, \"{ext.get('interaction', 'Sends data to')}\")")
+                lines.append(
+                    f"  Rel({ext['id']}, system, \"{ext.get('interaction', 'Sends data to')}\")"
+                )
 
         lines.extend(["", "```"])
         return "\n".join(lines)
 
-    def generate_container_diagram(self, containers: List[Dict[str, Any]],
-                                   databases: List[Dict[str, Any]] = None) -> str:
+    def generate_container_diagram(
+        self, containers: List[Dict[str, Any]], databases: List[Dict[str, Any]] = None
+    ) -> str:
         """Generate C4 Container diagram with enhanced styling."""
         databases = databases or []
 
-        lines = [
-            "```mermaid",
-            "C4Container",
-            "  title Container Diagram",
-            ""
-        ]
+        lines = ["```mermaid", "C4Container", "  title Container Diagram", ""]
 
         # Add containers
         for container in containers:
-            tech = container.get('technology', '')
-            desc = container.get('description', '')
-            lines.append(f"  Container({container['id']}, \"{container['name']}\", \"{tech}\", \"{desc}\")")
+            tech = container.get("technology", "")
+            desc = container.get("description", "")
+            lines.append(
+                f"  Container({container['id']}, \"{container['name']}\", \"{tech}\", \"{desc}\")"
+            )
 
         lines.append("")
 
         # Add databases
         for db in databases:
-            tech = db.get('technology', 'Database')
-            desc = db.get('description', '')
+            tech = db.get("technology", "Database")
+            desc = db.get("description", "")
             lines.append(f"  ContainerDb({db['id']}, \"{db['name']}\", \"{tech}\", \"{desc}\")")
 
         lines.append("")
 
         # Add relationships
         for container in containers:
-            for rel in container.get('relationships', []):
-                protocol = f" [{rel.get('protocol', 'HTTPS')}]" if rel.get('protocol') else ""
-                lines.append(f"  Rel({container['id']}, {rel['to']}, \"{rel['description']}{protocol}\")")
+            for rel in container.get("relationships", []):
+                protocol = f" [{rel.get('protocol', 'HTTPS')}]" if rel.get("protocol") else ""
+                lines.append(
+                    f"  Rel({container['id']}, {rel['to']}, \"{rel['description']}{protocol}\")"
+                )
 
         lines.extend(["", "```"])
         return "\n".join(lines)
 
-    def generate_component_diagram(self, components: List[Dict[str, Any]],
-                                   container_name: str) -> str:
+    def generate_component_diagram(
+        self, components: List[Dict[str, Any]], container_name: str
+    ) -> str:
         """Generate C4 Component diagram."""
-        lines = [
-            "```mermaid",
-            "C4Component",
-            f"  title Component Diagram - {container_name}",
-            ""
-        ]
+        lines = ["```mermaid", "C4Component", f"  title Component Diagram - {container_name}", ""]
 
         # Group components by layer
         layers = {}
         for comp in components:
-            layer = comp.get('layer', 'application')
+            layer = comp.get("layer", "application")
             if layer not in layers:
                 layers[layer] = []
             layers[layer].append(comp)
@@ -145,14 +142,16 @@ class EnhancedC4Generator:
         for layer, comps in layers.items():
             lines.append(f"  ' {layer.upper()} LAYER")
             for comp in comps:
-                tech = comp.get('technology', '')
-                desc = comp.get('description', '')
-                lines.append(f"  Component({comp['id']}, \"{comp['name']}\", \"{tech}\", \"{desc}\")")
+                tech = comp.get("technology", "")
+                desc = comp.get("description", "")
+                lines.append(
+                    f"  Component({comp['id']}, \"{comp['name']}\", \"{tech}\", \"{desc}\")"
+                )
             lines.append("")
 
         # Add relationships
         for comp in components:
-            for rel in comp.get('relationships', []):
+            for rel in comp.get("relationships", []):
                 lines.append(f"  Rel({comp['id']}, {rel['to']}, \"{rel['description']}\")")
 
         lines.extend(["", "```"])
@@ -160,16 +159,11 @@ class EnhancedC4Generator:
 
     def generate_deployment_diagram(self, nodes: List[Dict[str, Any]]) -> str:
         """Generate deployment diagram showing infrastructure."""
-        lines = [
-            "```mermaid",
-            "graph TB",
-            "  subgraph \"Production Environment\"",
-            ""
-        ]
+        lines = ["```mermaid", "graph TB", '  subgraph "Production Environment"', ""]
 
         for node in nodes:
-            node_type = node.get('type', 'server')
-            containers = node.get('containers', [])
+            node_type = node.get("type", "server")
+            containers = node.get("containers", [])
 
             lines.append(f"    subgraph {node['id']}[\"{node['name']} ({node_type})\"]")
             for container in containers:
@@ -180,21 +174,15 @@ class EnhancedC4Generator:
         lines.extend(["  end", "```"])
         return "\n".join(lines)
 
-    def generate_sequence_diagram(self, scenario: str,
-                                  steps: List[Dict[str, Any]]) -> str:
+    def generate_sequence_diagram(self, scenario: str, steps: List[Dict[str, Any]]) -> str:
         """Generate sequence diagram for a specific scenario."""
-        lines = [
-            "```mermaid",
-            "sequenceDiagram",
-            f"  title {scenario}",
-            ""
-        ]
+        lines = ["```mermaid", "sequenceDiagram", f"  title {scenario}", ""]
 
         # Extract participants
         participants = set()
         for step in steps:
-            participants.add(step['from'])
-            participants.add(step['to'])
+            participants.add(step["from"])
+            participants.add(step["to"])
 
         for participant in sorted(participants):
             lines.append(f"  participant {participant}")
@@ -203,8 +191,8 @@ class EnhancedC4Generator:
 
         # Add steps
         for idx, step in enumerate(steps, 1):
-            arrow = "->>" if step.get('async', False) else "->"
-            note = step.get('note', '')
+            arrow = "->>" if step.get("async", False) else "->"
+            note = step.get("note", "")
 
             lines.append(f"  {step['from']}{arrow}{step['to']}: {idx}. {step['description']}")
 
@@ -224,50 +212,50 @@ class EnhancedC4Generator:
         - Services/components
         - External integrations
         """
-        analysis = {
-            "containers": [],
-            "components": [],
-            "databases": [],
-            "external_systems": []
-        }
+        analysis = {"containers": [], "components": [], "databases": [], "external_systems": []}
 
         # Scan for Python FastAPI/Flask
         api_files = list(project_root.glob("**/api/**/*.py"))
         if api_files:
-            analysis["containers"].append({
-                "id": "api",
-                "name": "API Server",
-                "technology": "Python/FastAPI",
-                "description": "REST API endpoints"
-            })
+            analysis["containers"].append(
+                {
+                    "id": "api",
+                    "name": "API Server",
+                    "technology": "Python/FastAPI",
+                    "description": "REST API endpoints",
+                }
+            )
 
         # Scan for database models
         model_files = list(project_root.glob("**/models/**/*.py"))
         if model_files:
-            analysis["databases"].append({
-                "id": "db",
-                "name": "Database",
-                "technology": "PostgreSQL",
-                "description": "Persistent storage"
-            })
+            analysis["databases"].append(
+                {
+                    "id": "db",
+                    "name": "Database",
+                    "technology": "PostgreSQL",
+                    "description": "Persistent storage",
+                }
+            )
 
         # Scan for services
         service_files = list(project_root.glob("**/services/**/*.py"))
         for service_file in service_files:
             service_name = service_file.stem
-            analysis["components"].append({
-                "id": f"svc_{service_name}",
-                "name": f"{service_name.title()} Service",
-                "technology": "Python",
-                "description": f"{service_name} business logic",
-                "layer": "application"
-            })
+            analysis["components"].append(
+                {
+                    "id": f"svc_{service_name}",
+                    "name": f"{service_name.title()} Service",
+                    "technology": "Python",
+                    "description": f"{service_name} business logic",
+                    "layer": "application",
+                }
+            )
 
         return analysis
 
 
-def generate_architecture_doc(system_name: str,
-                             project_root: Path) -> str:
+def generate_architecture_doc(system_name: str, project_root: Path) -> str:
     """
     Generate complete ARCHITECTURE.md with C4 diagrams.
 
@@ -292,21 +280,19 @@ def generate_architecture_doc(system_name: str,
         generator.generate_context_diagram(
             system_name,
             external_systems=analysis.get("external_systems", []),
-            users=[{"id": "user", "name": "User", "description": "System user"}]
+            users=[{"id": "user", "name": "User", "description": "System user"}],
         ),
         "",
         "## Container Diagram",
         "",
         generator.generate_container_diagram(
-            containers=analysis.get("containers", []),
-            databases=analysis.get("databases", [])
+            containers=analysis.get("containers", []), databases=analysis.get("databases", [])
         ),
         "",
         "## Component Diagram",
         "",
         generator.generate_component_diagram(
-            components=analysis.get("components", []),
-            container_name="Application"
+            components=analysis.get("components", []), container_name="Application"
         ),
         "",
         "## Key Architectural Decisions",
@@ -326,7 +312,7 @@ def generate_architecture_doc(system_name: str,
         "---",
         "",
         "**Generated**: Auto-generated with enhanced C4 diagrams",
-        "**Tool**: wfc-architecture with intelligent code analysis"
+        "**Tool**: wfc-architecture with intelligent code analysis",
     ]
 
     return "\n".join(lines)

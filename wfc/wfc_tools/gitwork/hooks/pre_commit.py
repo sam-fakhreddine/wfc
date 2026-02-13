@@ -6,7 +6,6 @@ Soft enforcement: Warns but NEVER blocks commits.
 
 import subprocess
 import sys
-from pathlib import Path
 from typing import Dict, Any, List, Optional
 
 
@@ -144,7 +143,7 @@ def pre_commit_hook() -> int:
     protected_branches = ["main", "master", "develop", "production"]
     if current_branch in protected_branches:
         print(f"\n⚠️  WARNING: Committing directly to '{current_branch}'")
-        print(f"   Consider: git checkout -b feat/TASK-XXX-description")
+        print("   Consider: git checkout -b feat/TASK-XXX-description")
         print()
 
         violations.append(
@@ -196,10 +195,10 @@ def pre_commit_hook() -> int:
     # Check 3: Sensitive files warning
     sensitive_files = check_sensitive_files(staged_files)
     if sensitive_files:
-        print(f"\n⚠️  WARNING: Potentially sensitive files detected:")
+        print("\n⚠️  WARNING: Potentially sensitive files detected:")
         for f in sensitive_files:
             print(f"   - {f}")
-        print(f"   Ensure these files don't contain secrets/credentials")
+        print("   Ensure these files don't contain secrets/credentials")
         print()
 
         violations.append(

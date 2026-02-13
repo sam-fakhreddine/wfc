@@ -52,21 +52,22 @@ class PlanCLI:
             self._print_results(result)
 
             # Record telemetry
-            self.telemetry.record("plan", {
-                "status": "success",
-                "output_dir": str(result.output_dir),
-                "tasks_count": len(open(result.tasks_file).read().split("## TASK-")) - 1,
-                "properties_count": len(open(result.properties_file).read().split("## PROP-")) - 1,
-            })
+            self.telemetry.record(
+                "plan",
+                {
+                    "status": "success",
+                    "output_dir": str(result.output_dir),
+                    "tasks_count": len(open(result.tasks_file).read().split("## TASK-")) - 1,
+                    "properties_count": len(open(result.properties_file).read().split("## PROP-"))
+                    - 1,
+                },
+            )
 
             return 0
 
         except Exception as e:
             self._print_error(f"Planning failed: {e}")
-            self.telemetry.record("plan", {
-                "status": "error",
-                "error": str(e)
-            })
+            self.telemetry.record("plan", {"status": "error", "error": str(e)})
             return 1
 
     def _print_header(self) -> None:

@@ -11,6 +11,7 @@ from typing import List, Dict, Any
 @dataclass
 class SkillSpec:
     """Specification for a new skill"""
+
     name: str
     description: str
     trigger: str  # /wfc-skillname
@@ -61,14 +62,14 @@ class NewSkillInterviewer:
             description=self.answers.get("description", ""),
             trigger=self.answers.get("trigger", ""),
             purpose=self.answers.get("purpose", ""),
-            inputs=self.answers.get("inputs", "").split(','),
-            outputs=self.answers.get("outputs", "").split(','),
+            inputs=self.answers.get("inputs", "").split(","),
+            outputs=self.answers.get("outputs", "").split(","),
             agents=self._parse_agents(self.answers.get("agents", "")),
-            integration=self.answers.get("integration", "").split(','),
+            integration=self.answers.get("integration", "").split(","),
             configuration=self._parse_config(self.answers.get("configuration", "")),
-            telemetry=self.answers.get("telemetry", "").split(','),
-            properties=self.answers.get("properties", "").split(','),
-            raw_answers=self.answers
+            telemetry=self.answers.get("telemetry", "").split(","),
+            properties=self.answers.get("properties", "").split(","),
+            raw_answers=self.answers,
         )
 
     def _parse_agents(self, agents_str: str) -> Dict[str, Any]:
@@ -81,4 +82,4 @@ class NewSkillInterviewer:
         """Parse configuration"""
         if not config_str:
             return {}
-        return {key.strip(): "default_value" for key in config_str.split(',')}
+        return {key.strip(): "default_value" for key in config_str.split(",")}

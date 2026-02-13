@@ -5,7 +5,6 @@ Coordinates interview → prompt generation → auto-build.
 """
 
 from pathlib import Path
-from typing import Optional
 
 from .interview import NewSkillInterviewer, SkillSpec
 from .prompt_generator import PromptGenerator

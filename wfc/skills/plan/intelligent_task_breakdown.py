@@ -11,14 +11,13 @@ Enhanced task generation with:
 """
 
 from dataclasses import dataclass, field
-from typing import List, Dict, Any, Set, Tuple
-from pathlib import Path
-import re
+from typing import List, Dict, Set
 
 
 @dataclass
 class TaskRisk:
     """Risk assessment for a task."""
+
     level: str  # low, medium, high, critical
     description: str
     mitigation: str
@@ -27,6 +26,7 @@ class TaskRisk:
 @dataclass
 class IntelligentTask:
     """Enhanced task with intelligence."""
+
     id: str
     title: str
     description: str
@@ -55,23 +55,57 @@ class IntelligentTaskBreakdown:
     # Complexity patterns (keywords that indicate complexity)
     COMPLEXITY_PATTERNS = {
         "XL": [
-            "distributed", "microservice", "architecture", "scalable",
-            "real-time", "streaming", "machine learning", "ai",
-            "blockchain", "consensus", "sharding"
+            "distributed",
+            "microservice",
+            "architecture",
+            "scalable",
+            "real-time",
+            "streaming",
+            "machine learning",
+            "ai",
+            "blockchain",
+            "consensus",
+            "sharding",
         ],
         "L": [
-            "authentication", "authorization", "payment", "integration",
-            "migration", "refactor", "optimize", "security", "encryption",
-            "caching", "queue", "async", "concurrent"
+            "authentication",
+            "authorization",
+            "payment",
+            "integration",
+            "migration",
+            "refactor",
+            "optimize",
+            "security",
+            "encryption",
+            "caching",
+            "queue",
+            "async",
+            "concurrent",
         ],
         "M": [
-            "api", "endpoint", "crud", "database", "model", "service",
-            "component", "feature", "validation", "middleware"
+            "api",
+            "endpoint",
+            "crud",
+            "database",
+            "model",
+            "service",
+            "component",
+            "feature",
+            "validation",
+            "middleware",
         ],
         "S": [
-            "fix", "update", "add", "remove", "logging", "config",
-            "documentation", "format", "lint", "test"
-        ]
+            "fix",
+            "update",
+            "add",
+            "remove",
+            "logging",
+            "config",
+            "documentation",
+            "format",
+            "lint",
+            "test",
+        ],
     }
 
     # Risk indicators
@@ -79,7 +113,7 @@ class IntelligentTaskBreakdown:
         "critical": ["security", "auth", "payment", "data loss", "privacy"],
         "high": ["migration", "breaking change", "backward incompatible", "deprecated"],
         "medium": ["performance", "scaling", "complexity", "refactor"],
-        "low": ["logging", "documentation", "formatting", "config"]
+        "low": ["logging", "documentation", "formatting", "config"],
     }
 
     # File patterns (infer files from task description)
@@ -97,8 +131,9 @@ class IntelligentTaskBreakdown:
         self.tasks: List[IntelligentTask] = []
         self.task_graph: Dict[str, Set[str]] = {}  # task_id -> dependencies
 
-    def analyze_and_break_down(self, requirements: List[str],
-                               tech_stack: List[str] = None) -> List[IntelligentTask]:
+    def analyze_and_break_down(
+        self, requirements: List[str], tech_stack: List[str] = None
+    ) -> List[IntelligentTask]:
         """
         Intelligently break down requirements into tasks.
 
@@ -168,7 +203,7 @@ class IntelligentTaskBreakdown:
             properties=properties,
             estimated_hours=hours,
             test_strategy=test_strategy,
-            suggested_approach=approach
+            suggested_approach=approach,
         )
 
     def _estimate_complexity(self, text: str) -> str:
@@ -198,9 +233,7 @@ class IntelligentTaskBreakdown:
                     idx = words.index(pattern_type)
                     if idx > 0:
                         name = words[idx - 1]
-                        files.extend([
-                            t.format(name=name) for t in file_templates
-                        ])
+                        files.extend([t.format(name=name) for t in file_templates])
 
         return files if files else ["src/"]  # Default to src/ if no specific files
 
@@ -221,31 +254,30 @@ class IntelligentTaskBreakdown:
 
         # Pattern-specific criteria
         if "api" in text_lower:
-            criteria.extend([
-                "API endpoints respond correctly",
-                "Error handling implemented",
-                "API documentation updated"
-            ])
+            criteria.extend(
+                [
+                    "API endpoints respond correctly",
+                    "Error handling implemented",
+                    "API documentation updated",
+                ]
+            )
 
         if "database" in text_lower or "model" in text_lower:
-            criteria.extend([
-                "Database schema created/updated",
-                "Migrations tested",
-                "Data validation implemented"
-            ])
+            criteria.extend(
+                [
+                    "Database schema created/updated",
+                    "Migrations tested",
+                    "Data validation implemented",
+                ]
+            )
 
         if "security" in text_lower or "auth" in text_lower:
-            criteria.extend([
-                "Security review passed",
-                "Authentication tested",
-                "Authorization rules validated"
-            ])
+            criteria.extend(
+                ["Security review passed", "Authentication tested", "Authorization rules validated"]
+            )
 
         if "test" in text_lower:
-            criteria.extend([
-                "Test coverage > 80%",
-                "Edge cases covered"
-            ])
+            criteria.extend(["Test coverage > 80%", "Edge cases covered"])
 
         return criteria
 
@@ -277,12 +309,7 @@ class IntelligentTaskBreakdown:
 
     def _estimate_hours(self, complexity: str) -> float:
         """Estimate hours based on complexity."""
-        hours_map = {
-            "S": 2.0,
-            "M": 4.0,
-            "L": 8.0,
-            "XL": 16.0
-        }
+        hours_map = {"S": 2.0, "M": 4.0, "L": 8.0, "XL": 16.0}
         return hours_map.get(complexity, 4.0)
 
     def _generate_test_strategy(self, requirement: str, complexity: str) -> str:
@@ -362,8 +389,6 @@ class IntelligentTaskBreakdown:
         for deps in self.task_graph.values():
             all_deps.update(deps)
 
-        independent_tasks = set(self.task_graph.keys()) - all_deps
-
         for task in self.tasks:
             # Mark as critical if:
             # 1. Has many dependencies
@@ -372,9 +397,7 @@ class IntelligentTaskBreakdown:
             blocking_count = sum(1 for deps in self.task_graph.values() if task.id in deps)
 
             task.critical_path = (
-                len(task.dependencies) > 2 or
-                task.complexity in ["L", "XL"] or
-                blocking_count > 2
+                len(task.dependencies) > 2 or task.complexity in ["L", "XL"] or blocking_count > 2
             )
 
             # Mark as non-parallelizable if has dependencies
@@ -391,19 +414,23 @@ class IntelligentTaskBreakdown:
             for level, patterns in self.RISK_PATTERNS.items():
                 for pattern in patterns:
                     if pattern in text_lower:
-                        risks.append(TaskRisk(
-                            level=level,
-                            description=f"{pattern.title()} implementation carries {level} risk",
-                            mitigation=self._suggest_mitigation(pattern, level)
-                        ))
+                        risks.append(
+                            TaskRisk(
+                                level=level,
+                                description=f"{pattern.title()} implementation carries {level} risk",
+                                mitigation=self._suggest_mitigation(pattern, level),
+                            )
+                        )
 
             # Complexity-based risks
             if task.complexity == "XL":
-                risks.append(TaskRisk(
-                    level="high",
-                    description="Very large task - may take longer than estimated",
-                    mitigation="Break into smaller subtasks, implement incrementally"
-                ))
+                risks.append(
+                    TaskRisk(
+                        level="high",
+                        description="Very large task - may take longer than estimated",
+                        mitigation="Break into smaller subtasks, implement incrementally",
+                    )
+                )
 
             task.risks = risks
 
@@ -415,7 +442,7 @@ class IntelligentTaskBreakdown:
             "payment": "Use payment provider + test with test cards + rollback plan",
             "migration": "Test on copy + incremental rollout + rollback script",
             "performance": "Benchmark before/after + load testing + monitoring",
-            "breaking change": "Deprecation period + migration guide + backwards compatibility layer"
+            "breaking change": "Deprecation period + migration guide + backwards compatibility layer",
         }
 
         return mitigations.get(risk_keyword, "Thorough testing + code review + monitoring")
@@ -435,14 +462,14 @@ class IntelligentTaskBreakdown:
                 acceptance_criteria=[
                     "Project structure created",
                     "Dependencies documented",
-                    "CI/CD configured"
+                    "CI/CD configured",
                 ],
                 properties=["CORRECTNESS"],
                 estimated_hours=1.0,
                 parallelizable=False,
                 critical_path=True,
                 test_strategy="Installation test + smoke tests",
-                suggested_approach="Follow language/framework best practices"
+                suggested_approach="Follow language/framework best practices",
             )
 
             # Insert at beginning
@@ -463,33 +490,37 @@ def render_intelligent_tasks(tasks: List[IntelligentTask]) -> str:
     critical_tasks = [t for t in tasks if t.critical_path]
     parallel_tasks = [t for t in tasks if t.parallelizable]
 
-    lines.extend([
-        "## Summary",
-        f"- Total tasks: {len(tasks)}",
-        f"- Estimated hours: {total_hours:.1f}h ({total_hours/8:.1f} days)",
-        f"- Critical path tasks: {len(critical_tasks)}",
-        f"- Parallelizable tasks: {len(parallel_tasks)}",
-        ""
-    ])
+    lines.extend(
+        [
+            "## Summary",
+            f"- Total tasks: {len(tasks)}",
+            f"- Estimated hours: {total_hours:.1f}h ({total_hours/8:.1f} days)",
+            f"- Critical path tasks: {len(critical_tasks)}",
+            f"- Parallelizable tasks: {len(parallel_tasks)}",
+            "",
+        ]
+    )
 
     # Tasks
     lines.append("## Tasks")
     lines.append("")
 
     for task in tasks:
-        lines.extend([
-            f"### {task.id}: {task.title}",
-            f"- **Complexity**: {task.complexity} ({task.estimated_hours}h)",
-            f"- **Dependencies**: {', '.join(task.dependencies) if task.dependencies else 'None'}",
-            f"- **Properties**: {', '.join(task.properties)}",
-            f"- **Files**: {', '.join(task.files) if task.files else 'TBD'}",
-            f"- **Critical Path**: {'Yes' if task.critical_path else 'No'}",
-            f"- **Parallelizable**: {'Yes' if task.parallelizable else 'No'}",
-            "",
-            f"**Description**: {task.description}",
-            "",
-            "**Acceptance Criteria**:",
-        ])
+        lines.extend(
+            [
+                f"### {task.id}: {task.title}",
+                f"- **Complexity**: {task.complexity} ({task.estimated_hours}h)",
+                f"- **Dependencies**: {', '.join(task.dependencies) if task.dependencies else 'None'}",
+                f"- **Properties**: {', '.join(task.properties)}",
+                f"- **Files**: {', '.join(task.files) if task.files else 'TBD'}",
+                f"- **Critical Path**: {'Yes' if task.critical_path else 'No'}",
+                f"- **Parallelizable**: {'Yes' if task.parallelizable else 'No'}",
+                "",
+                f"**Description**: {task.description}",
+                "",
+                "**Acceptance Criteria**:",
+            ]
+        )
 
         for criterion in task.acceptance_criteria:
             lines.append(f"- {criterion}")
@@ -520,7 +551,7 @@ if __name__ == "__main__":
         "Create REST API for user management (CRUD operations)",
         "Add database migrations for user schema",
         "Implement authorization middleware for protected routes",
-        "Add comprehensive test suite with >80% coverage"
+        "Add comprehensive test suite with >80% coverage",
     ]
 
     tech_stack = ["Python", "FastAPI", "PostgreSQL", "JWT"]

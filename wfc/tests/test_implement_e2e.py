@@ -26,26 +26,30 @@ def test_full_pipeline():
         # Generate mock plan
         plan_dir = project_root / "plan"
         generate_mock_plan(plan_dir)
-        print(f"✅ Mock plan generated")
+        print("✅ Mock plan generated")
 
         # Initialize git repo (required for worktrees)
         import subprocess
+
         subprocess.run(["git", "init"], cwd=project_root, capture_output=True)
-        subprocess.run(["git", "config", "user.email", "test@wfc.com"], cwd=project_root, capture_output=True)
-        subprocess.run(["git", "config", "user.name", "WFC Test"], cwd=project_root, capture_output=True)
+        subprocess.run(
+            ["git", "config", "user.email", "test@wfc.com"], cwd=project_root, capture_output=True
+        )
+        subprocess.run(
+            ["git", "config", "user.name", "WFC Test"], cwd=project_root, capture_output=True
+        )
 
         # Create initial commit (required for worktrees)
         (project_root / "README.md").write_text("# Test Project")
         subprocess.run(["git", "add", "."], cwd=project_root, capture_output=True)
-        subprocess.run(["git", "commit", "-m", "Initial commit"], cwd=project_root, capture_output=True)
-        print(f"✅ Git repo initialized")
+        subprocess.run(
+            ["git", "commit", "-m", "Initial commit"], cwd=project_root, capture_output=True
+        )
+        print("✅ Git repo initialized")
 
         # Run implementation
         try:
-            result = run_implementation(
-                tasks_file=plan_dir / "TASKS.md",
-                project_root=project_root
-            )
+            result = run_implementation(tasks_file=plan_dir / "TASKS.md", project_root=project_root)
 
             print()
             print("📊 Results:")
@@ -64,6 +68,7 @@ def test_full_pipeline():
         except Exception as e:
             print(f"❌ Error: {e}")
             import traceback
+
             traceback.print_exc()
             return False
 
