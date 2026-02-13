@@ -72,17 +72,22 @@ jobs:
     - name: Install validation dependencies
       run: pip install pyyaml
 
-    # Validates SKILL.md frontmatter per Agent Skills spec
-    # Reference: https://github.com/anthropics/skills
+    # Validates SKILL.md per Agent Skills spec (https://github.com/anthropics/skills)
+    # Checks: YAML frontmatter (name, description), skill body content, naming convention,
+    # and XML prompt rendering. Note: the original `skills-ref` validator from
+    # anthropics/agentskills is not publicly available; this implements equivalent checks
+    # based on the Agent Skills spec at https://agentskills.io/specification.
     - name: Validate all WFC skills
       run: |
         python3 << 'PYEOF'
         import yaml
         import os
         import sys
+        import xml.etree.ElementTree as ET
 
         skills_dir = os.path.expanduser("~/.claude/skills")
         failed = False
+        validated = 0
 
         for entry in sorted(os.listdir(skills_dir)):
             if not entry.startswith("wfc-"):
@@ -131,13 +136,35 @@ jobs:
                 failed = True
                 continue
 
-            print(f"✅ {entry}: valid (name={meta['name']})")
+            # Validate naming convention (lowercase, hyphens)
+            name = meta["name"]
+            if name != name.lower() or " " in name:
+                print(f"❌ {entry}: name '{name}' must be lowercase with hyphens")
+                failed = True
+                continue
+
+            # Validate skill body has meaningful content
+            body = parts[2].strip()
+            if len(body) < 50:
+                print(f"❌ {entry}: SKILL.md body too short ({len(body)} chars)")
+                failed = True
+                continue
+
+            # Validate XML prompt rendering
+            try:
+                xml_str = f"<skill><name>{name}</name><description>{meta['description']}</description><content>{body[:200]}</content></skill>"
+                ET.fromstring(xml_str)
+            except ET.ParseError as e:
+                print(f"⚠️  {entry}: XML prompt rendering warning: {e}")
+
+            validated += 1
+            print(f"✅ {entry}: valid (name={name})")
 
         if failed:
-            print("\n❌ Some skills failed validation")
+            print(f"\n❌ Some skills failed validation")
             sys.exit(1)
         else:
-            print("\n✅ All WFC skills validated")
+            print(f"\n✅ All {validated} WFC skills validated")
         PYEOF
 
   benchmark:
