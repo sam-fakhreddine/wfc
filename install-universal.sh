@@ -17,7 +17,7 @@ set -e
 #   - Progressive disclosure (92% token reduction)
 #   - Symlink support for multi-platform sync
 
-VERSION="0.6.0"
+VERSION="1.1.0"
 
 # Non-interactive mode flag
 CI_MODE=false
@@ -28,7 +28,7 @@ fi
 # Show help
 if [ "$1" = "--help" ] || [ "$1" = "-h" ]; then
     cat << 'EOF'
-WFC Universal Installer v0.6.0
+WFC Universal Installer v1.1.0
 ==============================
 
 USAGE:
