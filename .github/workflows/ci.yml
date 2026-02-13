@@ -2,217 +2,36 @@ name: CI
 
 on:
   push:
-    branches: [ main ]
+    branches: [main]
   pull_request:
-    branches: [ main ]
+    branches: [main]
 
 jobs:
-  lint:
-    name: Lint & Format Check
+  devcontainer:
+    name: DevContainer Build & Test
     runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.12'
-
-      - name: Cache dependencies
-        uses: actions/cache@v4
-        with:
-          path: ~/.cache/pip
-          key: ${{ runner.os }}-pip-${{ hashFiles('**/pyproject.toml') }}
-          restore-keys: |
-            ${{ runner.os }}-pip-
-
-      - name: Install dependencies
-        run: |
-          python -m pip install --upgrade pip
-          pip install black ruff mypy
-          pip install pytest pytest-cov
-
-      - name: Run black
-        run: black --check --diff wfc/
-
-      - name: Run ruff
-        run: ruff check wfc/
-
-      - name: Run mypy
-        run: mypy wfc/ --ignore-missing-imports || true
-
-  test:
-    name: Test Suite
-    runs-on: ${{ matrix.os }}
-    strategy:
-      matrix:
-        os: [ubuntu-latest, macos-latest]
-        python-version: ['3.12']
+    timeout-minutes: 30
 
     steps:
       - uses: actions/checkout@v4
 
-      - name: Set up Python ${{ matrix.python-version }}
-        uses: actions/setup-python@v5
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build devcontainer image
+        uses: docker/build-push-action@v6
         with:
-          python-version: ${{ matrix.python-version }}
+          context: .devcontainer
+          file: .devcontainer/Dockerfile
+          load: true
+          tags: wfc-devcontainer:ci
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
 
-      - name: Install dependencies
+      - name: Run CI checks
         run: |
-          python -m pip install --upgrade pip
-          pip install pytest pytest-cov
-          pip install -e .
-
-      - name: Install WFC skills
-        run: |
-          chmod +x install.sh
-          ./install.sh --ci
-
-      - name: Run tests
-        run: |
-          pytest tests/ -v --cov=wfc --cov-report=xml
-
-      - name: Upload coverage
-        if: matrix.python-version == '3.12' && matrix.os == 'ubuntu-latest'
-        uses: codecov/codecov-action@v4
-        with:
-          files: ./coverage.xml
-          flags: unittests
-          name: codecov-wfc
-
-  validate-personas:
-    name: Validate Persona Library
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.12'
-
-      - name: Validate JSON files
-        run: |
-          python3 << 'EOF'
-          import json
-          from pathlib import Path
-
-          panels_dir = Path('wfc/references/personas/panels')
-          errors = []
-
-          for persona_file in panels_dir.glob('*/*.json'):
-              try:
-                  with open(persona_file) as f:
-                      data = json.load(f)
-                      # Basic validation
-                      required_fields = ['id', 'name', 'panel', 'skills', 'lens', 'selection_criteria']
-                      missing = [field for field in required_fields if field not in data]
-                      if missing:
-                          errors.append(f"{persona_file}: Missing fields: {missing}")
-              except json.JSONDecodeError as e:
-                  errors.append(f"{persona_file}: Invalid JSON: {e}")
-              except Exception as e:
-                  errors.append(f"{persona_file}: Error: {e}")
-
-          if errors:
-              print("❌ Persona validation errors:")
-              for error in errors:
-                  print(f"  - {error}")
-              exit(1)
-          else:
-              persona_count = len(list(panels_dir.glob('*/*.json')))
-              print(f"✅ All {persona_count} personas validated successfully")
-          EOF
-
-      - name: Check model aliases
-        run: |
-          python3 << 'EOF'
-          import json
-          from pathlib import Path
-
-          panels_dir = Path('wfc/references/personas/panels')
-          allowed_models = ['opus', 'sonnet', 'haiku']
-          errors = []
-
-          for persona_file in panels_dir.glob('*/*.json'):
-              with open(persona_file) as f:
-                  data = json.load(f)
-                  model_pref = data.get('model_preference', {}).get('default', '')
-                  if model_pref not in allowed_models:
-                      errors.append(f"{persona_file}: Invalid model '{model_pref}' (use: {allowed_models})")
-
-          if errors:
-              print("❌ Model alias errors:")
-              for error in errors:
-                  print(f"  - {error}")
-              exit(1)
-          else:
-              print("✅ All personas use valid model aliases")
-          EOF
-
-  build:
-    name: Build Check
-    runs-on: ubuntu-latest
-    needs: [lint, test, validate-personas]
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.12'
-
-      - name: Install build tools
-        run: |
-          python -m pip install --upgrade pip
-          pip install build twine
-
-      - name: Build package
-        run: python -m build
-
-      - name: Check package
-        run: twine check dist/*
-
-      - name: Test installation
-        run: |
-          pip install dist/*.whl
-          python -c "import sys; print('✅ Package installs successfully')"
-
-  install-test:
-    name: Test Install Script
-    runs-on: ${{ matrix.os }}
-    strategy:
-      matrix:
-        os: [ubuntu-latest, macos-latest]
-
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Create mock Claude directory
-        run: mkdir -p ~/.claude/skills
-
-      - name: Test install script
-        run: |
-          chmod +x install.sh
-          ./install.sh <<< 'y'
-
-      - name: Verify installation
-        run: |
-          # Check framework installed
-          [ -d ~/.claude/skills/wfc ] || (echo "❌ Framework not installed" && exit 1)
-
-          # Check skills flattened
-          skill_count=$(ls -d ~/.claude/skills/wfc-* 2>/dev/null | wc -l)
-          if [ "$skill_count" -lt 10 ]; then
-              echo "❌ Skills not properly flattened (found $skill_count, expected ≥10)"
-              exit 1
-          fi
-
-          # Check persona library
-          persona_count=$(find ~/.claude/skills/wfc/references/personas/panels -name "*.json" 2>/dev/null | wc -l)
-          if [ "$persona_count" -lt 50 ]; then
-              echo "❌ Persona library incomplete (found $persona_count, expected ≥50)"
-              exit 1
-          fi
-
-          echo "✅ Installation verified: $skill_count skills, $persona_count personas"
+          docker run --rm \
+            --user root \
+            -v "${{ github.workspace }}:/workspace/app" \
+            wfc-devcontainer:ci \
+            bash /workspace/app/.devcontainer/scripts/ci-checks.sh
