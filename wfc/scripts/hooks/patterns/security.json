@@ -42,7 +42,7 @@
     },
     {
       "id": "subprocess-shell",
-      "pattern": "subprocess\\.(call|run|Popen)\\(.*shell\\s*=\\s*True",
+      "pattern": "subprocess\\.(call|run|Popen)\\([^)]*shell\\s*=\\s*True",
       "description": "subprocess with shell=True is vulnerable to injection",
       "action": "block",
       "event": "file",

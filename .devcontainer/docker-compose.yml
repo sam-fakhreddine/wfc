@@ -29,7 +29,8 @@ services:
       # SSH agent socket for Git operations
       - ${SSH_AUTH_SOCK:-/tmp/.ssh-auth-sock}:/tmp/.ssh-auth-sock:ro
 
-      # Docker socket for Docker-in-Docker
+      # Docker socket for container management (Docker-in-Docker: build, run, push)
+      # Security boundary is the FIREWALL, not socket permissions
       - /var/run/docker.sock:/var/run/docker.sock:rw
 
       # Persistent home directory — survives rebuilds
@@ -60,9 +61,9 @@ services:
       # Firewall configuration
       - FIREWALL_MODE=${FIREWALL_MODE:-audit}
 
-      # Claude Code with autonomous permissions
-      - CLAUDE_DANGEROUSLY_DISABLE_SANDBOX=true
-      - CLAUDE_AUTO_APPROVE_DANGEROUS_COMMANDS=true
+      # Claude Code permissions (configurable — set in .env or host environment)
+      - CLAUDE_DANGEROUSLY_DISABLE_SANDBOX=${CLAUDE_DANGEROUSLY_DISABLE_SANDBOX:-false}
+      - CLAUDE_AUTO_APPROVE_DANGEROUS_COMMANDS=${CLAUDE_AUTO_APPROVE_DANGEROUS_COMMANDS:-false}
 
       # PATH
       - PATH=/home/wfc/.npm-global/bin:/home/wfc/.local/bin:${PATH}
@@ -74,27 +75,16 @@ services:
     networks:
       - wfc-dev
 
-    # Full container capabilities for autonomous development
+    # Container capabilities — only what's actually needed
     # Security boundary is the FIREWALL, not container restrictions
     cap_add:
       - SYS_PTRACE    # Debugging (gdb, strace)
-      - NET_ADMIN     # Network configuration (firewall)
-      - NET_RAW       # Raw socket access
-      - SYS_ADMIN     # System administration
-      - SYS_CHROOT    # chroot()
-      - MKNOD         # Device node creation
-      - SYS_MODULE    # Kernel module loading
-      - SYS_RAWIO     # Raw I/O operations
-      - SYS_RESOURCE  # Resource limits
-      - SYS_TIME      # System clock
-      - AUDIT_WRITE   # Audit logging
-      - AUDIT_CONTROL # Audit control
-
-    # Security options
-    # seccomp:unconfined allows all syscalls (needed for autonomous development)
-    # Security boundary is the FIREWALL, not syscall filtering
-    security_opt:
-      - seccomp:unconfined
+      - NET_ADMIN     # Network configuration (iptables firewall)
+      - NET_RAW       # Raw socket access (network tools)
+      - SYS_ADMIN     # Docker-in-Docker, mount operations
+      - SYS_RESOURCE  # Resource limits (ulimit)
+      - AUDIT_WRITE   # Firewall audit logging
+      - AUDIT_CONTROL # Firewall audit control
 
     # Keep container running
     tty: true
