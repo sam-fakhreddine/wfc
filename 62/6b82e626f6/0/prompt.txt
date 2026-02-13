@@ -1,0 +1,65 @@
+Implement the following plan:
+
+# Set Up python-semantic-release (autosemver)
+
+## Context
+
+CLAUDE.md says "Use autosemver for automatic semantic versioning" but it's not implemented. The repo has a `v1.1.0` tag, but `pyproject.toml` still says `version = "0.1.0"`. Two manual release workflows exist (`release.yml`, `publish.yml`) that require manually tagging + keeping pyproject.toml in sync. We'll replace this with automated versioning driven by conventional commits.
+
+## What Changes
+
+### 1. `pyproject.toml` — configure semantic-release + fix version
+
+- Update `version = "0.1.0"` → `version = "1.1.0"` (match existing tag)
+- Add `python-semantic-release` to `[project.optional-dependencies] dev`
+- Add `[tool.semantic_release]` config:
+  - `version_toml = ["pyproject.toml:project.version"]`
+  - `branch = "main"`
+  - `tag_format = "v{version}"`
+  - `commit_message = "chore(release): v{version}"`
+  - Changelog generation enabled
+
+### 2. `.github/workflows/release.yml` — rewrite as automated
+
+Replace the manual tag-triggered workflow with:
+- Trigger: push to `main`
+- Step 1: `semantic-release version` (analyzes commits, bumps version, creates tag)
+- Step 2: `semantic-release publish` (creates GitHub release with changelog)
+- PyPI publish gated behind `secrets.PYPI_API_TOKEN` existence
+- Permissions: `contents: write`, `id-token: write`
+
+### 3. `.github/workflows/publish.yml` — delete
+
+Superseded by the automated release.yml.
+
+### 4. `install.sh` line 20 — update VERSION
+
+`VERSION="0.6.0"` → `VERSION="1.1.0"`
+
+## Files to Modify
+
+1. **`pyproject.toml`** — version + semantic-release config
+2. **`.github/workflows/release.yml`** — automated release workflow
+3. **`.github/workflows/publish.yml`** — delete
+4. **`install.sh`** — sync VERSION constant
+
+## Verification
+
+```bash
+# Verify config
+uv pip install python-semantic-release
+semantic-release version --print
+# Should show 1.1.0 (current), no bump needed yet
+
+# After merge to main:
+# feat: commit → 1.2.0
+# fix: commit → 1.1.1
+# BREAKING CHANGE → 2.0.0
+```
+
+
+If you need specific details from before exiting plan mode (like exact code snippets, error messages, or content you generated), read the full transcript at: /Users/samfakhreddine/.claude/projects/-Users-samfakhreddine-repos-wfc/afc3e390-9d2b-4fac-a3bc-efd1e90c1a23.jsonl
+
+---
+
+make a detail;ed git commit, i  am going to continue this somewhere else

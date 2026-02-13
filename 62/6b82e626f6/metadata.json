@@ -1,0 +1,30 @@
+{
+  "cli_version": "0.4.2",
+  "checkpoint_id": "626b82e626f6",
+  "strategy": "manual-commit",
+  "branch": "feat/devcontainer",
+  "checkpoints_count": 1,
+  "files_touched": [
+    ".github/workflows/publish.yml",
+    ".github/workflows/release.yml",
+    "install-universal.sh",
+    "install.sh",
+    "pyproject.toml"
+  ],
+  "sessions": [
+    {
+      "metadata": "/62/6b82e626f6/0/metadata.json",
+      "transcript": "/62/6b82e626f6/0/full.jsonl",
+      "context": "/62/6b82e626f6/0/context.md",
+      "content_hash": "/62/6b82e626f6/0/content_hash.txt",
+      "prompt": "/62/6b82e626f6/0/prompt.txt"
+    }
+  ],
+  "token_usage": {
+    "input_tokens": 21,
+    "cache_creation_tokens": 42305,
+    "cache_read_tokens": 889280,
+    "output_tokens": 275,
+    "api_call_count": 18
+  }
+}

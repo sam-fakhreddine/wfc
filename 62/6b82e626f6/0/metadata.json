@@ -1,0 +1,33 @@
+{
+  "cli_version": "0.4.2",
+  "checkpoint_id": "626b82e626f6",
+  "session_id": "a61d1785-996c-4a7b-938e-51e35ac07ead",
+  "strategy": "manual-commit",
+  "created_at": "2026-02-13T23:42:29.333448Z",
+  "branch": "feat/devcontainer",
+  "checkpoints_count": 1,
+  "files_touched": [
+    ".github/workflows/publish.yml",
+    ".github/workflows/release.yml",
+    "install-universal.sh",
+    "install.sh",
+    "pyproject.toml"
+  ],
+  "agent": "Claude Code",
+  "token_usage": {
+    "input_tokens": 21,
+    "cache_creation_tokens": 42305,
+    "cache_read_tokens": 889280,
+    "output_tokens": 275,
+    "api_call_count": 18
+  },
+  "initial_attribution": {
+    "calculated_at": "2026-02-13T23:42:29.315379Z",
+    "agent_lines": 51,
+    "human_added": 0,
+    "human_modified": 0,
+    "human_removed": 0,
+    "total_committed": 51,
+    "agent_percentage": 100
+  }
+}
