@@ -158,8 +158,8 @@ python3 scripts/docs/generate_doc_registry.py
 This will:
 1. Scan `docs/` directory
 2. Extract titles, summaries, topics
-3. Generate `docs/REGISTRY.json` (machine-readable)
-4. Generate `docs/REGISTRY.md` (human-readable)
+3. Generate `docs/reference/REGISTRY.json` (machine-readable)
+4. Generate `docs/reference/REGISTRY.md` (human-readable)
 
 ## Example: Skill Integration
 
@@ -207,8 +207,8 @@ Loaded docs cached in memory for session.
 ```python
 # Load all docs (62K tokens)
 quickstart = Path('docs/QUICKSTART.md').read_text()
-install = Path('docs/UNIVERSAL_INSTALL.md').read_text()
-architecture = Path('docs/ARCHITECTURE.md').read_text()
+install = Path('docs/workflow/UNIVERSAL_INSTALL.md').read_text()
+architecture = Path('docs/architecture/ARCHITECTURE.md').read_text()
 # ... 19 more files
 
 # ❌ 62,432 tokens loaded

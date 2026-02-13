@@ -316,18 +316,18 @@ Should show 9 panels with JSON files.
 
 WFC mitigates 9/9 applicable risks from the OWASP Top 10 for LLM Applications 2025 through real-time hooks, multi-agent consensus, token budgets, and supply chain controls.
 
-See [docs/OWASP_LLM_TOP10_MITIGATIONS.md](docs/OWASP_LLM_TOP10_MITIGATIONS.md) for the full analysis.
+See [docs/security/OWASP_LLM_TOP10_MITIGATIONS.md](docs/security/OWASP_LLM_TOP10_MITIGATIONS.md) for the full analysis.
 
 ## Next Steps
 
-- **Explore personas**: See [PERSONAS.md](docs/PERSONAS.md) for complete library
+- **Explore personas**: See [PERSONAS.md](docs/quality/PERSONAS.md) for complete library
 - **Customize**: Add your own personas to `~/.claude/skills/wfc/personas/custom/`
 - **Integrate**: Add `CLAUDE.md` to your projects for automatic WFC usage
 - **Extend**: Use `/wfc-newskill` to create custom workflows
 
 ## Get Help
 
-- **Documentation**: [README.md](README.md), [ARCHITECTURE.md](docs/ARCHITECTURE.md)
+- **Documentation**: [README.md](README.md), [ARCHITECTURE.md](docs/architecture/ARCHITECTURE.md)
 - **Issues**: GitHub Issues
 - **Examples**: [docs/examples/](docs/examples/)
 

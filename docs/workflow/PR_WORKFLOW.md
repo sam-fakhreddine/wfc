@@ -175,7 +175,7 @@ DEFAULTS = {
 ### Phase 5: Documentation Updates ✅
 
 **Modified Files**:
-- `docs/GIT_SAFETY_POLICY.md` - Complete rewrite (521 lines)
+- `docs/security/GIT_SAFETY_POLICY.md` - Complete rewrite (521 lines)
 - `CLAUDE.md` - Updated workflow sections
 
 **New Documentation Includes**:
@@ -376,7 +376,7 @@ wfc implement plan/TASKS.md
 | `wfc/skills/implement/merge_engine.py` | +150 | PR workflow integration |
 | `wfc/skills/implement/executor.py` | +40 | Routing logic |
 | `wfc/shared/config/wfc_config.py` | +35 | Config defaults |
-| `docs/GIT_SAFETY_POLICY.md` | ~500 | Complete rewrite |
+| `docs/security/GIT_SAFETY_POLICY.md` | ~500 | Complete rewrite |
 | `CLAUDE.md` | +30 | Workflow updates |
 
 **Total**: ~1,200 lines of new/modified code + comprehensive documentation

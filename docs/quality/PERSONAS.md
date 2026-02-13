@@ -154,7 +154,7 @@ Each persona has:
 
 ## Adding Custom Personas
 
-See [CONTRIBUTING.md](CONTRIBUTING.md) for how to add your own personas to extend the library.
+See [CONTRIBUTING.md](../../CONTRIBUTING.md) for how to add your own personas to extend the library.
 
 ---
 

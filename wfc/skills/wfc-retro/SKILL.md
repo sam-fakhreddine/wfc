@@ -43,7 +43,7 @@ Analyzes WFC telemetry to identify improvements and optimize workflows.
 
 ## Outputs
 
-- RETRO-REPORT.md
+- .development/summaries/RETRO-REPORT.md
 - Trend charts (Mermaid)
 - Top bottlenecks
 - Prioritized recommendations

@@ -160,7 +160,7 @@ jobs:
 
           ## Documentation
 
-          - [Complete Guide](https://github.com/${{ github.repository }}/blob/v${{ steps.version.outputs.version }}/docs/WFC_IMPLEMENTATION.md)
+          - [Complete Guide](https://github.com/${{ github.repository }}/blob/v${{ steps.version.outputs.version }}/docs/workflow/WFC_IMPLEMENTATION.md)
           - [Quick Start](https://github.com/${{ github.repository }}/blob/v${{ steps.version.outputs.version }}/QUICKSTART.md)
 
           **This is World Fucking Class.** 🚀

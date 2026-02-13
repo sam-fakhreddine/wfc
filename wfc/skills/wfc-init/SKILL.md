@@ -95,7 +95,7 @@ Found languages:
      ✅ Keeping enabled (recommended)
 
      Installation guide: https://entire.io/install
-     Learn more: docs/ENTIRE_IO.md
+     Learn more: https://entire.io/docs
 
 Proceed with setup? (y/n): y
 
@@ -300,7 +300,7 @@ Disable session capture? (y/n): n
 ✅ Keeping enabled (recommended)
 ✅ Privacy settings configured in wfc.config.json
 
-Learn more: docs/ENTIRE_IO.md
+Learn more: https://entire.io/docs
 ```
 
 ### If Entire CLI Not Installed
@@ -383,7 +383,7 @@ Use template for config files:
 
 ## See Also
 
-- `docs/QUALITY_GATE.md` - Quality gate documentation
+- `docs/quality/QUALITY_GATE.md` - Quality gate documentation
 - `wfc/scripts/language_detector.py` - Language detection logic
 - `wfc/scripts/quality_checker.py` - Multi-language quality checker
 

@@ -243,7 +243,7 @@ criteria = generate_acceptance_criteria_ears(
 
 - [EARS Official Guide](https://alistairmavin.com/ears/) - Alistair Mavin (creator)
 - [NASA Systems Engineering Handbook](https://www.nasa.gov/seh/) - Requirements best practices
-- [WFC Planning Documentation](PLANNING.md) - How WFC uses EARS
+- [WFC Planning Documentation](../architecture/PLANNING.md) - How WFC uses EARS
 
 ---
 

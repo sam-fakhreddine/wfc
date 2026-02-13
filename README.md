@@ -203,7 +203,7 @@ SFW  [Safe For Work] → Workflow Champion      [Professional]
 NSFW [Default]       → World Fucking Class    [No Bullshit]
 ```
 
-[Branding Documentation](docs/BRANDING.md)
+Branding is configured during installation.
 
 ---
 
@@ -267,7 +267,7 @@ Five templates for unambiguous, testable requirements:
 | OPTIONAL     | `WHERE <feature>, system shall <action>`      | Conditional capability|
 | UNWANTED     | `IF <condition>, THEN system shall <action>`  | Constraint/prevention |
 
-[EARS Documentation](docs/EARS.md)
+[EARS Documentation](docs/reference/EARS.md)
 
 ### 4.3 Performance Metrics
 
@@ -296,7 +296,7 @@ WFC mitigates **9/9 applicable risks** from the [OWASP Top 10 for LLM Applicatio
 | Misinformation | Multi-agent consensus (4-5 reviewers) + divergence detection |
 | Unbounded Consumption | 150K token hard budget + adaptive condensing + model tiers |
 
-Full analysis: [docs/OWASP_LLM_TOP10_MITIGATIONS.md](docs/OWASP_LLM_TOP10_MITIGATIONS.md)
+Full analysis: [docs/security/OWASP_LLM_TOP10_MITIGATIONS.md](docs/security/OWASP_LLM_TOP10_MITIGATIONS.md)
 
 ### 4.5 SEE SOMETHING SAY SOMETHING
 
@@ -401,7 +401,7 @@ MULTIPLE PLATFORMS: Symlink from ~/.wfc/ [RECOMMENDED]
 CUSTOM SELECTION:   Choose specific platforms
 ```
 
-[Installation Details](docs/UNIVERSAL_INSTALL.md)
+[Installation Details](docs/workflow/UNIVERSAL_INSTALL.md)
 
 ---
 
@@ -409,22 +409,20 @@ CUSTOM SELECTION:   Choose specific platforms
 
 ### GETTING STARTED
 - [Quick Start Guide](QUICKSTART.md)
-- [Universal Installation](docs/UNIVERSAL_INSTALL.md)
+- [Universal Installation](docs/workflow/UNIVERSAL_INSTALL.md)
 - [Examples](docs/examples/)
 
 ### CORE CONCEPTS
-- [Architecture](docs/ARCHITECTURE.md)
-- [Persona Library](docs/PERSONAS.md)
-- [EARS Requirements](docs/EARS.md)
-- [Branding Modes](docs/BRANDING.md)
+- [Architecture](docs/architecture/ARCHITECTURE.md)
+- [Persona Library](docs/quality/PERSONAS.md)
+- [EARS Requirements](docs/reference/EARS.md)
 
 ### CONFIGURATION
 - [WFC Configuration](wfc/shared/config/wfc_config.py)
 - [Quality Tools](wfc/skills/implement/quality_checker.py)
 
 ### CONTRIBUTING
-- [Contributing Guide](docs/CONTRIBUTING.md)
-- [Creating Skills](docs/CREATING_SKILLS.md)
+- [Contributing Guide](CONTRIBUTING.md)
 
 ---
 

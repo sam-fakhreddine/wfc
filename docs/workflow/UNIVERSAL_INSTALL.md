@@ -464,7 +464,7 @@ ln -s ~/.wfc/skills/wfc-review ~/.kiro/skills/wfc-review
 
 ## Contributing
 
-See [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines on adding skills and personas that work across platforms.
+See [CONTRIBUTING.md](../../CONTRIBUTING.md) for guidelines on adding skills and personas that work across platforms.
 
 ---
 

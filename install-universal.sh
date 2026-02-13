@@ -74,8 +74,7 @@ BRANDING MODES:
          Original branding, no bullshit
 
 DOCUMENTATION:
-    Installation:  docs/UNIVERSAL_INSTALL.md
-    Branding:      docs/BRANDING.md
+    Installation:  docs/workflow/UNIVERSAL_INSTALL.md
     Quick Start:   QUICKSTART.md
 
 EOF
@@ -878,8 +877,8 @@ done
 echo -e "${BOLD}📚 Documentation${RESET}"
 echo ""
 echo -e "  • README:    ${CYAN}https://github.com/sam-fakhreddine/wfc${RESET}"
-echo -e "  • Install:   ${CYAN}$SCRIPT_DIR/docs/UNIVERSAL_INSTALL.md${RESET}"
-echo -e "  • Personas:  ${CYAN}$SCRIPT_DIR/docs/PERSONAS.md${RESET}"
+echo -e "  • Install:   ${CYAN}$SCRIPT_DIR/docs/workflow/UNIVERSAL_INSTALL.md${RESET}"
+echo -e "  • Personas:  ${CYAN}$SCRIPT_DIR/docs/quality/PERSONAS.md${RESET}"
 
 echo ""
 if [ "$WFC_MODE" = "sfw" ]; then

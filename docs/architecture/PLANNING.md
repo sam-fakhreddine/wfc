@@ -87,9 +87,11 @@ WFC Architecture v0.1.0
 │       └── plan/test_plan_generator.py
 │
 ├── Documentation (docs/)
-│   ├── AGENT_SKILLS_COMPLIANCE.md  # Compliance guide
-│   ├── WFC_MAX.md                  # WFC^MAX features
-│   ├── SUPERCLAUDE_LEARNINGS.md    # Learnings from SuperClaude
+│   ├── architecture/               # System design, planning
+│   ├── security/                   # OWASP, hooks, git safety
+│   ├── workflow/                   # Install, PR, build, implementation
+│   ├── quality/                    # Quality gates, personas
+│   ├── reference/                  # Compliance, registries
 │   └── examples/
 │
 └── Tooling
@@ -664,9 +666,7 @@ for level in levels:
 - **CLAUDE.md** - Session guidance for Claude Code
 - **QUICKSTART.md** - Get started in 5 minutes
 - **CONTRIBUTING.md** - How to contribute
-- **docs/AGENT_SKILLS_COMPLIANCE.md** - Compliance details
-- **docs/WFC_MAX.md** - WFC^MAX achievement
-- **docs/SUPERCLAUDE_LEARNINGS.md** - Learnings from SuperClaude
+- **docs/reference/AGENT_SKILLS_COMPLIANCE.md** - Compliance details
 
 ### Code
 

@@ -240,11 +240,13 @@ WFC - World Fucking Class
 │   ├── wfc-playground/           # Interactive HTML playground generator
 │   └── ... (17 total)
 │
-├── docs/                         # Documentation
-│   ├── AGENT_SKILLS_COMPLIANCE.md
-│   ├── WFC_MAX.md
-│   ├── SUPERCLAUDE_LEARNINGS.md
-│   └── examples/
+├── docs/                         # Documentation (organized by topic)
+│   ├── architecture/             # System design, planning
+│   ├── security/                 # OWASP, hooks, git safety
+│   ├── workflow/                 # Install, PR workflow, build, implementation
+│   ├── quality/                  # Quality gates, personas
+│   ├── reference/                # Compliance, registries, EARS
+│   └── examples/                 # Working demos
 │
 ├── tests/                        # Test suite
 ├── scripts/                      # Utility scripts
@@ -333,7 +335,7 @@ wfc implement --dry-run
 - ✅ **PROJECT_INDEX.json** (machine-readable structure)
 - ✅ **make doctor** (comprehensive health checks)
 - ✅ **Integration Tests** (>80% coverage, 22 tests)
-- ✅ **Complete Documentation** (docs/WFC_IMPLEMENTATION.md)
+- ✅ **Complete Documentation** (docs/workflow/WFC_IMPLEMENTATION.md)
 
 ### Architecture
 
@@ -358,7 +360,7 @@ Orchestrator → N Agents (parallel) → Quality Gate → Review → Merge → I
 - `wfc/scripts/memory_manager.py` - Cross-session learning
 - `wfc/scripts/token_manager.py` - Budget optimization
 - `wfc/scripts/universal_quality_checker.py` - Trunk.io integration
-- `docs/WFC_IMPLEMENTATION.md` - Complete guide
+- `docs/workflow/WFC_IMPLEMENTATION.md` - Complete guide
 
 ### Testing
 
@@ -551,15 +553,18 @@ All 17 WFC skills are Agent Skills compliant:
 
 ## 📚 Documentation
 
+Documentation is organized by topic in `docs/` (see `docs/README.md` for full index):
+
 - **QUICKSTART.md** - Get started in 5 minutes
-- **PLANNING.md** - Architecture & absolute rules
+- **docs/architecture/** - System design, planning, progressive disclosure
+- **docs/security/** - OWASP LLM Top 10, git safety, hooks & telemetry
 - **CONTRIBUTING.md** - How to contribute
-- **docs/AGENT_SKILLS_COMPLIANCE.md** - Compliance details
-- **docs/WFC_MAX.md** - WFC^MAX achievement
-- **docs/SUPERCLAUDE_LEARNINGS.md** - Learnings from SuperClaude
+- **docs/workflow/** - PR workflow, install, build, implementation
+- **docs/quality/** - Quality gates, personas (56 experts)
+- **docs/reference/** - Agent Skills compliance, registries, EARS, Claude integration
+- **docs/examples/** - Working demos and examples
 - **wfc/references/TOKEN_MANAGEMENT.md** - Token optimization
 - **wfc/references/ULTRA_MINIMAL_RESULTS.md** - Performance data
-- **docs/OWASP_LLM_TOP10_MITIGATIONS.md** - OWASP LLM Top 10 coverage analysis
 
 ---
 

@@ -318,7 +318,7 @@ WFC workflow:
 - ✅ Easy to revert before push
 - ✅ User decides: push, PR, or revert
 
-See [GIT_SAFETY_POLICY.md](../../../docs/GIT_SAFETY_POLICY.md) for complete policy.
+See [GIT_SAFETY_POLICY.md](../../../docs/security/GIT_SAFETY_POLICY.md) for complete policy.
 
 ---
 

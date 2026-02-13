@@ -282,8 +282,10 @@ def main():
         return 1
 
     # Generate registries
-    generate_registry_json(docs, docs_dir / 'REGISTRY.json')
-    generate_registry_markdown(docs, docs_dir / 'REGISTRY.md')
+    reference_dir = docs_dir / 'reference'
+    reference_dir.mkdir(parents=True, exist_ok=True)
+    generate_registry_json(docs, reference_dir / 'REGISTRY.json')
+    generate_registry_markdown(docs, reference_dir / 'REGISTRY.md')
 
     print("\n✅ Documentation registry generated successfully!")
     print(f"\nUsage:")

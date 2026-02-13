@@ -18,7 +18,7 @@
 ### Level 2: Essential Guides (15-30 minutes)
 **Goal**: Understand core features
 
-- docs/WFC_IMPLEMENTATION.md (complete guide)
+- docs/workflow/WFC_IMPLEMENTATION.md (complete guide)
 - CLAUDE.md (development workflow)
 - PLANNING.md (architecture + patterns)
 
@@ -29,9 +29,8 @@
 ### Level 3: Deep Dives (1-2 hours)
 **Goal**: Master specific features
 
-- docs/SUPERCLAUDE_LEARNINGS.md (advanced patterns)
-- docs/AGENT_SKILLS_COMPLIANCE.md (spec details)
-- docs/QUALITY_SYSTEM.md (quality gates)
+- docs/reference/AGENT_SKILLS_COMPLIANCE.md (spec details)
+- docs/quality/QUALITY_SYSTEM.md (quality gates)
 
 **When**: Advanced users, custom workflows
 
@@ -62,7 +61,7 @@
 
 Multi-agent parallel implementation engine.
 
-[Quick Start](#quick-start) | [Features](#features) | **[Complete Guide](../../docs/WFC_IMPLEMENTATION.md)**
+[Quick Start](#quick-start) | [Features](#features) | **[Complete Guide](../../docs/workflow/WFC_IMPLEMENTATION.md)**
 
 ## Quick Start
 ...basic usage...
@@ -71,7 +70,7 @@ Multi-agent parallel implementation engine.
 ...feature list...
 
 ## Learn More
-- [Complete Guide](../../docs/WFC_IMPLEMENTATION.md) - Full documentation
+- [Complete Guide](../../docs/workflow/WFC_IMPLEMENTATION.md) - Full documentation
 - [Implementation Patterns](../../PLANNING.md#implementation-patterns) - Code patterns
 ```
 
@@ -99,11 +98,12 @@ Multi-agent parallel implementation engine.
 ├── CLAUDE.md
 ├── PLANNING.md
 ├── docs/
-│   ├── ARCHITECTURE.md
-│   ├── WFC_IMPLEMENTATION.md
-│   ├── SUPERCLAUDE_LEARNINGS.md
-│   ├── AGENT_SKILLS_COMPLIANCE.md
-│   └── ... (14 more files)
+│   ├── architecture/     # System design
+│   ├── security/         # OWASP, hooks
+│   ├── workflow/         # Install, build, implementation
+│   ├── quality/          # Quality gates, personas
+│   ├── reference/        # Compliance, registries
+│   └── examples/
 ```
 
 ### Proposed Structure (Progressive)
