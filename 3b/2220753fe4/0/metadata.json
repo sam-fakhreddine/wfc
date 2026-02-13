@@ -1,0 +1,30 @@
+{
+  "cli_version": "0.4.2",
+  "checkpoint_id": "3b2220753fe4",
+  "session_id": "598ec4c8-14ad-483f-8274-3bef57a24d46",
+  "strategy": "manual-commit",
+  "created_at": "2026-02-13T18:03:10.753711Z",
+  "branch": "feat/plugin-integration-7-features",
+  "checkpoints_count": 1,
+  "files_touched": [
+    ".claude/settings.local.json"
+  ],
+  "agent": "Claude Code",
+  "transcript_identifier_at_start": "9aa1c0db-3242-4078-8aae-69659915ca28",
+  "token_usage": {
+    "input_tokens": 32,
+    "cache_creation_tokens": 137762,
+    "cache_read_tokens": 1647421,
+    "output_tokens": 606,
+    "api_call_count": 24
+  },
+  "initial_attribution": {
+    "calculated_at": "2026-02-13T18:03:10.685772Z",
+    "agent_lines": 0,
+    "human_added": 4073,
+    "human_modified": 0,
+    "human_removed": 0,
+    "total_committed": 4073,
+    "agent_percentage": 0
+  }
+}
