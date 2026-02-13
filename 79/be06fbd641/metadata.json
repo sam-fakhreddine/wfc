@@ -1,0 +1,28 @@
+{
+  "cli_version": "0.4.2",
+  "checkpoint_id": "79be06fbd641",
+  "strategy": "manual-commit",
+  "branch": "main",
+  "checkpoints_count": 1,
+  "files_touched": [
+    "wfc/skills/plan/SKILL.md",
+    "wfc/skills/plan/orchestrator.py",
+    "wfc/skills/plan/plan_history.py"
+  ],
+  "sessions": [
+    {
+      "metadata": "/79/be06fbd641/0/metadata.json",
+      "transcript": "/79/be06fbd641/0/full.jsonl",
+      "context": "/79/be06fbd641/0/context.md",
+      "content_hash": "/79/be06fbd641/0/content_hash.txt",
+      "prompt": "/79/be06fbd641/0/prompt.txt"
+    }
+  ],
+  "token_usage": {
+    "input_tokens": 122,
+    "cache_creation_tokens": 14711,
+    "cache_read_tokens": 2249811,
+    "output_tokens": 41,
+    "api_call_count": 15
+  }
+}

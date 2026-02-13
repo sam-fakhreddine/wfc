@@ -1,0 +1,34 @@
+{
+  "cli_version": "0.4.2",
+  "checkpoint_id": "c7f165742261",
+  "session_id": "6d5a8a79-7e82-412f-9d18-7751ea72dcc0",
+  "strategy": "manual-commit",
+  "created_at": "2026-02-12T02:12:49.62746Z",
+  "branch": "main",
+  "checkpoints_count": 1,
+  "files_touched": [
+    "QUICKSTART.md",
+    "docs/examples/orchestrator_delegation_demo.md",
+    "wfc/skills/implement/executor.py"
+  ],
+  "agent": "Claude Code",
+  "transcript_identifier_at_start": "643b692e-4cd9-4940-bd00-ca3209a8c8ff",
+  "checkpoint_transcript_start": 3791,
+  "transcript_lines_at_start": 3791,
+  "token_usage": {
+    "input_tokens": 188,
+    "cache_creation_tokens": 66448,
+    "cache_read_tokens": 2438481,
+    "output_tokens": 753,
+    "api_call_count": 23
+  },
+  "initial_attribution": {
+    "calculated_at": "2026-02-12T02:12:48.927142Z",
+    "agent_lines": 486,
+    "human_added": 112,
+    "human_modified": 0,
+    "human_removed": 0,
+    "total_committed": 598,
+    "agent_percentage": 81.27090301003345
+  }
+}

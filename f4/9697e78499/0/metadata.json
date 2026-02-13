@@ -1,0 +1,34 @@
+{
+  "cli_version": "0.4.2",
+  "checkpoint_id": "f49697e78499",
+  "session_id": "6d5a8a79-7e82-412f-9d18-7751ea72dcc0",
+  "strategy": "manual-commit",
+  "created_at": "2026-02-12T02:38:18.312751Z",
+  "branch": "main",
+  "checkpoints_count": 1,
+  "files_touched": [
+    "docs/GIT_SAFETY_POLICY.md",
+    "wfc/skills/build/SKILL.md",
+    "wfc/skills/implement/SKILL.md"
+  ],
+  "agent": "Claude Code",
+  "transcript_identifier_at_start": "d195337e-6825-41d4-84f0-70d94ffeafe2",
+  "checkpoint_transcript_start": 4027,
+  "transcript_lines_at_start": 4027,
+  "token_usage": {
+    "input_tokens": 124,
+    "cache_creation_tokens": 18587,
+    "cache_read_tokens": 1772670,
+    "output_tokens": 526,
+    "api_call_count": 15
+  },
+  "initial_attribution": {
+    "calculated_at": "2026-02-12T02:38:17.5874Z",
+    "agent_lines": 288,
+    "human_added": 210,
+    "human_modified": 0,
+    "human_removed": 0,
+    "total_committed": 498,
+    "agent_percentage": 57.831325301204814
+  }
+}

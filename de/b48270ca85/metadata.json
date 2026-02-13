@@ -1,0 +1,45 @@
+{
+  "cli_version": "0.4.2",
+  "checkpoint_id": "deb48270ca85",
+  "strategy": "manual-commit",
+  "branch": "main",
+  "checkpoints_count": 1,
+  "files_touched": [
+    "README.md",
+    "tests/test_vibe_summarizer.py",
+    "tests/test_vibe_transitions.py",
+    "wfc/scripts/skills/vibe/summarizer.py",
+    "wfc/scripts/skills/vibe/transitions.py",
+    "wfc/shared/config/wfc_config.py",
+    "wfc/wfc-tools/gitwork/README.md",
+    "wfc/wfc-tools/gitwork/TOOL.md",
+    "wfc/wfc-tools/gitwork/__init__.py",
+    "wfc/wfc-tools/gitwork/api/__init__.py",
+    "wfc/wfc-tools/gitwork/api/branch.py",
+    "wfc/wfc-tools/gitwork/api/commit.py",
+    "wfc/wfc-tools/gitwork/api/history.py",
+    "wfc/wfc-tools/gitwork/api/hooks.py",
+    "wfc/wfc-tools/gitwork/api/merge.py",
+    "wfc/wfc-tools/gitwork/api/rollback.py",
+    "wfc/wfc-tools/gitwork/api/semver.py",
+    "wfc/wfc-tools/gitwork/api/worktree.py",
+    "wfc/wfc-tools/gitwork/config.py",
+    "wfc/wfc-tools/gitwork/router.py"
+  ],
+  "sessions": [
+    {
+      "metadata": "/de/b48270ca85/0/metadata.json",
+      "transcript": "/de/b48270ca85/0/full.jsonl",
+      "context": "/de/b48270ca85/0/context.md",
+      "content_hash": "/de/b48270ca85/0/content_hash.txt",
+      "prompt": "/de/b48270ca85/0/prompt.txt"
+    }
+  ],
+  "token_usage": {
+    "input_tokens": 107,
+    "cache_creation_tokens": 19884,
+    "cache_read_tokens": 2179348,
+    "output_tokens": 3406,
+    "api_call_count": 15
+  }
+}

@@ -1,0 +1,36 @@
+{
+  "cli_version": "0.4.2",
+  "checkpoint_id": "528a890e2ef1",
+  "strategy": "manual-commit",
+  "branch": "main",
+  "checkpoints_count": 4,
+  "files_touched": [
+    "ISTHISSMART.md",
+    "plan/PROPERTIES.md",
+    "plan/TASKS.md",
+    "plan/TEST-PLAN.md",
+    "validation/VALIDATION-REPORT.md",
+    "validation/collect_metrics.py",
+    "validation/metrics.json",
+    "wfc/shared/extended_thinking.py",
+    "wfc/skills/implement/DEBUGGING.md",
+    "wfc/skills/implement/agent.py",
+    "wfc/skills/implement/executor.py"
+  ],
+  "sessions": [
+    {
+      "metadata": "/52/8a890e2ef1/0/metadata.json",
+      "transcript": "/52/8a890e2ef1/0/full.jsonl",
+      "context": "/52/8a890e2ef1/0/context.md",
+      "content_hash": "/52/8a890e2ef1/0/content_hash.txt",
+      "prompt": "/52/8a890e2ef1/0/prompt.txt"
+    }
+  ],
+  "token_usage": {
+    "input_tokens": 992,
+    "cache_creation_tokens": 128666,
+    "cache_read_tokens": 4706800,
+    "output_tokens": 2427,
+    "api_call_count": 45
+  }
+}

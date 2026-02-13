@@ -1,0 +1,51 @@
+{
+  "cli_version": "0.4.2",
+  "checkpoint_id": "99264b93b29f",
+  "session_id": "a42eecef-aa74-47d3-b8a9-739da191e235",
+  "strategy": "manual-commit",
+  "created_at": "2026-02-12T23:09:50.905961Z",
+  "branch": "main",
+  "checkpoints_count": 5,
+  "files_touched": [
+    "README.md",
+    "plan/PROPERTIES.md",
+    "plan/TASKS.md",
+    "plan/TEST-PLAN.md",
+    "tests/test_build_complexity.py",
+    "wfc/scripts/skills/build/complexity_assessor.py",
+    "wfc/wfc-tools/gitwork/README.md",
+    "wfc/wfc-tools/gitwork/TOOL.md",
+    "wfc/wfc-tools/gitwork/__init__.py",
+    "wfc/wfc-tools/gitwork/api/__init__.py",
+    "wfc/wfc-tools/gitwork/api/branch.py",
+    "wfc/wfc-tools/gitwork/api/commit.py",
+    "wfc/wfc-tools/gitwork/api/history.py",
+    "wfc/wfc-tools/gitwork/api/hooks.py",
+    "wfc/wfc-tools/gitwork/api/merge.py",
+    "wfc/wfc-tools/gitwork/api/rollback.py",
+    "wfc/wfc-tools/gitwork/api/semver.py",
+    "wfc/wfc-tools/gitwork/api/worktree.py",
+    "wfc/wfc-tools/gitwork/config.py",
+    "wfc/wfc-tools/gitwork/router.py"
+  ],
+  "agent": "Claude Code",
+  "transcript_identifier_at_start": "41833380-43dc-4a55-b3bb-45e9ed1e1c65",
+  "checkpoint_transcript_start": 734,
+  "transcript_lines_at_start": 734,
+  "token_usage": {
+    "input_tokens": 4909,
+    "cache_creation_tokens": 166534,
+    "cache_read_tokens": 5402267,
+    "output_tokens": 34937,
+    "api_call_count": 44
+  },
+  "initial_attribution": {
+    "calculated_at": "2026-02-12T23:09:50.715891Z",
+    "agent_lines": 0,
+    "human_added": 2736,
+    "human_modified": 1801,
+    "human_removed": 0,
+    "total_committed": 4027,
+    "agent_percentage": 0
+  }
+}

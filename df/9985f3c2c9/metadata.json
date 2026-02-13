@@ -1,0 +1,31 @@
+{
+  "cli_version": "0.4.2",
+  "checkpoint_id": "df9985f3c2c9",
+  "strategy": "manual-commit",
+  "branch": "main",
+  "checkpoints_count": 1,
+  "files_touched": [
+    "codeshaker_report.json",
+    "wfc/skills/build/README.md",
+    "wfc/skills/build/SKILL.md",
+    "wfc/skills/build/__init__.py",
+    "wfc/skills/build/cli.py",
+    "wfc/skills/build/orchestrator.py"
+  ],
+  "sessions": [
+    {
+      "metadata": "/df/9985f3c2c9/0/metadata.json",
+      "transcript": "/df/9985f3c2c9/0/full.jsonl",
+      "context": "/df/9985f3c2c9/0/context.md",
+      "content_hash": "/df/9985f3c2c9/0/content_hash.txt",
+      "prompt": "/df/9985f3c2c9/0/prompt.txt"
+    }
+  ],
+  "token_usage": {
+    "input_tokens": 110,
+    "cache_creation_tokens": 13111,
+    "cache_read_tokens": 1298143,
+    "output_tokens": 843,
+    "api_call_count": 13
+  }
+}
