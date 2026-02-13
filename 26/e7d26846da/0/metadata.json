@@ -1,0 +1,44 @@
+{
+  "cli_version": "0.4.2",
+  "checkpoint_id": "26e7d26846da",
+  "session_id": "fb2626bf-5eb8-4c45-9263-602bc377fed6",
+  "strategy": "manual-commit",
+  "created_at": "2026-02-13T19:08:06.966946Z",
+  "branch": "feat/plugin-integration-7-features",
+  "checkpoints_count": 2,
+  "files_touched": [
+    "CLAUDE.md",
+    "install-universal.sh",
+    "wfc/skills/wfc-architecture/SKILL.md",
+    "wfc/skills/wfc-build/SKILL.md",
+    "wfc/skills/wfc-implement/SKILL.md",
+    "wfc/skills/wfc-isthissmart/SKILL.md",
+    "wfc/skills/wfc-newskill/SKILL.md",
+    "wfc/skills/wfc-observe/SKILL.md",
+    "wfc/skills/wfc-plan/SKILL.md",
+    "wfc/skills/wfc-pr-comments/SKILL.md",
+    "wfc/skills/wfc-retro/SKILL.md",
+    "wfc/skills/wfc-review/SKILL.md",
+    "wfc/skills/wfc-safeclaude/SKILL.md",
+    "wfc/skills/wfc-security/SKILL.md",
+    "wfc/skills/wfc-test/SKILL.md"
+  ],
+  "agent": "Claude Code",
+  "transcript_identifier_at_start": "b360ad8a-9e44-4152-8436-94d8481f779f",
+  "token_usage": {
+    "input_tokens": 67,
+    "cache_creation_tokens": 83633,
+    "cache_read_tokens": 3250171,
+    "output_tokens": 3742,
+    "api_call_count": 61
+  },
+  "initial_attribution": {
+    "calculated_at": "2026-02-13T19:08:06.918764Z",
+    "agent_lines": 269,
+    "human_added": 52,
+    "human_modified": 0,
+    "human_removed": 0,
+    "total_committed": 321,
+    "agent_percentage": 83.8006230529595
+  }
+}
