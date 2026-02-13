@@ -1,0 +1,44 @@
+{
+  "cli_version": "0.4.2",
+  "checkpoint_id": "5ccf3b4edf78",
+  "strategy": "manual-commit",
+  "branch": "feat/devcontainer",
+  "checkpoints_count": 0,
+  "files_touched": [
+    "CLAUDE.md",
+    "Makefile",
+    "install-universal.sh",
+    "scripts/pre-commit.sh",
+    "wfc/skills/wfc-architecture/SKILL.md",
+    "wfc/skills/wfc-build/SKILL.md",
+    "wfc/skills/wfc-build/cli.py",
+    "wfc/skills/wfc-build/orchestrator.py",
+    "wfc/skills/wfc-implement/SKILL.md",
+    "wfc/skills/wfc-isthissmart/SKILL.md",
+    "wfc/skills/wfc-newskill/SKILL.md",
+    "wfc/skills/wfc-observe/SKILL.md",
+    "wfc/skills/wfc-plan/SKILL.md",
+    "wfc/skills/wfc-pr-comments/SKILL.md",
+    "wfc/skills/wfc-retro/SKILL.md",
+    "wfc/skills/wfc-review/SKILL.md",
+    "wfc/skills/wfc-safeclaude/SKILL.md",
+    "wfc/skills/wfc-security/SKILL.md",
+    "wfc/skills/wfc-test/SKILL.md"
+  ],
+  "sessions": [
+    {
+      "metadata": "/5c/cf3b4edf78/0/metadata.json",
+      "transcript": "/5c/cf3b4edf78/0/full.jsonl",
+      "context": "/5c/cf3b4edf78/0/context.md",
+      "content_hash": "/5c/cf3b4edf78/0/content_hash.txt",
+      "prompt": "/5c/cf3b4edf78/0/prompt.txt"
+    }
+  ],
+  "token_usage": {
+    "input_tokens": 46,
+    "cache_creation_tokens": 162345,
+    "cache_read_tokens": 4264591,
+    "output_tokens": 2591,
+    "api_call_count": 40
+  }
+}
