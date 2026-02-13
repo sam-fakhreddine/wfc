@@ -12,7 +12,7 @@ help:
 	@echo "  make doctor          - Run comprehensive health checks"
 	@echo "  make test            - Run all tests"
 	@echo "  make validate        - Validate all WFC skills"
-	@echo "  make lint            - Run linters (ruff)"
+	@echo "  make lint            - Run linters (black + ruff)"
 	@echo "  make format          - Format code (black)"
 	@echo "  make check-all       - Run tests, validate, and lint"
 	@echo "  make clean           - Remove build artifacts"
@@ -76,19 +76,20 @@ validate-xml:
 # Code quality
 lint:
 	@echo "🔍 Running linters..."
-	ruff check wfc/
+	uv run black --check wfc/ tests/ scripts/
+	uv run ruff check wfc/
 	@echo "✅ Lint passed"
 
 format:
 	@echo "🎨 Formatting code..."
-	black wfc/
-	ruff check --fix wfc/
+	uv run black wfc/ tests/ scripts/
+	uv run ruff check --fix wfc/
 	@echo "✅ Code formatted"
 
 format-check:
 	@echo "🔍 Checking code format..."
-	black --check wfc/
-	ruff check wfc/
+	uv run black --check wfc/ tests/ scripts/
+	uv run ruff check wfc/
 	@echo "✅ Format is correct"
 
 # Comprehensive checks
