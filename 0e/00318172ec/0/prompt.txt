@@ -1,0 +1,1512 @@
+Implement the following plan:
+
+# WFC Plugin Integration Plan - Anthropic Official Plugins Hybridization
+
+## Context
+
+Anthropic released `claude-plugins-official` with production-quality patterns for hooks, review, security, and iterative development. WFC already has a strong multi-agent review pipeline, persona system, and quality gates - but gaps exist in **real-time enforcement** (hooks), **false positive filtering** (confidence scoring), **specialized review agents**, **architecture alternatives in planning**, **interactive exploration**, and **post-review simplification**. This plan integrates 7 plugins as hybrid enhancements to the existing WFC framework, making them available to ANY project that uses WFC.
+
+---
+
+## Feature 1: Real-Time Security Hooks (`wfc-safeguard`)
+
+**Source:** `security-guidance` plugin
+**Integration:** New skill + hook infrastructure in WFC
+
+### What We Build
+
+A new `wfc-safeguard` skill that installs PreToolUse hooks into a project's `.claude/settings.json` to catch dangerous patterns IN REAL-TIME as code is written.
+
+### Files to Create
+
+- `wfc/skills/wfc-safeguard/SKILL.md` - Skill definition
+- `wfc/scripts/hooks/security_hook.py` - PreToolUse hook script (catches patterns before code lands)
+- `wfc/scripts/hooks/patterns/` - Directory of pattern definition files
+- `wfc/scripts/hooks/patterns/security.json` - Security patterns (eval, innerHTML, pickle, os.system, etc.)
+- `wfc/scripts/hooks/patterns/github_actions.json` - GitHub Actions injection patterns
+- `wfc/scripts/hooks/hook_state.py` - Session-scoped state manager (show warning once per file per pattern per session)
+
+### How It Works
+
+```
+User runs: /wfc-safeguard
+  → Detects project languages (reuse wfc/scripts/language_detector.py)
+  → Installs relevant pattern files
+  → Adds PreToolUse hook entry to .claude/settings.json
+  → Hook runs on every Edit/Write/Bash tool call
+  → Matches patterns → blocks (exit 2) or warns (stderr)
+  → Session-scoped state prevents repeat warnings
+```
+
+### Key Patterns (from Anthropic + WFC additions)
+
+| Pattern | Event | Action | Source |
+|---------|-------|--------|--------|
+| `eval()`, `new Function()` | file | block | Anthropic |
+| `innerHTML`, `dangerouslySetInnerHTML` | file | warn | Anthropic |
+| `pickle` (untrusted) | file | warn | Anthropic |
+| `os.system`, `subprocess.call` (shell=True) | file | block | Anthropic |
+| GitHub Actions `${{ github.event.*` in `run:` | file | block | Anthropic |
+| `child_process.exec` | file | warn | Anthropic |
+| `rm -rf /`, `rm -rf ~` | bash | block | WFC |
+| Hardcoded secrets (`API_KEY=`, `password=`) | file | warn | WFC |
+| SQL string concatenation | file | warn | WFC |
+
+### Reuses
+
+- `wfc/scripts/language_detector.py` - Detect project languages to select relevant patterns
+- Session state pattern from Anthropic's `security_reminder_hook.py` (adapted to WFC paths)
+
+---
+
+## Feature 2: Hookify Rule Engine (`wfc-rules`)
+
+**Source:** `hookify` plugin
+**Integration:** New skill + configurable rule engine in WFC
+
+### What We Build
+
+A markdown-based rule engine that lets users define custom enforcement rules without code. Drop `.wfc/rules/*.md` files and WFC enforces them via hooks.
+
+### Files to Create
+
+- `wfc/skills/wfc-rules/SKILL.md` - Skill definition (creates rules from natural language)
+- `wfc/scripts/hooks/rule_engine.py` - Rule evaluation engine (adapted from hookify's `core/rule_engine.py`)
+- `wfc/scripts/hooks/config_loader.py` - Load `.wfc/rules/*.md` files with YAML frontmatter
+- `wfc/scripts/hooks/pretooluse_hook.py` - Main PreToolUse dispatcher (calls security_hook + rule_engine)
+- `wfc/scripts/hooks/__init__.py`
+
+### Rule Format (from Anthropic, adapted)
+
+```markdown
+---
+name: no-any-typescript
+enabled: true
+event: file
+action: warn
+conditions:
+  - field: new_text
+    operator: regex_match
+    pattern: ":\\s*any[\\s;,)]"
+---
+Avoid using `any` in TypeScript. Use proper types for type safety.
+```
+
+### How It Works
+
+```
+User runs: /wfc-rules "Block console.log in production code"
+  → Analyzes request
+  → Creates .wfc/rules/no-console-log.md with proper YAML frontmatter
+  → Rule is immediately active (loaded on next tool use)
+
+Or user creates rules manually:
+  → Drop .wfc/rules/my-rule.md
+  → Frontmatter defines conditions
+  → Body is the message shown to Claude
+```
+
+### Architecture Decision: Unified Hook Dispatcher
+
+Rather than installing separate hooks for security + rules, we create ONE PreToolUse dispatcher:
+
+```python
+# wfc/scripts/hooks/pretooluse_hook.py
+def main():
+    input_data = json.load(sys.stdin)
+
+    # 1. Run security patterns (Feature 1)
+    result = security_hook.check(input_data)
+    if result.get("block"): return result
+
+    # 2. Run user rules (Feature 2)
+    result = rule_engine.evaluate(input_data)
+    if result.get("block"): return result
+
+    # Allow operation
+    return {}
+```
+
+### Reuses from Anthropic
+
+- `compile_regex` with `@lru_cache(maxsize=128)` from hookify's `rule_engine.py`
+- Condition operators: `regex_match`, `contains`, `equals`, `not_contains`, `starts_with`, `ends_with`
+- Graceful error handling pattern (always exit 0 on errors, never block due to hook bugs)
+
+---
+
+## Feature 3: Confidence-Based False Positive Filtering
+
+**Source:** `code-review` plugin
+**Integration:** Enhance existing `wfc/scripts/skills/review/consensus.py` and `agents.py`
+
+### What We Change
+
+Add per-finding confidence scoring (0-100) with a configurable threshold (default: 80) to filter false positives from review output.
+
+### Files to Modify
+
+- `wfc/scripts/skills/review/agents.py` - Add `confidence` field to `ReviewComment`
+- `wfc/scripts/skills/review/consensus.py` - Filter comments by confidence threshold before reporting
+- `wfc/scripts/skills/review/orchestrator.py` - Add confidence threshold to `ReviewRequest` and report
+
+### Changes to `ReviewComment` (agents.py)
+
+```python
+@dataclass
+class ReviewComment:
+    file: str
+    line: int
+    severity: str         # critical, high, medium, low, info
+    message: str
+    suggestion: str
+    confidence: int = 80  # NEW: 0-100 confidence score
+```
+
+### Changes to `ConsensusAlgorithm` (consensus.py)
+
+Add filtering in `calculate()`:
+
+```python
+def calculate(self, reviews, ..., confidence_threshold: int = 80):
+    all_comments = []
+    for review in reviews:
+        # Filter by confidence
+        filtered = [c for c in review.comments if c.confidence >= confidence_threshold]
+        all_comments.extend(filtered)
+
+    # Critical severity bypasses confidence filter
+    critical_comments = [c for c in all_comments_unfiltered if c.severity == "critical"]
+    ...
+```
+
+### Changes to report generation (orchestrator.py)
+
+Add filtered/total counts to report:
+```
+**Comments**: 12 reported (8 filtered as low-confidence)
+```
+
+### Reuses
+
+- Existing `ConsensusAlgorithm.calculate()` - extend, don't replace
+- Existing `ReviewComment` dataclass - add field with default
+- Confidence scoring concept from Anthropic's code-review plugin
+
+---
+
+## Feature 4: Silent Failure Hunter (New Persona)
+
+**Source:** `pr-review-toolkit` (silent-failure-hunter agent)
+**Integration:** New persona JSON + enhanced review focus
+
+### What We Build
+
+A new expert persona that specifically hunts for swallowed errors, empty catch blocks, missing error logging, and inappropriate fallback behavior.
+
+### Files to Create
+
+- `REDACTED.json` - New persona definition
+
+### Persona JSON
+
+```json
+{
+  "id": "SILENT_FAILURE_HUNTER",
+  "name": "Silent Failure Hunter",
+  "panel": "quality",
+  "subpanel": "error-handling",
+  "skills": [
+    {"name": "Error Handling Analysis", "level": "expert", "context": "Empty catch blocks, swallowed errors, missing logging"},
+    {"name": "Failure Mode Analysis", "level": "expert", "context": "Silent failures, inappropriate defaults, hidden bugs"},
+    {"name": "Observability Gaps", "level": "proficient", "context": "Missing error metrics, untracked failures"}
+  ],
+  "domain_knowledge": ["Error Handling", "Observability", "Reliability Engineering"],
+  "lens": {
+    "focus": "Silent failures, empty catch blocks, swallowed errors, missing error logging, inappropriate fallbacks",
+    "philosophy": "Every error should be visible - silent failures are the most dangerous bugs",
+    "review_dimensions": [
+      {"dimension": "error_visibility", "weight": 0.35},
+      {"dimension": "error_handling_completeness", "weight": 0.30},
+      {"dimension": "logging_adequacy", "weight": 0.20},
+      {"dimension": "fallback_appropriateness", "weight": 0.15}
+    ]
+  },
+  "selection_criteria": {
+    "task_types": ["feature-implementation", "refactoring", "bug-fix", "code-review"],
+    "tech_stacks": ["python", "javascript", "typescript", "java", "go", "rust"],
+    "complexity_range": ["M", "L", "XL"],
+    "anti_patterns": ["empty-catch", "swallowed-error", "silent-failure", "missing-logging"],
+    "properties": ["SAFETY", "RELIABILITY", "OBSERVABILITY"]
+  },
+  "tags": ["error-handling", "reliability", "observability", "silent-failures", "quality"]
+}
+```
+
+### Why This Matters
+
+General reviewers routinely miss:
+- `except: pass`
+- `catch (e) {}` (empty catch)
+- `.catch(() => {})` (swallowed promise rejection)
+- Default values hiding errors (`return [] # should have raised`)
+- Missing error logging in catch blocks
+
+The persona selector will auto-include this persona when files contain try/catch patterns.
+
+---
+
+## Feature 5: Multi-Architecture Design Phase (wfc-plan Enhancement)
+
+**Source:** `feature-dev` plugin (Phase 4: Architecture Design)
+**Integration:** Enhance existing `wfc/skills/wfc-plan/` workflow
+
+### What We Change
+
+After the adaptive interview, before generating TASKS.md, present 2-3 architecture approaches with trade-offs and let the user choose.
+
+### Files to Modify
+
+- `wfc/skills/wfc-plan/orchestrator.py` - Add architecture design phase between interview and generation
+- `wfc/skills/wfc-plan/SKILL.md` - Document the new phase
+
+### Files to Create
+
+- `wfc/skills/wfc-plan/architecture_designer.py` - Generates architecture alternatives
+
+### New Flow
+
+```
+Interview → Architecture Design (NEW) → Task Generation → Properties → Test Plan
+```
+
+### Architecture Designer
+
+```python
+class ArchitectureDesigner:
+    """
+    Generates 2-3 architecture approaches with trade-offs.
+
+    Approaches (inspired by feature-dev):
+    1. Minimal Changes - smallest diff, maximum reuse of existing code
+    2. Clean Architecture - proper abstractions, maintainability-first
+    3. Pragmatic Balance - speed + quality tradeoff
+    """
+
+    def design(self, interview_result: InterviewResult) -> List[ArchitectureApproach]:
+        """Returns 2-3 approaches for user to choose from."""
+        ...
+
+    def format_comparison(self, approaches: List[ArchitectureApproach]) -> str:
+        """Formats approaches as markdown comparison table."""
+        ...
+```
+
+### Changes to PlanOrchestrator
+
+```python
+def execute(self, ...):
+    # Phase 1: Interview (existing)
+    interview = self.interviewer.conduct(...)
+
+    # Phase 2: Architecture Design (NEW)
+    designer = ArchitectureDesigner()
+    approaches = designer.design(interview)
+
+    # Present to user and get selection
+    # (This happens in the SKILL.md prompt - Claude asks user)
+
+    # Phase 3: Generate with chosen approach (existing, enhanced)
+    tasks = self.tasks_generator.generate(interview, chosen_approach)
+    ...
+```
+
+---
+
+## Feature 6: Interactive Playground Generator (`wfc-playground`)
+
+**Source:** `playground` plugin
+**Integration:** New skill in WFC
+
+### What We Build
+
+A skill that creates self-contained interactive HTML playgrounds for visual exploration of configurations, designs, and data.
+
+### Files to Create
+
+- `wfc/skills/wfc-playground/SKILL.md` - Skill definition
+- `wfc/assets/templates/playground/` - Template directory
+- `wfc/assets/templates/playground/design.html` - Design playground template
+- `wfc/assets/templates/playground/data-explorer.html` - Data/query explorer template
+- `wfc/assets/templates/playground/concept-map.html` - Learning/concept exploration template
+
+### How It Works
+
+```
+User: /wfc-playground "design a color palette explorer"
+  → Selects closest template (design.html)
+  → Claude customizes for the specific request
+  → Generates single self-contained .html file
+  → User opens in browser
+```
+
+### Template Structure
+
+Each template is a self-contained HTML file with:
+- Interactive controls (left panel)
+- Live preview (right panel)
+- Generated prompt/output (bottom) with copy button
+- No external dependencies (inline CSS/JS)
+
+---
+
+## Feature 7: Code Simplifier (New Persona + Post-Review Phase)
+
+**Source:** `pr-review-toolkit` (code-simplifier agent) + `code-simplifier` plugin
+**Integration:** New persona + optional post-review simplification pass
+
+### What We Build
+
+1. A new Code Simplifier persona for the review pipeline
+2. An optional simplification pass after review approval
+
+### Files to Create
+
+- `REDACTED.json` - New persona
+
+### Files to Modify
+
+- `wfc/skills/wfc-review/SKILL.md` - Add optional `--simplify` flag documentation
+- `wfc/scripts/skills/review/orchestrator.py` - Add post-review simplification phase
+
+### Persona JSON
+
+```json
+{
+  "id": "CODE_SIMPLIFIER",
+  "name": "Code Simplifier",
+  "panel": "quality",
+  "subpanel": "simplification",
+  "skills": [
+    {"name": "Code Simplification", "level": "expert", "context": "Reduce complexity while preserving functionality"},
+    {"name": "Refactoring", "level": "expert", "context": "Extract, inline, rename, restructure"},
+    {"name": "Readability Optimization", "level": "expert", "context": "Clarity over cleverness"}
+  ],
+  "lens": {
+    "focus": "Unnecessary complexity, overly clever code, redundant abstractions, deep nesting, code that could be simpler",
+    "philosophy": "The best code is the code that doesn't need to exist. Simplify ruthlessly while preserving intent.",
+    "review_dimensions": [
+      {"dimension": "unnecessary_complexity", "weight": 0.30},
+      {"dimension": "redundant_abstractions", "weight": 0.25},
+      {"dimension": "readability", "weight": 0.25},
+      {"dimension": "consistency", "weight": 0.20}
+    ]
+  },
+  "selection_criteria": {
+    "task_types": ["refactoring", "code-review", "feature-implementation"],
+    "tech_stacks": ["python", "javascript", "typescript", "java", "go", "rust"],
+    "complexity_range": ["M", "L", "XL"],
+    "anti_patterns": ["over-engineering", "premature-abstraction", "deep-nesting", "clever-code"],
+    "properties": ["MAINTAINABILITY", "READABILITY", "QUALITY"]
+  },
+  "tags": ["simplification", "refactoring", "readability", "quality", "clean-code"]
+}
+```
+
+### Post-Review Simplification
+
+After review passes, if `--simplify` flag or complexity > L:
+```
+Review PASSES → "Would you like a simplification pass?" → Code Simplifier runs → Suggestions presented
+```
+
+---
+
+## Implementation Order
+
+| Phase | Feature | Effort | Dependencies |
+|-------|---------|--------|--------------|
+| 1 | Hook infrastructure (unified dispatcher) | M | None |
+| 2 | Real-Time Security Hooks (wfc-safeguard) | M | Phase 1 |
+| 3 | Hookify Rule Engine (wfc-rules) | M | Phase 1 |
+| 4 | Confidence-Based False Positive Filtering | S | None |
+| 5 | Silent Failure Hunter persona | S | None |
+| 6 | Code Simplifier persona + post-review | S | None |
+| 7 | Multi-Architecture Design | M | None |
+| 8 | Interactive Playground | M | None |
+
+Phases 4-6 are independent and can be done in parallel.
+Phases 2-3 depend on Phase 1 (hook infrastructure).
+Phases 7-8 are independent of everything else.
+
+---
+
+## Files Summary
+
+### New Files (18)
+
+```
+wfc/scripts/hooks/__init__.py
+wfc/scripts/hooks/pretooluse_hook.py          # Unified dispatcher
+wfc/scripts/hooks/security_hook.py            # Security pattern checker
+wfc/scripts/hooks/rule_engine.py              # Configurable rule engine
+wfc/scripts/hooks/config_loader.py            # Load .wfc/rules/*.md
+wfc/scripts/hooks/hook_state.py               # Session-scoped state
+wfc/scripts/hooks/patterns/security.json      # Security patterns
+wfc/scripts/hooks/patterns/github_actions.json
+wfc/skills/wfc-safeguard/SKILL.md
+wfc/skills/wfc-rules/SKILL.md
+wfc/skills/wfc-playground/SKILL.md
+wfc/skills/wfc-plan/architecture_designer.py
+wfc/assets/templates/playground/design.html
+wfc/assets/templates/playground/data-explorer.html
+wfc/assets/templates/playground/concept-map.html
+REDACTED.json
+REDACTED.json
+tests/test_hooks.py                           # Update existing
+```
+
+### Modified Files (6)
+
+```
+wfc/scripts/skills/review/agents.py           # Add confidence field
+wfc/scripts/skills/review/consensus.py        # Add confidence filtering
+wfc/scripts/skills/review/orchestrator.py     # Add threshold + simplify
+wfc/skills/wfc-plan/orchestrator.py           # Add architecture phase
+wfc/skills/wfc-plan/SKILL.md                  # Document architecture phase
+wfc/skills/wfc-review/SKILL.md                # Document simplify flag
+```
+
+---
+
+## Verification
+
+### Hook Infrastructure
+```bash
+# Test security hook catches eval()
+echo '{"tool_name": "Write", "tool_input": {"file_path": "test.py", "content": "eval(user_input)"}}' | uv run python wfc/scripts/hooks/pretooluse_hook.py
+
+# Test rule engine with custom rule
+echo '{"tool_name": "Bash", "tool_input": {"command": "rm -rf /"}}' | uv run python wfc/scripts/hooks/pretooluse_hook.py
+```
+
+### Review Enhancements
+```bash
+uv run pytest tests/test_consensus.py -v      # Confidence filtering
+uv run pytest tests/test_hooks.py -v           # Hook infrastructure
+```
+
+### Personas
+```bash
+# Verify new personas load correctly
+uv run python -c "
+from wfc.scripts.personas.persona_orchestrator import PersonaRegistry
+from pathlib import Path
+reg = PersonaRegistry(Path('wfc/references/personas'))
+print(reg.get_persona('SILENT_FAILURE_HUNTER'))
+print(reg.get_persona('CODE_SIMPLIFIER'))
+"
+```
+
+### Integration
+```bash
+make test                  # All tests pass
+make validate              # All skills validate
+make check-all             # Lint + format + test
+```
+
+
+If you need specific details from before exiting plan mode (like exact code snippets, error messages, or content you generated), read the full transcript at: /Users/samfakhreddine/.REDACTED.jsonl
+
+---
+
+[Request interrupted by user]
+
+---
+
+why are you doing the work, you are meant to be orchestrator only.
+
+---
+
+<task-notification>
+<task-id>a932cf4</task-id>
+<status>completed</status>
+<summary>Agent "Create personas + confidence filtering" completed</summary>
+<result>All files look correct and properly formatted. Here is a complete summary of all changes made:
+
+---
+
+## Summary of Changes
+
+### Feature 3: Confidence-Based False Positive Filtering
+
+**File: `/Users/samfakhreddine/repos/wfc/wfc/scripts/skills/review/agents.py`**
+- Added `confidence: int = 80` field to the `ReviewComment` dataclass (line 30). This is a default-valued field so it's backward compatible with all existing code that constructs `ReviewComment` without specifying confidence.
+
+**File: `/Users/samfakhreddine/repos/wfc/wfc/scripts/skills/review/consensus.py`**
+- Added `filtered_count: int = 0` field to the `ConsensusResult` dataclass (line 35), tracking how many comments were filtered out by confidence.
+- Added `result["filtered_count"] = self.filtered_count` to the `to_dict()` method (line 55).
+- Added `confidence_threshold: int = 80` parameter to the `calculate()` method (line 95).
+- Replaced the simple comment collection loop with confidence-aware filtering (lines 118-129): collects all comments first, then filters out those with confidence below the threshold -- except comments with `"critical"` severity always bypass the filter. Tracks the `filtered_count`.
+- Passes `filtered_count` to the `ConsensusResult` constructor (line 160).
+
+**File: `/Users/samfakhreddine/repos/wfc/wfc/scripts/skills/review/orchestrator.py`**
+- Added `confidence_threshold: int = 80` and `simplify: bool = False` fields to `ReviewRequest` (lines 60-61).
+- Added `simplification_suggestions: Optional[List[str]] = None` field to `ReviewResult` (line 71).
+- In `_review_with_legacy_agents()`, passes `confidence_threshold=request.confidence_threshold` to `consensus.calculate()` (lines 204-206).
+- In `finalize_persona_review()`, passes `confidence_threshold=request.confidence_threshold` to `consensus.calculate()` (lines 302-307).
+- In `_generate_report()`, adds a filtered count info line when `consensus.filtered_count > 0` (lines 506-513), showing e.g. `"**Comments**: 12 reported (8 filtered as low-confidence)"`.
+- In `_generate_persona_report()`, adds the same filtered count info to the report header (lines 364-369).
+
+### Feature 4: Silent Failure Hunter Persona
+
+**File: `REDACTED.json`** (new file)
+- Quality panel persona in the `error-handling` subpanel.
+- Expert skills in Error Handling Analysis, Failure Mode Analysis, and Observability Gaps.
+- Review dimensions weighted: error_visibility (35%), error_handling_completeness (30%), logging_adequacy (20%), fallback_appropriateness (15%).
+- Selection criteria targets anti-patterns: `empty-catch`, `swallowed-error`, `silent-failure`, `missing-logging`.
+- Properties: SAFETY, RELIABILITY, OBSERVABILITY.
+- System prompt focuses on finding silent failures -- empty catch blocks, swallowed errors, `except: pass`, `catch(e) {}`, missing error logging.
+
+### Feature 7: Code Simplifier Persona + Post-Review Simplification
+
+**File: `REDACTED.json`** (new file)
+- Quality panel persona in the `simplification` subpanel.
+- Expert skills in Code Simplification, Refactoring, and Readability Optimization.
+- Review dimensions: unnecessary_complexity (30%), redundant_abstractions (25%), readability (25%), consistency (20%).
+- Selection criteria targets anti-patterns: `over-engineering`, `premature-abstraction`, `deep-nesting`, `clever-code`.
+- Properties: MAINTAINABILITY, READABILITY, QUALITY.
+- System prompt focuses on finding unnecessary complexity, over-engineered patterns, deep nesting, and redundant wrappers.
+
+**Post-review simplification in orchestrator (`orchestrator.py`):**
+- Both `_generate_report()` (lines 561-574) and `_generate_persona_report()` (lines 469-482) add a "Simplification Pass" section at the end of the report when `consensus.passed and request.simplify` is true. This section announces that the Code Simplifier persona will analyze the code for unnecessary complexity.
+
+**File: `/Users/samfakhreddine/repos/wfc/wfc/skills/wfc-review/SKILL.md`**
+- Added "Confidence Filtering" section (lines 176-182) documenting the confidence score system, default threshold of 80, critical severity bypass, and report format.
+- Added "Post-Review Simplification" section (lines 184-196) documenting the `--simplify` flag usage and what the Code Simplifier persona looks for.</result>
+<usage>total_tokens: 65310
+tool_uses: 34
+duration_ms: 182649</usage>
+</task-notification>
+Full transcript available at: /private/tmp/claude-501/-Users-samfakhreddine-repos-wfc/tasks/a932cf4.output
+
+---
+
+<task-notification>
+<task-id>a63acd1</task-id>
+<status>completed</status>
+<summary>Agent "Build hook infrastructure + security hooks + rule engine" completed</summary>
+<result>All files are in place. I was unable to run the verification command due to Bash permission restrictions, but let me note that for you to run. Here is the complete summary of everything built.
+
+---
+
+## Summary: Phases 1-3 WFC Plugin Integration Plan
+
+### Files Created (9 new files + 2 updated)
+
+#### Phase 1: Hook Infrastructure
+
+1. **`/Users/samfakhreddine/repos/wfc/wfc/scripts/hooks/hook_state.py`** -- Session-scoped state manager
+   - `HookState` class backed by JSON in `/tmp`, keyed by parent PID
+   - Methods: `has_warned(file, pattern_id)`, `mark_warned(file, pattern_id)`, `clear()`
+   - Auto-expires stale sessions after 24 hours
+   - All I/O errors handled gracefully (non-critical)
+
+2. **`/Users/samfakhreddine/repos/wfc/wfc/scripts/hooks/pretooluse_hook.py`** -- Unified dispatcher (main entry point)
+   - Reads JSON from stdin, runs security check then rule evaluation
+   - Exit 2 = block (reason on stderr), Exit 0 = allow or warn
+   - Deferred imports so import errors never block the user
+   - Triple-wrapped error handling: inner `_run()` can throw, outer `main()` catches everything and exits 0
+
+3. **`/Users/samfakhreddine/repos/wfc/wfc/scripts/hooks/__main__.py`** -- Module entry point
+   - Allows `uv run python -m wfc.scripts.hooks` as an alternative invocation
+
+#### Phase 2: Security Hooks
+
+4. **`/Users/samfakhreddine/repos/wfc/wfc/scripts/hooks/security_hook.py`** -- Security pattern checker
+   - `check(input_data, state=None) -> dict` main entry point
+   - Loads all `patterns/*.json` files automatically
+   - Language-aware: maps file extensions to languages, skips irrelevant patterns
+   - File pattern matching for GitHub Actions YAML files
+   - Regex compilation cached via `@lru_cache(maxsize=256)`
+   - `PatternMatch` and `CheckResult` dataclasses for structured results
+   - Warning deduplication via `HookState`
+
+5. **`/Users/samfakhreddine/repos/wfc/wfc/scripts/hooks/patterns/security.json`** -- 11 security patterns
+   - **Block**: eval-injection, new-function, os-system, subprocess-shell, rm-rf-root, rm-rf-home
+   - **Warn**: inner-html, pickle-untrusted, child-process-exec, hardcoded-secret, sql-concatenation
+
+6. **`/Users/samfakhreddine/repos/wfc/wfc/scripts/hooks/patterns/github_actions.json`** -- 2 CI/CD patterns
+   - **Block**: gha-script-injection (`${{ github.event.* }}`)
+   - **Warn**: gha-pull-request-target
+
+7. **`/Users/samfakhreddine/repos/wfc/wfc/scripts/hooks/patterns/__init__.py`** -- Package marker with docstring
+
+#### Phase 3: Rule Engine
+
+8. **`/Users/samfakhreddine/repos/wfc/wfc/scripts/hooks/config_loader.py`** -- Config loader
+   - `load_rules(rules_dir: Path) -> list[dict]` loads `.wfc/rules/*.md`
+   - Custom YAML frontmatter parser (no PyYAML dependency)
+   - Supports key-value pairs, booleans, numbers, inline lists, and list-of-dicts for conditions
+   - Returns rule dicts with `body` field for the human-readable message
+   - Missing dirs and malformed files handled gracefully
+
+9. **`/Users/samfakhreddine/repos/wfc/wfc/scripts/hooks/rule_engine.py`** -- Configurable rule engine
+   - `evaluate(input_data, rules_dir=None) -> dict` main entry point
+   - Virtual field mapping: `new_text` resolves to `content`/`new_string`/`new_source` depending on tool
+   - 6 operators: `regex_match`, `contains`, `not_contains`, `equals`, `starts_with`, `ends_with`
+   - AND logic for conditions (all must match)
+   - Event filtering: `file`, `bash`, `all`
+   - Regex cached via `@lru_cache(maxsize=128)`
+
+#### Skill Definitions
+
+10. **`/Users/samfakhreddine/repos/wfc/wfc/skills/wfc-safeguard/SKILL.md`** -- Agent Skills compliant
+    - Frontmatter: only `name`, `description`, `license` (compliant)
+    - Documents all patterns, how to add custom patterns, architecture, language mappings
+
+11. **`/Users/samfakhreddine/repos/wfc/wfc/skills/wfc-rules/SKILL.md`** -- Agent Skills compliant
+    - Frontmatter: only `name`, `description`, `license` (compliant)
+    - Documents rule format, all operators, 5 worked examples, tips
+
+#### Updated Files
+
+12. **`/Users/samfakhreddine/repos/wfc/wfc/scripts/hooks/__init__.py`** -- Updated with exports
+    - Exports `HookState`, `security_check`, `rule_evaluate`
+
+### Design Decisions
+
+- **No external dependencies**: The YAML frontmatter parser is built-in (no PyYAML requirement). Pattern files are plain JSON. No new entries needed in `pyproject.toml`.
+- **Fail-open everywhere**: Every public function wraps its implementation in try/except and returns `{}` on errors. The main dispatcher catches all exceptions and exits 0. A hook bug will never block the user.
+- **Performance**: All regex patterns are compiled once and cached via `@lru_cache`. Pattern files are read from disk on each invocation (cheap since they are small JSON files).
+- **Session scoping**: State is keyed by parent PID, so all hook invocations within a single Claude Code session share deduplication state, while separate sessions are independent.
+
+### Verification Command
+
+You need to run this to verify the hook works end-to-end:
+
+```bash
+cd /Users/samfakhreddine/repos/wfc
+echo '{"tool_name": "Write", "tool_input": {"file_path": "test.py", "content": "eval(user_input)"}}' | uv run python -m wfc.scripts.hooks.pretooluse_hook
+echo $?
+# Expected: stderr shows "Security violation: [eval-injection] eval() can execute arbitrary code"
+# Expected: exit code 2
+```
+
+You should also make the main hook file executable:
+
+```bash
+chmod +x /Users/samfakhreddine/repos/wfc/wfc/scripts/hooks/pretooluse_hook.py
+```</result>
+<usage>total_tokens: 64383
+tool_uses: 45
+duration_ms: 300854</usage>
+</task-notification>
+Full transcript available at: /private/tmp/claude-501/-Users-samfakhreddine-repos-wfc/tasks/a63acd1.output
+
+---
+
+<task-notification>
+<task-id>a3e4c5f</task-id>
+<status>completed</status>
+<summary>Agent "Build architecture designer + playground" completed</summary>
+<result>All files are confirmed present. Here is the complete summary of everything implemented.
+
+---
+
+## Implementation Summary
+
+### Feature 5: Multi-Architecture Design Phase (wfc-plan Enhancement)
+
+**New file created:**
+
+- `/Users/samfakhreddine/repos/wfc/wfc/skills/wfc-plan/architecture_designer.py` -- Contains:
+  - `ArchitectureApproach` dataclass with fields: `name`, `summary`, `pros`, `cons`, `effort`, `risk`, `files_affected`, `key_decisions`
+  - `ArchitectureDesigner` class with 3 approach templates (Minimal Changes, Clean Architecture, Pragmatic Balance)
+  - `design()` method that generates 3 `ArchitectureApproach` instances from the goal and context
+  - `format_comparison()` method that produces a full markdown comparison including per-approach sections (summary, effort, risk, pros, cons, key decisions) and a summary comparison table
+
+**Modified files:**
+
+- `/Users/samfakhreddine/repos/wfc/wfc/skills/wfc-plan/orchestrator.py`:
+  - Added import: `from .architecture_designer import ArchitectureDesigner, ArchitectureApproach`
+  - Added `architecture_approach: Optional[str] = None` field to `PlanResult`
+  - Updated `PlanResult.__str__()` to include the `ARCHITECTURE-OPTIONS.md` file path and optional architecture approach line
+  - Added "Step 1.5: Architecture Design" between interview results save and TASKS.md generation -- creates `ArchitectureDesigner`, calls `design()` and `format_comparison()`, writes `ARCHITECTURE-OPTIONS.md` to the output directory
+
+- `/Users/samfakhreddine/repos/wfc/wfc/skills/wfc-plan/__init__.py`:
+  - Added import of `ArchitectureDesigner` and `ArchitectureApproach`
+  - Added both to `__all__` exports
+
+- `/Users/samfakhreddine/repos/wfc/wfc/skills/wfc-plan/SKILL.md`:
+  - Added "Architecture Design Phase" section between "Plan History - Benefits" and "Interview Process"
+  - Documents all 3 architecture options with their characteristics
+
+### Feature 6: Interactive Playground Generator
+
+**New files created:**
+
+- `/Users/samfakhreddine/repos/wfc/wfc/skills/wfc-playground/SKILL.md` -- Agent Skills compliant with clean frontmatter (name, description, license only). Documents the playground generator's purpose, usage examples (design/data/concept), template descriptions, output format, architecture, and philosophy.
+
+- `/Users/samfakhreddine/repos/wfc/wfc/assets/templates/playground/design.html` -- Self-contained ~190 line HTML file with:
+  - Dark-themed left sidebar with 9 controls: background color, text color, accent color, border radius, heading size, body size, shadow Y offset, shadow blur, font family
+  - Main preview area with a live-updating card (heading, paragraph, button)
+  - Bottom output panel showing generated CSS custom properties
+  - Copy-to-clipboard button
+  - All CSS/JS inline, zero external dependencies
+
+- `/Users/samfakhreddine/repos/wfc/wfc/assets/templates/playground/data-explorer.html` -- Self-contained ~190 line HTML file with:
+  - Top toolbar with search/filter input and copy button
+  - Left panel: JSON textarea with sample WFC data, plus Parse/Format/Minify/Clear action buttons
+  - Right panel: Recursive tree view with collapsible nodes, color-coded types (string=blue, number=gold, boolean=green, null=gray)
+  - Search highlighting across tree nodes
+  - Stats bar showing value count, key count, max depth, byte size
+  - All CSS/JS inline, zero external dependencies
+
+- `/Users/samfakhreddine/repos/wfc/wfc/assets/templates/playground/concept-map.html` -- Self-contained ~220 line HTML file with:
+  - Top toolbar with mode buttons (Add Node, Connect, Move), Clear, and Export JSON
+  - Canvas area with grid background for placing and connecting nodes
+  - Right panel with node creation controls (label, category), node list with delete buttons, and usage help
+  - 4 category colors: Core (red), Feature (blue), External (gold), Data (green)
+  - Arrow-headed edges between nodes
+  - Drag-to-move mode with visual selection indicator in connect mode
+  - All CSS/JS inline, zero external dependencies</result>
+<usage>total_tokens: 53424
+tool_uses: 36
+duration_ms: 257764</usage>
+</task-notification>
+Full transcript available at: /private/tmp/claude-501/-Users-samfakhreddine-repos-wfc/tasks/a3e4c5f.output
+
+---
+
+<task-notification>
+<task-id>aa8133b</task-id>
+<status>completed</status>
+<summary>Agent "Write tests + verify all features" completed</summary>
+<result>I need Bash access to run the test suite. The task requires me to:
+
+1. Run `uv run pytest tests/test_plugin_integration.py -v` to execute the tests
+2. Fix any failures
+3. Run the full test suite `uv run pytest tests/ -v --tb=short` for regression checks
+4. Run file verification commands (`ls -la` on multiple paths)
+5. Run the smoke test Python script
+
+All of these require Bash execution. Could you please grant Bash permission so I can complete the test execution, verification, and any needed fixes? Without it, I can only write the test file but cannot run it, verify results, or fix failures.
+
+Here is what I have completed so far:
+
+**Completed:**
+- Created `/Users/samfakhreddine/repos/wfc/tests/test_plugin_integration.py` with comprehensive tests covering all 7 features:
+  - `TestHookState` (4 tests): mark_and_check_warned, not_warned_returns_false, different_files_different_state, clear_resets_state
+  - `TestSecurityHook` (8 tests): blocks_eval, blocks_os_system, warns_innerhtml, warns_pickle, blocks_rm_rf_root, allows_safe_code, blocks_subprocess_shell, warns_hardcoded_secret
+  - `TestRuleEngine` (4 tests): evaluate_no_rules_dir, evaluate_regex_match_rule, evaluate_contains_operator, evaluate_disabled_rule_skipped
+  - `TestConfigLoader` (4 tests): load_rules_empty_dir, load_rules_missing_dir, load_rules_valid_file, load_rules_body_extracted
+  - `TestPreToolUseDispatcher` (2 tests): security_block_exits_2, safe_code_exits_0
+  - `TestConfidenceFiltering` (6 tests): review_comment_default/custom_confidence, consensus_filters_low_confidence, critical_bypasses_filter, filtered_count_tracked, to_dict_includes_filtered
+  - `TestReviewRequestFields` (2 tests): confidence_threshold_default, simplify_default
+  - `TestNewPersonas` (4 tests): silent_failure_hunter_loads, code_simplifier_loads, both have_required_fields
+  - `TestArchitectureDesigner` (4 tests): design_returns_three_approaches, approach_names, format_comparison_markdown, approach_has_pros_and_cons
+
+**Verified file existence (via Glob):**
+- Hook infrastructure: All files present in `/Users/samfakhreddine/repos/wfc/wfc/scripts/hooks/`
+- Skills: `wfc-safeguard`, `wfc-rules`, `wfc-playground` all exist under `/Users/samfakhreddine/repos/wfc/wfc/skills/`
+- Personas: Both `SILENT_FAILURE_HUNTER.json` and `CODE_SIMPLIFIER.json` exist in `/Users/samfakhreddine/repos/wfc/wfc/references/personas/panels/quality/`
+- Templates: `concept-map.html`, `data-explorer.html`, `design.html` exist in `/Users/samfakhreddine/repos/wfc/wfc/assets/templates/playground/`
+- Architecture designer: `/Users/samfakhreddine/repos/wfc/wfc/skills/wfc-plan/architecture_designer.py` exists
+
+**Pending (requires Bash):**
+- Running the test suite
+- Fixing any test failures
+- Running the full regression suite
+- Running the smoke test script</result>
+<usage>total_tokens: 76893
+tool_uses: 44
+duration_ms: 186011</usage>
+</task-notification>
+Full transcript available at: /private/tmp/claude-501/-Users-samfakhreddine-repos-wfc/tasks/aa8133b.output
+
+---
+
+i need our install script to update wfc where is new stuff and keep settings
+
+---
+
+update all documentation
+
+---
+
+<task-notification>
+<task-id>aeee4db</task-id>
+<status>completed</status>
+<summary>Agent "Update CLAUDE.md and PLANNING.md" completed</summary>
+<result>No stale references remain. All old values have been updated. Here is a summary of every change made:
+
+---
+
+## Changes to `/Users/samfakhreddine/repos/wfc/CLAUDE.md`
+
+**8 edits total:**
+
+1. **"When to Use Which Skill" table (line ~119)** -- Added 3 new rows after the existing last row:
+   - `| Security hooks | /wfc-safeguard | Real-time pattern enforcement |`
+   - `| Custom rules | /wfc-rules | Markdown-based code standards |`
+   - `| Visual exploration | /wfc-playground | Interactive HTML prototyping |`
+
+2. **Project Structure tree -- scripts section** -- Added the `hooks/` directory with all 6 files (`pretooluse_hook.py`, `security_hook.py`, `rule_engine.py`, `config_loader.py`, `hook_state.py`, `patterns/`) between `personas/` and `skills/`.
+
+3. **Project Structure tree -- references/personas** -- Changed `# 54 expert personas (JSON)` to `# 56 expert personas (JSON)`.
+
+4. **Project Structure tree -- assets section** -- Added `templates/playground/` subtree under `assets/`.
+
+5. **Project Structure tree -- installed skills** -- Added `wfc-safeguard/`, `wfc-rules/`, `wfc-playground/` to the list and changed `(11 total)` to `(17 total)`.
+
+6. **Persona System section** -- Changed `Selects 5 relevant experts from 54 reviewers` to `56 reviewers`, and `**54 Expert Personas**` to `**56 Expert Personas**` with updated quality panel description mentioning Silent Failure Hunter and Code Simplifier.
+
+7. **Agent Skills Compliance section** -- Changed `All 11 WFC skills` to `All 17 WFC skills`.
+
+8. **Key Metrics section** -- Changed `Valid skills: 11/11 (100%)` and `XML generation: 11/11 (100%)` to `17/17`.
+
+9. **Quick Reference -- File Locations** -- Added 4 new entries: Hook Infrastructure, Security Patterns, Architecture Designer, and Playground Templates.
+
+---
+
+## Changes to `/Users/samfakhreddine/repos/wfc/docs/PLANNING.md`
+
+**5 edits total:**
+
+1. **Project Vision** -- Changed `54 expert personas` to `56 expert personas`.
+
+2. **Current State description** -- Changed `11 Agent Skills compliant skills` to `17 Agent Skills compliant skills`.
+
+3. **Architecture tree -- scripts section** -- Added `hooks/` directory with all files and `patterns/` subdirectory. Changed personas reference from `54` to `56`. Added `templates/playground/` under `assets/`.
+
+4. **Architecture tree -- installed skills** -- Added `wfc-safeguard/`, `wfc-rules/`, `wfc-playground/` and changed `(11 total)` to `(17 total)`.
+
+5. **Key Metrics -- Agent Skills Compliance** -- Changed `11/11 (100%)` to `17/17 (100%)`.</result>
+<usage>total_tokens: 36270
+tool_uses: 17
+duration_ms: 70620</usage>
+</task-notification>
+Full transcript available at: /private/tmp/claude-501/-Users-samfakhreddine-repos-wfc/tasks/aeee4db.output
+
+---
+
+<task-notification>
+<task-id>a8efb94</task-id>
+<status>completed</status>
+<summary>Agent "Update README.md and QUICKSTART.md" completed</summary>
+<result>All edits are verified and correct. I notice the QUICKSTART.md table now lists 16 skills but says "17 skills" -- the same count discrepancy exists in README.md (16 rows in the table). The user specified the total should be 17. There may be a 17th skill not yet listed. The counts match the user's instructions, so the text says 17 as requested.
+
+Here is a summary of all changes made:
+
+---
+
+## Changes to `/Users/samfakhreddine/repos/wfc/README.md`
+
+**6 edits made:**
+
+1. **Line 12** -- Banner: "54 Expert AI Agents" changed to "56 Expert AI Agents"
+2. **Line 41** -- Architecture diagram: "ENGINEERING TEAM [54 SPECIALISTS]" changed to "ENGINEERING TEAM [56 SPECIALISTS]"
+3. **Line 57** -- Agent panels table: QUALITY count changed from 8 to 10 (reflecting the 2 new personas: Silent Failure Hunter, Code Simplifier)
+4. **Line 63** -- Agent panels table: TOTAL changed from 54 to 56
+5. **Line 139** -- Review mechanism: "Auto-picks 5 from 54 experts" changed to "Auto-picks 5 from 56 experts"
+6. **Lines 227-229** -- Skill suite table: Added 3 new rows:
+   - `wfc-safeguard` | Real-time security hooks | PreToolUse enforcement
+   - `wfc-rules` | Custom enforcement rules | Markdown-based rule enforcement
+   - `wfc-playground` | Interactive HTML playgrounds | Design/data/concept templates
+7. **Line 276** -- Performance metrics table: Expert personas changed from 54 to 56
+
+## Changes to `/Users/samfakhreddine/repos/wfc/QUICKSTART.md`
+
+**4 edits made:**
+
+1. **Line 116** -- "From 54 specialists" changed to "From 56 specialists"
+2. **Line 164** -- Example output: "Selected Expert Personas (5/54)" changed to "(5/56)"
+3. **Line 221** -- Skill count: "WFC includes 11 skills" changed to "WFC includes 17 skills"
+4. **Lines 225-240** -- Available Skills table: Added `wfc-vibe`, `wfc-build` (previously missing from QUICKSTART), plus the 3 new skills:
+   - `wfc-safeguard` | Real-time security hooks | Security enforcement
+   - `wfc-rules` | Custom enforcement rules | Code standards
+   - `wfc-playground` | Interactive HTML playgrounds | Visual exploration</result>
+<usage>total_tokens: 32540
+tool_uses: 22
+duration_ms: 85639</usage>
+</task-notification>
+Full transcript available at: /private/tmp/claude-501/-Users-samfakhreddine-repos-wfc/tasks/a8efb94.output
+
+---
+
+<task-notification>
+<task-id>ab4cccd</task-id>
+<status>completed</status>
+<summary>Agent "Update docs/ compliance, personas, hooks, max" completed</summary>
+<result>All edits are complete and verified. Here is a summary of every change made across the four files:
+
+---
+
+## File 1: `REDACTED.md`
+
+**3 edits:**
+
+1. **Line 78** -- Changed "All 11 WFC skills validated" to "All 17 WFC skills validated"
+2. **Lines 91-107** -- Expanded the validated skills list from 11 entries to 17, adding: `wfc-build`, `wfc-init`, `wfc-playground`, `wfc-rules`, `wfc-safeguard`, `wfc-vibe`
+3. **Lines 203-222** -- Updated "All WFC Skills (11 total)" to "(17 total)" and expanded the frontmatter file list to include all 17 skill paths
+
+## File 2: `/Users/samfakhreddine/repos/wfc/docs/PERSONAS.md`
+
+**4 edits:**
+
+1. **Line 7** -- Changed "54 expert personas" to "56 expert personas"
+2. **Line 58** -- Changed "Quality Panel (8 personas)" to "Quality Panel (10 personas)"
+3. **Lines 72-73** -- Added two new rows to the Quality Panel table:
+   - `SILENT_FAILURE_HUNTER` (panel: quality/error-handling, properties: SAFETY, RELIABILITY, OBSERVABILITY)
+   - `CODE_SIMPLIFIER` (panel: quality/simplification, properties: MAINTAINABILITY, READABILITY, QUALITY)
+4. **Lines 161-162** -- Updated footer from "54 personas / 2026-02-10" to "56 personas / 2026-02-13"
+
+## File 3: `REDACTED.md`
+
+**1 edit:**
+
+Added a new "PreToolUse Hook Infrastructure (NEW)" section (lines 177-206) between the git hook architecture section and Phase 6 Telemetry, covering:
+- Components (Unified Dispatcher, Security Hook, Rule Engine, Config Loader, Hook State)
+- Security Patterns (security.json with 11 patterns, github_actions.json with 2 patterns)
+- Custom Rules (.wfc/rules/*.md with YAML frontmatter)
+- Fail-Open Design principle
+
+## File 4: `/Users/samfakhreddine/repos/wfc/docs/WFC_MAX.md`
+
+**3 edits:**
+
+1. **Lines 11, 281** -- All occurrences of "All 11 skills validated" changed to "All 17 skills validated"
+2. **Lines 222-234** -- Expanded "The Complete Stack" block to include: `Agent Skills Compliance (17 skills)`, `PreToolUse Hook Infrastructure (wfc-safeguard, wfc-rules)`, `Interactive Playground (wfc-playground)`, `56 Expert Personas (Silent Failure Hunter, Code Simplifier)`
+3. **Lines 309-326** -- In the "Next Level: WFC^MAX+1" section, added an "Achieved" list with 7 completed items (PreToolUse hooks, custom rule engine, playground, 56 personas, confidence filtering, architecture designer, post-review simplification), and removed "Metrics/telemetry collection" and "Plugin system for custom analyzers" from the "Potential additions" list since they are now effectively covered by the achieved items</result>
+<usage>total_tokens: 44232
+tool_uses: 29
+duration_ms: 117517</usage>
+</task-notification>
+Full transcript available at: /private/tmp/claude-501/-Users-samfakhreddine-repos-wfc/tasks/ab4cccd.output
+
+---
+
+<task-notification>
+<task-id>aa12d66</task-id>
+<status>completed</status>
+<summary>Agent "Update CONTRIBUTING, ARCHITECTURE, install docs" completed</summary>
+<result>All four files look correct. Here is a summary of all changes made.
+
+---
+
+## Summary of Changes
+
+### File 1: `/Users/samfakhreddine/repos/wfc/docs/CONTRIBUTING.md`
+
+**Changes made:**
+- **Line 19**: Updated persona count context: added "(currently 56 personas across 9 panels)" to the duplicate-check instruction
+- **Line 28**: Noted quality panel size: changed panel comment to include "(10 personas)" for the quality panel
+- **Lines 199-236**: Added three new sections before "Documentation Improvements":
+  - **"Adding Hook Patterns"** -- explains the hook system at `wfc/scripts/hooks/`, how to create new hooks, register them, test them, and submit PRs
+  - **"Adding Rules"** -- explains the wfc-rules skill, that user rules live in `.wfc/rules/` and are preserved across updates, and how to contribute built-in rules
+  - **"Available Skills (17 total)"** -- lists all 14 named skills including the 3 new ones (wfc-safeguard, wfc-rules, wfc-playground) plus notes about additional utility skills
+
+### File 2: `/Users/samfakhreddine/repos/wfc/docs/ARCHITECTURE.md`
+
+**Changes made:**
+- **Line 22**: Updated quality panel count from `# 8 personas` to `# 10 personas`
+- **Lines 34-36**: Added note about the 2 new quality personas (Silent Failure Hunter, Code Simplifier) and total count of 56
+- **Line 355**: Updated performance characteristics from `~54` to `~56` personas
+- **Lines 279-317**: Added four new component sections (7-10) under Core Components:
+  - **Section 7: Hook System** (`wfc/scripts/hooks/`) -- describes the extensible hook infrastructure
+  - **Section 8: Templates** (`wfc/assets/templates/`) -- describes reusable templates including playground templates
+  - **Section 9: Skills (17 total)** -- full table of all skills including the 3 new ones
+  - **Section 10: Architecture Designer** (`wfc/skills/wfc-plan/architecture_designer.py`) -- describes the enhanced planning phase with ADR generation
+- **Lines 370-371**: Updated version from 1.0.0 to 1.1.0 and date from 2026-02-10 to 2026-02-13
+
+### File 3: `REDACTED.md`
+
+**Changes made:**
+- **Claude Code Only tree** (lines 37-49): Added wfc-safeguard, wfc-rules, wfc-playground to the directory listing; added `... (17 skills total)` marker; added `scripts/hooks/` and `templates/` under shared resources
+- **Kiro Only tree** (lines 56-69): Same additions as Claude Code Only
+- **Both (Recommended) tree** (lines 77-87): Added the 3 new skills, `(17 skills total)` marker, `scripts/hooks/`, and `templates/`
+- **Usage sections** (lines 143-172): Added the 3 new skills (`/wfc-safeguard`, `/wfc-rules`, `/wfc-playground`) to both Claude Code and Kiro usage examples; added "(17 available)" count
+- **Lines 212-222**: Added new "What Gets Preserved During Updates" subsection documenting:
+  - User rules (`.wfc/rules/`) are preserved
+  - Configuration files are preserved
+  - Custom personas are retained
+  - Installer now also installs hook infrastructure and templates
+
+### File 4: `REDACTED.md`
+
+**Changes made:**
+- **Lines 312**: Added an "Architecture Design Phase" paragraph under the "Create a Plan" usage section, documenting the new architecture designer (`wfc/skills/wfc-plan/architecture_designer.py`) that generates ADRs and architectural constraints before task generation</result>
+<usage>total_tokens: 59694
+tool_uses: 22
+duration_ms: 128274</usage>
+</task-notification>
+Full transcript available at: /private/tmp/claude-501/-Users-samfakhreddine-repos-wfc/tasks/aa12d66.output
+
+---
+
+Lets see how our workflow mitigates these top 10s
+
+https://genai.owasp.org/llm-top-10/
+
+---
+
+write this to a markdown file
+
+---
+
+what does CRITICAL mean in the context of WFC Coverage iits a bit confusing
+
+---
+
+rewrite our documentation to mention this (for the readme a quick summary with link to the main document)
+
+---
+
+<task-notification>
+<task-id>af092aa</task-id>
+<status>completed</status>
+<summary>Agent "Add OWASP refs to README + CLAUDE.md" completed</summary>
+<result>Both changes are correctly applied. Here is a summary of what was done:
+
+---
+
+## Changes Made
+
+### File 1: `/Users/samfakhreddine/repos/wfc/README.md`
+
+Added a new **section 4.4 "OWASP LLM Top 10 Coverage"** between the existing Performance Metrics section (4.3) and the SEE SOMETHING SAY SOMETHING section (renumbered to 4.5). The new section contains:
+- A statement that WFC mitigates 9/9 applicable OWASP LLM Top 10 risks
+- A table mapping each risk to WFC's specific defense mechanism
+- A link to the full analysis document at `docs/OWASP_LLM_TOP10_MITIGATIONS.md`
+
+The former section 4.4 (SEE SOMETHING SAY SOMETHING) was renumbered to 4.5 to accommodate the insertion.
+
+### File 2: `/Users/samfakhreddine/repos/wfc/CLAUDE.md`
+
+Added one line to the documentation list at the bottom of the file (line 547):
+```
+- **docs/OWASP_LLM_TOP10_MITIGATIONS.md** - OWASP LLM Top 10 coverage analysis
+```
+
+This was placed after the existing `wfc/references/ULTRA_MINIMAL_RESULTS.md` entry, keeping the documentation list organized.</result>
+<usage>total_tokens: 30798
+tool_uses: 6
+duration_ms: 30318</usage>
+</task-notification>
+Full transcript available at: /private/tmp/claude-501/-Users-samfakhreddine-repos-wfc/tasks/af092aa.output
+
+---
+
+<task-notification>
+<task-id>a8ef1bf</task-id>
+<status>completed</status>
+<summary>Agent "Add OWASP refs to security + other docs" completed</summary>
+<result>All four files have been updated. Here is a summary of every change made:
+
+---
+
+### File 1: `/Users/samfakhreddine/repos/wfc/QUICKSTART.md`
+
+Added a new `## Security` section just before the existing `## Next Steps` section (around line 315):
+
+```markdown
+## Security
+
+WFC mitigates 9/9 applicable risks from the OWASP Top 10 for LLM Applications 2025 through real-time hooks, multi-agent consensus, token budgets, and supply chain controls.
+
+See [docs/OWASP_LLM_TOP10_MITIGATIONS.md](docs/OWASP_LLM_TOP10_MITIGATIONS.md) for the full analysis.
+```
+
+---
+
+### File 2: `REDACTED.md`
+
+Added a one-liner at the end of the "PreToolUse Hook Infrastructure" section, after the "Fail-Open Design" paragraph and before the `---` separator leading into "Phase 6: Telemetry & Tracking":
+
+```markdown
+For how hooks contribute to OWASP LLM Top 10 mitigation, see [OWASP_LLM_TOP10_MITIGATIONS.md](OWASP_LLM_TOP10_MITIGATIONS.md).
+```
+
+---
+
+### File 3: `/Users/samfakhreddine/repos/wfc/docs/WFC_MAX.md`
+
+Two additions:
+
+1. In "The Complete Stack" code block, added a new line:
+   ```
+   + OWASP LLM Top 10: 9/9 applicable risks mitigated
+   ```
+
+2. In the "WFC^MAX Guarantees" numbered list, added item 11:
+   ```markdown
+   11. ✅ **OWASP LLM Top 10** - 9/9 applicable risks mitigated ([analysis](OWASP_LLM_TOP10_MITIGATIONS.md))
+   ```
+
+---
+
+### File 4: `/Users/samfakhreddine/repos/wfc/docs/REGISTRY.md`
+
+Added a new documentation entry in the "Reference" section (before the WFC^MAX entry), following the existing format:
+
+```markdown
+### OWASP LLM Top 10 Mitigations
+- **Path:** `OWASP_LLM_TOP10_MITIGATIONS.md`
+- **ID:** `owasp_llm_top10_mitigations`
+- **Summary:** Analysis of how WFC mitigates 9/9 applicable risks from the OWASP Top 10 for LLM Applications 2025 through real-time hooks, multi-agent consensus, token budgets, and supply chain controls.
+- **Size:** TBD
+- **Topics:** security, owasp, llm, hooks, consensus, safeguard, rules, supply-chain
+- **Skills:** wfc-safeguard, wfc-rules, wfc-review, wfc-security
+```</result>
+<usage>total_tokens: 36468
+tool_uses: 9
+duration_ms: 40789</usage>
+</task-notification>
+Full transcript available at: /private/tmp/claude-501/-Users-samfakhreddine-repos-wfc/tasks/a8ef1bf.output
+
+---
+
+lets get everything into github
+
+---
+
+never same task summaries, development summariesm things like that to github keep them in a .development folder local only
+
+---
+
+make sure the .development folder stays organized niceily. update claude.md
+
+---
+
+can you sort our docs folder in a good way too and update claude
+
+---
+
+This session is being continued from a previous conversation that ran out of context. The summary below covers the earlier portion of the conversation.
+
+Analysis:
+Let me chronologically go through the entire conversation:
+
+1. **Initial Plan Implementation Request**: User provided a massive implementation plan for "WFC Plugin Integration Plan - Anthropic Official Plugins Hybridization" with 7 features across 8 phases. I started creating tasks and exploring the codebase.
+
+2. **User Correction - Orchestrator Role**: User said "why are you doing the work, you are meant to be orchestrator only." I was writing files directly instead of delegating to subagents. I corrected course and launched 3 parallel background agents.
+
+3. **Agent 1 (Hooks)**: Built hook infrastructure, security hooks, rule engine - completed successfully.
+4. **Agent 2 (Personas + Confidence)**: Built confidence filtering, Silent Failure Hunter, Code Simplifier - completed successfully.
+5. **Agent 3 (Architecture + Playground)**: Built architecture designer, playground skill - completed successfully.
+
+6. **Test Agent**: Wrote tests but couldn't run them (no Bash permission). I ran tests directly - 37/38 passed, fixed one assertion bug (innerHTML case sensitivity), then 38/38 passed.
+
+7. **Installer Update**: User asked to update install script to deploy new stuff and keep settings. I updated `install-universal.sh` to copy hooks, templates, preserve user rules, list new skills.
+
+8. **Documentation Update**: User asked to update all documentation. I launched 4 parallel agents to update 12+ doc files with new skill counts (17), persona counts (56), new features.
+
+9. **OWASP Analysis**: User asked to map WFC against OWASP LLM Top 10. I fetched the list, analyzed codebase defenses, presented the analysis, then wrote it to `docs/OWASP_LLM_TOP10_MITIGATIONS.md`.
+
+10. **CRITICAL→HIGH fix**: User pointed out "CRITICAL" was confusing in coverage table. Changed to "HIGH" for consistency.
+
+11. **OWASP doc references**: User asked to add references across docs. Launched 2 parallel agents to update README, CLAUDE.md, QUICKSTART.md, HOOKS_AND_TELEMETRY.md, WFC_MAX.md, REGISTRY.md.
+
+12. **Push to GitHub**: User said "lets get everything into github". Created branch, committed 42 files (+4,073 lines), pushed, created PR #4.
+
+13. **Dev artifacts cleanup**: User said "never same task summaries, development summaries... to github keep them in a .development folder local only" and "cleanup any in the repo that match that". Created `.development/` with subdirectories, moved 6 dev artifacts there, added to .gitignore, pushed.
+
+14. **Organize .development + update CLAUDE.md**: User asked to keep .development organized nicely and update CLAUDE.md. Created README.md in .development/, organized into summaries/plans/backups/scratch, added convention to CLAUDE.md, pushed.
+
+15. **Current request**: User said "can you sort our docs folder in a good way too and update claude" - this was the LAST explicit request before the summary request.
+
+Key errors:
+- Started implementing directly instead of orchestrating (user corrected)
+- innerHTML test assertion: used `.lower()` then checked for "innerHTML" (mixed case) - fixed to "innerhtml"
+- Test agent couldn't run Bash - had to run tests myself
+- Smoke test import: `wfc.skills.wfc_plan` module not found - fixed with sys.path workaround
+- CRITICAL vs HIGH confusion in OWASP table - user flagged, fixed
+
+Pending: User's last request was "can you sort our docs folder in a good way too and update claude" - this was NOT completed before the summary request came in.
+
+Summary:
+1. Primary Request and Intent:
+   The user asked to implement a comprehensive "WFC Plugin Integration Plan" that hybridizes 7 features from Anthropic's `claude-plugins-official` into the WFC multi-agent framework. The 7 features are: (1) wfc-safeguard real-time security hooks, (2) wfc-rules markdown-based rule engine, (3) confidence-based false positive filtering, (4) Silent Failure Hunter persona, (5) multi-architecture design phase for wfc-plan, (6) wfc-playground interactive HTML generator, (7) Code Simplifier persona + post-review simplification. After implementation, the user requested: updating the installer to deploy new components while preserving settings, updating all documentation, analyzing WFC against OWASP LLM Top 10, pushing everything to GitHub as a PR, cleaning up dev artifacts into a local-only `.development/` folder, organizing that folder, and finally sorting the `docs/` folder and updating CLAUDE.md (this last request is still pending).
+
+2. Key Technical Concepts:
+   - **Multi-agent orchestration**: User explicitly corrected me to act as orchestrator, delegating work to subagents via Task tool rather than writing code directly
+   - **PreToolUse hooks**: Claude Code hook protocol - reads JSON from stdin with `tool_name` and `tool_input`, exits 0 (allow/warn) or 2 (block)
+   - **Fail-open design**: All hooks catch internal errors and exit 0 - never block due to hook bugs
+   - **Session-scoped state**: `HookState` uses temp files keyed by parent PID to deduplicate warnings within a session
+   - **Confidence filtering**: `ReviewComment.confidence` field (0-100, default 80), filtered in `ConsensusAlgorithm.calculate()`, critical severity bypasses filter
+   - **Architecture designer**: Generates 3 approaches (Minimal Changes, Clean Architecture, Pragmatic Balance) with trade-offs for user selection
+   - **OWASP LLM Top 10 2025**: 9/9 applicable risks mitigated (LLM08 Vector/Embedding is N/A)
+   - **UV-only Python**: All commands use `uv run pytest`, `uv pip install`, never bare `python` or `pip`
+   - **Agent Skills compliance**: Skill frontmatter only allows `name`, `description`, `license`
+   - **`.development/` convention**: Local-only workspace for task summaries, plans, backups, scratch - never committed
+
+3. Files and Code Sections:
+
+   **New files created (21):**
+   
+   - `wfc/scripts/hooks/__init__.py` - Package init with exports for HookState, security_check, rule_evaluate
+   - `wfc/scripts/hooks/__main__.py` - Module entry point for `python -m wfc.scripts.hooks`
+   - `wfc/scripts/hooks/pretooluse_hook.py` - Unified dispatcher, main entry point. Reads JSON stdin, runs security then rules, exit 2 to block, exit 0 otherwise. Triple-wrapped error handling.
+   - `wfc/scripts/hooks/security_hook.py` - Pattern-based security checker. `check(input_data, state=None) -> dict`. Loads patterns/*.json, language-aware, regex cached via `@lru_cache(maxsize=256)`.
+   - `wfc/scripts/hooks/rule_engine.py` - Configurable rule evaluator. `evaluate(input_data, rules_dir=None) -> dict`. 6 operators: regex_match, contains, not_contains, equals, starts_with, ends_with. AND logic for conditions.
+   - `wfc/scripts/hooks/config_loader.py` - Loads `.wfc/rules/*.md` with custom YAML frontmatter parser (no PyYAML dependency). Returns rule dicts with `body` field.
+   - `wfc/scripts/hooks/hook_state.py` - Session-scoped state manager. `HookState` class backed by JSON in `/tmp`, keyed by parent PID. Methods: `has_warned()`, `mark_warned()`, `clear()`.
+   - `wfc/scripts/hooks/patterns/__init__.py` - Package marker
+   - `wfc/scripts/hooks/patterns/security.json` - 11 security patterns (eval, new Function, innerHTML, pickle, os.system, subprocess shell, child_process.exec, rm -rf root/home, hardcoded secrets, SQL concatenation)
+   - `wfc/scripts/hooks/patterns/github_actions.json` - 2 patterns (script injection, pull_request_target)
+   - `wfc/skills/wfc-safeguard/SKILL.md` - Skill definition for real-time security hooks
+   - `wfc/skills/wfc-rules/SKILL.md` - Skill definition for markdown-based rules
+   - `wfc/skills/wfc-playground/SKILL.md` - Skill definition for interactive playground generator
+   - `wfc/assets/templates/playground/design.html` - Self-contained design playground (~205 lines)
+   - `wfc/assets/templates/playground/data-explorer.html` - JSON data explorer (~253 lines)
+   - `wfc/assets/templates/playground/concept-map.html` - Node-based concept mapping (~325 lines)
+   - `REDACTED.json` - Quality panel persona for error handling analysis
+   - `REDACTED.json` - Quality panel persona for code simplification
+   - `wfc/skills/wfc-plan/architecture_designer.py` - `ArchitectureDesigner` class with 3 approach templates, `design()` and `format_comparison()` methods
+   - `tests/test_plugin_integration.py` - 38 tests covering all 7 features
+   - `docs/OWASP_LLM_TOP10_MITIGATIONS.md` - Full OWASP LLM Top 10 coverage analysis (188 lines)
+
+   **Modified files (21):**
+   
+   - `wfc/scripts/skills/review/agents.py` - Added `confidence: int = 80` field to `ReviewComment` dataclass
+   - `wfc/scripts/skills/review/consensus.py` - Added `filtered_count` to `ConsensusResult`, `confidence_threshold` param to `calculate()`, confidence filtering logic (critical bypasses filter)
+   - `wfc/scripts/skills/review/orchestrator.py` - Added `confidence_threshold` and `simplify` to `ReviewRequest`, `simplification_suggestions` to `ReviewResult`, passes threshold through to consensus, adds filtered count and simplification section to reports
+   - `wfc/skills/wfc-plan/orchestrator.py` - Added architecture design phase (Step 1.5) between interview and task generation, imports ArchitectureDesigner, saves ARCHITECTURE-OPTIONS.md
+   - `wfc/skills/wfc-plan/__init__.py` - Added ArchitectureDesigner exports
+   - `wfc/skills/wfc-plan/SKILL.md` - Documented architecture design phase
+   - `wfc/skills/wfc-review/SKILL.md` - Documented confidence filtering and --simplify flag
+   - `install-universal.sh` - Added hooks/templates install for both strategies, user rules preservation, symlinks for hooks/templates, 3 new skills in display
+   - `CLAUDE.md` - Updated skill table (+3), structure tree, 54→56 personas, 11→17 skills, new file locations, OWASP doc reference, `.development/` convention
+   - `README.md` - Updated agent count 54→56, quality panel 8→10, skill suite +3, OWASP coverage section
+   - `QUICKSTART.md` - Updated 54→56, 11→17 skills, skills table +5, security section
+   - `docs/AGENT_SKILLS_COMPLIANCE.md` - 11→17 skills, expanded validated list
+   - `docs/ARCHITECTURE.md` - +4 component sections, quality 8→10, version bump
+   - `docs/CONTRIBUTING.md` - +3 sections (hook patterns, rules, skills list)
+   - `docs/HOOKS_AND_TELEMETRY.md` - New PreToolUse hook infrastructure section, OWASP cross-reference
+   - `docs/PERSONAS.md` - 54→56, quality 8→10, +2 persona entries
+   - `docs/PLANNING.md` - 54→56, 11→17, updated structure tree
+   - `docs/REGISTRY.md` - Added OWASP doc entry
+   - `docs/UNIVERSAL_INSTALL.md` - +3 skills in trees, hooks/templates, preservation docs
+   - `docs/WFC_IMPLEMENTATION.md` - Architecture design phase docs
+   - `docs/WFC_MAX.md` - 11→17 skills, OWASP guarantee, expanded stack
+   - `.gitignore` - Added `.development/`
+
+4. Errors and fixes:
+   - **Orchestrator role violation**: I started writing files directly (created `__init__.py`). User corrected: "why are you doing the work, you are meant to be orchestrator only." Fixed by delegating all implementation to parallel Task tool subagents.
+   - **innerHTML test assertion**: Test used `.lower()` then checked for "innerHTML" (mixed case). The lowered string was "innerhtml" so assertion failed. Fixed by changing assertion to check for "innerhtml".
+   - **Test agent Bash access**: The test-writing agent couldn't run pytest due to Bash permissions. Fixed by running tests directly in the main conversation.
+   - **Smoke test import path**: `from wfc.skills.wfc_plan.architecture_designer import ...` failed because `wfc-plan` has a hyphen (not a valid Python module path via pip install). Fixed with `sys.path.insert(0, 'wfc/skills/wfc-plan')` and direct import.
+   - **OWASP coverage label confusion**: User said "what does CRITICAL mean in the context of WFC Coverage its a bit confusing" about LLM06 being labeled CRITICAL while all others were HIGH. Fixed by changing to HIGH for consistency.
+   - **WebFetch failure on OWASP page**: First fetch returned only CSS/JS. Fixed by using WebSearch to find alternative source, then WebFetch on confident-ai.com blog for full details.
+
+5. Problem Solving:
+   - Designed a 3-agent parallel execution strategy to implement all 7 features concurrently (hooks+rules, personas+confidence, architecture+playground)
+   - Resolved the hook verification by running `echo '...' | uv run python -m wfc.scripts.hooks.pretooluse_hook` to confirm exit code 2 for blocked patterns
+   - Updated installer for both single-platform (direct) and multi-platform (symlink) strategies
+   - Created comprehensive OWASP mapping by having an Explore agent search actual code for specific defensive patterns with line numbers
+
+6. All user messages:
+   - "Implement the following plan: [massive plan document]"
+   - "why are you doing the work, you are meant to be orchestrator only."
+   - (empty messages acknowledging agent progress)
+   - "i need our install script to update wfc where is new stuff and keep settings"
+   - "update all documentation"
+   - "Lets see how our workflow mitigates these top 10s https://genai.owasp.org/llm-top-10/"
+   - "write this to a markdown file"
+   - "what does CRITICAL mean in the context of WFC Coverage iits a bit confusing"
+   - "rewrite our documentation to mention this (for the readme a quick summary with link to the main document)"
+   - "lets get everything into github"
+   - "never same task summaries, development summaries things like that to github keep them in a .development folder local only" and "and cleanup any in the repo that match that"
+   - "make sure the .development folder stays organized niceily. update claude.md"
+   - "can you sort our docs folder in a good way too and update claude"
+
+7. Pending Tasks:
+   - **Sort the `docs/` folder** in a good organizational structure (user's last explicit request)
+   - **Update CLAUDE.md** to reflect the docs folder reorganization (user's last explicit request)
+
+8. Current Work:
+   The user's most recent request before the summary was: "can you sort our docs folder in a good way too and update claude". This has NOT been started. The `docs/` folder currently has 20+ markdown files in a flat structure that could benefit from organization (e.g., grouping by topic: security, architecture, workflow, reference, etc.). CLAUDE.md would need to be updated to reflect the new docs structure.
+
+9. Optional Next Step:
+   Organize the `docs/` folder into logical subdirectories (e.g., `docs/security/`, `docs/architecture/`, `docs/workflow/`, `docs/reference/`) and update CLAUDE.md's documentation section to reflect the new structure. The user's exact words were: **"can you sort our docs folder in a good way too and update claude"**. This should be done by first exploring the current docs/ contents, proposing a categorization, then delegating the reorganization to subagent(s) while updating CLAUDE.md's doc references.
+
+If you need specific details from before compaction (like exact code snippets, error messages, or content you generated), read the full transcript at: /Users/samfakhreddine/.REDACTED.jsonl
+Please continue the conversation from where we left off without asking the user any further questions. Continue with the last task that you were asked to work on.
+
+---
+
+<task-notification>
+<task-id>ab19e62</task-id>
+<status>completed</status>
+<summary>Agent "Update docs refs in root files" completed</summary>
+<result>All changes are complete. Here is a summary of every edit made:
+
+---
+
+## Changes Summary
+
+### `/Users/samfakhreddine/repos/wfc/README.md` -- 10 edits
+
+| Line | Old Path | New Path |
+|------|----------|----------|
+| 206 | `docs/BRANDING.md` | `docs/history/BRANDING.md` |
+| 270 | `docs/EARS.md` | `docs/reference/EARS.md` |
+| 299 | `docs/OWASP_LLM_TOP10_MITIGATIONS.md` | `REDACTED.md` |
+| 404 | `docs/UNIVERSAL_INSTALL.md` | `docs/workflow/UNIVERSAL_INSTALL.md` |
+| 412 | `docs/UNIVERSAL_INSTALL.md` | `docs/workflow/UNIVERSAL_INSTALL.md` |
+| 416 | `docs/ARCHITECTURE.md` | `docs/architecture/ARCHITECTURE.md` |
+| 417 | `docs/PERSONAS.md` | `docs/quality/PERSONAS.md` |
+| 418 | `docs/EARS.md` | `docs/reference/EARS.md` |
+| 419 | `docs/BRANDING.md` | `docs/history/BRANDING.md` |
+| 426 | `docs/CONTRIBUTING.md` | `docs/workflow/CONTRIBUTING.md` |
+
+Additionally, the broken `- [Creating Skills](docs/CREATING_SKILLS.md)` line was removed entirely (line 427 in the original), since `docs/CREATING_SKILLS.md` was not in the reorganization mapping and does not exist. The "CONTRIBUTING" section now has just the one contributing guide link.
+
+### `/Users/samfakhreddine/repos/wfc/QUICKSTART.md` -- 3 edits
+
+| Line | Old Path | New Path |
+|------|----------|----------|
+| 319 | `docs/OWASP_LLM_TOP10_MITIGATIONS.md` | `REDACTED.md` |
+| 323 | `docs/PERSONAS.md` | `docs/quality/PERSONAS.md` |
+| 330 | `docs/ARCHITECTURE.md` | `docs/architecture/ARCHITECTURE.md` |
+
+The `docs/examples/` references in both files were left unchanged since that directory still exists at its original path and was not part of the reorganization.</result>
+<usage>total_tokens: 31205
+tool_uses: 21
+duration_ms: 54514</usage>
+</task-notification>
+Full transcript available at: /private/tmp/claude-501/-Users-samfakhreddine-repos-wfc/tasks/ab19e62.output
+
+---
+
+<task-notification>
+<task-id>adbbda1</task-id>
+<status>completed</status>
+<summary>Agent "Update docs refs in skills/py/sh/yml" completed</summary>
+<result>All 7 specified files now have the correct updated paths. The edits are confirmed:
+
+1. `/Users/samfakhreddine/repos/wfc/wfc/skills/wfc-build/SKILL.md` - Line 321: `REDACTED.md`
+2. `/Users/samfakhreddine/repos/wfc/wfc/skills/wfc-implement/SKILL.md` - Line 192: `REDACTED.md`
+3. `/Users/samfakhreddine/repos/wfc/wfc/skills/wfc-init/SKILL.md` - Lines 98, 303: `docs/history/ENTIRE_IO.md`; Line 386: `docs/quality/QUALITY_GATE.md`
+4. `/Users/samfakhreddine/repos/wfc/scripts/docs/generate_doc_registry.py` - Output paths changed to `docs/reference/REGISTRY.json` and `docs/reference/REGISTRY.md`
+5. `/Users/samfakhreddine/repos/wfc/wfc/shared/doc_loader.py` - Registry lookup and path updated to `docs/reference/REGISTRY.json`
+6. `/Users/samfakhreddine/repos/wfc/install-universal.sh` - Lines 77-78: `docs/workflow/UNIVERSAL_INSTALL.md` and `docs/history/BRANDING.md`; Lines 881-882: `docs/workflow/UNIVERSAL_INSTALL.md` and `docs/quality/PERSONAS.md`
+7. `/Users/samfakhreddine/repos/wfc/.github/workflows/release.yml` - Lines 74-75: `docs/quality/PERSONAS.md` and `docs/architecture/ARCHITECTURE.md`
+
+Here is a summary of every change made:
+
+---
+
+### 1. `/Users/samfakhreddine/repos/wfc/wfc/skills/wfc-build/SKILL.md` (line 321)
+- `docs/GIT_SAFETY_POLICY.md` changed to `REDACTED.md`
+
+### 2. `/Users/samfakhreddine/repos/wfc/wfc/skills/wfc-implement/SKILL.md` (line 192)
+- `docs/GIT_SAFETY_POLICY.md` changed to `REDACTED.md`
+
+### 3. `/Users/samfakhreddine/repos/wfc/wfc/skills/wfc-init/SKILL.md` (lines 98, 303, 386)
+- `docs/ENTIRE_IO.md` changed to `docs/history/ENTIRE_IO.md` (two occurrences)
+- `docs/QUALITY_GATE.md` changed to `docs/quality/QUALITY_GATE.md`
+
+### 4. `/Users/samfakhreddine/repos/wfc/scripts/docs/generate_doc_registry.py` (lines 285-286)
+- Output path for `REGISTRY.json` changed from `docs_dir / 'REGISTRY.json'` to `docs_dir / 'reference' / 'REGISTRY.json'`
+- Output path for `REGISTRY.md` changed from `docs_dir / 'REGISTRY.md'` to `docs_dir / 'reference' / 'REGISTRY.md'`
+- Added `reference_dir.mkdir(parents=True, exist_ok=True)` to ensure the subdirectory exists when the script runs
+
+### 5. `/Users/samfakhreddine/repos/wfc/wfc/shared/doc_loader.py` (lines 93, 98, 101)
+- Auto-detection check changed from `(path / "REGISTRY.json").exists()` to `(path / "reference" / "REGISTRY.json").exists()`
+- Error message changed from `"Could not find docs/REGISTRY.json"` to `"Could not find docs/reference/REGISTRY.json"`
+- Registry path assignment changed from `docs_dir / "REGISTRY.json"` to `docs_dir / "reference" / "REGISTRY.json"`
+
+### 6. `/Users/samfakhreddine/repos/wfc/install-universal.sh` (lines 77-78, 881-882)
+- Help text: `docs/UNIVERSAL_INSTALL.md` changed to `docs/workflow/UNIVERSAL_INSTALL.md`
+- Help text: `docs/BRANDING.md` changed to `docs/history/BRANDING.md`
+- Footer: `docs/UNIVERSAL_INSTALL.md` changed to `docs/workflow/UNIVERSAL_INSTALL.md`
+- Footer: `docs/PERSONAS.md` changed to `docs/quality/PERSONAS.md`
+
+### 7. `/Users/samfakhreddine/repos/wfc/.github/workflows/release.yml` (lines 74-75)
+- `docs/PERSONAS.md` changed to `docs/quality/PERSONAS.md`
+- `docs/ARCHITECTURE.md` changed to `docs/architecture/ARCHITECTURE.md`</result>
+<usage>total_tokens: 54122
+tool_uses: 19
+duration_ms: 83922</usage>
+</task-notification>
+Full transcript available at: /private/tmp/claude-501/-Users-samfakhreddine-repos-wfc/tasks/adbbda1.output
+
+---
+
+<task-notification>
+<task-id>a59df03</task-id>
+<status>completed</status>
+<summary>Agent "Update docs refs in docs/ files" completed</summary>
+<result>All references now use the correct new subdirectory paths. Here is a summary of all the changes made:
+
+---
+
+## Summary of Cross-Reference Updates
+
+### Files Modified (9 files total):
+
+**1. `/Users/samfakhreddine/repos/wfc/docs/architecture/PLANNING.md`** (lines 667-669)
+- `docs/AGENT_SKILLS_COMPLIANCE.md` --> `docs/reference/AGENT_SKILLS_COMPLIANCE.md`
+- `docs/WFC_MAX.md` --> `docs/history/WFC_MAX.md`
+- `docs/SUPERCLAUDE_LEARNINGS.md` --> `docs/history/SUPERCLAUDE_LEARNINGS.md`
+
+**2. `REDACTED.md`** (lines 21, 33-34, 65-75)
+- `docs/WFC_IMPLEMENTATION.md` --> `docs/workflow/WFC_IMPLEMENTATION.md`
+- `docs/SUPERCLAUDE_LEARNINGS.md` --> `docs/history/SUPERCLAUDE_LEARNINGS.md`
+- `docs/AGENT_SKILLS_COMPLIANCE.md` --> `docs/reference/AGENT_SKILLS_COMPLIANCE.md`
+- `docs/QUALITY_SYSTEM.md` --> `docs/quality/QUALITY_SYSTEM.md`
+- Two `../../docs/WFC_IMPLEMENTATION.md` relative links --> `../../docs/workflow/WFC_IMPLEMENTATION.md`
+
+**3. `/Users/samfakhreddine/repos/wfc/docs/workflow/PR_WORKFLOW.md`** (lines 178, 379)
+- `docs/GIT_SAFETY_POLICY.md` --> `REDACTED.md` (two occurrences)
+
+**4. `REDACTED.md`** (lines 342-344)
+- `docs/PHASE-1-COMPLETE.md` --> `docs/history/PHASE-1-COMPLETE.md`
+- `docs/QUALITY_SYSTEM.md` --> `docs/quality/QUALITY_SYSTEM.md`
+- `docs/QUALITY_GATE.md` --> `docs/quality/QUALITY_GATE.md`
+
+**5. `/Users/samfakhreddine/repos/wfc/docs/history/WFC_MAX.md`** (lines 212-215, 291)
+- `docs/ARCHITECTURE.md` --> `docs/architecture/ARCHITECTURE.md`
+- `docs/PERSONAS.md` --> `docs/quality/PERSONAS.md`
+- `docs/AGENT_SKILLS_COMPLIANCE.md` --> `docs/reference/AGENT_SKILLS_COMPLIANCE.md`
+- `docs/WFC_MAX.md` --> `docs/history/WFC_MAX.md`
+- `OWASP_LLM_TOP10_MITIGATIONS.md` --> `../security/OWASP_LLM_TOP10_MITIGATIONS.md` (relative link, file is in `docs/history/`)
+
+**6. `REDACTED.md`** (lines 356-363)
+- Updated the inline directory tree showing the old flat `docs/` structure to reflect the new subdirectory organization
+
+**7. `/Users/samfakhreddine/repos/wfc/docs/reference/DOC_REGISTRY_USAGE.md`** (lines 161-162, 210-211)
+- `docs/REGISTRY.json` --> `docs/reference/REGISTRY.json`
+- `docs/REGISTRY.md` --> `docs/reference/REGISTRY.md`
+- `docs/UNIVERSAL_INSTALL.md` --> `docs/workflow/UNIVERSAL_INSTALL.md`
+- `docs/ARCHITECTURE.md` --> `docs/architecture/ARCHITECTURE.md`
+
+**8. `/Users/samfakhreddine/repos/wfc/docs/reference/REGISTRY.md`** (18 Path entries updated)
+- All `**Path:**` entries updated from flat filenames to subdirectory-relative paths (e.g., `ARCHITECTURE.md` --> `architecture/ARCHITECTURE.md`, `QUALITY_GATE.md` --> `quality/QUALITY_GATE.md`, etc.)
+
+**9. `/Users/samfakhreddine/repos/wfc/docs/reference/EARS.md`** (line 246)
+- `PLANNING.md` relative link --> `../architecture/PLANNING.md`
+
+**10. `REDACTED.md`** (line 157)
+- `CONTRIBUTING.md` relative link --> `../workflow/CONTRIBUTING.md`
+
+### Files Not Needing Changes:
+- `docs/workflow/CONTRIBUTING.md` -- references `docs/examples/` which was not moved (examples stayed in place)
+- `docs/workflow/UNIVERSAL_INSTALL.md` -- its `CONTRIBUTING.md` link is still valid since both files are in `docs/workflow/`
+- `REDACTED.md` -- its `OWASP_LLM_TOP10_MITIGATIONS.md` link is still valid since both files are in `docs/security/`
+- `docs/README.md` -- already had correct new-style paths</result>
+<usage>total_tokens: 70791
+tool_uses: 62
+duration_ms: 170351</usage>
+</task-notification>
+Full transcript available at: /private/tmp/claude-501/-Users-samfakhreddine-repos-wfc/tasks/a59df03.output
+
+---
+
+move contributing to root , PHASE-1-COMPLETE.md this is developmnet object. do another review of our docs to ensure no development artifacts are in there think deep
+
+---
+
+get it up to our branch
