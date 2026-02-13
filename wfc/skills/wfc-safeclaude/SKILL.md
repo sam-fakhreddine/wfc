@@ -2,9 +2,6 @@
 name: wfc-safeclaude
 description: Project-specific command allowlist generator that creates safe, curated approval settings for Claude Code. Scans project to identify commonly-used commands (git, npm, pytest, etc.), categorizes by risk level, and generates optimized settings.json configuration. Eliminates constant approval prompts without enabling dangerous YOLO mode. Use when setting up new projects or reducing approval friction. Triggers on "reduce approval prompts", "generate safe commands", "create allowlist", or explicit /wfc-safeclaude. Ideal for project onboarding and developer experience. Not for bypassing security controls.
 license: MIT
-user-invocable: true
-disable-model-invocation: false
-argument-hint: [--show or --strict or --add "command"]
 ---
 
 # WFC:SAFECLAUDE - Safe Command Allowlist Generator

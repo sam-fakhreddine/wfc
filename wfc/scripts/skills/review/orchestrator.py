@@ -56,6 +56,10 @@ class ReviewRequest:
     complexity: str = "M"  # S, M, L, XL
     domain_context: List[str] = field(default_factory=list)
 
+    # Review options
+    confidence_threshold: int = 80  # 0-100, filter low-confidence comments
+    simplify: bool = False  # Run post-review simplification pass
+
 
 @dataclass
 class ReviewResult:
@@ -64,6 +68,7 @@ class ReviewResult:
     task_id: str
     consensus: ConsensusResult
     report_path: Path
+    simplification_suggestions: Optional[List[str]] = None
 
     def __str__(self) -> str:
         status = "✅ PASSED" if self.consensus.passed else "❌ FAILED"
@@ -196,7 +201,9 @@ class ReviewOrchestrator:
             reviews.append(review)
 
         # Calculate consensus
-        consensus = self.consensus.calculate(reviews)
+        consensus = self.consensus.calculate(
+            reviews, confidence_threshold=request.confidence_threshold
+        )
 
         # Generate report
         report_path = output_dir / f"REVIEW-{request.task_id}.md"
@@ -293,7 +300,10 @@ class ReviewOrchestrator:
 
         # Calculate consensus with relevance weighting
         consensus = self.consensus.calculate(
-            reviews=agent_reviews, relevance_scores=relevance_scores, weight_by_relevance=True
+            reviews=agent_reviews,
+            relevance_scores=relevance_scores,
+            weight_by_relevance=True,
+            confidence_threshold=request.confidence_threshold,
         )
 
         # Generate report
@@ -349,12 +359,24 @@ class ReviewOrchestrator:
             f"**Status**: {'✅ APPROVED' if consensus.passed else '❌ REJECTED'}",
             f"**Overall Score**: {consensus.overall_score:.1f}/10",
             f"**Reviewers**: {len(selected_personas)} expert personas",
-            "",
-            "---",
-            "",
-            "## 👥 Selected Personas",
-            "",
         ]
+
+        # Filtered count info
+        if consensus.filtered_count > 0:
+            lines.append(
+                f"**Comments**: {len(consensus.all_comments)} reported"
+                f" ({consensus.filtered_count} filtered as low-confidence)"
+            )
+
+        lines.extend(
+            [
+                "",
+                "---",
+                "",
+                "## 👥 Selected Personas",
+                "",
+            ]
+        )
 
         # Persona selection summary
         for sp in selected_personas:
@@ -444,6 +466,22 @@ class ReviewOrchestrator:
             ]
         )
 
+        # Simplification pass section
+        if consensus.passed and request.simplify:
+            lines.extend(
+                [
+                    "---",
+                    "",
+                    "## Simplification Pass",
+                    "",
+                    (
+                        "Simplification recommended - run Code Simplifier persona"
+                        " separately for suggestions on reducing unnecessary complexity."
+                    ),
+                    "",
+                ]
+            )
+
         # Write report
         self._validate_output_path(path)
         with open(path, "w") as f:
@@ -464,6 +502,16 @@ class ReviewOrchestrator:
             "## Agent Reviews",
             "",
         ]
+
+        # Filtered count info
+        if consensus.filtered_count > 0:
+            lines.extend(
+                [
+                    f"**Comments**: {len(consensus.all_comments)} reported"
+                    f" ({consensus.filtered_count} filtered as low-confidence)",
+                    "",
+                ]
+            )
 
         # Agent summaries
         for agent_name, review in consensus.agent_reviews.items():
@@ -510,6 +558,22 @@ class ReviewOrchestrator:
                 "",
             ]
         )
+
+        # Simplification pass section
+        if consensus.passed and request.simplify:
+            lines.extend(
+                [
+                    "---",
+                    "",
+                    "## Simplification Pass",
+                    "",
+                    (
+                        "Simplification recommended - run Code Simplifier persona"
+                        " separately for suggestions on reducing unnecessary complexity."
+                    ),
+                    "",
+                ]
+            )
 
         # Write report
         self._validate_output_path(path)

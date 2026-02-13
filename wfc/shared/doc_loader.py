@@ -90,15 +90,15 @@ class DocLoader:
             ]
 
             for path in possible_paths:
-                if (path / "REGISTRY.json").exists():
+                if (path / "reference" / "REGISTRY.json").exists():
                     docs_dir = path
                     break
 
             if docs_dir is None:
-                raise FileNotFoundError("Could not find docs/REGISTRY.json")
+                raise FileNotFoundError("Could not find docs/reference/REGISTRY.json")
 
         self.docs_dir = docs_dir
-        self.registry_path = docs_dir / "REGISTRY.json"
+        self.registry_path = docs_dir / "reference" / "REGISTRY.json"
 
         if not self.registry_path.exists():
             raise FileNotFoundError(f"Registry not found: {self.registry_path}")

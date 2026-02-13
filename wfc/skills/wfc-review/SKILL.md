@@ -2,9 +2,6 @@
 name: wfc-consensus-review
 description: Multi-agent consensus code review using specialized expert personas. Automatically selects 5 relevant experts from 54 reviewers (security, architecture, performance, quality, domain specialists) to analyze code and reach consensus. Use when user requests code review, PR analysis, security assessment, or quality checks. Triggers on "review this code", "check for security issues", "analyze this PR", "is this code good", or explicit /wfc-consensus-review. Ideal for feature implementations, refactoring, API changes, and security-sensitive code. Not for simple typo fixes, documentation-only changes, or trivial updates.
 license: MIT
-user-invocable: true
-disable-model-invocation: false
-argument-hint: [task_id or path]
 ---
 
 # WFC:CONSENSUS-REVIEW - Multi-Agent Consensus Code Review
@@ -172,6 +169,28 @@ Each reviewer follows the systematic 6-step checklist (see `CHECKLIST.md`):
   }
 }
 ```
+
+## Confidence Filtering
+
+Review comments include confidence scores (0-100). Low-confidence findings are automatically filtered:
+
+- **Default threshold**: 80 (configurable)
+- **Critical severity**: Always shown regardless of confidence
+- **Report shows**: "12 reported (8 filtered as low-confidence)"
+
+## Post-Review Simplification
+
+Use `--simplify` to run an optional Code Simplifier pass after review approval:
+
+```bash
+/wfc-review TASK-001 --simplify
+```
+
+When enabled, the Code Simplifier persona analyzes approved code for:
+- Unnecessary complexity
+- Redundant abstractions
+- Deep nesting
+- Over-engineering
 
 ## Philosophy
 

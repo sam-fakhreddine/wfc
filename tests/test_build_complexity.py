@@ -24,7 +24,7 @@ class TestComplexityAssessor:
             files_affected=["middleware.py"],
             loc_estimate=25,
             new_dependencies=[],
-            constraints=[]
+            constraints=[],
         )
 
         rating = self.assessor.assess(interview)
@@ -41,7 +41,7 @@ class TestComplexityAssessor:
             files_affected=["auth.py", "middleware.py"],
             loc_estimate=150,
             new_dependencies=["pyjwt"],
-            constraints=["security"]
+            constraints=["security"],
         )
 
         rating = self.assessor.assess(interview)
@@ -60,11 +60,11 @@ class TestComplexityAssessor:
                 "users/models.py",
                 "users/service.py",
                 "users/repository.py",
-                "users/api.py"
+                "users/api.py",
             ],
             loc_estimate=400,
             new_dependencies=[],
-            constraints=["maintain_api_compatibility"]
+            constraints=["maintain_api_compatibility"],
         )
 
         rating = self.assessor.assess(interview)
@@ -81,7 +81,7 @@ class TestComplexityAssessor:
             files_affected=[f"file{i}.py" for i in range(15)],
             loc_estimate=800,
             new_dependencies=["fastapi", "sqlalchemy"],
-            constraints=[]
+            constraints=[],
         )
 
         rating = self.assessor.assess(interview)
@@ -98,7 +98,7 @@ class TestComplexityAssessor:
             files_affected=["api.py", "middleware.py"],
             loc_estimate=100,
             new_dependencies=["redis"],
-            constraints=[]
+            constraints=[],
         )
 
         # Run assessment 10 times
@@ -120,7 +120,7 @@ class TestComplexityAssessor:
             files_affected=["file1.py", "file2.py"],
             loc_estimate=60,
             new_dependencies=[],
-            constraints=[]
+            constraints=[],
         )
 
         rating = self.assessor.assess(interview)
@@ -135,7 +135,7 @@ class TestComplexityAssessor:
             files_affected=[f"file{i}.py" for i in range(4)],
             loc_estimate=250,
             new_dependencies=[],
-            constraints=[]
+            constraints=[],
         )
 
         rating = self.assessor.assess(interview)
@@ -150,7 +150,7 @@ class TestComplexityAssessor:
             files_affected=[f"file{i}.py" for i in range(12)],
             loc_estimate=600,
             new_dependencies=[],
-            constraints=[]
+            constraints=[],
         )
 
         rating = self.assessor.assess(interview)

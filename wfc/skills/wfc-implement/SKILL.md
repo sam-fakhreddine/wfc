@@ -2,9 +2,6 @@
 name: wfc-implement
 description: Multi-agent parallel implementation engine that orchestrates multiple TDD-style agents in isolated git worktrees. Reads structured TASKS.md, assigns tasks to parallel agents, enforces test-first development, integrates consensus review, and auto-merges with rollback capability. Use when you have a structured plan (TASKS.md) ready to execute, or when implementing multiple related tasks in parallel. Triggers on "implement this plan", "execute these tasks", "start implementation", or explicit /wfc-implement. Ideal for executing wfc-plan outputs or any structured task list. Not for ad-hoc single features without planning.
 license: MIT
-user-invocable: true
-disable-model-invocation: false
-argument-hint: [path/to/TASKS.md or --help]
 ---
 
 # wfc-implement - Multi-Agent Parallel Implementation Engine
@@ -189,7 +186,7 @@ WFC workflow:
 - ✅ Easy to revert before push
 - ✅ User decides: push, PR, or revert
 
-See [GIT_SAFETY_POLICY.md](../../../docs/GIT_SAFETY_POLICY.md) for complete policy.
+See [GIT_SAFETY_POLICY.md](../../../docs/security/GIT_SAFETY_POLICY.md) for complete policy.
 
 ## Current Implementation Status
 

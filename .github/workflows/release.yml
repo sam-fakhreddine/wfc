@@ -71,8 +71,8 @@ jobs:
 
           - [README](README.md) - Overview and quick start
           - [QUICKSTART](QUICKSTART.md) - 5-minute getting started guide
-          - [PERSONAS](docs/PERSONAS.md) - Complete persona library
-          - [ARCHITECTURE](docs/ARCHITECTURE.md) - System design
+          - [PERSONAS](docs/quality/PERSONAS.md) - Complete persona library
+          - [ARCHITECTURE](docs/architecture/ARCHITECTURE.md) - System design
 
           ### 🔗 Links
 

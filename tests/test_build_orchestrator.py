@@ -22,10 +22,7 @@ class TestBuildOrchestrator:
 
     def test_execute_with_feature_hint(self):
         """Test execute with feature hint"""
-        result = self.orchestrator.execute(
-            feature_hint="Add logging to middleware",
-            dry_run=True
-        )
+        result = self.orchestrator.execute(feature_hint="Add logging to middleware", dry_run=True)
 
         assert result["status"] in ["dry_run_success", "xl_recommendation"]
         assert result["interview"] is not None
@@ -33,10 +30,7 @@ class TestBuildOrchestrator:
 
     def test_dry_run_no_implementation(self):
         """Test dry-run mode doesn't execute implementation"""
-        result = self.orchestrator.execute(
-            feature_hint="Test feature",
-            dry_run=True
-        )
+        result = self.orchestrator.execute(feature_hint="Test feature", dry_run=True)
 
         if result["status"] == "dry_run_success":
             # Should have interview and complexity, but no implementation
@@ -48,10 +42,7 @@ class TestBuildOrchestrator:
         """TEST-019: XL complexity triggers wfc-plan recommendation"""
         # This would require mocking the interview to return XL-sized feature
         # For now, test that the recommendation flow exists
-        result = self.orchestrator.execute(
-            feature_hint="Test",
-            dry_run=True
-        )
+        result = self.orchestrator.execute(feature_hint="Test", dry_run=True)
 
         # If XL is detected, should return recommendation status
         if result["complexity"] and result["complexity"].rating == "XL":
@@ -70,10 +61,7 @@ class TestBuildOrchestrator:
 
     def test_metrics_recorded(self):
         """Test that execution metrics are recorded"""
-        result = self.orchestrator.execute(
-            feature_hint="Test",
-            dry_run=True
-        )
+        result = self.orchestrator.execute(feature_hint="Test", dry_run=True)
 
         assert "metrics" in result
         assert "duration_seconds" in result["metrics"]
@@ -81,10 +69,7 @@ class TestBuildOrchestrator:
 
     def test_no_auto_push_in_result(self):
         """TEST-015: No auto-push to remote (PROP-003)"""
-        result = self.orchestrator.execute(
-            feature_hint="Test",
-            dry_run=False
-        )
+        result = self.orchestrator.execute(feature_hint="Test", dry_run=False)
 
         # If implementation result exists, verify no push
         if result.get("implementation"):
@@ -102,34 +87,25 @@ class TestOrchestrationFlow:
 
     def test_phase_1_interview(self):
         """Test Phase 1: Interview completes"""
-        result = self.orchestrator.execute(
-            feature_hint="Test",
-            dry_run=True
-        )
+        result = self.orchestrator.execute(feature_hint="Test", dry_run=True)
 
         # Interview phase should complete
         assert result["interview"] is not None
-        assert hasattr(result["interview"], 'feature_description')
-        assert hasattr(result["interview"], 'scope')
+        assert hasattr(result["interview"], "feature_description")
+        assert hasattr(result["interview"], "scope")
 
     def test_phase_2_complexity_assessment(self):
         """Test Phase 2: Complexity assessment completes"""
-        result = self.orchestrator.execute(
-            feature_hint="Test",
-            dry_run=True
-        )
+        result = self.orchestrator.execute(feature_hint="Test", dry_run=True)
 
         # Assessment phase should complete
         assert result["complexity"] is not None
-        assert hasattr(result["complexity"], 'rating')
-        assert hasattr(result["complexity"], 'agent_count')
+        assert hasattr(result["complexity"], "rating")
+        assert hasattr(result["complexity"], "agent_count")
 
     def test_phase_3_implementation_placeholder(self):
         """Test Phase 3: Implementation routing (placeholder)"""
-        result = self.orchestrator.execute(
-            feature_hint="Test",
-            dry_run=False
-        )
+        result = self.orchestrator.execute(feature_hint="Test", dry_run=False)
 
         # Implementation phase should have placeholder
         if result["status"] not in ["xl_recommendation"]:
@@ -145,40 +121,28 @@ class TestSafetyProperties:
 
     def test_prop_001_quality_gates_enforced(self):
         """Verify PROP-001: Quality gates would be enforced"""
-        result = self.orchestrator.execute(
-            feature_hint="Test",
-            dry_run=False
-        )
+        result = self.orchestrator.execute(feature_hint="Test", dry_run=False)
 
         if result.get("implementation"):
             assert result["implementation"].get("would_run_quality_gates") == True
 
     def test_prop_002_consensus_review_enforced(self):
         """Verify PROP-002: Consensus review would be enforced"""
-        result = self.orchestrator.execute(
-            feature_hint="Test",
-            dry_run=False
-        )
+        result = self.orchestrator.execute(feature_hint="Test", dry_run=False)
 
         if result.get("implementation"):
             assert result["implementation"].get("would_run_consensus_review") == True
 
     def test_prop_003_no_auto_push(self):
         """Verify PROP-003: No auto-push to remote"""
-        result = self.orchestrator.execute(
-            feature_hint="Test",
-            dry_run=False
-        )
+        result = self.orchestrator.execute(feature_hint="Test", dry_run=False)
 
         if result.get("implementation"):
             assert result["implementation"].get("would_push_to_remote") == False
 
     def test_prop_007_tdd_enforced(self):
         """Verify PROP-007: TDD workflow would be enforced"""
-        result = self.orchestrator.execute(
-            feature_hint="Test",
-            dry_run=False
-        )
+        result = self.orchestrator.execute(feature_hint="Test", dry_run=False)
 
         if result.get("implementation"):
             assert result["implementation"].get("would_enforce_tdd") == True

@@ -6,6 +6,32 @@ set -e
 
 echo "🪝 WFC Pre-commit validation..."
 
+# Run black format check
+echo "  Checking black formatting..."
+if command -v uv &> /dev/null; then
+    if ! uv run black --check wfc/ tests/ scripts/ --quiet 2>/dev/null; then
+        echo "❌ Black formatting check failed"
+        echo "   Fix with: make format"
+        exit 1
+    fi
+    echo "  ✅ Black formatting OK"
+else
+    echo "  ⚠️  uv not found, skipping black check"
+fi
+
+# Run ruff lint check
+echo "  Checking ruff linting..."
+if command -v uv &> /dev/null; then
+    if ! uv run ruff check wfc/ --quiet 2>/dev/null; then
+        echo "❌ Ruff lint check failed"
+        echo "   Fix with: uv run ruff check --fix wfc/"
+        exit 1
+    fi
+    echo "  ✅ Ruff lint OK"
+else
+    echo "  ⚠️  uv not found, skipping ruff check"
+fi
+
 # Check if skills-ref is available
 SKILLS_REF_DIR="$HOME/repos/agentskills/skills-ref"
 if [ ! -d "$SKILLS_REF_DIR" ]; then

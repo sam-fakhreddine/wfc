@@ -117,6 +117,10 @@ WFC workflow (NEW):
 | Generate tests | `/wfc-test` | Property-based tests |
 | Add monitoring | `/wfc-observe` | Observability from properties |
 | Validate idea | `/wfc-isthissmart` | 7-dimension analysis |
+| Security hooks | `/wfc-safeguard` | Real-time pattern enforcement |
+| Custom rules | `/wfc-rules` | Markdown-based code standards |
+| Visual exploration | `/wfc-playground` | Interactive HTML prototyping |
+| Fix PR comments | `/wfc-pr-comments` | Triage & fix review feedback |
 
 **Note:** wfc-vibe is the default conversational mode. Just chat naturally - when you're ready to implement, say "let's plan this" or "let's build this".
 
@@ -173,6 +177,21 @@ git push origin main  # Push when ready
 - ❌ Skip consensus review
 - ❌ Let WFC push to main/master (it won't - PRs only)
 - ❌ Force push without understanding changes
+- ❌ Commit task summaries, dev logs, or scratch notes to the repo
+
+### Development Workspace
+
+**`.development/`** is the local-only workspace (gitignored). All dev artifacts go here:
+
+```
+.development/
+├── summaries/    # Task completion summaries, session recaps
+├── plans/        # Working plans, TASKS.md drafts, properties, test plans
+├── backups/      # File backups, old versions before rewrites
+└── scratch/      # Temporary notes, experiments, one-off scripts
+```
+
+**Rule:** Never commit development artifacts (summaries, progress logs, scratch notes) to the repo. Keep them in `.development/` where they stay local and organized.
 
 ## 📂 Project Structure
 
@@ -189,17 +208,26 @@ WFC - World Fucking Class
 │   │   │   ├── token_manager.py          # Token optimization (99% reduction)
 │   │   │   ├── ultra_minimal_prompts.py  # 200-token prompts
 │   │   │   └── file_reference_prompts.py # File refs not content
+│   │   ├── hooks/                # Hook infrastructure
+│   │   │   ├── pretooluse_hook.py        # PreToolUse hook handler
+│   │   │   ├── security_hook.py          # Security enforcement
+│   │   │   ├── rule_engine.py            # Custom rule engine
+│   │   │   ├── config_loader.py          # Hook configuration
+│   │   │   ├── hook_state.py             # Hook state management
+│   │   │   └── patterns/                 # Security patterns (JSON)
 │   │   └── skills/               # Skill implementations
 │   │       └── review/
 │   │           ├── orchestrator.py       # Review workflow
 │   │           ├── consensus.py          # Consensus algorithm
 │   │           └── agents.py             # Agent logic
 │   ├── references/               # Progressive disclosure docs
-│   │   ├── personas/             # 54 expert personas (JSON)
+│   │   ├── personas/             # 56 expert personas (JSON)
 │   │   ├── ARCHITECTURE.md
 │   │   ├── TOKEN_MANAGEMENT.md
 │   │   └── ULTRA_MINIMAL_RESULTS.md
 │   └── assets/                   # Templates, configs
+│       └── templates/
+│           └── playground/       # HTML playground templates
 │
 ├── ~/.claude/skills/wfc-*/      # Installed skills (Agent Skills compliant)
 │   ├── wfc-review/               # Multi-agent consensus review
@@ -208,13 +236,18 @@ WFC - World Fucking Class
 │   ├── wfc-security/             # STRIDE threat analysis
 │   ├── wfc-architecture/         # Architecture docs + C4 diagrams
 │   ├── wfc-test/                 # Property-based test generation
-│   └── ... (11 total)
+│   ├── wfc-safeguard/            # Real-time security enforcement hooks
+│   ├── wfc-rules/                # Markdown-based custom enforcement rules
+│   ├── wfc-playground/           # Interactive HTML playground generator
+│   └── ... (17 total)
 │
-├── docs/                         # Documentation
-│   ├── AGENT_SKILLS_COMPLIANCE.md
-│   ├── WFC_MAX.md
-│   ├── SUPERCLAUDE_LEARNINGS.md
-│   └── examples/
+├── docs/                         # Documentation (organized by topic)
+│   ├── architecture/             # System design, planning
+│   ├── security/                 # OWASP, hooks, git safety
+│   ├── workflow/                 # Install, PR workflow, build, implementation
+│   ├── quality/                  # Quality gates, personas
+│   ├── reference/                # Compliance, registries, EARS
+│   └── examples/                 # Working demos
 │
 ├── tests/                        # Test suite
 ├── scripts/                      # Utility scripts
@@ -303,7 +336,7 @@ wfc implement --dry-run
 - ✅ **PROJECT_INDEX.json** (machine-readable structure)
 - ✅ **make doctor** (comprehensive health checks)
 - ✅ **Integration Tests** (>80% coverage, 22 tests)
-- ✅ **Complete Documentation** (docs/WFC_IMPLEMENTATION.md)
+- ✅ **Complete Documentation** (docs/workflow/WFC_IMPLEMENTATION.md)
 
 ### Architecture
 
@@ -328,7 +361,7 @@ Orchestrator → N Agents (parallel) → Quality Gate → Review → Merge → I
 - `wfc/scripts/memory_manager.py` - Cross-session learning
 - `wfc/scripts/token_manager.py` - Budget optimization
 - `wfc/scripts/universal_quality_checker.py` - Trunk.io integration
-- `docs/WFC_IMPLEMENTATION.md` - Complete guide
+- `docs/workflow/WFC_IMPLEMENTATION.md` - Complete guide
 
 ### Testing
 
@@ -374,15 +407,15 @@ make test-coverage
 3. Returns them for Claude Code to execute via Task tool
 
 **PersonaOrchestrator** (`wfc/scripts/personas/persona_orchestrator.py`):
-- Selects 5 relevant experts from 54 reviewers
+- Selects 5 relevant experts from 56 reviewers
 - Uses semantic matching (file types, properties, context)
 - Diversity scoring ensures varied perspectives
 
-**54 Expert Personas** (`wfc/references/personas/panels/`):
+**56 Expert Personas** (`wfc/references/personas/panels/`):
 - Security specialists (AppSec, CloudSec, CryptoSec, etc.)
 - Architecture experts (Distributed, Microservices, etc.)
 - Performance specialists (Backend, Frontend, Database, etc.)
-- Quality experts (Testing, Observability, Documentation, etc.)
+- Quality experts (Testing, Observability, Documentation, Silent Failure Hunter, Code Simplifier, etc.)
 
 ### Consensus Algorithm
 
@@ -400,7 +433,7 @@ make test-coverage
 
 ### Agent Skills Compliance
 
-All 11 WFC skills are Agent Skills compliant:
+All 17 WFC skills are Agent Skills compliant:
 - Valid frontmatter (only: name, description, license)
 - Hyphenated names (wfc-review, not wfc-review)
 - Comprehensive descriptions
@@ -481,8 +514,8 @@ All 11 WFC skills are Agent Skills compliant:
 - Reduction: 93%
 
 **Agent Skills Compliance**:
-- Valid skills: 11/11 (100%)
-- XML generation: 11/11 (100%)
+- Valid skills: 17/17 (100%)
+- XML generation: 17/17 (100%)
 
 ## 🔍 Quick Reference
 
@@ -495,6 +528,10 @@ All 11 WFC skills are Agent Skills compliant:
 **Persona Orchestrator**: `wfc/scripts/personas/persona_orchestrator.py`
 **Review Orchestrator**: `wfc/scripts/skills/review/orchestrator.py`
 **Consensus Algorithm**: `wfc/scripts/skills/review/consensus.py`
+**Hook Infrastructure**: `wfc/scripts/hooks/pretooluse_hook.py`
+**Security Patterns**: `wfc/scripts/hooks/patterns/security.json`
+**Architecture Designer**: `wfc/skills/wfc-plan/architecture_designer.py`
+**Playground Templates**: `wfc/assets/templates/playground/`
 **Installed Skills**: `~/.claude/skills/wfc-*/`
 
 ### Testing
@@ -517,14 +554,74 @@ All 11 WFC skills are Agent Skills compliant:
 
 ## 📚 Documentation
 
+Documentation is organized by topic in `docs/` (see `docs/README.md` for full index):
+
 - **QUICKSTART.md** - Get started in 5 minutes
-- **PLANNING.md** - Architecture & absolute rules
+- **docs/architecture/** - System design, planning, progressive disclosure
+- **docs/security/** - OWASP LLM Top 10, git safety, hooks & telemetry
 - **CONTRIBUTING.md** - How to contribute
-- **docs/AGENT_SKILLS_COMPLIANCE.md** - Compliance details
-- **docs/WFC_MAX.md** - WFC^MAX achievement
-- **docs/SUPERCLAUDE_LEARNINGS.md** - Learnings from SuperClaude
+- **docs/workflow/** - PR workflow, install, build, implementation
+- **docs/quality/** - Quality gates, personas (56 experts)
+- **docs/reference/** - Agent Skills compliance, registries, EARS, Claude integration
+- **docs/examples/** - Working demos and examples
 - **wfc/references/TOKEN_MANAGEMENT.md** - Token optimization
 - **wfc/references/ULTRA_MINIMAL_RESULTS.md** - Performance data
+
+## 🐳 DevContainer
+
+WFC ships a batteries-included devcontainer for end users. Drop `.devcontainer/` into any project for a full secure dev environment with WFC pre-installed.
+
+### Quick Start
+
+```bash
+# Option A: Interactive setup (guided)
+bash .devcontainer/setup.sh
+
+# Option B: VS Code (recommended)
+# 1. Copy .devcontainer/ into your project root
+# 2. cp .devcontainer/.env.example .devcontainer/.env
+# 3. Edit .env with your ANTHROPIC_AUTH_TOKEN
+# 4. Open in VS Code → F1 → "Dev Containers: Reopen in Container"
+
+# Option C: Docker CLI
+cd .devcontainer && docker compose build && docker compose up -d
+```
+
+### What's Included
+
+- **Python 3.12** + UV, black, ruff, pytest, mypy, pre-commit
+- **Node.js LTS** + pnpm, bun, typescript, vite, eslint, prettier, tailwindcss
+- **AI Tools**: Claude Code CLI, Kiro CLI, OpenCode CLI, Entire CLI (session recording)
+- **GitHub CLI** (`gh`) for WFC PR workflow
+- **Docker-in-Docker** (docker-ce-cli, docker-compose-plugin)
+- **Dev Tools**: ripgrep, fd, fzf, bat, exa, tmux, htop, Oh My Zsh, Starship
+- **Database Clients**: postgresql-client, redis-tools
+- **Firewall**: iptables-based audit/enforce modes
+- **VS Code Extensions**: Python, ruff, black, ESLint, Prettier, Docker, Copilot, GitLens
+- **WFC Skills**: All 17 skills auto-installed via `install-universal.sh`
+
+### Workspace Layout
+
+```
+/workspace/
+├── app/        # Your project (mounted from host)
+├── repos/
+│   └── wfc/    # WFC framework (cloned automatically)
+└── tmp/        # Persistent scratch space
+```
+
+### Firewall
+
+```bash
+# Audit mode (default): logs all traffic, doesn't block
+FIREWALL_MODE=audit
+
+# Enforce mode: blocks non-whitelisted traffic
+FIREWALL_MODE=enforce
+
+# View audit logs inside container
+sudo tail -f /var/log/kern.log | grep FW-AUDIT
+```
 
 ---
 

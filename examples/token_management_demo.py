@@ -22,7 +22,7 @@ from wfc.personas.token_manager import (
     TokenBudget,
     FileCondenser,
     PersonaPromptCompressor,
-    TokenBudgetManager
+    TokenBudgetManager,
 )
 
 
@@ -113,7 +113,9 @@ class SampleClass:
     condensed = condenser.condense("sample.py", sample_code, max_tokens, counter)
     condensed_tokens = counter.count(condensed)
 
-    print(f"Condensed code: {condensed_tokens} tokens ({(condensed_tokens/original_tokens)*100:.1f}%)")
+    print(
+        f"Condensed code: {condensed_tokens} tokens ({(condensed_tokens/original_tokens)*100:.1f}%)"
+    )
     print(f"\nCondensed output:")
     print("-" * 60)
     print(condensed)
@@ -144,7 +146,7 @@ def demo_prompt_compression():
             {"dimension": "Data Protection", "weight": 0.3},
             {"dimension": "Authentication", "weight": 0.2},
             {"dimension": "Authorization", "weight": 0.1},
-        ]
+        ],
     }
 
     personality = {"communication_style": "direct"}
@@ -157,7 +159,7 @@ def demo_prompt_compression():
         lens=lens,
         personality=personality,
         system_additions=system_additions,
-        properties_focus="SECURITY, DATA_PROTECTION"
+        properties_focus="SECURITY, DATA_PROTECTION",
     )
 
     counter = TokenCounter()
@@ -192,10 +194,10 @@ def demo_full_pipeline():
                 {"dimension": "Performance", "weight": 0.5},
                 {"dimension": "Scalability", "weight": 0.3},
                 {"dimension": "Resource Usage", "weight": 0.2},
-            ]
+            ],
         },
         "personality": {"communication_style": "analytical"},
-        "system_prompt_additions": "Focus on algorithmic complexity and bottlenecks."
+        "system_prompt_additions": "Focus on algorithmic complexity and bottlenecks.",
     }
 
     # Sample files (create temp files for demo)
@@ -220,25 +222,29 @@ def demo_full_pipeline():
         # Properties
         properties = [
             {"type": "PERFORMANCE", "statement": "O(n) or better complexity"},
-            {"type": "SCALABILITY", "statement": "Handles 10k+ requests/sec"}
+            {"type": "SCALABILITY", "statement": "Handles 10k+ requests/sec"},
         ]
 
         # Prepare prompt
         prompt, metrics = manager.prepare_persona_prompt(
-            persona=persona,
-            files=files,
-            properties=properties
+            persona=persona, files=files, properties=properties
         )
 
         # Report metrics
         print(f"\n📊 Token Metrics:")
         print(f"  Total tokens: {metrics['total_tokens']:,}")
-        print(f"  System prompt: {metrics['system_tokens']:,} ({(metrics['system_tokens']/metrics['total_tokens'])*100:.1f}%)")
-        print(f"  Properties: {metrics['properties_tokens']:,} ({(metrics['properties_tokens']/metrics['total_tokens'])*100:.1f}%)")
-        print(f"  Files: {metrics['files_tokens']:,} ({(metrics['files_tokens']/metrics['total_tokens'])*100:.1f}%)")
+        print(
+            f"  System prompt: {metrics['system_tokens']:,} ({(metrics['system_tokens']/metrics['total_tokens'])*100:.1f}%)"
+        )
+        print(
+            f"  Properties: {metrics['properties_tokens']:,} ({(metrics['properties_tokens']/metrics['total_tokens'])*100:.1f}%)"
+        )
+        print(
+            f"  Files: {metrics['files_tokens']:,} ({(metrics['files_tokens']/metrics['total_tokens'])*100:.1f}%)"
+        )
         print(f"  Budget used: {metrics['budget_used_pct']:.1f}%")
         print(f"  Files condensed: {metrics['num_condensed']}/{metrics['num_files']}")
-        if metrics['condensed_files']:
+        if metrics["condensed_files"]:
             print(f"  Which files: {', '.join(metrics['condensed_files'])}")
         print(f"  Fits budget: {'✅ Yes' if metrics['fits_budget'] else '❌ No'}")
 
@@ -266,6 +272,7 @@ def main():
     except Exception as e:
         print(f"\n❌ Error: {e}")
         import traceback
+
         traceback.print_exc()
         return 1
 

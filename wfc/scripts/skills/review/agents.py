@@ -27,6 +27,7 @@ class ReviewComment:
     severity: str  # critical, high, medium, low, info
     message: str
     suggestion: str
+    confidence: int = 80  # 0-100 confidence score
 
 
 @dataclass

@@ -1,0 +1,90 @@
+{
+  "patterns": [
+    {
+      "id": "eval-injection",
+      "pattern": "\\beval\\s*\\(",
+      "description": "eval() can execute arbitrary code",
+      "action": "block",
+      "event": "file",
+      "languages": ["python", "javascript"]
+    },
+    {
+      "id": "new-function",
+      "pattern": "new\\s+Function\\s*\\(",
+      "description": "new Function() can execute arbitrary code",
+      "action": "block",
+      "event": "file",
+      "languages": ["javascript"]
+    },
+    {
+      "id": "inner-html",
+      "pattern": "\\.innerHTML\\s*=|dangerouslySetInnerHTML",
+      "description": "innerHTML assignment can lead to XSS",
+      "action": "warn",
+      "event": "file",
+      "languages": ["javascript", "typescript"]
+    },
+    {
+      "id": "pickle-untrusted",
+      "pattern": "pickle\\.loads?\\(",
+      "description": "pickle can execute arbitrary code during deserialization",
+      "action": "warn",
+      "event": "file",
+      "languages": ["python"]
+    },
+    {
+      "id": "os-system",
+      "pattern": "os\\.system\\s*\\(",
+      "description": "os.system() is vulnerable to command injection",
+      "action": "block",
+      "event": "file",
+      "languages": ["python"]
+    },
+    {
+      "id": "subprocess-shell",
+      "pattern": "subprocess\\.(call|run|Popen)\\([^)]*shell\\s*=\\s*True",
+      "description": "subprocess with shell=True is vulnerable to injection",
+      "action": "block",
+      "event": "file",
+      "languages": ["python"]
+    },
+    {
+      "id": "child-process-exec",
+      "pattern": "child_process\\.exec\\s*\\(",
+      "description": "child_process.exec is vulnerable to command injection",
+      "action": "warn",
+      "event": "file",
+      "languages": ["javascript"]
+    },
+    {
+      "id": "rm-rf-root",
+      "pattern": "rm\\s+-rf\\s+/(?!tmp|var/tmp)",
+      "description": "Destructive rm -rf on system paths",
+      "action": "block",
+      "event": "bash"
+    },
+    {
+      "id": "rm-rf-home",
+      "pattern": "rm\\s+-rf\\s+~/|rm\\s+-rf\\s+\\$HOME",
+      "description": "Destructive rm -rf on home directory",
+      "action": "block",
+      "event": "bash"
+    },
+    {
+      "id": "hardcoded-secret",
+      "pattern": "(API_KEY|SECRET_KEY|PASSWORD|PRIVATE_KEY)\\s*=\\s*['\"][^'\"]{8,}['\"]",
+      "description": "Possible hardcoded secret or credential",
+      "action": "warn",
+      "event": "file",
+      "languages": ["python", "javascript", "typescript", "go", "rust", "java"]
+    },
+    {
+      "id": "sql-concatenation",
+      "pattern": "(SELECT|INSERT|UPDATE|DELETE).*\\+\\s*(req\\.|request\\.|params\\.|user_input|input)",
+      "description": "SQL string concatenation - use parameterized queries",
+      "action": "warn",
+      "event": "file",
+      "languages": ["python", "javascript", "typescript", "java"]
+    }
+  ]
+}

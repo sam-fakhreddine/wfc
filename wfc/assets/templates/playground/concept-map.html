@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>WFC Concept Map</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    background: #1a1a2e; color: #e0e0e0; height: 100vh;
+    display: grid; grid-template-columns: 1fr 240px; grid-template-rows: auto 1fr;
+  }
+  .toolbar {
+    grid-column: 1 / 3; background: #16213e; padding: 10px 20px;
+    display: flex; align-items: center; gap: 12px;
+    border-bottom: 1px solid #0f3460;
+  }
+  .toolbar h2 { color: #e94560; font-size: 16px; margin-right: 8px; }
+  .toolbar button {
+    padding: 6px 14px; background: #0f3460; color: #e0e0e0;
+    border: 1px solid #1a1a4e; border-radius: 6px; cursor: pointer; font-size: 12px;
+  }
+  .toolbar button:hover { background: #1a3a6e; }
+  .toolbar button.active { background: #e94560; border-color: #e94560; }
+  .toolbar .sep { width: 1px; height: 24px; background: #0f3460; }
+  canvas {
+    display: block; cursor: crosshair; background: #1a1a2e;
+  }
+  .panel {
+    background: #16213e; padding: 16px; overflow-y: auto;
+    border-left: 1px solid #0f3460;
+  }
+  .panel h3 { font-size: 14px; color: #e94560; margin-bottom: 12px; }
+  .panel label {
+    display: block; font-size: 11px; color: #a0a0b0;
+    text-transform: uppercase; letter-spacing: 0.5px; margin: 10px 0 4px;
+  }
+  .panel input[type="text"] {
+    width: 100%; padding: 6px 10px; background: #0f3460;
+    border: 1px solid #1a1a4e; border-radius: 4px; color: #e0e0e0; font-size: 13px;
+  }
+  .panel select {
+    width: 100%; padding: 6px 10px; background: #0f3460;
+    border: 1px solid #1a1a4e; border-radius: 4px; color: #e0e0e0; font-size: 13px;
+  }
+  .node-list { margin-top: 16px; }
+  .node-item {
+    padding: 6px 10px; margin-bottom: 4px; border-radius: 4px;
+    font-size: 12px; cursor: pointer; display: flex;
+    align-items: center; gap: 8px;
+  }
+  .node-item:hover { background: #0f3460; }
+  .node-dot {
+    width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0;
+  }
+  .node-item .del {
+    margin-left: auto; color: #ff6b6b; cursor: pointer;
+    font-size: 14px; opacity: 0.5;
+  }
+  .node-item .del:hover { opacity: 1; }
+  .help { font-size: 11px; color: #5a5a7a; margin-top: 16px; line-height: 1.5; }
+</style>
+</head>
+<body>
+
+<div class="toolbar">
+  <h2>Concept Map</h2>
+  <button id="modeAdd" class="active" onclick="setMode('add')">Add Node</button>
+  <button id="modeConnect" onclick="setMode('connect')">Connect</button>
+  <button id="modeMove" onclick="setMode('move')">Move</button>
+  <div class="sep"></div>
+  <button onclick="clearAll()">Clear</button>
+  <button onclick="exportMap()">Export JSON</button>
+</div>
+
+<canvas id="canvas"></canvas>
+
+<div class="panel">
+  <h3>New Node</h3>
+  <label>Label</label>
+  <input type="text" id="nodeLabel" placeholder="Node name" value="">
+  <label>Category</label>
+  <select id="nodeCategory">
+    <option value="core" style="color:#e94560">Core</option>
+    <option value="feature" style="color:#7ec8e3">Feature</option>
+    <option value="external" style="color:#ffd700">External</option>
+    <option value="data" style="color:#50fa7b">Data</option>
+  </select>
+
+  <h3 style="margin-top:20px">Nodes</h3>
+  <div class="node-list" id="nodeList"></div>
+
+  <div class="help">
+    <strong>Add</strong>: Click canvas to place node<br>
+    <strong>Connect</strong>: Click source then target<br>
+    <strong>Move</strong>: Drag nodes around<br>
+    <strong>Delete</strong>: Click X in node list
+  </div>
+</div>
+
+<script>
+  const canvas = document.getElementById('canvas');
+  const ctx = canvas.getContext('2d');
+  let nodes = [];
+  let edges = [];
+  let mode = 'add';
+  let connectSource = null;
+  let dragNode = null;
+  let dragOffset = { x: 0, y: 0 };
+
+  const COLORS = {
+    core: '#e94560', feature: '#7ec8e3',
+    external: '#ffd700', data: '#50fa7b'
+  };
+  const NODE_R = 30;
+
+  function resize() {
+    const rect = canvas.parentElement
+      ? canvas.getBoundingClientRect()
+      : { width: 800, height: 600 };
+    canvas.width = canvas.offsetWidth;
+    canvas.height = canvas.offsetHeight;
+    draw();
+  }
+  window.addEventListener('resize', resize);
+
+  function setMode(m) {
+    mode = m;
+    connectSource = null;
+    document.getElementById('modeAdd').classList.toggle('active', m === 'add');
+    document.getElementById('modeConnect').classList.toggle(
+      'active', m === 'connect'
+    );
+    document.getElementById('modeMove').classList.toggle('active', m === 'move');
+    canvas.style.cursor = m === 'move' ? 'grab' : 'crosshair';
+  }
+
+  function findNode(x, y) {
+    for (let i = nodes.length - 1; i >= 0; i--) {
+      const n = nodes[i];
+      const dx = x - n.x, dy = y - n.y;
+      if (dx * dx + dy * dy <= NODE_R * NODE_R) return n;
+    }
+    return null;
+  }
+
+  canvas.addEventListener('mousedown', (e) => {
+    const rect = canvas.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
+    const hit = findNode(x, y);
+
+    if (mode === 'add' && !hit) {
+      const label = document.getElementById('nodeLabel').value || `Node ${nodes.length + 1}`;
+      const cat = document.getElementById('nodeCategory').value;
+      nodes.push({ id: Date.now(), x, y, label, category: cat });
+      document.getElementById('nodeLabel').value = '';
+      updateNodeList();
+      draw();
+    } else if (mode === 'connect') {
+      if (!connectSource && hit) {
+        connectSource = hit;
+      } else if (connectSource && hit && hit !== connectSource) {
+        const exists = edges.some(
+          e => (e.from === connectSource.id && e.to === hit.id) ||
+               (e.from === hit.id && e.to === connectSource.id)
+        );
+        if (!exists) edges.push({ from: connectSource.id, to: hit.id });
+        connectSource = null;
+        draw();
+      }
+    } else if (mode === 'move' && hit) {
+      dragNode = hit;
+      dragOffset = { x: x - hit.x, y: y - hit.y };
+      canvas.style.cursor = 'grabbing';
+    }
+  });
+
+  canvas.addEventListener('mousemove', (e) => {
+    if (!dragNode) return;
+    const rect = canvas.getBoundingClientRect();
+    dragNode.x = e.clientX - rect.left - dragOffset.x;
+    dragNode.y = e.clientY - rect.top - dragOffset.y;
+    draw();
+  });
+
+  canvas.addEventListener('mouseup', () => {
+    if (dragNode) {
+      dragNode = null;
+      canvas.style.cursor = 'grab';
+    }
+  });
+
+  function draw() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    // Draw grid
+    ctx.strokeStyle = '#ffffff08';
+    ctx.lineWidth = 1;
+    for (let x = 0; x < canvas.width; x += 40) {
+      ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, canvas.height); ctx.stroke();
+    }
+    for (let y = 0; y < canvas.height; y += 40) {
+      ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(canvas.width, y); ctx.stroke();
+    }
+
+    // Draw edges
+    edges.forEach(edge => {
+      const from = nodes.find(n => n.id === edge.from);
+      const to = nodes.find(n => n.id === edge.to);
+      if (!from || !to) return;
+
+      ctx.beginPath();
+      ctx.moveTo(from.x, from.y);
+      ctx.lineTo(to.x, to.y);
+      ctx.strokeStyle = '#ffffff30';
+      ctx.lineWidth = 2;
+      ctx.stroke();
+
+      // Arrow
+      const angle = Math.atan2(to.y - from.y, to.x - from.x);
+      const ax = to.x - Math.cos(angle) * NODE_R;
+      const ay = to.y - Math.sin(angle) * NODE_R;
+      ctx.beginPath();
+      ctx.moveTo(ax, ay);
+      ctx.lineTo(
+        ax - 10 * Math.cos(angle - 0.4),
+        ay - 10 * Math.sin(angle - 0.4)
+      );
+      ctx.lineTo(
+        ax - 10 * Math.cos(angle + 0.4),
+        ay - 10 * Math.sin(angle + 0.4)
+      );
+      ctx.closePath();
+      ctx.fillStyle = '#ffffff50';
+      ctx.fill();
+    });
+
+    // Draw nodes
+    nodes.forEach(node => {
+      const color = COLORS[node.category] || '#888';
+
+      // Shadow
+      ctx.beginPath();
+      ctx.arc(node.x + 2, node.y + 2, NODE_R, 0, Math.PI * 2);
+      ctx.fillStyle = '#00000040';
+      ctx.fill();
+
+      // Circle
+      ctx.beginPath();
+      ctx.arc(node.x, node.y, NODE_R, 0, Math.PI * 2);
+      ctx.fillStyle = color + '20';
+      ctx.fill();
+      ctx.strokeStyle = color;
+      ctx.lineWidth = 2;
+      ctx.stroke();
+
+      // Label
+      ctx.fillStyle = '#e0e0e0';
+      ctx.font = '12px -apple-system, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      const maxW = NODE_R * 2 - 8;
+      let text = node.label;
+      if (ctx.measureText(text).width > maxW) {
+        while (ctx.measureText(text + '...').width > maxW && text.length > 1) {
+          text = text.slice(0, -1);
+        }
+        text += '...';
+      }
+      ctx.fillText(text, node.x, node.y);
+    });
+
+    // Connect mode indicator
+    if (mode === 'connect' && connectSource) {
+      ctx.beginPath();
+      ctx.arc(connectSource.x, connectSource.y, NODE_R + 4, 0, Math.PI * 2);
+      ctx.strokeStyle = '#e94560';
+      ctx.lineWidth = 2;
+      ctx.setLineDash([4, 4]);
+      ctx.stroke();
+      ctx.setLineDash([]);
+    }
+  }
+
+  function updateNodeList() {
+    const list = document.getElementById('nodeList');
+    list.innerHTML = '';
+    nodes.forEach(n => {
+      const item = document.createElement('div');
+      item.className = 'node-item';
+      item.dataset.id = n.id;
+
+      const dot = document.createElement('span');
+      dot.className = 'node-dot';
+      dot.style.background = COLORS[n.category] || '#888';
+
+      const labelSpan = document.createElement('span');
+      labelSpan.textContent = n.label;
+
+      const del = document.createElement('span');
+      del.className = 'del';
+      del.textContent = 'x';
+      del.addEventListener('click', () => deleteNode(n.id));
+
+      item.appendChild(dot);
+      item.appendChild(labelSpan);
+      item.appendChild(del);
+      list.appendChild(item);
+    });
+  }
+
+  function deleteNode(id) {
+    nodes = nodes.filter(n => n.id !== id);
+    edges = edges.filter(e => e.from !== id && e.to !== id);
+    updateNodeList();
+    draw();
+  }
+
+  function clearAll() {
+    nodes = [];
+    edges = [];
+    updateNodeList();
+    draw();
+  }
+
+  function exportMap() {
+    const data = JSON.stringify({ nodes, edges }, null, 2);
+    navigator.clipboard.writeText(data).then(() => {
+      const btns = document.querySelectorAll('.toolbar button');
+      const btn = btns[btns.length - 1];
+      btn.textContent = 'Copied!';
+      setTimeout(() => btn.textContent = 'Export JSON', 1500);
+    });
+  }
+
+  setTimeout(resize, 0);
+</script>
+</body>
+</html>

@@ -11,6 +11,7 @@ downloads/
 eggs/
 .eggs/
 lib/
+!.devcontainer/scripts/lib/
 lib64/
 parts/
 sdist/
@@ -56,7 +57,14 @@ wfc-*-prompt.md
 *DEMONSTRATION*.md
 *BUILD_COMPLETE*.md
 
+# Development notes (local only - task summaries, dev logs, scratch)
+.development/
+
 # Entire.io session data (local-only by default, privacy-first)
 .entire/
 entire/checkpoints/
 *.entire.json
+
+# DevContainer local files
+.devcontainer/.env
+.devcontainer/docker-compose.override.yml

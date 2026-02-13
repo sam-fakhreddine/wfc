@@ -14,6 +14,7 @@ from .tasks_generator import TasksGenerator
 from .properties_generator import PropertiesGenerator
 from .test_plan_generator import TestPlanGenerator
 from .plan_history import PlanHistory, create_plan_metadata
+from .architecture_designer import ArchitectureDesigner
 
 
 @dataclass
@@ -25,8 +26,12 @@ class PlanResult:
     properties_file: Path
     test_plan_file: Path
     output_dir: Path
+    architecture_approach: Optional[str] = None
 
     def __str__(self) -> str:
+        arch_line = ""
+        if self.architecture_approach:
+            arch_line = f"\nArchitecture: {self.architecture_approach}"
         return f"""
 Plan Complete!
 
@@ -34,11 +39,12 @@ Output Directory: {self.output_dir}
 - TASKS.md: {self.tasks_file}
 - PROPERTIES.md: {self.properties_file}
 - TEST-PLAN.md: {self.test_plan_file}
+- ARCHITECTURE-OPTIONS.md: {self.output_dir / "ARCHITECTURE-OPTIONS.md"}
 
-Goal: {self.interview_result.goal}
-Tasks: {len(open(self.tasks_file).read().count('## TASK-'))} tasks
-Properties: {len(open(self.properties_file).read().count('## PROP-'))} properties
-Tests: {len(open(self.test_plan_file).read().count('### TEST-'))} test cases
+Goal: {self.interview_result.goal}{arch_line}
+Tasks: {self.tasks_file.read_text(encoding='utf-8').count('## TASK-')} tasks
+Properties: {self.properties_file.read_text(encoding='utf-8').count('## PROP-')} properties
+Tests: {self.test_plan_file.read_text(encoding='utf-8').count('### TEST-')} test cases
 """
 
 
@@ -94,6 +100,20 @@ class PlanOrchestrator:
         # Save interview results
         interview_file = self.output_dir / "interview-results.json"
         interview_result.save(interview_file)
+
+        # Step 1.5: Architecture Design
+        designer = ArchitectureDesigner()
+        approaches = designer.design(
+            goal=interview_result.goal,
+            context=interview_result.context,
+        )
+        comparison = designer.format_comparison(approaches)
+
+        # Save architecture options
+        arch_file = self.output_dir / "ARCHITECTURE-OPTIONS.md"
+        with open(arch_file, "w") as f:
+            f.write(comparison)
+        print(f"  Created: {arch_file.name}")
 
         # Step 2: Generate TASKS.md
         tasks_gen = TasksGenerator(interview_result)
