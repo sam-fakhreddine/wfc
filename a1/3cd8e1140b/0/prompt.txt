@@ -1,0 +1,90 @@
+Implement the following plan:
+
+# Fix CI Workflow Failures — Mock Claude Directory for install.sh
+
+## Context
+
+All CI workflows on PR #5 (and now main) fail at the "Install WFC skills" step. The root cause is identical across all 6 failing jobs: `install.sh --ci` checks for `$HOME/.claude` directory to detect Claude Code as a platform. GitHub Actions runners don't have Claude Code installed, so no platform is detected and the installer exits with code 1.
+
+The devcontainer is now the definitive test environment. CI just needs skills installed so tests and validation can run — it doesn't need a real Claude Code installation.
+
+## Root Cause
+
+`install.sh` line 261: `if [ -d "$HOME/.claude" ]` — no directory = no platform = hard exit.
+
+The `install-test` job in `ci.yml` already has the fix (line 192): `mkdir -p ~/.claude/skills` before running install.sh. The other 4 jobs that call install.sh are missing this.
+
+## Fix
+
+Add `mkdir -p ~/.claude/skills` before `./install.sh --ci` in these 3 workflow files:
+
+### 1. `.github/workflows/ci.yml` — `test` job (line 66-69)
+
+```yaml
+      - name: Install WFC skills
+        run: |
+          mkdir -p ~/.claude/skills
+          chmod +x install.sh
+          ./install.sh --ci
+```
+
+### 2. `.github/workflows/quick-check.yml` — `quick-check` job (line 36-39)
+
+```yaml
+      - name: Install WFC skills
+        run: |
+          mkdir -p ~/.claude/skills
+          chmod +x install.sh
+          ./install.sh --ci
+```
+
+### 3. `.github/workflows/validate.yml` — `test` job (line 33-36) AND `validate-skills` job (line 65-68)
+
+Both jobs need the same fix:
+
+```yaml
+    - name: Install WFC skills
+      run: |
+        mkdir -p ~/.claude/skills
+        chmod +x install.sh
+        ./install.sh --ci
+```
+
+### 4. `.github/workflows/ci.yml` — `install-test` job (line 194)
+
+Already has `mkdir -p ~/.claude/skills` — the interactive `./install.sh <<< 'y'` test is failing because `y` isn't a valid branding choice (expects `1` or `2`). Fix the input:
+
+```yaml
+      - name: Test install script
+        run: |
+          chmod +x install.sh
+          ./install.sh <<< '2'
+```
+
+## Files to Modify
+
+1. `.github/workflows/ci.yml` — add mkdir to `test` job, fix input in `install-test` job
+2. `.github/workflows/quick-check.yml` — add mkdir to `quick-check` job
+3. `.github/workflows/validate.yml` — add mkdir to both `test` and `validate-skills` jobs
+
+## Verification
+
+Push to branch, check that all CI jobs pass:
+```bash
+gh run watch --repo sam-fakhreddine/wfc
+```
+
+
+If you need specific details from before exiting plan mode (like exact code snippets, error messages, or content you generated), read the full transcript at: /Users/samfakhreddine/.REDACTED.jsonl
+
+---
+
+what I am saying is, we can say if our container builds and all the checks in there, then we are good. put the WFC checks in there that are missing from your test script if there are any. so GH actions spins up the container and then ensures it builds
+
+---
+
+where did you push to
+
+---
+
+yes
