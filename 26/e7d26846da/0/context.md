@@ -28,3 +28,11 @@ Let me also note that the existing wfc-isthissmart and wfc-build skills have tho
 
 to the branch!
 
+### Prompt 5
+
+you didnt lint before you pushed, where in the skill did that fai;
+
+### Prompt 6
+
+fix thre lint errors
+

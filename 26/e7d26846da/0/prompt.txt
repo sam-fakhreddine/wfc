@@ -199,3 +199,11 @@ Let me also note that the existing wfc-isthissmart and wfc-build skills have tho
 ---
 
 to the branch!
+
+---
+
+you didnt lint before you pushed, where in the skill did that fai;
+
+---
+
+fix thre lint errors
