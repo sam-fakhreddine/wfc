@@ -3,31 +3,30 @@
   "checkpoint_id": "26e7d26846da",
   "session_id": "fb2626bf-5eb8-4c45-9263-602bc377fed6",
   "strategy": "manual-commit",
-  "created_at": "2026-02-13T19:14:12.778788Z",
+  "created_at": "2026-02-13T19:14:57.806699Z",
   "branch": "feat/plugin-integration-7-features",
   "checkpoints_count": 1,
   "files_touched": [
-    "wfc/skills/wfc-build/cli.py",
-    "wfc/skills/wfc-build/orchestrator.py"
+    "wfc/skills/wfc-pr-comments/SKILL.md"
   ],
   "agent": "Claude Code",
-  "transcript_identifier_at_start": "6512d5f1-052c-452f-a7ce-4f2b53872460",
-  "checkpoint_transcript_start": 760,
-  "transcript_lines_at_start": 760,
+  "transcript_identifier_at_start": "4fa00e26-d38e-4405-83f9-47fad9e7a8c5",
+  "checkpoint_transcript_start": 821,
+  "transcript_lines_at_start": 821,
   "token_usage": {
-    "input_tokens": 20,
-    "cache_creation_tokens": 6345,
-    "cache_read_tokens": 1094742,
-    "output_tokens": 405,
-    "api_call_count": 16
+    "input_tokens": 6,
+    "cache_creation_tokens": 2260,
+    "cache_read_tokens": 289346,
+    "output_tokens": 56,
+    "api_call_count": 4
   },
   "initial_attribution": {
-    "calculated_at": "2026-02-13T19:14:12.723214Z",
+    "calculated_at": "2026-02-13T19:14:57.749408Z",
     "agent_lines": 0,
-    "human_added": 27,
-    "human_modified": 5,
+    "human_added": 56,
+    "human_modified": 14,
     "human_removed": 0,
-    "total_committed": 27,
+    "total_committed": 56,
     "agent_percentage": 0
   }
 }

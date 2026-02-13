@@ -5,8 +5,7 @@
   "branch": "feat/plugin-integration-7-features",
   "checkpoints_count": 1,
   "files_touched": [
-    "wfc/skills/wfc-build/cli.py",
-    "wfc/skills/wfc-build/orchestrator.py"
+    "wfc/skills/wfc-pr-comments/SKILL.md"
   ],
   "sessions": [
     {
@@ -18,10 +17,10 @@
     }
   ],
   "token_usage": {
-    "input_tokens": 20,
-    "cache_creation_tokens": 6345,
-    "cache_read_tokens": 1094742,
-    "output_tokens": 405,
-    "api_call_count": 16
+    "input_tokens": 6,
+    "cache_creation_tokens": 2260,
+    "cache_read_tokens": 289346,
+    "output_tokens": 56,
+    "api_call_count": 4
   }
 }
