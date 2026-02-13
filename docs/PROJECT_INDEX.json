@@ -6,7 +6,7 @@
     "description": "Multi-agent consensus review system with parallel implementation engine",
     "license": "MIT",
     "author": "Sam Fakhreddine",
-    "requires_python": ">=3.10",
+    "requires_python": ">=3.12",
     "repository": "https://github.com/samfakhreddine/wfc"
   },
   "generated": {

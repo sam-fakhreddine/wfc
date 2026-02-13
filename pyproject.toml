@@ -6,7 +6,7 @@ authors = [
     {name = "Sam Fakhreddine"}
 ]
 readme = "README.md"
-requires-python = ">=3.10"
+requires-python = ">=3.12"
 license = {text = "MIT"}
 
 dependencies = [
@@ -43,11 +43,11 @@ packages = ["wfc"]
 
 [tool.black]
 line-length = 100
-target-version = ['py310']
+target-version = ['py312']
 
 [tool.ruff]
 line-length = 100
-target-version = "py310"
+target-version = "py312"
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

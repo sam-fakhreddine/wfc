@@ -13,14 +13,16 @@ from typing import List, Optional, Dict, Any
 
 class TaskComplexity(Enum):
     """Task complexity levels for model selection."""
-    S = "S"    # Small: 1-2 hours, simple changes, haiku
-    M = "M"    # Medium: half-day, moderate complexity, sonnet
-    L = "L"    # Large: 1-2 days, complex changes, opus
+
+    S = "S"  # Small: 1-2 hours, simple changes, haiku
+    M = "M"  # Medium: half-day, moderate complexity, sonnet
+    L = "L"  # Large: 1-2 days, complex changes, opus
     XL = "XL"  # Extra Large: 2+ days, very complex, opus
 
 
 class TaskStatus(Enum):
     """Task execution states."""
+
     QUEUED = "QUEUED"
     ASSIGNED = "ASSIGNED"
     IN_PROGRESS = "IN_PROGRESS"
@@ -42,11 +44,12 @@ class Task:
 
     Used by: wfc-plan (creates), wfc-implement (executes), wfc-architecture (informs)
     """
-    id: str                                # e.g., "TASK-001"
-    title: str                             # Short title
-    description: str                       # What to implement
-    acceptance_criteria: List[str]         # How to know it's done
-    complexity: TaskComplexity             # S, M, L, XL
+
+    id: str  # e.g., "TASK-001"
+    title: str  # Short title
+    description: str  # What to implement
+    acceptance_criteria: List[str]  # How to know it's done
+    complexity: TaskComplexity  # S, M, L, XL
 
     # Dependencies and relationships
     dependencies: List[str] = field(default_factory=list)  # Other TASK-XXX IDs
@@ -97,15 +100,15 @@ class Task:
             "assigned_agent": self.assigned_agent,
             "worktree_path": self.worktree_path,
             "branch_name": self.branch_name,
-            "tags": self.tags
+            "tags": self.tags,
         }
 
     @classmethod
-    def from_dict(cls, data: Dict[str, Any]) -> 'Task':
+    def from_dict(cls, data: Dict[str, Any]) -> "Task":
         """Create Task from dictionary."""
         data = data.copy()
-        data['complexity'] = TaskComplexity(data['complexity'])
-        data['status'] = TaskStatus(data.get('status', 'QUEUED'))
+        data["complexity"] = TaskComplexity(data["complexity"])
+        data["status"] = TaskStatus(data.get("status", "QUEUED"))
         return cls(**data)
 
 
@@ -116,6 +119,7 @@ class TaskGraph:
 
     Used by: wfc-implement (orchestration), wfc-architecture (visualization)
     """
+
     tasks: List[Task] = field(default_factory=list)
 
     def add(self, task: Task) -> None:
@@ -191,12 +195,10 @@ class TaskGraph:
 
     def to_dict(self) -> Dict[str, Any]:
         """Convert to dictionary for serialization."""
-        return {
-            "tasks": [t.to_dict() for t in self.tasks]
-        }
+        return {"tasks": [t.to_dict() for t in self.tasks]}
 
     @classmethod
-    def from_dict(cls, data: Dict[str, Any]) -> 'TaskGraph':
+    def from_dict(cls, data: Dict[str, Any]) -> "TaskGraph":
         """Create TaskGraph from dictionary."""
         tasks = [Task.from_dict(t) for t in data.get("tasks", [])]
         return cls(tasks=tasks)
@@ -212,11 +214,11 @@ if __name__ == "__main__":
         acceptance_criteria=[
             "Middleware validates JWT tokens",
             "Invalid tokens are rejected with 401",
-            "Valid tokens pass through to handler"
+            "Valid tokens pass through to handler",
         ],
         complexity=TaskComplexity.M,
         properties_satisfied=["PROP-001"],
-        files_likely_affected=["middleware/auth.py", "tests/test_auth.py"]
+        files_likely_affected=["middleware/auth.py", "tests/test_auth.py"],
     )
 
     task2 = Task(
@@ -226,7 +228,7 @@ if __name__ == "__main__":
         acceptance_criteria=["All user routes require authentication"],
         complexity=TaskComplexity.S,
         dependencies=["TASK-001"],  # Depends on auth middleware
-        files_likely_affected=["routes/users.py"]
+        files_likely_affected=["routes/users.py"],
     )
 
     # Create graph

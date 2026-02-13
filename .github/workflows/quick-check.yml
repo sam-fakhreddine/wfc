@@ -22,8 +22,7 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: "3.10"
-          cache: "pip"
+          python-version: "3.12"
 
       - name: Install UV
         run: |
@@ -33,6 +32,11 @@ jobs:
       - name: Install dependencies (minimal)
         run: |
           uv pip install --system -e ".[dev]"
+
+      - name: Install WFC skills
+        run: |
+          chmod +x install.sh
+          ./install.sh --ci
 
       - name: Format check (black)
         run: |

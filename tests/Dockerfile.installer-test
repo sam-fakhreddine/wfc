@@ -1,0 +1,112 @@
+FROM ubuntu:22.04
+
+# Install dependencies
+RUN apt-get update && apt-get install -y \
+    git \
+    curl \
+    bash \
+    python3 \
+    python3-pip
+
+# Create Claude directory structure
+RUN mkdir -p /root/.claude/skills
+
+# Set working directory
+WORKDIR /wfc
+
+# Copy WFC repository
+COPY . /wfc
+
+# Make installer executable
+RUN chmod +x /wfc/install-universal.sh
+
+# Test script
+RUN cat > /test.sh << 'EOF'
+#!/bin/bash
+set -e
+
+echo "==================================="
+echo "WFC Installer Docker Test"
+echo "==================================="
+
+# Test 1: CI Mode Installation
+echo ""
+echo "Test 1: CI Mode Installation"
+echo "-----------------------------------"
+cd /wfc
+./install.sh --ci
+
+# Verify skills installed
+echo ""
+echo "Verifying installation..."
+if [ -d /root/.claude/skills/wfc-review ]; then
+    echo "✅ wfc-review installed"
+else
+    echo "❌ wfc-review NOT found"
+    exit 1
+fi
+
+if [ -d /root/.claude/skills/wfc-implement ]; then
+    echo "✅ wfc-implement installed"
+else
+    echo "❌ wfc-implement NOT found"
+    exit 1
+fi
+
+if [ -d /root/.claude/skills/wfc-plan ]; then
+    echo "✅ wfc-plan installed"
+else
+    echo "❌ wfc-plan NOT found"
+    exit 1
+fi
+
+if [ -d /root/.claude/skills/wfc-architecture ]; then
+    echo "✅ wfc-architecture installed"
+else
+    echo "❌ wfc-architecture NOT found"
+    exit 1
+fi
+
+# Verify SKILL.md files exist
+echo ""
+echo "Checking SKILL.md files..."
+SKILL_COUNT=$(find /root/.claude/skills/wfc-*/SKILL.md -type f | wc -l)
+if [ $SKILL_COUNT -ge 12 ]; then
+    echo "✅ Found $SKILL_COUNT skill markdown files"
+else
+    echo "❌ Only found $SKILL_COUNT skill markdown files (expected >= 12)"
+    exit 1
+fi
+
+# Verify NO nested wfc/skills/ directory
+echo ""
+echo "Checking for incorrect nested structure..."
+if [ -d /root/.claude/skills/wfc/skills ]; then
+    echo "❌ FAIL: Nested wfc/skills/ directory found (BUG!)"
+    exit 1
+else
+    echo "✅ No incorrect nested structure"
+fi
+
+# Verify shared resources
+echo ""
+echo "Checking shared resources..."
+if [ -d /root/.claude/skills/wfc/personas ]; then
+    echo "✅ Shared personas directory exists"
+else
+    echo "❌ Shared personas NOT found"
+    exit 1
+fi
+
+# List final structure
+echo ""
+echo "Final installation structure:"
+ls -la /root/.claude/skills/ | grep wfc
+
+echo ""
+echo "==================================="
+echo "✅ ALL TESTS PASSED"
+echo "==================================="
+EOF
+
+RUN chmod +x /test.sh && /test.sh

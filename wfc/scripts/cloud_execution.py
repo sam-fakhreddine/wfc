@@ -16,6 +16,7 @@ from enum import Enum
 
 class CloudProvider(Enum):
     """Supported cloud providers."""
+
     AWS_LAMBDA = "aws_lambda"
     GOOGLE_CLOUD_RUN = "google_cloud_run"
     AZURE_FUNCTIONS = "azure_functions"
@@ -26,6 +27,7 @@ class CloudProvider(Enum):
 @dataclass
 class CloudAgentSpec:
     """Specification for cloud agent execution."""
+
     agent_id: str
     task_id: str
     model: str  # opus, sonnet, haiku

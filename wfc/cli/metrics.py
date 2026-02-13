@@ -12,7 +12,7 @@ from pathlib import Path
 wfc_root = Path(__file__).parent.parent.parent
 sys.path.insert(0, str(wfc_root))
 
-from wfc.shared.telemetry_auto import view_metrics
+from wfc.shared.telemetry_auto import view_metrics  # noqa: E402
 
 
 def main():

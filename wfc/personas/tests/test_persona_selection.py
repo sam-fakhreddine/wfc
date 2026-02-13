@@ -14,15 +14,15 @@ from personas.persona_orchestrator import (
     PersonaRegistry,
     PersonaSelector,
     PersonaSelectionContext,
-    extract_tech_stack_from_files
+    extract_tech_stack_from_files,
 )
 
 
 def test_python_api_task():
     """Test: Python FastAPI implementation should select Python/API experts"""
-    print("\n" + "="*60)
+    print("\n" + "=" * 60)
     print("TEST: Python FastAPI API Implementation")
-    print("="*60)
+    print("=" * 60)
 
     registry = PersonaRegistry(Path.home() / ".claude/skills/wfc/personas")
     selector = PersonaSelector(registry)
@@ -34,7 +34,7 @@ def test_python_api_task():
         task_type="api-implementation",
         complexity="L",
         properties=["SECURITY", "PERFORMANCE"],
-        domain_context=["authentication"]
+        domain_context=["authentication"],
     )
 
     selected = selector.select_personas(context, num_personas=5)
@@ -47,10 +47,12 @@ def test_python_api_task():
 
     # Assertions
     persona_names = [sp.persona.name for sp in selected]
-    assert any("Python" in name or "Backend" in name for name in persona_names), \
-        "Should select Python backend expert"
-    assert any("Security" in name for name in persona_names), \
-        "Should select security expert for SECURITY property"
+    assert any(
+        "Python" in name or "Backend" in name for name in persona_names
+    ), "Should select Python backend expert"
+    assert any(
+        "Security" in name for name in persona_names
+    ), "Should select security expert for SECURITY property"
 
     # Check diversity
     panels = [sp.persona.panel for sp in selected]
@@ -59,8 +61,9 @@ def test_python_api_task():
         panel_counts[panel] = panel_counts.get(panel, 0) + 1
 
     print(f"\n📊 Panel Distribution: {panel_counts}")
-    assert all(count <= 2 for count in panel_counts.values()), \
-        "No panel should have more than 2 personas (diversity check)"
+    assert all(
+        count <= 2 for count in panel_counts.values()
+    ), "No panel should have more than 2 personas (diversity check)"
 
     print("\n✅ Test PASSED: Python API task selection is correct")
     return True
@@ -68,9 +71,9 @@ def test_python_api_task():
 
 def test_react_frontend_task():
     """Test: React UI implementation should select frontend experts"""
-    print("\n" + "="*60)
+    print("\n" + "=" * 60)
     print("TEST: React Frontend UI Implementation")
-    print("="*60)
+    print("=" * 60)
 
     registry = PersonaRegistry(Path.home() / ".claude/skills/wfc/personas")
     selector = PersonaSelector(registry)
@@ -82,7 +85,7 @@ def test_react_frontend_task():
         task_type="ui-implementation",
         complexity="M",
         properties=["USABILITY", "ACCESSIBILITY"],
-        domain_context=[]
+        domain_context=[],
     )
 
     selected = selector.select_personas(context, num_personas=5)
@@ -94,10 +97,12 @@ def test_react_frontend_task():
 
     # Assertions
     persona_names = [sp.persona.name for sp in selected]
-    assert any("React" in name or "Frontend" in name for name in persona_names), \
-        "Should select React/Frontend expert"
-    assert any("Accessibility" in name for name in persona_names), \
-        "Should select accessibility expert for ACCESSIBILITY property"
+    assert any(
+        "React" in name or "Frontend" in name for name in persona_names
+    ), "Should select React/Frontend expert"
+    assert any(
+        "Accessibility" in name for name in persona_names
+    ), "Should select accessibility expert for ACCESSIBILITY property"
 
     print("\n✅ Test PASSED: React UI task selection is correct")
     return True
@@ -105,9 +110,9 @@ def test_react_frontend_task():
 
 def test_payment_processing_task():
     """Test: Payment processing should select fintech + security experts"""
-    print("\n" + "="*60)
+    print("\n" + "=" * 60)
     print("TEST: Payment Processing Implementation")
-    print("="*60)
+    print("=" * 60)
 
     registry = PersonaRegistry(Path.home() / ".claude/skills/wfc/personas")
     selector = PersonaSelector(registry)
@@ -119,7 +124,7 @@ def test_payment_processing_task():
         task_type="feature-implementation",
         complexity="XL",
         properties=["SECURITY", "SAFETY", "CORRECTNESS"],
-        domain_context=["fintech", "payments"]
+        domain_context=["fintech", "payments"],
     )
 
     selected = selector.select_personas(context, num_personas=5)
@@ -133,12 +138,11 @@ def test_payment_processing_task():
     persona_names = [sp.persona.name for sp in selected]
     panels = [sp.persona.panel for sp in selected]
 
-    assert any("Fintech" in name or "Payment" in name for name in persona_names), \
-        "Should select fintech/payment expert"
-    assert any("Security" in name for name in persona_names), \
-        "Should select security expert"
-    assert "domain-experts" in panels, \
-        "Should include domain expert for fintech context"
+    assert any(
+        "Fintech" in name or "Payment" in name for name in persona_names
+    ), "Should select fintech/payment expert"
+    assert any("Security" in name for name in persona_names), "Should select security expert"
+    assert "domain-experts" in panels, "Should include domain expert for fintech context"
 
     print("\n✅ Test PASSED: Payment processing task selection is correct")
     return True
@@ -146,9 +150,9 @@ def test_payment_processing_task():
 
 def test_go_microservice_task():
     """Test: Go microservice should select Go backend + architecture experts"""
-    print("\n" + "="*60)
+    print("\n" + "=" * 60)
     print("TEST: Go Microservice Implementation")
-    print("="*60)
+    print("=" * 60)
 
     registry = PersonaRegistry(Path.home() / ".claude/skills/wfc/personas")
     selector = PersonaSelector(registry)
@@ -160,7 +164,7 @@ def test_go_microservice_task():
         task_type="microservices",
         complexity="XL",
         properties=["PERFORMANCE", "SCALABILITY", "RELIABILITY"],
-        domain_context=[]
+        domain_context=[],
     )
 
     selected = selector.select_personas(context, num_personas=5)
@@ -173,10 +177,10 @@ def test_go_microservice_task():
     # Assertions
     persona_names = [sp.persona.name for sp in selected]
 
-    assert any("Go" in name for name in persona_names), \
-        "Should select Go expert"
-    assert any("Architect" in name or "SRE" in name for name in persona_names), \
-        "Should select architecture/SRE expert for XL complexity"
+    assert any("Go" in name for name in persona_names), "Should select Go expert"
+    assert any(
+        "Architect" in name or "SRE" in name for name in persona_names
+    ), "Should select architecture/SRE expert for XL complexity"
 
     print("\n✅ Test PASSED: Go microservice task selection is correct")
     return True
@@ -184,9 +188,9 @@ def test_go_microservice_task():
 
 def test_tech_stack_extraction():
     """Test: Tech stack extraction from file paths"""
-    print("\n" + "="*60)
+    print("\n" + "=" * 60)
     print("TEST: Tech Stack Extraction from Files")
-    print("="*60)
+    print("=" * 60)
 
     test_cases = [
         (["auth.py", "models.py"], ["python"]),
@@ -211,16 +215,15 @@ def test_tech_stack_extraction():
 
 def test_manual_persona_override():
     """Test: Manual persona selection override"""
-    print("\n" + "="*60)
+    print("\n" + "=" * 60)
     print("TEST: Manual Persona Selection Override")
-    print("="*60)
+    print("=" * 60)
 
     registry = PersonaRegistry(Path.home() / ".claude/skills/wfc/personas")
     selector = PersonaSelector(registry)
 
     context = PersonaSelectionContext(
-        task_id="TEST-005",
-        manual_personas=["APPSEC_SPECIALIST", "BACKEND_PYTHON_SENIOR"]
+        task_id="TEST-005", manual_personas=["APPSEC_SPECIALIST", "BACKEND_PYTHON_SENIOR"]
     )
 
     selected = selector.select_personas(context, num_personas=5)
@@ -232,7 +235,9 @@ def test_manual_persona_override():
     # Assertions
     persona_ids = [sp.persona.id for sp in selected]
     assert "APPSEC_SPECIALIST" in persona_ids, "Should include manually selected APPSEC_SPECIALIST"
-    assert "BACKEND_PYTHON_SENIOR" in persona_ids, "Should include manually selected BACKEND_PYTHON_SENIOR"
+    assert (
+        "BACKEND_PYTHON_SENIOR" in persona_ids
+    ), "Should include manually selected BACKEND_PYTHON_SENIOR"
 
     print("\n✅ Test PASSED: Manual override works correctly")
     return True
@@ -240,9 +245,9 @@ def test_manual_persona_override():
 
 def test_relevance_scoring():
     """Test: Relevance scoring produces reasonable scores"""
-    print("\n" + "="*60)
+    print("\n" + "=" * 60)
     print("TEST: Relevance Scoring")
-    print("="*60)
+    print("=" * 60)
 
     registry = PersonaRegistry(Path.home() / ".claude/skills/wfc/personas")
     selector = PersonaSelector(registry)
@@ -253,25 +258,26 @@ def test_relevance_scoring():
         tech_stack=["python", "fastapi", "postgresql"],
         task_type="api-implementation",
         complexity="L",
-        properties=["SECURITY", "PERFORMANCE"]
+        properties=["SECURITY", "PERFORMANCE"],
     )
 
     selected = selector.select_personas(context, num_personas=5)
 
-    print(f"\n✅ Relevance Scores:")
+    print("\n✅ Relevance Scores:")
     for sp in selected:
         print(f"  • {sp.persona.name}: {sp.relevance_score:.2f}")
 
     # Assertions
-    assert all(sp.relevance_score >= 0.3 for sp in selected), \
-        "All selected personas should meet minimum relevance threshold"
-    assert all(sp.relevance_score <= 1.0 for sp in selected), \
-        "Relevance scores should not exceed 1.0"
+    assert all(
+        sp.relevance_score >= 0.3 for sp in selected
+    ), "All selected personas should meet minimum relevance threshold"
+    assert all(
+        sp.relevance_score <= 1.0 for sp in selected
+    ), "Relevance scores should not exceed 1.0"
 
     # Most relevant should have higher scores
     scores = [sp.relevance_score for sp in selected]
-    assert scores[0] >= scores[-1], \
-        "Scores should be sorted in descending order"
+    assert scores[0] >= scores[-1], "Scores should be sorted in descending order"
 
     print("\n✅ Test PASSED: Relevance scoring is working correctly")
     return True
@@ -304,9 +310,9 @@ def run_all_tests():
             results.append((test.__name__, False))
 
     # Summary
-    print("\n" + "="*60)
+    print("\n" + "=" * 60)
     print("TEST SUMMARY")
-    print("="*60)
+    print("=" * 60)
 
     passed = sum(1 for _, result in results if result)
     total = len(results)

@@ -181,11 +181,11 @@ WFC QUALITY CHECK REPORT
 ```toml
 [tool.black]
 line-length = 100
-target-version = ['py310']
+target-version = ['py312']
 
 [tool.ruff]
 line-length = 100
-target-version = "py310"
+target-version = "py312"
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

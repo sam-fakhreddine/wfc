@@ -30,9 +30,10 @@ try:
         PersonaRegistry,
         PersonaSelector,
         PersonaSelectionContext,
-        extract_tech_stack_from_files
+        extract_tech_stack_from_files,
     )
     from scripts.personas.persona_executor import PersonaReviewExecutor
+
     PERSONAS_AVAILABLE = True
 except ImportError:
     PERSONAS_AVAILABLE = False
@@ -41,6 +42,7 @@ except ImportError:
 @dataclass
 class ReviewRequest:
     """Request for code review"""
+
     task_id: str
     files: List[str]
     properties: List[Dict[str, Any]]
@@ -58,6 +60,7 @@ class ReviewRequest:
 @dataclass
 class ReviewResult:
     """Complete review result"""
+
     task_id: str
     consensus: ConsensusResult
     report_path: Path
@@ -156,7 +159,9 @@ class ReviewOrchestrator:
             except (OSError, PermissionError) as e:
                 raise ValueError(f"Cannot create parent directory {resolved.parent}: {e}")
 
-    def review(self, request: ReviewRequest, output_dir: Path) -> Union[ReviewResult, Dict[str, Any]]:
+    def review(
+        self, request: ReviewRequest, output_dir: Path
+    ) -> Union[ReviewResult, Dict[str, Any]]:
         """
         Perform complete review.
 
@@ -197,11 +202,7 @@ class ReviewOrchestrator:
         report_path = output_dir / f"REVIEW-{request.task_id}.md"
         self._generate_report(request, consensus, report_path)
 
-        return ReviewResult(
-            task_id=request.task_id,
-            consensus=consensus,
-            report_path=report_path
-        )
+        return ReviewResult(task_id=request.task_id, consensus=consensus, report_path=report_path)
 
     def prepare_persona_review(self, request: ReviewRequest):
         """
@@ -226,7 +227,7 @@ class ReviewOrchestrator:
             complexity=request.complexity,
             properties=property_names,
             domain_context=request.domain_context,
-            manual_personas=request.manual_personas
+            manual_personas=request.manual_personas,
         )
 
         # Select personas
@@ -234,42 +235,35 @@ class ReviewOrchestrator:
             context=context,
             num_personas=request.num_personas,
             require_diversity=True,
-            min_relevance=0.3
+            min_relevance=0.3,
         )
 
         logger.info("Selected %d personas for %s:", len(selected), request.task_id)
         for sp in selected:
             logger.info("  • %s (relevance: %.2f)", sp.persona.name, sp.relevance_score)
-            logger.debug("    └─ %s", ', '.join(sp.selection_reasons[:2]))
+            logger.debug("    └─ %s", ", ".join(sp.selection_reasons[:2]))
 
         # Prepare persona review tasks for Claude Code to execute
-        personas_with_relevance = [
-            (sp.persona.to_dict(), sp.relevance_score)
-            for sp in selected
-        ]
+        personas_with_relevance = [(sp.persona.to_dict(), sp.relevance_score) for sp in selected]
 
         # Get task specifications for subagent execution
         task_specs = self.persona_executor.prepare_subagent_tasks(
             personas_with_relevance=personas_with_relevance,
             files=request.files,
-            properties=request.properties
+            properties=request.properties,
         )
 
         logger.info("Prepared %d persona review tasks.", len(task_specs))
         logger.debug("Task specs ready for Claude Code to execute via Task tool.")
 
-        return {
-            "task_specs": task_specs,
-            "selected_personas": selected,
-            "request": request
-        }
+        return {"task_specs": task_specs, "selected_personas": selected, "request": request}
 
     def finalize_persona_review(
         self,
         request: ReviewRequest,
         selected_personas,
         subagent_responses: List[Dict[str, Any]],
-        output_dir: Path
+        output_dir: Path,
     ) -> ReviewResult:
         """
         Phase 2: Synthesize persona reviews and generate final report.
@@ -295,39 +289,31 @@ class ReviewOrchestrator:
         agent_reviews = self._convert_persona_results_to_agent_reviews(persona_results)
 
         # Build relevance scores dict for consensus weighting
-        relevance_scores = {
-            result.persona_id: result.relevance_score
-            for result in persona_results
-        }
+        relevance_scores = {result.persona_id: result.relevance_score for result in persona_results}
 
         # Calculate consensus with relevance weighting
         consensus = self.consensus.calculate(
-            reviews=agent_reviews,
-            relevance_scores=relevance_scores,
-            weight_by_relevance=True
+            reviews=agent_reviews, relevance_scores=relevance_scores, weight_by_relevance=True
         )
 
         # Generate report
         report_path = output_dir / f"REVIEW-{request.task_id}.md"
-        self._generate_persona_report(request, consensus, selected_personas, persona_results, report_path)
-
-        return ReviewResult(
-            task_id=request.task_id,
-            consensus=consensus,
-            report_path=report_path
+        self._generate_persona_report(
+            request, consensus, selected_personas, persona_results, report_path
         )
+
+        return ReviewResult(task_id=request.task_id, consensus=consensus, report_path=report_path)
 
     def _convert_persona_results_to_agent_reviews(self, persona_results):
         """Convert PersonaReviewResult to AgentReview format"""
-        from .agents import AgentReview, AgentType, ReviewComment
+        from .agents import AgentReview, ReviewComment
 
         agent_reviews = []
         for result in persona_results:
             # Create a dynamic agent type
-            agent_type = type('PersonaAgentType', (), {
-                'name': result.persona_id,
-                'value': result.persona_name
-            })()
+            agent_type = type(
+                "PersonaAgentType", (), {"name": result.persona_id, "value": result.persona_name}
+            )()
 
             # Convert comments
             comments = [
@@ -336,7 +322,7 @@ class ReviewOrchestrator:
                     line=c.get("line", 0),
                     severity=c.get("severity", "info"),
                     message=c.get("message", ""),
-                    suggestion=c.get("suggestion", "")
+                    suggestion=c.get("suggestion", ""),
                 )
                 for c in result.comments
             ]
@@ -346,14 +332,16 @@ class ReviewOrchestrator:
                 score=result.score,
                 passed=result.passed,
                 comments=comments,
-                summary=result.summary
+                summary=result.summary,
             )
 
             agent_reviews.append(agent_review)
 
         return agent_reviews
 
-    def _generate_persona_report(self, request, consensus, selected_personas, persona_results, path):
+    def _generate_persona_report(
+        self, request, consensus, selected_personas, persona_results, path
+    ):
         """Generate markdown review report for persona-based review"""
         lines = [
             f"# 🎯 Persona Review Report: {request.task_id}",
@@ -370,85 +358,100 @@ class ReviewOrchestrator:
 
         # Persona selection summary
         for sp in selected_personas:
-            lines.extend([
-                f"### {sp.persona.name}",
-                f"**Panel**: {sp.persona.panel}",
-                f"**Relevance**: {sp.relevance_score:.2f}",
-                f"**Selection Reasons**: {', '.join(sp.selection_reasons)}",
-                "",
-            ])
+            lines.extend(
+                [
+                    f"### {sp.persona.name}",
+                    f"**Panel**: {sp.persona.panel}",
+                    f"**Relevance**: {sp.relevance_score:.2f}",
+                    f"**Selection Reasons**: {', '.join(sp.selection_reasons)}",
+                    "",
+                ]
+            )
 
-        lines.extend([
-            "---",
-            "",
-            "## 📝 Individual Reviews",
-            "",
-        ])
+        lines.extend(
+            [
+                "---",
+                "",
+                "## 📝 Individual Reviews",
+                "",
+            ]
+        )
 
         # Individual persona reviews
         for result in persona_results:
             status = "✅" if result.passed else "❌"
-            lines.extend([
-                f"### {status} {result.persona_name}: {result.score:.1f}/10",
-                f"**Summary**: {result.summary}",
-                f"**Reasoning**: {result.reasoning}",
-                f"**Comments**: {len(result.comments)}",
-                "",
-            ])
+            lines.extend(
+                [
+                    f"### {status} {result.persona_name}: {result.score:.1f}/10",
+                    f"**Summary**: {result.summary}",
+                    f"**Reasoning**: {result.reasoning}",
+                    f"**Comments**: {len(result.comments)}",
+                    "",
+                ]
+            )
 
             # Show comments
             for comment in result.comments[:5]:  # Limit to top 5
-                lines.extend([
-                    f"#### {comment['severity'].upper()}: {comment['file']}:{comment.get('line', 0)}",
-                    f"- **Issue**: {comment['message']}",
-                    f"- **Fix**: {comment['suggestion']}",
-                    "",
-                ])
+                lines.extend(
+                    [
+                        f"#### {comment['severity'].upper()}: {comment['file']}:{comment.get('line', 0)}",
+                        f"- **Issue**: {comment['message']}",
+                        f"- **Fix**: {comment['suggestion']}",
+                        "",
+                    ]
+                )
 
         # Consensus insights
         if consensus.consensus_areas:
-            lines.extend([
-                "---",
-                "",
-                "## 🤝 Consensus Areas",
-                "",
-                "Issues mentioned by multiple reviewers:",
-                "",
-            ])
+            lines.extend(
+                [
+                    "---",
+                    "",
+                    "## 🤝 Consensus Areas",
+                    "",
+                    "Issues mentioned by multiple reviewers:",
+                    "",
+                ]
+            )
             for area in consensus.consensus_areas:
                 lines.append(f"- {area}")
             lines.append("")
 
         if consensus.unique_insights:
-            lines.extend([
-                "---",
-                "",
-                "## 💡 Unique Insights",
-                "",
-                "Critical issues caught by individual specialists:",
-                "",
-            ])
+            lines.extend(
+                [
+                    "---",
+                    "",
+                    "## 💡 Unique Insights",
+                    "",
+                    "Critical issues caught by individual specialists:",
+                    "",
+                ]
+            )
             for insight in consensus.unique_insights:
                 lines.append(f"- {insight}")
             lines.append("")
 
         # Final consensus
-        lines.extend([
-            "---",
-            "",
-            "## ✨ Final Consensus",
-            "",
-            consensus.summary,
-            "",
-        ])
+        lines.extend(
+            [
+                "---",
+                "",
+                "## ✨ Final Consensus",
+                "",
+                consensus.summary,
+                "",
+            ]
+        )
 
         # Write report
         self._validate_output_path(path)
-        with open(path, 'w') as f:
-            f.write('\n'.join(lines))
+        with open(path, "w") as f:
+            f.write("\n".join(lines))
 
-    def _generate_report(self, request: ReviewRequest,
-                         consensus: ConsensusResult, path: Path) -> None:
+    def _generate_report(
+        self, request: ReviewRequest, consensus: ConsensusResult, path: Path
+    ) -> None:
         """Generate markdown review report"""
         lines = [
             f"# Code Review Report: {request.task_id}",
@@ -465,42 +468,50 @@ class ReviewOrchestrator:
         # Agent summaries
         for agent_name, review in consensus.agent_reviews.items():
             status = "✅" if review.passed else "❌"
-            lines.extend([
-                f"### {status} {agent_name}: {review.agent.value}",
-                f"**Score**: {review.score:.1f}/10",
-                f"**Summary**: {review.summary}",
-                f"**Comments**: {len(review.comments)}",
-                "",
-            ])
+            lines.extend(
+                [
+                    f"### {status} {agent_name}: {review.agent.value}",
+                    f"**Score**: {review.score:.1f}/10",
+                    f"**Summary**: {review.summary}",
+                    f"**Comments**: {len(review.comments)}",
+                    "",
+                ]
+            )
 
         # All comments
         if consensus.all_comments:
-            lines.extend([
-                "---",
-                "",
-                "## Detailed Comments",
-                "",
-            ])
+            lines.extend(
+                [
+                    "---",
+                    "",
+                    "## Detailed Comments",
+                    "",
+                ]
+            )
 
             for comment in consensus.all_comments:
-                lines.extend([
-                    f"### {comment.severity.upper()}: {comment.file}:{comment.line}",
-                    f"**Message**: {comment.message}",
-                    f"**Suggestion**: {comment.suggestion}",
-                    "",
-                ])
+                lines.extend(
+                    [
+                        f"### {comment.severity.upper()}: {comment.file}:{comment.line}",
+                        f"**Message**: {comment.message}",
+                        f"**Suggestion**: {comment.suggestion}",
+                        "",
+                    ]
+                )
 
         # Consensus summary
-        lines.extend([
-            "---",
-            "",
-            "## Consensus",
-            "",
-            consensus.summary,
-            "",
-        ])
+        lines.extend(
+            [
+                "---",
+                "",
+                "## Consensus",
+                "",
+                consensus.summary,
+                "",
+            ]
+        )
 
         # Write report
         self._validate_output_path(path)
-        with open(path, 'w') as f:
-            f.write('\n'.join(lines))
+        with open(path, "w") as f:
+            f.write("\n".join(lines))

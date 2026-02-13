@@ -148,14 +148,14 @@ class TestSkillInstallation:
         skill_path = Path.home() / ".claude/skills/wfc-build/SKILL.md"
         assert skill_path.exists(), "SKILL.md must be installed"
 
-    def test_skill_has_executable_code(self):
-        """TEST-040: SKILL.md has executable CLI code"""
+    def test_skill_has_frontmatter(self):
+        """TEST-040: SKILL.md has valid YAML frontmatter"""
         skill_path = Path.home() / ".claude/skills/wfc-build/SKILL.md"
         content = skill_path.read_text()
 
-        assert "#!/usr/bin/env python3" in content
-        assert "BuildOrchestrator" in content
-        assert "def main():" in content
+        assert "---" in content
+        assert "name: wfc-build" in content
+        assert "description:" in content
 
     def test_skill_has_usage_examples(self):
         """TEST-041: SKILL.md has usage examples"""

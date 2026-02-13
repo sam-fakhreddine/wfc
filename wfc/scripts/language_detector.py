@@ -6,7 +6,7 @@ Detects project languages and recommends appropriate quality tools.
 """
 
 from pathlib import Path
-from typing import Dict, List, Set
+from typing import Dict, List
 from dataclasses import dataclass
 import json
 
@@ -14,6 +14,7 @@ import json
 @dataclass
 class LanguageConfig:
     """Configuration for a detected language."""
+
     language: str
     files_found: int
     formatter: str
@@ -32,7 +33,7 @@ class LanguageDetector:
             "formatter": "black",
             "linter": "ruff",  # Ruff is Python-specific
             "test_framework": "pytest",
-            "install": "uv pip install black ruff pytest"
+            "install": "uv pip install black ruff pytest",
         },
         "javascript": {
             "extensions": [".js", ".jsx"],
@@ -40,7 +41,7 @@ class LanguageDetector:
             "formatter": "prettier",
             "linter": "eslint",
             "test_framework": "jest",
-            "install": "npm install --save-dev prettier eslint jest"
+            "install": "npm install --save-dev prettier eslint jest",
         },
         "typescript": {
             "extensions": [".ts", ".tsx"],
@@ -48,7 +49,7 @@ class LanguageDetector:
             "formatter": "prettier",
             "linter": "eslint",
             "test_framework": "jest",
-            "install": "npm install --save-dev prettier @typescript-eslint/parser @typescript-eslint/eslint-plugin jest"
+            "install": "npm install --save-dev prettier @typescript-eslint/parser @typescript-eslint/eslint-plugin jest",
         },
         "go": {
             "extensions": [".go"],
@@ -56,7 +57,7 @@ class LanguageDetector:
             "formatter": "gofmt",
             "linter": "golangci-lint",
             "test_framework": "go test",
-            "install": "go install github.com/golangci/golangci-lint/cmd/golangci-lint@latest"
+            "install": "go install github.com/golangci/golangci-lint/cmd/golangci-lint@latest",
         },
         "rust": {
             "extensions": [".rs"],
@@ -64,7 +65,7 @@ class LanguageDetector:
             "formatter": "rustfmt",
             "linter": "clippy",
             "test_framework": "cargo test",
-            "install": "rustup component add rustfmt clippy"
+            "install": "rustup component add rustfmt clippy",
         },
         "java": {
             "extensions": [".java"],
@@ -72,7 +73,7 @@ class LanguageDetector:
             "formatter": "google-java-format",
             "linter": "checkstyle",
             "test_framework": "junit",
-            "install": "# Maven/Gradle managed"
+            "install": "# Maven/Gradle managed",
         },
         "ruby": {
             "extensions": [".rb"],
@@ -80,7 +81,7 @@ class LanguageDetector:
             "formatter": "rubocop",
             "linter": "rubocop",
             "test_framework": "rspec",
-            "install": "gem install rubocop rspec"
+            "install": "gem install rubocop rspec",
         },
         "csharp": {
             "extensions": [".cs"],
@@ -88,8 +89,8 @@ class LanguageDetector:
             "formatter": "dotnet format",
             "linter": "dotnet analyze",
             "test_framework": "dotnet test",
-            "install": "# .NET SDK included"
-        }
+            "install": "# .NET SDK included",
+        },
     }
 
     def __init__(self, project_root: Path = None):
@@ -114,10 +115,7 @@ class LanguageDetector:
                 files_found += len(list(self.project_root.rglob(f"*{ext}")))
 
             # Check for config files
-            has_config = any(
-                (self.project_root / cf).exists()
-                for cf in lang_info["config_files"]
-            )
+            has_config = any((self.project_root / cf).exists() for cf in lang_info["config_files"])
 
             if files_found > 0 or has_config:
                 detected[lang_name] = LanguageConfig(
@@ -126,15 +124,11 @@ class LanguageDetector:
                     formatter=lang_info["formatter"],
                     linter=lang_info["linter"],
                     test_framework=lang_info["test_framework"],
-                    install_command=lang_info["install"]
+                    install_command=lang_info["install"],
                 )
 
         # Sort by file count (most files first)
-        return sorted(
-            detected.values(),
-            key=lambda x: x.files_found,
-            reverse=True
-        )
+        return sorted(detected.values(), key=lambda x: x.files_found, reverse=True)
 
     def generate_config(self, languages: List[LanguageConfig]) -> Dict:
         """Generate quality check configuration."""
@@ -144,11 +138,11 @@ class LanguageDetector:
                     "name": lang.language,
                     "formatter": lang.formatter,
                     "linter": lang.linter,
-                    "test_framework": lang.test_framework
+                    "test_framework": lang.test_framework,
                 }
                 for lang in languages
             ],
-            "install_commands": [lang.install_command for lang in languages]
+            "install_commands": [lang.install_command for lang in languages],
         }
 
 

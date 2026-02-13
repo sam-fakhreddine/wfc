@@ -5,13 +5,13 @@ SOLID: Single Responsibility - Manages vibe session state
 """
 
 import random
-from typing import Optional
 from dataclasses import dataclass
 
 
 @dataclass
 class VibeState:
     """Minimal vibe session state"""
+
     message_count: int = 0
     reminder_shown: bool = False
     scope_suggestion_shown: bool = False

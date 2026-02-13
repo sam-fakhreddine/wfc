@@ -26,10 +26,12 @@ except ImportError:
 
 def load_sample_persona() -> Dict:
     """Load a sample persona for benchmarking."""
-    personas_dir = Path.home() / "repos/wfc/wfc/references/personas/panels"
+    # Use path relative to the repository root
+    repo_root = Path(__file__).parent.parent
+    personas_dir = repo_root / "wfc" / "references" / "personas" / "panels"
 
     # Try to load Security-AppSec as a representative persona
-    persona_files = list(personas_dir.glob("*.json"))
+    persona_files = list(personas_dir.glob("**/*.json"))
 
     if not persona_files:
         print(f"❌ No personas found in {personas_dir}")
@@ -66,11 +68,11 @@ def benchmark_persona_prompt(persona: Dict, sample_files: List[str]) -> Tuple[in
         properties_focus=properties_focus
     )
 
-    ultra_tokens = counter.count_tokens(ultra_minimal)
+    ultra_tokens = counter.count(ultra_minimal)
 
     # 2. Legacy prompt (full system prompt)
     legacy_prompt = build_persona_system_prompt(persona, sample_files, properties)
-    legacy_tokens = counter.count_tokens(legacy_prompt)
+    legacy_tokens = counter.count(legacy_prompt)
 
     return ultra_tokens, legacy_tokens
 

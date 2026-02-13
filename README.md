@@ -180,7 +180,7 @@ REQUIRED:
 ```bash
 git clone https://github.com/sam-fakhreddine/wfc.git
 cd wfc
-./install-universal.sh
+./install.sh
 ```
 
 **UNIVERSAL INSTALLER** — Auto-detects platform:

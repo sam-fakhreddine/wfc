@@ -10,26 +10,33 @@ from .config import get_config
 
 class ModelRouter:
     """Routes operations to appropriate models"""
-    
+
     SIMPLE_OPS = {
-        "branch.create", "branch.delete", "branch.list",
-        "commit.create", "commit.validate_message",
-        "worktree.create", "worktree.delete", "worktree.list",
-        "merge.abort", "hooks.install", "semver.current"
+        "branch.create",
+        "branch.delete",
+        "branch.list",
+        "commit.create",
+        "commit.validate_message",
+        "worktree.create",
+        "worktree.delete",
+        "worktree.list",
+        "merge.abort",
+        "hooks.install",
+        "semver.current",
     }
-    
+
     COMPLEX_OPS = {
         "branch._classify_type",  # Type classification needs reasoning
         "worktree.conflicts",  # Conflict analysis
         "merge.execute",  # Pre-flight checks
         "rollback.plan",  # Recovery plan generation
         "history.search_content",  # Secrets scanning
-        "semver.calculate"  # Commit analysis
+        "semver.calculate",  # Commit analysis
     }
-    
+
     def __init__(self):
         self.config = get_config()
-    
+
     def route(self, operation: str) -> str:
         """Determine which model to use"""
         if operation in self.SIMPLE_OPS:
@@ -39,7 +46,7 @@ class ModelRouter:
         else:
             # Default to sonnet for unknown operations
             return "sonnet"
-    
+
     def record_usage(self, operation: str, model: str, tokens: Dict) -> None:
         """Record model usage in telemetry"""
         # Would integrate with WFC telemetry system
@@ -48,6 +55,7 @@ class ModelRouter:
 
 # Singleton
 _instance = None
+
 
 def get_router() -> ModelRouter:
     """Get model router instance"""

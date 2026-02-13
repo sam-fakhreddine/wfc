@@ -12,6 +12,7 @@ from typing import Dict, Any, Optional
 
 class FileIOError(Exception):
     """Base exception for file I/O errors"""
+
     pass
 
 
@@ -39,7 +40,7 @@ def load_json(path: Path, default: Optional[Dict] = None) -> Dict[str, Any]:
                 return default
             raise FileIOError(f"File not found: {path}")
 
-        with open(path, 'r', encoding='utf-8') as f:
+        with open(path, "r", encoding="utf-8") as f:
             return json.load(f)
 
     except json.JSONDecodeError as e:
@@ -49,10 +50,7 @@ def load_json(path: Path, default: Optional[Dict] = None) -> Dict[str, Any]:
 
 
 def save_json(
-    path: Path,
-    data: Dict[str, Any],
-    indent: int = 2,
-    ensure_parent: bool = True
+    path: Path, data: Dict[str, Any], indent: int = 2, ensure_parent: bool = True
 ) -> None:
     """
     Save JSON file safely with proper formatting.
@@ -77,7 +75,7 @@ def save_json(
         if ensure_parent and not path.parent.exists():
             path.parent.mkdir(parents=True, exist_ok=True)
 
-        with open(path, 'w', encoding='utf-8') as f:
+        with open(path, "w", encoding="utf-8") as f:
             json.dump(data, f, indent=indent, ensure_ascii=False)
 
     except Exception as e:
@@ -85,9 +83,7 @@ def save_json(
 
 
 def update_json(
-    path: Path,
-    updates: Dict[str, Any],
-    create_if_missing: bool = True
+    path: Path, updates: Dict[str, Any], create_if_missing: bool = True
 ) -> Dict[str, Any]:
     """
     Update JSON file with new values (merge operation).
@@ -157,18 +153,14 @@ def load_text(path: Path, default: Optional[str] = None) -> str:
                 return default
             raise FileIOError(f"File not found: {path}")
 
-        with open(path, 'r', encoding='utf-8') as f:
+        with open(path, "r", encoding="utf-8") as f:
             return f.read()
 
     except Exception as e:
         raise FileIOError(f"Error reading {path}: {e}")
 
 
-def save_text(
-    path: Path,
-    content: str,
-    ensure_parent: bool = True
-) -> None:
+def save_text(path: Path, content: str, ensure_parent: bool = True) -> None:
     """
     Save text file safely.
 
@@ -190,7 +182,7 @@ def save_text(
         if ensure_parent and not path.parent.exists():
             path.parent.mkdir(parents=True, exist_ok=True)
 
-        with open(path, 'w', encoding='utf-8') as f:
+        with open(path, "w", encoding="utf-8") as f:
             f.write(content)
 
     except Exception as e:
@@ -219,7 +211,7 @@ def append_text(path: Path, content: str, ensure_parent: bool = True) -> None:
         if ensure_parent and not path.parent.exists():
             path.parent.mkdir(parents=True, exist_ok=True)
 
-        with open(path, 'a', encoding='utf-8') as f:
+        with open(path, "a", encoding="utf-8") as f:
             f.write(content)
 
     except Exception as e:
@@ -234,7 +226,7 @@ write_text = save_text
 
 
 # Example usage
-if __name__ == '__main__':
+if __name__ == "__main__":
     import tempfile
     import shutil
 
@@ -246,8 +238,8 @@ if __name__ == '__main__':
 
         # Test 1: Save and load JSON
         print("1. Testing JSON operations:")
-        test_data = {'name': 'WFC', 'version': '1.0', 'features': ['build', 'review']}
-        json_file = temp_dir / 'test.json'
+        test_data = {"name": "WFC", "version": "1.0", "features": ["build", "review"]}
+        json_file = temp_dir / "test.json"
 
         save_json(json_file, test_data)
         print(f"   ✅ Saved JSON to {json_file}")
@@ -258,31 +250,31 @@ if __name__ == '__main__':
 
         # Test 2: Update JSON
         print("\n2. Testing JSON update:")
-        updated = update_json(json_file, {'new_key': 'new_value'})
+        updated = update_json(json_file, {"new_key": "new_value"})
         print(f"   ✅ Updated JSON: {updated}")
 
         # Test 3: Load with default
         print("\n3. Testing default values:")
-        missing = load_json(temp_dir / 'missing.json', default={'default': True})
+        missing = load_json(temp_dir / "missing.json", default={"default": True})
         print(f"   ✅ Missing file returned default: {missing}")
 
         # Test 4: Text operations
         print("\n4. Testing text operations:")
-        text_file = temp_dir / 'test.txt'
-        save_text(text_file, 'Hello WFC\n')
-        print(f"   ✅ Saved text")
+        text_file = temp_dir / "test.txt"
+        save_text(text_file, "Hello WFC\n")
+        print("   ✅ Saved text")
 
-        append_text(text_file, 'Second line\n')
-        print(f"   ✅ Appended text")
+        append_text(text_file, "Second line\n")
+        print("   ✅ Appended text")
 
         content = load_text(text_file)
-        assert content == 'Hello WFC\nSecond line\n'
+        assert content == "Hello WFC\nSecond line\n"
         print(f"   ✅ Loaded text: {repr(content)}")
 
         # Test 5: Error handling
         print("\n5. Testing error handling:")
         try:
-            load_json(temp_dir / 'missing.json')
+            load_json(temp_dir / "missing.json")
             print("   ❌ Should have raised error")
         except FileIOError as e:
             print(f"   ✅ Correctly raised error: {e}")
@@ -292,4 +284,4 @@ if __name__ == '__main__':
     finally:
         # Cleanup
         shutil.rmtree(temp_dir)
-        print(f"\n🧹 Cleaned up temp directory")
+        print("\n🧹 Cleaned up temp directory")

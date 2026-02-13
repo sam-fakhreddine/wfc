@@ -1,0 +1,145 @@
+---
+name: wfc-vibe
+description: Natural brainstorming mode with smart transitions to structured workflows. Detects when scope grows and suggests planning. Passive reminders every ~10 messages. Easy transitions: say "let's plan this" to move to wfc-plan or wfc-build. Triggers on "vibe", "brainstorm", "explore ideas", or explicit /wfc-vibe. Ideal for early-stage ideation. Not for implementation.
+license: MIT
+---
+
+# wfc-vibe - Natural Brainstorming Mode
+
+**Conversational mode for stream-of-consciousness brainstorming with smart transitions to structured workflows**
+
+## What It Does
+
+Natural chat interface that lets you brainstorm freely without workflow enforcement:
+1. **Vibe naturally** - Just talk, no formal structure required
+2. **Smart detection** - Recognizes when scope grows large (not annoying)
+3. **Passive reminders** - Subtle hints every ~10 messages
+4. **Easy transitions** - Say "let's plan this" to move to wfc-plan or wfc-build
+
+## When to Use
+
+**Use wfc-vibe when:**
+- ✅ Brainstorming ideas
+- ✅ Exploring possibilities
+- ✅ Stream-of-consciousness thinking
+- ✅ Not ready to commit to implementation
+
+**Transition to planning when:**
+- ⚠️ Scope growing large (>3 features)
+- ⚠️ Ready to implement
+- ⚠️ Need structured breakdown
+
+## Usage
+
+```bash
+# Start vibe session (default mode in Claude Code)
+# Just start chatting naturally - no special command needed
+
+# When ready to plan:
+"let's plan this"
+"I want to implement this"
+"let's build this"
+```
+
+## Philosophy
+
+**CHILL:** Natural conversation, no pressure
+**SMART:** Detects planning opportunities (not annoying)
+**SMOOTH:** Easy transition with context preservation
+
+**Not like ChatGPT/Gemini:** No constant "want me to create?" interruptions
+
+## Key Behaviors
+
+### What wfc-vibe DOES:
+- ✅ Respond naturally like normal chat
+- ✅ Track conversation context
+- ✅ Passive reminder every ~10 messages (8-12 randomized)
+- ✅ Detect when scope grows large (once per conversation)
+- ✅ Smooth transition with relevant context summary
+
+### What wfc-vibe DOESN'T DO:
+- ❌ Force workflow transitions
+- ❌ Interrupt natural flow
+- ❌ Ask "want to plan?" constantly
+- ❌ Be pushy or eager about planning
+
+## Smart Detection
+
+Suggests planning when:
+- Multiple features mentioned (>3)
+- Architecture discussion detected
+- Many files mentioned (>5)
+- Complexity indicators ("refactor", "migrate", "system")
+
+**Max 1 suggestion per conversation** - not annoying
+
+## Transition Preview
+
+When you say "let's plan this":
+```
+📋 I'll help you plan this. Here's what I captured:
+
+Goal: Build a REST API for user management
+Features:
+  - User authentication
+  - Role-based access control
+  - Audit logging
+Estimated complexity: M
+
+Route to: wfc-build (simple) or wfc-plan (complex)?
+```
+
+## Configuration
+
+```json
+{
+  "vibe": {
+    "reminder_frequency": [8, 12],
+    "max_scope_suggestions": 1,
+    "context_summarization_timeout": 5000,
+    "transition_preview": true
+  }
+}
+```
+
+## Examples
+
+### Natural Brainstorming
+```
+You: I'm thinking about adding user authentication
+Claude: What kind of auth are you considering?
+You: JWT tokens, maybe with Redis for sessions
+Claude: Makes sense. How about the user model?
+You: Probably email, password hash, role
+...
+(after 10 messages)
+💡 *Tip: Say 'let's plan this' anytime to move to implementation*
+```
+
+### Scope Growing
+```
+You: We need auth, RBAC, audit logging, email notifications, webhooks
+Claude: 💭 *This is growing into a sizable project. Consider using /wfc-plan to structure it when ready.*
+```
+
+### Smooth Transition
+```
+You: let's plan this
+
+Claude:
+📋 I'll help you plan this. Here's what I captured:
+
+Goal: User management system with auth and RBAC
+Features: authentication, roles, audit logs, email
+Tech: JWT, Redis, PostgreSQL
+Complexity: M (2-3 agents)
+
+Ready to start with /wfc-build? (yes/no)
+```
+
+## Integration
+
+- **Transitions to:** wfc-build (simple) or wfc-plan (complex)
+- **Context:** Relevant info extracted automatically
+- **Telemetry:** Tracks vibe sessions, transitions, suggestions

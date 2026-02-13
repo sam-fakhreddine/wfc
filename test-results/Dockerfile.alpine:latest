@@ -1,0 +1,24 @@
+# Dockerfile for alpine:latest
+FROM alpine:latest
+
+# Set working directory
+WORKDIR /wfc
+
+# Install basic dependencies and test requirements
+# Alpine specific setup
+RUN apk add --no-cache     curl     git     python3     py3-pip     bash     && rm -rf /var/cache/apk/*
+
+# Copy WFC source code
+COPY . /
+
+# Create Claude Code directory structure
+RUN mkdir -p /home/sambou/.claude/skills &&     mkdir -p /home/sambou/.wfc
+
+# Set environment variables
+ENV HOME=/home/sambou
+
+# Create verification script
+RUN echo '#!/bin/bash' > /verify.sh &&     echo 'echo "=== WFC INSTALLATION VERIFICATION ==="' >> /verify.sh &&     echo 'if [ -d /home/sambou/.claude/skills ]; then' >> /verify.sh &&     echo '    echo "✅ Skills directory exists"' >> /verify.sh &&     echo '    SKILL_COUNT=15' >> /verify.sh &&     echo '    echo "📊 Skills installed: "' >> /verify.sh &&     echo '    echo "📋 Installed skills:"' >> /verify.sh &&     echo '    find /home/sambou/.claude/skills/ -mindepth 1 -maxdepth 1 -type d -printf "  • %f\n"' >> /verify.sh &&     echo '    echo "✅ Installation verification complete"' >> /verify.sh &&     echo 'else' >> /verify.sh &&     echo '    echo "❌ Skills directory not found"' >> /verify.sh &&     echo '    exit 1' >> /verify.sh &&     echo 'fi' >> /verify.sh &&     echo 'echo "=== END VERIFICATION ==="' >> /verify.sh &&     chmod +x /verify.sh
+
+# Run the installer with verification
+CMD ["/bin/bash", "-c", "export HOME=/home/sambou && echo '=== Starting WFC Installation ===' && /install-universal.sh --ci && echo '=== Starting Verification ===' && bash /verify.sh"]

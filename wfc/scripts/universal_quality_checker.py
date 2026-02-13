@@ -20,14 +20,13 @@ PHILOSOPHY:
 import subprocess
 import sys
 from dataclasses import dataclass
-from pathlib import Path
-from typing import List, Dict, Optional
-import json
+from typing import List, Optional
 
 
 @dataclass
 class TrunkCheckResult:
     """Result from Trunk check."""
+
     passed: bool
     issues_found: int
     files_checked: int
@@ -82,10 +81,7 @@ class UniversalQualityChecker:
         # Run Trunk
         try:
             result = subprocess.run(
-                cmd,
-                capture_output=True,
-                text=True,
-                timeout=300  # 5 minutes max
+                cmd, capture_output=True, text=True, timeout=300  # 5 minutes max
             )
 
             # Parse output
@@ -98,7 +94,7 @@ class UniversalQualityChecker:
                 issues_found=issues_found,
                 files_checked=len(self.files) if self.files else 0,
                 output=output,
-                fixable_issues=fixable_issues
+                fixable_issues=fixable_issues,
             )
 
         except subprocess.TimeoutExpired:
@@ -107,7 +103,7 @@ class UniversalQualityChecker:
                 issues_found=0,
                 files_checked=0,
                 output="Trunk check timed out (>5 minutes)",
-                fixable_issues=0
+                fixable_issues=0,
             )
 
     def format(self) -> TrunkCheckResult:
@@ -117,11 +113,7 @@ class UniversalQualityChecker:
     def _is_trunk_installed(self) -> bool:
         """Check if Trunk is installed."""
         try:
-            subprocess.run(
-                ["trunk", "--version"],
-                capture_output=True,
-                timeout=5
-            )
+            subprocess.run(["trunk", "--version"], capture_output=True, timeout=5)
             return True
         except (FileNotFoundError, subprocess.TimeoutExpired):
             return False
@@ -143,18 +135,15 @@ Or npm:
 More info: https://trunk.io
 """
         return TrunkCheckResult(
-            passed=False,
-            issues_found=0,
-            files_checked=0,
-            output=install_msg,
-            fixable_issues=0
+            passed=False, issues_found=0, files_checked=0, output=install_msg, fixable_issues=0
         )
 
     def _count_issues(self, output: str) -> int:
         """Count issues in Trunk output."""
         # Trunk outputs issue counts
         import re
-        match = re.search(r'(\d+) issue', output)
+
+        match = re.search(r"(\d+) issue", output)
         if match:
             return int(match.group(1))
         return 0
@@ -164,7 +153,8 @@ More info: https://trunk.io
         # Check for "run trunk check --fix" message
         if "--fix" in output:
             import re
-            match = re.search(r'(\d+) fixable', output)
+
+            match = re.search(r"(\d+) fixable", output)
             if match:
                 return int(match.group(1))
         return 0

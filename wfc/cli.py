@@ -23,12 +23,7 @@ from typing import Optional
 def run_command(cmd: str, cwd: Optional[Path] = None, check: bool = True) -> int:
     """Run a shell command and return exit code."""
     result = subprocess.run(
-        cmd,
-        shell=True,
-        cwd=cwd,
-        stdout=subprocess.PIPE,
-        stderr=subprocess.STDOUT,
-        text=True
+        cmd, shell=True, cwd=cwd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True
     )
 
     if result.stdout:
@@ -156,9 +151,13 @@ def cmd_version():
     print("Agent Skills Compliant ✅")
 
 
-def cmd_implement(tasks_file: Optional[str] = None, agents: Optional[int] = None,
-                  dry_run: bool = False, skip_quality: bool = False,
-                  enable_entire: bool = False):
+def cmd_implement(
+    tasks_file: Optional[str] = None,
+    agents: Optional[int] = None,
+    dry_run: bool = False,
+    skip_quality: bool = False,
+    enable_entire: bool = False,
+):
     """
     Execute implementation tasks with wfc-implement.
 
@@ -255,7 +254,9 @@ def cmd_implement(tasks_file: Optional[str] = None, agents: Optional[int] = None
                 if level_tasks:
                     print(f"Level {level} ({len(level_tasks)} tasks):")
                     for task in level_tasks:
-                        deps = f" [deps: {', '.join(task.dependencies)}]" if task.dependencies else ""
+                        deps = (
+                            f" [deps: {', '.join(task.dependencies)}]" if task.dependencies else ""
+                        )
                         print(f"  - {task.id}: {task.title} ({task.complexity.value}){deps}")
                     print()
 
@@ -309,6 +310,7 @@ def cmd_implement(tasks_file: Optional[str] = None, agents: Optional[int] = None
     except Exception as e:
         print(f"\n\n❌ Implementation failed: {e}")
         import traceback
+
         traceback.print_exc()
         sys.exit(1)
 
@@ -317,7 +319,7 @@ def main():
     """Main CLI entry point."""
     parser = argparse.ArgumentParser(
         description="WFC CLI - World Fucking Class tools",
-        formatter_class=argparse.RawDescriptionHelpFormatter
+        formatter_class=argparse.RawDescriptionHelpFormatter,
     )
 
     subparsers = parser.add_subparsers(dest="command", help="Command to run")
@@ -351,11 +353,21 @@ def main():
 
     # Implement
     implement_parser = subparsers.add_parser("implement", help="Execute implementation tasks")
-    implement_parser.add_argument("--tasks", type=str, help="Path to TASKS.md (default: plan/TASKS.md)")
+    implement_parser.add_argument(
+        "--tasks", type=str, help="Path to TASKS.md (default: plan/TASKS.md)"
+    )
     implement_parser.add_argument("--agents", type=int, help="Number of parallel agents")
-    implement_parser.add_argument("--dry-run", action="store_true", help="Show plan without executing")
-    implement_parser.add_argument("--skip-quality", action="store_true", help="Skip quality checks (NOT RECOMMENDED)")
-    implement_parser.add_argument("--enable-entire", action="store_true", help="Enable Entire.io session capture (RECOMMENDED for debugging)")
+    implement_parser.add_argument(
+        "--dry-run", action="store_true", help="Show plan without executing"
+    )
+    implement_parser.add_argument(
+        "--skip-quality", action="store_true", help="Skip quality checks (NOT RECOMMENDED)"
+    )
+    implement_parser.add_argument(
+        "--enable-entire",
+        action="store_true",
+        help="Enable Entire.io session capture (RECOMMENDED for debugging)",
+    )
 
     args = parser.parse_args()
 
@@ -384,7 +396,7 @@ def main():
             agents=args.agents,
             dry_run=args.dry_run,
             skip_quality=args.skip_quality,
-            enable_entire=args.enable_entire
+            enable_entire=args.enable_entire,
         )
 
 

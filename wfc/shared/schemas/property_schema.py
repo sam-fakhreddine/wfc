@@ -14,10 +14,11 @@ from typing import List, Optional, Dict, Any
 
 class PropertyType(Enum):
     """Property types following formal verification categories."""
-    SAFETY = "SAFETY"           # "Bad things never happen"
-    LIVENESS = "LIVENESS"       # "Good things eventually happen"
-    INVARIANT = "INVARIANT"     # "This always holds true"
-    PERFORMANCE = "PERFORMANCE" # "Within these bounds"
+
+    SAFETY = "SAFETY"  # "Bad things never happen"
+    LIVENESS = "LIVENESS"  # "Good things eventually happen"
+    INVARIANT = "INVARIANT"  # "This always holds true"
+    PERFORMANCE = "PERFORMANCE"  # "Within these bounds"
 
 
 @dataclass
@@ -27,20 +28,21 @@ class Property:
 
     Used by: wfc-plan, wfc-implement, wfc-test, wfc-observe
     """
-    id: str                           # e.g., "PROP-001"
-    type: PropertyType                # SAFETY, LIVENESS, INVARIANT, PERFORMANCE
-    statement: str                    # Human-readable property statement
-    rationale: str                    # Why this property matters
+
+    id: str  # e.g., "PROP-001"
+    type: PropertyType  # SAFETY, LIVENESS, INVARIANT, PERFORMANCE
+    statement: str  # Human-readable property statement
+    rationale: str  # Why this property matters
 
     # Optional fields
-    formal_spec: Optional[str] = None # Formal logic specification (if applicable)
+    formal_spec: Optional[str] = None  # Formal logic specification (if applicable)
     acceptance_criteria: List[str] = field(default_factory=list)
     tags: List[str] = field(default_factory=list)
 
     # Links to other artifacts
     requirements: List[str] = field(default_factory=list)  # FR-001, NFR-002, etc.
-    tests: List[str] = field(default_factory=list)         # Test IDs that verify this
-    tasks: List[str] = field(default_factory=list)         # TASK-001, etc.
+    tests: List[str] = field(default_factory=list)  # Test IDs that verify this
+    tasks: List[str] = field(default_factory=list)  # TASK-001, etc.
 
     def __post_init__(self):
         """Validate property on creation."""
@@ -65,14 +67,14 @@ class Property:
             "tags": self.tags,
             "requirements": self.requirements,
             "tests": self.tests,
-            "tasks": self.tasks
+            "tasks": self.tasks,
         }
 
     @classmethod
-    def from_dict(cls, data: Dict[str, Any]) -> 'Property':
+    def from_dict(cls, data: Dict[str, Any]) -> "Property":
         """Create Property from dictionary."""
         data = data.copy()
-        data['type'] = PropertyType(data['type'])
+        data["type"] = PropertyType(data["type"])
         return cls(**data)
 
 
@@ -83,6 +85,7 @@ class PropertySet:
 
     Used by: wfc-plan (creates), wfc-implement (consumes), wfc-test (verifies)
     """
+
     properties: List[Property] = field(default_factory=list)
 
     def add(self, prop: Property) -> None:
@@ -106,12 +109,10 @@ class PropertySet:
 
     def to_dict(self) -> Dict[str, Any]:
         """Convert to dictionary for serialization."""
-        return {
-            "properties": [p.to_dict() for p in self.properties]
-        }
+        return {"properties": [p.to_dict() for p in self.properties]}
 
     @classmethod
-    def from_dict(cls, data: Dict[str, Any]) -> 'PropertySet':
+    def from_dict(cls, data: Dict[str, Any]) -> "PropertySet":
         """Create PropertySet from dictionary."""
         props = [Property.from_dict(p) for p in data.get("properties", [])]
         return cls(properties=props)
@@ -128,10 +129,10 @@ if __name__ == "__main__":
         acceptance_criteria=[
             "All protected endpoints reject requests without valid auth token",
             "Auth middleware runs before any protected handler",
-            "Token validation includes expiry and signature checks"
+            "Token validation includes expiry and signature checks",
         ],
         requirements=["FR-001", "NFR-002"],
-        tags=["security", "authentication"]
+        tags=["security", "authentication"],
     )
 
     print(f"Property: {prop.id} ({prop.type.value})")

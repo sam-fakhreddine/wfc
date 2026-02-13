@@ -13,6 +13,7 @@ from .detector import ScopeDetector
 @dataclass
 class TransitionResult:
     """Result of transition attempt"""
+
     should_transition: bool
     target_workflow: Optional[str]  # "wfc-build" or "wfc-plan"
     context: Optional[PlanningContext]
@@ -44,7 +45,7 @@ class TransitionHandler:
         "let's make this real",
         "lets make this real",
         "start planning",
-        "begin implementation"
+        "begin implementation",
     ]
 
     def __init__(self):
@@ -70,9 +71,7 @@ class TransitionHandler:
         return False
 
     def prepare_transition(
-        self,
-        messages: List[Message],
-        scope_detector: Optional[ScopeDetector] = None
+        self, messages: List[Message], scope_detector: Optional[ScopeDetector] = None
     ) -> TransitionResult:
         """
         Prepare transition by extracting context and determining target workflow.
@@ -100,10 +99,7 @@ class TransitionHandler:
         preview += f"\n\nReady to start with /{target}? (yes/no)"
 
         return TransitionResult(
-            should_transition=True,
-            target_workflow=target,
-            context=context,
-            preview=preview
+            should_transition=True, target_workflow=target, context=context, preview=preview
         )
 
     def parse_confirmation(self, message: str) -> bool:
@@ -183,7 +179,7 @@ class TransitionOrchestrator:
         self,
         message: str,
         conversation: List[Message],
-        scope_detector: Optional[ScopeDetector] = None
+        scope_detector: Optional[ScopeDetector] = None,
     ) -> Tuple[bool, Optional[str]]:
         """
         Process user message for transition handling.

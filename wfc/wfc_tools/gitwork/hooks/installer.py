@@ -4,7 +4,6 @@ Hook Installer - Install and manage WFC git hooks
 Uses non-destructive wrapping to preserve existing hooks.
 """
 
-import subprocess
 from pathlib import Path
 from typing import Dict, List, Optional, Any
 import sys
@@ -291,7 +290,6 @@ exit 0
 
         # Summary
         total = len(status)
-        installed_count = sum(1 for h in status if h["installed"])
         wfc_count = sum(1 for h in status if h["wfc_managed"])
 
         print(f"Summary: {wfc_count}/{total} WFC hooks installed")

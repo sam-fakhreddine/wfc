@@ -16,13 +16,14 @@ import subprocess
 import sys
 from dataclasses import dataclass
 from pathlib import Path
-from typing import List, Dict, Optional, Tuple
+from typing import List, Optional
 import json
 
 
 @dataclass
 class QualityCheckResult:
     """Result from a quality check."""
+
     check_name: str
     passed: bool
     message: str
@@ -34,6 +35,7 @@ class QualityCheckResult:
 @dataclass
 class QualityReport:
     """Complete quality check report."""
+
     passed: bool
     checks: List[QualityCheckResult]
     files_checked: List[str]
@@ -84,7 +86,7 @@ class QualityChecker:
         run_tests: bool = True,
         run_type_check: bool = False,
         run_markdown_lint: bool = False,
-        project_root: Optional[Path] = None
+        project_root: Optional[Path] = None,
     ):
         """
         Initialize quality checker.
@@ -103,8 +105,8 @@ class QualityChecker:
         self.project_root = project_root or Path.cwd()
 
         # Separate files by type
-        self.python_files = [f for f in self.files if f.suffix == '.py']
-        self.markdown_files = [f for f in self.files if f.suffix == '.md']
+        self.python_files = [f for f in self.files if f.suffix == ".py"]
+        self.markdown_files = [f for f in self.files if f.suffix == ".md"]
 
     def check_all(self) -> QualityReport:
         """
@@ -139,9 +141,7 @@ class QualityChecker:
         passed = all(check.passed for check in checks)
 
         return QualityReport(
-            passed=passed,
-            checks=checks,
-            files_checked=[str(f) for f in self.files]
+            passed=passed, checks=checks, files_checked=[str(f) for f in self.files]
         )
 
     def _check_black(self) -> QualityCheckResult:
@@ -151,14 +151,14 @@ class QualityChecker:
                 ["black", "--check", "--line-length=100"] + [str(f) for f in self.python_files],
                 capture_output=True,
                 text=True,
-                timeout=30
+                timeout=30,
             )
 
             if result.returncode == 0:
                 return QualityCheckResult(
                     check_name="Python Formatting (black)",
                     passed=True,
-                    message=f"All {len(self.python_files)} Python files formatted correctly"
+                    message=f"All {len(self.python_files)} Python files formatted correctly",
                 )
             else:
                 return QualityCheckResult(
@@ -167,7 +167,7 @@ class QualityChecker:
                     message=f"{len(self.python_files)} files need formatting",
                     details=result.stdout[:200] if result.stdout else None,
                     fixable=True,
-                    fix_command="black --line-length=100 <files> (or: make format)"
+                    fix_command="black --line-length=100 <files> (or: make format)",
                 )
 
         except FileNotFoundError:
@@ -176,13 +176,11 @@ class QualityChecker:
                 passed=False,
                 message="black not installed",
                 fixable=True,
-                fix_command="uv pip install black"
+                fix_command="uv pip install black",
             )
         except Exception as e:
             return QualityCheckResult(
-                check_name="Python Formatting (black)",
-                passed=False,
-                message=f"Check failed: {e}"
+                check_name="Python Formatting (black)", passed=False, message=f"Check failed: {e}"
             )
 
     def _check_ruff(self) -> QualityCheckResult:
@@ -192,18 +190,18 @@ class QualityChecker:
                 ["ruff", "check", "--line-length=100"] + [str(f) for f in self.python_files],
                 capture_output=True,
                 text=True,
-                timeout=30
+                timeout=30,
             )
 
             if result.returncode == 0:
                 return QualityCheckResult(
                     check_name="Python Linting (ruff)",
                     passed=True,
-                    message=f"All {len(self.python_files)} Python files pass linting"
+                    message=f"All {len(self.python_files)} Python files pass linting",
                 )
             else:
                 # Count errors
-                error_count = result.stdout.count('\n') if result.stdout else 0
+                error_count = result.stdout.count("\n") if result.stdout else 0
 
                 return QualityCheckResult(
                     check_name="Python Linting (ruff)",
@@ -211,7 +209,7 @@ class QualityChecker:
                     message=f"{error_count} linting errors found",
                     details=result.stdout[:500] if result.stdout else None,
                     fixable=True,
-                    fix_command="ruff check --fix <files> (or: make lint --fix)"
+                    fix_command="ruff check --fix <files> (or: make lint --fix)",
                 )
 
         except FileNotFoundError:
@@ -220,13 +218,11 @@ class QualityChecker:
                 passed=False,
                 message="ruff not installed",
                 fixable=True,
-                fix_command="uv pip install ruff"
+                fix_command="uv pip install ruff",
             )
         except Exception as e:
             return QualityCheckResult(
-                check_name="Python Linting (ruff)",
-                passed=False,
-                message=f"Check failed: {e}"
+                check_name="Python Linting (ruff)", passed=False, message=f"Check failed: {e}"
             )
 
     def _check_mypy(self) -> QualityCheckResult:
@@ -236,24 +232,22 @@ class QualityChecker:
                 ["mypy"] + [str(f) for f in self.python_files],
                 capture_output=True,
                 text=True,
-                timeout=60
+                timeout=60,
             )
 
             if result.returncode == 0:
                 return QualityCheckResult(
-                    check_name="Type Checking (mypy)",
-                    passed=True,
-                    message="All type checks passed"
+                    check_name="Type Checking (mypy)", passed=True, message="All type checks passed"
                 )
             else:
-                error_count = result.stdout.count('error:') if result.stdout else 0
+                error_count = result.stdout.count("error:") if result.stdout else 0
 
                 return QualityCheckResult(
                     check_name="Type Checking (mypy)",
                     passed=False,
                     message=f"{error_count} type errors found",
                     details=result.stdout[:500] if result.stdout else None,
-                    fixable=False
+                    fixable=False,
                 )
 
         except FileNotFoundError:
@@ -261,13 +255,11 @@ class QualityChecker:
             return QualityCheckResult(
                 check_name="Type Checking (mypy)",
                 passed=True,
-                message="mypy not installed (optional check skipped)"
+                message="mypy not installed (optional check skipped)",
             )
         except Exception as e:
             return QualityCheckResult(
-                check_name="Type Checking (mypy)",
-                passed=False,
-                message=f"Check failed: {e}"
+                check_name="Type Checking (mypy)", passed=False, message=f"Check failed: {e}"
             )
 
     def _check_tests(self) -> QualityCheckResult:
@@ -291,7 +283,7 @@ class QualityChecker:
             return QualityCheckResult(
                 check_name="Tests (pytest)",
                 passed=True,
-                message="No test files found (check skipped)"
+                message="No test files found (check skipped)",
             )
 
         try:
@@ -299,25 +291,25 @@ class QualityChecker:
                 ["pytest", "-v"] + [str(f) for f in test_files],
                 capture_output=True,
                 text=True,
-                timeout=120
+                timeout=120,
             )
 
             if result.returncode == 0:
                 return QualityCheckResult(
                     check_name="Tests (pytest)",
                     passed=True,
-                    message=f"All tests passed ({len(test_files)} test files)"
+                    message=f"All tests passed ({len(test_files)} test files)",
                 )
             else:
                 # Extract failure info
-                failed = result.stdout.count('FAILED') if result.stdout else 0
+                failed = result.stdout.count("FAILED") if result.stdout else 0
 
                 return QualityCheckResult(
                     check_name="Tests (pytest)",
                     passed=False,
                     message=f"{failed} tests failed",
                     details=result.stdout[-500:] if result.stdout else None,
-                    fixable=False
+                    fixable=False,
                 )
 
         except FileNotFoundError:
@@ -326,13 +318,11 @@ class QualityChecker:
                 passed=False,
                 message="pytest not installed",
                 fixable=True,
-                fix_command="uv pip install pytest"
+                fix_command="uv pip install pytest",
             )
         except Exception as e:
             return QualityCheckResult(
-                check_name="Tests (pytest)",
-                passed=False,
-                message=f"Tests failed: {e}"
+                check_name="Tests (pytest)", passed=False, message=f"Tests failed: {e}"
             )
 
     def _check_markdown(self) -> QualityCheckResult:
@@ -342,14 +332,14 @@ class QualityChecker:
                 ["markdownlint"] + [str(f) for f in self.markdown_files],
                 capture_output=True,
                 text=True,
-                timeout=30
+                timeout=30,
             )
 
             if result.returncode == 0:
                 return QualityCheckResult(
                     check_name="Markdown Linting",
                     passed=True,
-                    message=f"All {len(self.markdown_files)} markdown files pass linting"
+                    message=f"All {len(self.markdown_files)} markdown files pass linting",
                 )
             else:
                 return QualityCheckResult(
@@ -358,7 +348,7 @@ class QualityChecker:
                     message="Markdown linting errors found",
                     details=result.stdout[:500] if result.stdout else None,
                     fixable=True,
-                    fix_command="markdownlint --fix <files>"
+                    fix_command="markdownlint --fix <files>",
                 )
 
         except FileNotFoundError:
@@ -366,13 +356,11 @@ class QualityChecker:
             return QualityCheckResult(
                 check_name="Markdown Linting",
                 passed=True,
-                message="markdownlint not installed (optional check skipped)"
+                message="markdownlint not installed (optional check skipped)",
             )
         except Exception as e:
             return QualityCheckResult(
-                check_name="Markdown Linting",
-                passed=False,
-                message=f"Check failed: {e}"
+                check_name="Markdown Linting", passed=False, message=f"Check failed: {e}"
             )
 
 
@@ -393,7 +381,7 @@ def main():
         files=args.files,
         run_tests=not args.no_tests,
         run_type_check=args.type_check,
-        run_markdown_lint=args.markdown
+        run_markdown_lint=args.markdown,
     )
 
     report = checker.check_all()
@@ -410,10 +398,10 @@ def main():
                     "message": c.message,
                     "details": c.details,
                     "fixable": c.fixable,
-                    "fix_command": c.fix_command
+                    "fix_command": c.fix_command,
                 }
                 for c in report.checks
-            ]
+            ],
         }
         print(json.dumps(output, indent=2))
     else:

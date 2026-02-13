@@ -39,14 +39,17 @@ logger = logging.getLogger(__name__)
 try:
     sys.path.insert(0, str(Path.home() / ".claude/skills/wfc"))
     from scripts.personas.persona_orchestrator import resolve_model_name
-except:
+except Exception:
+
     def resolve_model_name(model_ref: str) -> str:
         """Fallback if import fails"""
         return model_ref if model_ref.startswith("claude-") else "claude-sonnet-4-20250514"
 
+
 # Import token management
 try:
     from .token_manager import TokenBudgetManager, TokenBudget
+
     TOKEN_MANAGER_AVAILABLE = True
 except ImportError:
     TOKEN_MANAGER_AVAILABLE = False
@@ -56,6 +59,7 @@ except ImportError:
 @dataclass
 class PersonaReviewRequest:
     """Request for a persona to review code"""
+
     task_id: str
     files: List[str]
     properties: List[Dict[str, Any]]
@@ -68,6 +72,7 @@ class PersonaReviewRequest:
 @dataclass
 class PersonaReviewResult:
     """Result from a persona's review"""
+
     persona_id: str
     persona_name: str
     score: float  # 0-10
@@ -79,9 +84,7 @@ class PersonaReviewResult:
 
 
 def build_persona_system_prompt(
-    persona: Dict,
-    request_files: List[str],
-    request_properties: List[Dict[str, Any]]
+    persona: Dict, request_files: List[str], request_properties: List[Dict[str, Any]]
 ) -> str:
     """
     Build a complete system prompt for a persona.
@@ -101,17 +104,18 @@ def build_persona_system_prompt(
     system_additions = persona.get("system_prompt_additions", "")
 
     # Build skills description
-    skills_text = "\n".join([
-        f"  - {skill['name']} ({skill['level']}): {skill.get('context', '')}"
-        for skill in skills[:5]  # Top 5 skills
-    ])
+    skills_text = "\n".join(
+        [
+            f"  - {skill['name']} ({skill['level']}): {skill.get('context', '')}"
+            for skill in skills[:5]  # Top 5 skills
+        ]
+    )
 
     # Build review dimensions
     dimensions = lens.get("review_dimensions", [])
-    dimensions_text = "\n".join([
-        f"  - {d['dimension']}: {d['weight']*100:.0f}% weight"
-        for d in dimensions
-    ])
+    dimensions_text = "\n".join(
+        [f"  - {d['dimension']}: {d['weight']*100:.0f}% weight" for d in dimensions]
+    )
 
     # Extract properties to focus on
     property_names = [p.get("type", "") for p in request_properties if p.get("type")]
@@ -182,7 +186,9 @@ Review the code now and respond with ONLY the JSON format above.
     return prompt
 
 
-def parse_persona_review_response(response: str, persona_id: str, persona_name: str) -> PersonaReviewResult:
+def parse_persona_review_response(
+    response: str, persona_id: str, persona_name: str
+) -> PersonaReviewResult:
     """
     Parse the JSON response from a persona review.
 
@@ -194,10 +200,7 @@ def parse_persona_review_response(response: str, persona_id: str, persona_name: 
         if json_str.startswith("```"):
             # Remove markdown code blocks
             lines = json_str.split("\n")
-            json_str = "\n".join([
-                line for line in lines
-                if not line.strip().startswith("```")
-            ])
+            json_str = "\n".join([line for line in lines if not line.strip().startswith("```")])
 
         data = json.loads(json_str)
 
@@ -209,7 +212,7 @@ def parse_persona_review_response(response: str, persona_id: str, persona_name: 
             summary=data.get("summary", "Review completed"),
             comments=data.get("comments", []),
             reasoning=data.get("reasoning", ""),
-            relevance_score=0.0  # Will be set by caller
+            relevance_score=0.0,  # Will be set by caller
         )
 
     except json.JSONDecodeError as e:
@@ -223,14 +226,11 @@ def parse_persona_review_response(response: str, persona_id: str, persona_name: 
             summary=f"Review parsing failed: {e}",
             comments=[],
             reasoning=f"Failed to parse response: {response[:200]}",
-            relevance_score=0.0
+            relevance_score=0.0,
         )
 
 
-def create_persona_review_prompt(
-    files: List[str],
-    properties: List[Dict[str, Any]]
-) -> str:
+def create_persona_review_prompt(files: List[str], properties: List[Dict[str, Any]]) -> str:
     """
     Create the user prompt with code files and properties.
     """
@@ -250,13 +250,13 @@ def create_persona_review_prompt(
 
     for file_path in files:
         try:
-            with open(file_path, 'r') as f:
+            with open(file_path, "r") as f:
                 content = f.read()
 
             prompt_parts.append(f"\n## File: {file_path}\n")
             prompt_parts.append("```")
             # Try to guess language from extension
-            ext = Path(file_path).suffix.lstrip('.')
+            ext = Path(file_path).suffix.lstrip(".")
             if ext:
                 prompt_parts.append(ext)
             prompt_parts.append(f"\n{content}\n```\n")
@@ -307,7 +307,7 @@ class PersonaReviewExecutor:
         personas_with_relevance: List[tuple],  # [(persona, relevance_score), ...]
         files: List[str],
         properties: List[Dict[str, Any]],
-        token_budget: Optional[TokenBudget] = None
+        token_budget: Optional[TokenBudget] = None,
     ) -> List[Dict[str, Any]]:
         """
         Prepare subagent task specifications for Claude Code to execute.
@@ -333,7 +333,7 @@ class PersonaReviewExecutor:
         total_metrics = {
             "total_prompts_tokens": 0,
             "total_condensed_files": 0,
-            "personas_over_budget": 0
+            "personas_over_budget": 0,
         }
 
         # Use WFC token manager if available
@@ -344,10 +344,7 @@ class PersonaReviewExecutor:
 
                 # Build optimized prompt with token management
                 full_prompt, metrics = self.token_manager.prepare_persona_prompt(
-                    persona=persona,
-                    files=files,
-                    properties=properties,
-                    budget=token_budget
+                    persona=persona, files=files, properties=properties, budget=token_budget
                 )
 
                 # Get model for this persona
@@ -363,7 +360,7 @@ class PersonaReviewExecutor:
                     "model": model,
                     "relevance_score": relevance_score,
                     "description": f"Review by {persona_name}",
-                    "token_metrics": metrics  # WFC: Include token stats
+                    "token_metrics": metrics,  # WFC: Include token stats
                 }
 
                 tasks.append(task_spec)
@@ -380,7 +377,9 @@ class PersonaReviewExecutor:
             logger.info(f"  • Avg tokens/persona: {avg_tokens:.0f}")
             logger.info(f"  • Total condensed files: {total_metrics['total_condensed_files']}")
             if total_metrics["personas_over_budget"] > 0:
-                logger.warning(f"  ⚠️  {total_metrics['personas_over_budget']} personas over budget!")
+                logger.warning(
+                    f"  ⚠️  {total_metrics['personas_over_budget']} personas over budget!"
+                )
 
         else:
             # Legacy mode (backward compatible)
@@ -412,7 +411,7 @@ Remember to respond with ONLY valid JSON in the specified format."""
                     "prompt": full_prompt,
                     "model": model,
                     "relevance_score": relevance_score,
-                    "description": f"Review by {persona_name}"
+                    "description": f"Review by {persona_name}",
                 }
 
                 tasks.append(task_spec)
@@ -420,8 +419,7 @@ Remember to respond with ONLY valid JSON in the specified format."""
         return tasks
 
     def parse_subagent_results(
-        self,
-        subagent_responses: List[Dict[str, Any]]
+        self, subagent_responses: List[Dict[str, Any]]
     ) -> List[PersonaReviewResult]:
         """
         Parse results from Claude Code subagent Task tool executions.
@@ -446,9 +444,7 @@ Remember to respond with ONLY valid JSON in the specified format."""
 
             # Parse the JSON response
             result = parse_persona_review_response(
-                response=response,
-                persona_id=persona_id,
-                persona_name=persona_name
+                response=response, persona_id=persona_id, persona_name=persona_name
             )
             result.relevance_score = relevance_score
 

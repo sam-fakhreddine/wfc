@@ -20,19 +20,34 @@ class ScopeDetector:
 
     # Detection thresholds
     FEATURE_THRESHOLD = 3  # >3 distinct features
-    FILE_THRESHOLD = 5     # >5 file/module mentions
+    FILE_THRESHOLD = 5  # >5 file/module mentions
     ARCHITECTURE_KEYWORD_THRESHOLD = 2  # >2 architecture keywords
 
     # Keywords for detection
     ARCHITECTURE_KEYWORDS = [
-        "architecture", "architect", "integrate", "integration",
-        "system", "distributed", "microservice", "service",
-        "api", "endpoint", "database", "schema"
+        "architecture",
+        "architect",
+        "integrate",
+        "integration",
+        "system",
+        "distributed",
+        "microservice",
+        "service",
+        "api",
+        "endpoint",
+        "database",
+        "schema",
     ]
 
     COMPLEXITY_INDICATORS = [
-        "refactor", "refactoring", "migrate", "migration",
-        "rewrite", "redesign", "restructure", "overhaul"
+        "refactor",
+        "refactoring",
+        "migrate",
+        "migration",
+        "rewrite",
+        "redesign",
+        "restructure",
+        "overhaul",
     ]
 
     def __init__(self):
@@ -60,15 +75,13 @@ class ScopeDetector:
 
         # Count architecture keywords
         arch_keywords_found = sum(
-            1 for keyword in self.ARCHITECTURE_KEYWORDS
-            if keyword in message_lower
+            1 for keyword in self.ARCHITECTURE_KEYWORDS if keyword in message_lower
         )
         self.architecture_keyword_count += arch_keywords_found
 
         # Count complexity indicators
         complexity_found = sum(
-            1 for indicator in self.COMPLEXITY_INDICATORS
-            if indicator in message_lower
+            1 for indicator in self.COMPLEXITY_INDICATORS if indicator in message_lower
         )
         self.complexity_indicator_count += complexity_found
 
@@ -77,7 +90,7 @@ class ScopeDetector:
             "files_count": len(self.files_mentioned),
             "architecture_keywords": self.architecture_keyword_count,
             "complexity_indicators": self.complexity_indicator_count,
-            "scope_growing": self.is_scope_growing_large()
+            "scope_growing": self.is_scope_growing_large(),
         }
 
     def _extract_features(self, message: str) -> List[str]:
@@ -91,14 +104,31 @@ class ScopeDetector:
 
         # Common feature keywords (direct mentions)
         feature_keywords = [
-            "authentication", "auth", "authorization",
-            "logging", "log", "audit",
-            "email", "notification", "notif",
-            "rbac", "role", "permission", "access control",
-            "dashboard", "admin", "panel",
-            "api", "endpoint", "rest",
-            "database", "storage", "cache",
-            "search", "filter", "sort"
+            "authentication",
+            "auth",
+            "authorization",
+            "logging",
+            "log",
+            "audit",
+            "email",
+            "notification",
+            "notif",
+            "rbac",
+            "role",
+            "permission",
+            "access control",
+            "dashboard",
+            "admin",
+            "panel",
+            "api",
+            "endpoint",
+            "rest",
+            "database",
+            "storage",
+            "cache",
+            "search",
+            "filter",
+            "sort",
         ]
 
         # Check for feature keywords
@@ -130,15 +160,15 @@ class ScopeDetector:
         files = []
 
         # Pattern 1: file.ext
-        file_pattern = r'\b(\w+\.\w+)\b'
+        file_pattern = r"\b(\w+\.\w+)\b"
         files.extend(re.findall(file_pattern, message))
 
         # Pattern 2: explicit "file" mentions
-        file_keyword_pattern = r'file\s+(\w+)'
+        file_keyword_pattern = r"file\s+(\w+)"
         files.extend(re.findall(file_keyword_pattern, message.lower()))
 
         # Pattern 3: module paths (foo.bar.baz)
-        module_pattern = r'\b(\w+\.\w+\.\w+)\b'
+        module_pattern = r"\b(\w+\.\w+\.\w+)\b"
         files.extend(re.findall(module_pattern, message))
 
         return files
@@ -154,10 +184,10 @@ class ScopeDetector:
         - >2 complexity indicators
         """
         return (
-            len(self.features_mentioned) > self.FEATURE_THRESHOLD or
-            len(self.files_mentioned) > self.FILE_THRESHOLD or
-            self.architecture_keyword_count > self.ARCHITECTURE_KEYWORD_THRESHOLD or
-            self.complexity_indicator_count > 1
+            len(self.features_mentioned) > self.FEATURE_THRESHOLD
+            or len(self.files_mentioned) > self.FILE_THRESHOLD
+            or self.architecture_keyword_count > self.ARCHITECTURE_KEYWORD_THRESHOLD
+            or self.complexity_indicator_count > 1
         )
 
     def get_scope_summary(self) -> Dict[str, Any]:
@@ -167,5 +197,5 @@ class ScopeDetector:
             "files": list(self.files_mentioned),
             "architecture_keywords": self.architecture_keyword_count,
             "complexity_indicators": self.complexity_indicator_count,
-            "scope_growing": self.is_scope_growing_large()
+            "scope_growing": self.is_scope_growing_large(),
         }

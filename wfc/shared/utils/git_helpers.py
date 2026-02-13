@@ -8,11 +8,12 @@ Design: Thin wrappers, no git library dependency, subprocess only.
 
 import subprocess
 from pathlib import Path
-from typing import List, Optional, Tuple
+from typing import List, Tuple
 
 
 class GitError(Exception):
     """Raised when a git operation fails."""
+
     pass
 
 
@@ -52,10 +53,7 @@ class GitHelper:
 
         try:
             result = subprocess.run(
-                cmd,
-                capture_output=True,
-                text=True,
-                timeout=300  # 5 minute timeout
+                cmd, capture_output=True, text=True, timeout=300  # 5 minute timeout
             )
 
             if check and result.returncode != 0:

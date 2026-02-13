@@ -14,6 +14,7 @@ from dataclasses import dataclass
 @dataclass
 class DocSummary:
     """Lightweight doc summary for progressive disclosure"""
+
     id: str
     path: str
     title: str
@@ -25,24 +26,25 @@ class DocSummary:
     category: str
 
     @classmethod
-    def from_dict(cls, data: dict) -> 'DocSummary':
+    def from_dict(cls, data: dict) -> "DocSummary":
         """Create from registry dict"""
         return cls(
-            id=data['id'],
-            path=data['path'],
-            title=data['title'],
-            summary=data['summary'],
-            topics=data['topics'],
-            skills=data['skills'],
-            size_lines=data['size_lines'],
-            size_tokens=data['size_tokens'],
-            category=data['category']
+            id=data["id"],
+            path=data["path"],
+            title=data["title"],
+            summary=data["summary"],
+            topics=data["topics"],
+            skills=data["skills"],
+            size_lines=data["size_lines"],
+            size_tokens=data["size_tokens"],
+            category=data["category"],
         )
 
 
 @dataclass
 class Doc:
     """Full documentation with content"""
+
     metadata: DocSummary
     content: str
 
@@ -81,14 +83,14 @@ class DocLoader:
             # Auto-detect docs directory
             # Try multiple locations for flexibility
             possible_paths = [
-                Path.cwd() / 'docs',
-                Path(__file__).parent.parent.parent / 'docs',
-                Path.home() / '.claude/skills/wfc/docs',
-                Path.home() / '.wfc/docs',
+                Path.cwd() / "docs",
+                Path(__file__).parent.parent.parent / "docs",
+                Path.home() / ".claude/skills/wfc/docs",
+                Path.home() / ".wfc/docs",
             ]
 
             for path in possible_paths:
-                if (path / 'REGISTRY.json').exists():
+                if (path / "REGISTRY.json").exists():
                     docs_dir = path
                     break
 
@@ -96,7 +98,7 @@ class DocLoader:
                 raise FileNotFoundError("Could not find docs/REGISTRY.json")
 
         self.docs_dir = docs_dir
-        self.registry_path = docs_dir / 'REGISTRY.json'
+        self.registry_path = docs_dir / "REGISTRY.json"
 
         if not self.registry_path.exists():
             raise FileNotFoundError(f"Registry not found: {self.registry_path}")
@@ -106,10 +108,7 @@ class DocLoader:
             self.registry = json.load(f)
 
         # Create summary index
-        self.summaries = {
-            doc['id']: DocSummary.from_dict(doc)
-            for doc in self.registry['docs']
-        }
+        self.summaries = {doc["id"]: DocSummary.from_dict(doc) for doc in self.registry["docs"]}
 
         # Cache for loaded docs
         self._cache: Dict[str, Doc] = {}
@@ -118,7 +117,7 @@ class DocLoader:
         self,
         category: Optional[str] = None,
         skill: Optional[str] = None,
-        topic: Optional[str] = None
+        topic: Optional[str] = None,
     ) -> List[DocSummary]:
         """
         List doc summaries (progressive disclosure - lightweight).
@@ -185,10 +184,7 @@ class DocLoader:
         return doc
 
     def search(
-        self,
-        query: str,
-        category: Optional[str] = None,
-        max_results: int = 5
+        self, query: str, category: Optional[str] = None, max_results: int = 5
     ) -> List[DocSummary]:
         """
         Search docs by keyword (searches title, summary, topics).
@@ -239,12 +235,12 @@ class DocLoader:
     def get_stats(self) -> Dict:
         """Get registry statistics"""
         return {
-            'total_docs': self.registry['total_docs'],
-            'total_lines': self.registry['total_lines'],
-            'total_tokens_full': self.registry['total_tokens_full'],
-            'total_tokens_summaries': self.registry['total_tokens_summaries'],
-            'savings_percent': self.registry['savings_percent'],
-            'categories': self._count_by_category(),
+            "total_docs": self.registry["total_docs"],
+            "total_lines": self.registry["total_lines"],
+            "total_tokens_full": self.registry["total_tokens_full"],
+            "total_tokens_summaries": self.registry["total_tokens_summaries"],
+            "savings_percent": self.registry["savings_percent"],
+            "categories": self._count_by_category(),
         }
 
     def _count_by_category(self) -> Dict[str, int]:
@@ -287,7 +283,7 @@ def search_docs(query: str, max_results: int = 5) -> List[DocSummary]:
 
 
 # Example usage
-if __name__ == '__main__':
+if __name__ == "__main__":
     loader = DocLoader()
 
     print("📊 Registry Stats:")
@@ -297,18 +293,18 @@ if __name__ == '__main__':
     print(f"  Full load: {stats['total_tokens_full']:,} tokens")
     print(f"  Summaries: {stats['total_tokens_summaries']:,} tokens")
     print(f"  Savings: {stats['savings_percent']}%")
-    print(f"\nCategories:")
-    for cat, count in stats['categories'].items():
+    print("\nCategories:")
+    for cat, count in stats["categories"].items():
         print(f"  - {cat}: {count} docs")
 
     print("\n🔍 Search: 'orchestrator'")
-    results = loader.search('orchestrator', max_results=3)
+    results = loader.search("orchestrator", max_results=3)
     for summary in results:
         print(f"  - {summary.title} ({summary.category})")
         print(f"    {summary.summary}")
 
     print("\n📄 Load full doc: 'examples_orchestrator_delegation_demo'")
-    doc = loader.load_doc('examples_orchestrator_delegation_demo')
+    doc = loader.load_doc("examples_orchestrator_delegation_demo")
     print(f"  Title: {doc.title}")
     print(f"  Size: {doc.metadata.size_lines} lines")
     print(f"  Content preview: {doc.content[:200]}...")

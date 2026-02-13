@@ -10,7 +10,7 @@ Tracks and analyzes:
 - Time-to-completion
 """
 
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from typing import List, Dict, Any
 from pathlib import Path
 from datetime import datetime, timedelta
@@ -21,6 +21,7 @@ import statistics
 @dataclass
 class MetricsSummary:
     """Summary of metrics over a time period."""
+
     period: str  # day, week, month
     tasks_completed: int = 0
     tasks_failed: int = 0
@@ -104,15 +105,15 @@ class AdvancedMetricsTracker:
         summary.median_time_per_task_ms = statistics.median(times) if times else 0.0
 
         # Quality metrics
-        quality_scores = [m.get("confidence_score", 0) for m in metrics if m.get("confidence_score")]
+        quality_scores = [
+            m.get("confidence_score", 0) for m in metrics if m.get("confidence_score")
+        ]
         summary.avg_quality_score = statistics.mean(quality_scores) if quality_scores else 0.0
 
         coverage = [m.get("test_coverage", 0) for m in metrics if m.get("test_coverage")]
         summary.avg_test_coverage = statistics.mean(coverage) if coverage else 0.0
 
-        summary.critical_issues = sum(
-            m.get("quality_issues_found", 0) for m in metrics
-        )
+        summary.critical_issues = sum(m.get("quality_issues_found", 0) for m in metrics)
 
         return summary
 
@@ -144,7 +145,7 @@ class AdvancedMetricsTracker:
             "success_rate": [],
             "avg_tokens": [],
             "avg_duration": [],
-            "quality_score": []
+            "quality_score": [],
         }
 
         for date in sorted(daily_metrics.keys()):
@@ -207,51 +208,52 @@ class AdvancedMetricsTracker:
             f"**Generated**: {datetime.now().isoformat()}",
             "",
             "## Weekly Summary",
-            ""
+            "",
         ]
 
         # Weekly summary
         week = self.get_summary("week")
 
-        lines.extend([
-            f"- **Tasks Completed**: {week.tasks_completed}",
-            f"- **Tasks Failed**: {week.tasks_failed}",
-            f"- **Success Rate**: {week.success_rate*100:.1f}%",
-            "",
-            f"- **Total Tokens**: {week.total_tokens:,}",
-            f"- **Avg Tokens/Task**: {week.avg_tokens_per_task:,.0f}",
-            f"- **Token Efficiency**: {week.token_efficiency_vs_baseline:.1f}% reduction vs baseline",
-            "",
-            f"- **Total Time**: {week.total_time_ms/1000/60:.1f} minutes",
-            f"- **Avg Time/Task**: {week.avg_time_per_task_ms/1000:.1f}s",
-            f"- **Median Time/Task**: {week.median_time_per_task_ms/1000:.1f}s",
-            "",
-            f"- **Avg Quality Score**: {week.avg_quality_score:.1f}/100",
-            f"- **Avg Test Coverage**: {week.avg_test_coverage:.1f}%",
-            f"- **Critical Issues**: {week.critical_issues}",
-            "",
-            "## Complexity Breakdown",
-            ""
-        ])
+        lines.extend(
+            [
+                f"- **Tasks Completed**: {week.tasks_completed}",
+                f"- **Tasks Failed**: {week.tasks_failed}",
+                f"- **Success Rate**: {week.success_rate*100:.1f}%",
+                "",
+                f"- **Total Tokens**: {week.total_tokens:,}",
+                f"- **Avg Tokens/Task**: {week.avg_tokens_per_task:,.0f}",
+                f"- **Token Efficiency**: {week.token_efficiency_vs_baseline:.1f}% reduction vs baseline",
+                "",
+                f"- **Total Time**: {week.total_time_ms/1000/60:.1f} minutes",
+                f"- **Avg Time/Task**: {week.avg_time_per_task_ms/1000:.1f}s",
+                f"- **Median Time/Task**: {week.median_time_per_task_ms/1000:.1f}s",
+                "",
+                f"- **Avg Quality Score**: {week.avg_quality_score:.1f}/100",
+                f"- **Avg Test Coverage**: {week.avg_test_coverage:.1f}%",
+                f"- **Critical Issues**: {week.critical_issues}",
+                "",
+                "## Complexity Breakdown",
+                "",
+            ]
+        )
 
         # Complexity breakdown
         breakdown = self.get_complexity_breakdown()
 
         for complexity, stats in breakdown.items():
-            lines.extend([
-                f"### {complexity} (Simple/Medium/Large/XL)",
-                f"- **Count**: {stats['count']} tasks",
-                f"- **Success Rate**: {stats['success_rate']*100:.1f}%",
-                f"- **Avg Tokens**: {stats['avg_tokens']:,.0f}",
-                f"- **Avg Time**: {stats['avg_time_ms']/1000:.1f}s",
-                ""
-            ])
+            lines.extend(
+                [
+                    f"### {complexity} (Simple/Medium/Large/XL)",
+                    f"- **Count**: {stats['count']} tasks",
+                    f"- **Success Rate**: {stats['success_rate']*100:.1f}%",
+                    f"- **Avg Tokens**: {stats['avg_tokens']:,.0f}",
+                    f"- **Avg Time**: {stats['avg_time_ms']/1000:.1f}s",
+                    "",
+                ]
+            )
 
         # Trends
-        lines.extend([
-            "## Trends (Last 7 Days)",
-            ""
-        ])
+        lines.extend(["## Trends (Last 7 Days)", ""])
 
         trends = self.get_trends()
         if trends and trends.get("dates"):
@@ -268,12 +270,7 @@ class AdvancedMetricsTracker:
                     f"{trends['avg_duration'][-(7-i)]/1000:.1f}s |"
                 )
 
-        lines.extend([
-            "",
-            "---",
-            "",
-            "**This is World Fucking Class.** 🚀"
-        ])
+        lines.extend(["", "---", "", "**This is World Fucking Class.** 🚀"])
 
         return "\n".join(lines)
 

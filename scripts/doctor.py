@@ -90,11 +90,11 @@ class WFCDoctor:
 
         version = sys.version_info
 
-        if version >= (3, 10):
+        if version >= (3, 12):
             check.pass_check(f"Python {version.major}.{version.minor}.{version.micro}")
         else:
             check.fail_check(
-                f"Python {version.major}.{version.minor}.{version.micro} < 3.10 (required)"
+                f"Python {version.major}.{version.minor}.{version.micro} < 3.12 (required)"
             )
 
     def _check_wfc_installation(self):

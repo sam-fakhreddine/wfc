@@ -27,7 +27,7 @@ MODEL_TO_ALIAS = {
 def update_persona_file(file_path: Path):
     """Update a single persona file to use aliases"""
     try:
-        with open(file_path, 'r') as f:
+        with open(file_path, "r") as f:
             persona = json.load(f)
 
         # Update model_preference
@@ -44,7 +44,7 @@ def update_persona_file(file_path: Path):
                 persona["model_preference"]["fallback"] = MODEL_TO_ALIAS[fallback]
 
         # Write back
-        with open(file_path, 'w') as f:
+        with open(file_path, "w") as f:
             json.dump(persona, f, indent=2)
 
         return True

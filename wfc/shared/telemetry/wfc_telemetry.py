@@ -79,7 +79,7 @@ class WFCTelemetry:
         """
         try:
             # Open in append mode, create if doesn't exist
-            with open(file_path, 'a') as f:
+            with open(file_path, "a") as f:
                 # Lock file for atomic write (Unix only, gracefully degrades on Windows)
                 try:
                     fcntl.flock(f.fileno(), fcntl.LOCK_EX)
@@ -89,7 +89,7 @@ class WFCTelemetry:
 
                 # Write JSON line
                 json_line = json.dumps(data, ensure_ascii=False)
-                f.write(json_line + '\n')
+                f.write(json_line + "\n")
                 f.flush()
                 os.fsync(f.fileno())  # Ensure data hits disk
 
@@ -127,8 +127,9 @@ class TelemetryRecord:
         >>> record.save()
     """
 
-    def __init__(self, skill: str, run_id: Optional[str] = None,
-                 metrics_dir: Optional[Path] = None):
+    def __init__(
+        self, skill: str, run_id: Optional[str] = None, metrics_dir: Optional[Path] = None
+    ):
         """
         Initialize telemetry record builder.
 
@@ -144,7 +145,7 @@ class TelemetryRecord:
         if run_id:
             self.data["run_id"] = run_id
 
-    def add(self, key: str, value: Any) -> 'TelemetryRecord':
+    def add(self, key: str, value: Any) -> "TelemetryRecord":
         """
         Add a field to the telemetry record.
 
@@ -182,15 +183,10 @@ if __name__ == "__main__":
     telemetry = get_telemetry()
 
     # Test record
-    test_record = {
-        "run_id": "test-001",
-        "status": "success",
-        "duration_ms": 1500,
-        "test": True
-    }
+    test_record = {"run_id": "test-001", "status": "success", "duration_ms": 1500, "test": True}
 
     telemetry.record("test", test_record)
-    print(f"Test record written to metrics directory")
+    print("Test record written to metrics directory")
 
     # Test builder pattern
     record = TelemetryRecord("test", run_id="test-002")
