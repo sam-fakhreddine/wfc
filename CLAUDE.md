@@ -567,6 +567,62 @@ Documentation is organized by topic in `docs/` (see `docs/README.md` for full in
 - **wfc/references/TOKEN_MANAGEMENT.md** - Token optimization
 - **wfc/references/ULTRA_MINIMAL_RESULTS.md** - Performance data
 
+## 🐳 DevContainer
+
+WFC ships a batteries-included devcontainer for end users. Drop `.devcontainer/` into any project for a full secure dev environment with WFC pre-installed.
+
+### Quick Start
+
+```bash
+# Option A: Interactive setup (guided)
+bash .devcontainer/setup.sh
+
+# Option B: VS Code (recommended)
+# 1. Copy .devcontainer/ into your project root
+# 2. cp .devcontainer/.env.example .devcontainer/.env
+# 3. Edit .env with your ANTHROPIC_AUTH_TOKEN
+# 4. Open in VS Code → F1 → "Dev Containers: Reopen in Container"
+
+# Option C: Docker CLI
+cd .devcontainer && docker compose build && docker compose up -d
+```
+
+### What's Included
+
+- **Python 3.12** + UV, black, ruff, pytest, mypy, pre-commit
+- **Node.js LTS** + pnpm, bun, typescript, vite, eslint, prettier, tailwindcss
+- **AI Tools**: Claude Code CLI, Kiro CLI, OpenCode CLI, Entire CLI (session recording)
+- **GitHub CLI** (`gh`) for WFC PR workflow
+- **Docker-in-Docker** (docker-ce-cli, docker-compose-plugin)
+- **Dev Tools**: ripgrep, fd, fzf, bat, exa, tmux, htop, Oh My Zsh, Starship
+- **Database Clients**: postgresql-client, redis-tools
+- **Firewall**: iptables-based audit/enforce modes
+- **VS Code Extensions**: Python, ruff, black, ESLint, Prettier, Docker, Copilot, GitLens
+- **WFC Skills**: All 17 skills auto-installed via `install-universal.sh`
+
+### Workspace Layout
+
+```
+/workspace/
+├── app/        # Your project (mounted from host)
+├── repos/
+│   └── wfc/    # WFC framework (cloned automatically)
+└── tmp/        # Persistent scratch space
+```
+
+### Firewall
+
+```bash
+# Audit mode (default): logs all traffic, doesn't block
+FIREWALL_MODE=audit
+
+# Enforce mode: blocks non-whitelisted traffic
+FIREWALL_MODE=enforce
+
+# View audit logs inside container
+sudo tail -f /var/log/kern.log | grep FW-AUDIT
+```
+
 ---
 
 **This is World Fucking Class.** 🚀

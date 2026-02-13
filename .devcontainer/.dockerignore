@@ -1,0 +1,59 @@
+# Git
+.git
+.gitignore
+.gitattributes
+
+# Documentation (not needed in build context)
+*.md
+docs/
+*.txt
+LICENSE
+CONTRIBUTING.md
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Environment
+.env
+.env.*
+!.env.example
+
+# Dependencies (will be installed in container)
+node_modules/
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# Build artifacts
+dist/
+build/
+*.egg-info/
+.eggs/
+
+# Logs
+*.log
+logs/
+
+# Docker
+docker-compose.override.yml
+.dockerignore
+
+# Temporary files
+tmp/
+temp/
+*.tmp
+
+# Cache
+.cache/
+*.cache
