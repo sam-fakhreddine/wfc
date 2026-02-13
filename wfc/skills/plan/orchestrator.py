@@ -113,9 +113,27 @@ class PlanOrchestrator:
         # Step 5: Record in history (if enabled)
         if self.use_history:
             # Count tasks, properties, tests
-            task_count = len([line for line in open(tasks_file) if line.startswith("## TASK-")])
-            prop_count = len([line for line in open(props_file) if line.startswith("## PROP-")])
-            test_count = len([line for line in open(test_file) if line.startswith("### TEST-")])
+            task_count = len(
+                [
+                    line
+                    for line in tasks_file.read_text().splitlines()
+                    if line.startswith("## TASK-")
+                ]
+            )
+            prop_count = len(
+                [
+                    line
+                    for line in props_file.read_text().splitlines()
+                    if line.startswith("## PROP-")
+                ]
+            )
+            test_count = len(
+                [
+                    line
+                    for line in test_file.read_text().splitlines()
+                    if line.startswith("### TEST-")
+                ]
+            )
 
             metadata = create_plan_metadata(
                 plan_id=self.output_dir.name,

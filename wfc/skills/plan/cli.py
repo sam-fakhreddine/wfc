@@ -57,8 +57,8 @@ class PlanCLI:
                 {
                     "status": "success",
                     "output_dir": str(result.output_dir),
-                    "tasks_count": len(open(result.tasks_file).read().split("## TASK-")) - 1,
-                    "properties_count": len(open(result.properties_file).read().split("## PROP-"))
+                    "tasks_count": len(result.tasks_file.read_text().split("## TASK-")) - 1,
+                    "properties_count": len(result.properties_file.read_text().split("## PROP-"))
                     - 1,
                 },
             )

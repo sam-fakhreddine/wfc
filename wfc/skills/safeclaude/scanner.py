@@ -114,7 +114,7 @@ class ProjectScanner:
                 if "vitest" in deps:
                     frameworks.append("vitest")
             except Exception:
-                pass
+                pass  # package.json may be malformed or unreadable
 
         return frameworks
 
