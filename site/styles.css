@@ -38,18 +38,18 @@
   --type-caption: 0.75rem;
   --type-code: 0.875rem;
 
-  /* Spacing */
-  --space-1: 4px;
-  --space-2: 8px;
-  --space-3: 12px;
-  --space-4: 16px;
-  --space-5: 20px;
-  --space-6: 24px;
-  --space-8: 32px;
-  --space-10: 40px;
-  --space-12: 48px;
-  --space-16: 64px;
-  --space-20: 80px;
+  /* Spacing (tightened 31.3%) */
+  --space-1: 3px;
+  --space-2: 5px;
+  --space-3: 8px;
+  --space-4: 11px;
+  --space-5: 14px;
+  --space-6: 16px;
+  --space-8: 22px;
+  --space-10: 27px;
+  --space-12: 33px;
+  --space-16: 44px;
+  --space-20: 55px;
 
   /* Borders */
   --border-thin: 1px;
@@ -106,7 +106,7 @@
 }
 
 html {
-  font-size: 16px;
+  font-size: 18px;
   scroll-behavior: smooth;
 }
 
