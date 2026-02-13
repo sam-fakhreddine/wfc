@@ -1,0 +1,36 @@
+{
+  "cli_version": "0.4.2",
+  "checkpoint_id": "d88ba5a2164e",
+  "session_id": "dd35cd14-d989-4464-baea-39e67f726978",
+  "strategy": "manual-commit",
+  "created_at": "2026-02-13T18:07:56.474525Z",
+  "branch": "feat/plugin-integration-7-features",
+  "checkpoints_count": 1,
+  "files_touched": [
+    ".gitignore",
+    "docs/OWASP_LLM_TOP10_MITIGATIONS.md",
+    "install-universal.sh",
+    "tests/test_plugin_integration.py",
+    "wfc/scripts/hooks/__init__.py"
+  ],
+  "agent": "Claude Code",
+  "transcript_identifier_at_start": "3a62dde7-b99a-495d-a95b-e90000687ff4",
+  "checkpoint_transcript_start": 622,
+  "transcript_lines_at_start": 622,
+  "token_usage": {
+    "input_tokens": 12,
+    "cache_creation_tokens": 3732,
+    "cache_read_tokens": 1610313,
+    "output_tokens": 280,
+    "api_call_count": 10
+  },
+  "initial_attribution": {
+    "calculated_at": "2026-02-13T18:07:56.338338Z",
+    "agent_lines": 3,
+    "human_added": 19,
+    "human_modified": 0,
+    "human_removed": 0,
+    "total_committed": 22,
+    "agent_percentage": 13.636363636363635
+  }
+}
