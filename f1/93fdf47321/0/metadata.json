@@ -1,0 +1,50 @@
+{
+  "cli_version": "0.4.2",
+  "checkpoint_id": "f193fdf47321",
+  "session_id": "dd35cd14-d989-4464-baea-39e67f726978",
+  "strategy": "manual-commit",
+  "created_at": "2026-02-13T18:38:30.090616Z",
+  "branch": "feat/plugin-integration-7-features",
+  "checkpoints_count": 0,
+  "files_touched": [
+    ".development/README.md",
+    ".github/workflows/publish.yml",
+    ".gitignore",
+    "CLAUDE.md",
+    "README.md",
+    "RETRO-REPORT.md",
+    "docs/OWASP_LLM_TOP10_MITIGATIONS.md",
+    "docs/README.md",
+    "docs/architecture/PLANNING.md",
+    "docs/architecture/PROGRESSIVE_DISCLOSURE.md",
+    "docs/quality/PERSONAS.md",
+    "docs/reference/REGISTRY.json",
+    "docs/reference/REGISTRY.md",
+    "docs/workflow/UNIVERSAL_INSTALL.md",
+    "install-universal.sh",
+    "tests/test_plugin_integration.py",
+    "wfc/scripts/hooks/__init__.py",
+    "wfc/skills/wfc-init/SKILL.md",
+    "wfc/skills/wfc-retro/SKILL.md"
+  ],
+  "agent": "Claude Code",
+  "transcript_identifier_at_start": "37ae4e64-dad9-4304-9b2f-cb6930d7a3b2",
+  "checkpoint_transcript_start": 1268,
+  "transcript_lines_at_start": 1268,
+  "token_usage": {
+    "input_tokens": 23,
+    "cache_creation_tokens": 50533,
+    "cache_read_tokens": 1305972,
+    "output_tokens": 1871,
+    "api_call_count": 15
+  },
+  "initial_attribution": {
+    "calculated_at": "2026-02-13T18:38:29.646958Z",
+    "agent_lines": 0,
+    "human_added": 103,
+    "human_modified": 23,
+    "human_removed": 0,
+    "total_committed": 123,
+    "agent_percentage": 0
+  }
+}
