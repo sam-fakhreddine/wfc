@@ -1,3 +1,9 @@
+---
+name: wfc-vibe
+description: Natural brainstorming mode with smart transitions to structured workflows. Detects when scope grows and suggests planning. Passive reminders every ~10 messages. Easy transitions: say "let's plan this" to move to wfc-plan or wfc-build. Triggers on "vibe", "brainstorm", "explore ideas", or explicit /wfc-vibe. Ideal for early-stage ideation. Not for implementation.
+license: MIT
+---
+
 # wfc-vibe - Natural Brainstorming Mode
 
 **Conversational mode for stream-of-consciousness brainstorming with smart transitions to structured workflows**
