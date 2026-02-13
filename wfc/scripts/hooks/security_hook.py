@@ -76,13 +76,15 @@ def _compile_pattern(pattern: str) -> Optional[re.Pattern]:
         return None
 
 
-def _load_patterns() -> list[dict]:
-    """Load all pattern files from the patterns directory."""
+@lru_cache(maxsize=1)
+def _load_patterns(patterns_dir: str = str(PATTERNS_DIR)) -> list[dict]:
+    """Load all pattern files from the patterns directory (cached)."""
     patterns: list[dict] = []
-    if not PATTERNS_DIR.is_dir():
+    dir_path = Path(patterns_dir)
+    if not dir_path.is_dir():
         return patterns
 
-    for pattern_file in sorted(PATTERNS_DIR.glob("*.json")):
+    for pattern_file in sorted(dir_path.glob("*.json")):
         try:
             data = json.loads(pattern_file.read_text(encoding="utf-8"))
             file_patterns = data.get("patterns", [])
@@ -177,7 +179,6 @@ def _check_impl(input_data: dict, state: Optional[HookState] = None) -> dict:
     all_patterns = _load_patterns()
     file_language = _get_file_language(file_path) if file_path else None
 
-    result = CheckResult()
     block_reasons: list[str] = []
     warn_reasons: list[str] = []
 

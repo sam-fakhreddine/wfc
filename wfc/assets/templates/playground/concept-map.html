@@ -286,13 +286,29 @@
 
   function updateNodeList() {
     const list = document.getElementById('nodeList');
-    list.innerHTML = nodes.map(n => `
-      <div class="node-item" data-id="${n.id}">
-        <span class="node-dot" style="background:${COLORS[n.category]}"></span>
-        <span>${n.label}</span>
-        <span class="del" onclick="deleteNode(${n.id})">x</span>
-      </div>
-    `).join('');
+    list.innerHTML = '';
+    nodes.forEach(n => {
+      const item = document.createElement('div');
+      item.className = 'node-item';
+      item.dataset.id = n.id;
+
+      const dot = document.createElement('span');
+      dot.className = 'node-dot';
+      dot.style.background = COLORS[n.category] || '#888';
+
+      const labelSpan = document.createElement('span');
+      labelSpan.textContent = n.label;
+
+      const del = document.createElement('span');
+      del.className = 'del';
+      del.textContent = 'x';
+      del.addEventListener('click', () => deleteNode(n.id));
+
+      item.appendChild(dot);
+      item.appendChild(labelSpan);
+      item.appendChild(del);
+      list.appendChild(item);
+    });
   }
 
   function deleteNode(id) {

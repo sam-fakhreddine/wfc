@@ -474,9 +474,10 @@ class ReviewOrchestrator:
                     "",
                     "## Simplification Pass",
                     "",
-                    "A post-review simplification pass was requested."
-                    " The Code Simplifier persona will analyze the code"
-                    " for unnecessary complexity.",
+                    (
+                        "Simplification recommended - run Code Simplifier persona"
+                        " separately for suggestions on reducing unnecessary complexity."
+                    ),
                     "",
                 ]
             )
@@ -566,9 +567,10 @@ class ReviewOrchestrator:
                     "",
                     "## Simplification Pass",
                     "",
-                    "A post-review simplification pass was requested."
-                    " The Code Simplifier persona will analyze the code"
-                    " for unnecessary complexity.",
+                    (
+                        "Simplification recommended - run Code Simplifier persona"
+                        " separately for suggestions on reducing unnecessary complexity."
+                    ),
                     "",
                 ]
             )

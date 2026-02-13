@@ -15,14 +15,12 @@ import sys
 import tempfile
 from pathlib import Path
 
-import pytest
-
 from wfc.scripts.hooks.hook_state import HookState
 from wfc.scripts.hooks.security_hook import check as security_check
 from wfc.scripts.hooks.rule_engine import evaluate as rule_evaluate
 from wfc.scripts.hooks.config_loader import load_rules
 from wfc.scripts.skills.review.agents import ReviewComment
-from wfc.scripts.skills.review.consensus import ConsensusAlgorithm, ConsensusResult
+from wfc.scripts.skills.review.consensus import ConsensusAlgorithm
 from wfc.scripts.skills.review.agents import AgentReview, AgentType
 
 # Import architecture_designer from hyphenated directory via importlib

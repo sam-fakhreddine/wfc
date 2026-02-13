@@ -154,7 +154,7 @@ Net Change:    -469 lines (quality improvement)
 | `README.md` | 8 commits | Documentation |
 | `wfc/skills/implement/agent.py` | 7 commits | Implementation |
 | `assets/` | 5 commits | Branding |
-| `docs/ENTIRE_IO.md` | 3 commits | Documentation |
+| `docs/history/ENTIRE_IO.md` | 3 commits | Documentation |
 
 **Insight:** Agent implementation and documentation are hot spots
 

@@ -339,9 +339,9 @@ Automated implementation:
 ### Documentation
 - `docs/TASK-001-SUMMARY.md` - Quality checker docs
 - `docs/TASK-002-SUMMARY.md` - TDD workflow docs
-- `docs/PHASE-1-COMPLETE.md` - This file
-- `docs/QUALITY_SYSTEM.md` - Quality system guide
-- `docs/QUALITY_GATE.md` - Quality gate details
+- `docs/history/PHASE-1-COMPLETE.md` - This file
+- `docs/quality/QUALITY_SYSTEM.md` - Quality system guide
+- `docs/quality/QUALITY_GATE.md` - Quality gate details
 
 ---
 

@@ -21,6 +21,7 @@ class ArchitectureApproach:
     risk: str  # low, medium, high
     files_affected: List[str] = field(default_factory=list)
     key_decisions: List[str] = field(default_factory=list)
+    considerations: List[str] = field(default_factory=list)
 
 
 class ArchitectureDesigner:
@@ -108,15 +109,51 @@ class ArchitectureDesigner:
         """
         approaches = []
 
+        # Extract technology mentions from context for tailoring descriptions
+        tech_keywords = []
+        if context:
+            # Common technology terms to detect in context
+            known_techs = [
+                "react", "vue", "angular", "django", "flask", "fastapi",
+                "node", "express", "redis", "postgres", "postgresql", "mysql",
+                "mongodb", "docker", "kubernetes", "k8s", "graphql", "rest",
+                "grpc", "kafka", "rabbitmq", "aws", "gcp", "azure",
+                "terraform", "celery", "sqlalchemy", "prisma", "nextjs",
+                "typescript", "python", "go", "rust", "java",
+            ]
+            context_lower = context.lower()
+            tech_keywords = [t for t in known_techs if t in context_lower]
+
         for template in self.APPROACH_TEMPLATES:
+            summary = f"{template['philosophy']} for: {goal}"
+
+            # Tailor the Minimal Changes approach if existing_patterns are provided
+            if template["name"] == "Minimal Changes" and existing_patterns:
+                patterns_str = ", ".join(existing_patterns[:3])
+                summary = (
+                    f"{template['philosophy']} for: {goal} "
+                    f"(building on existing patterns: {patterns_str})"
+                )
+
+            # Reflect detected technologies in approach descriptions
+            if tech_keywords:
+                tech_str = ", ".join(tech_keywords[:3])
+                summary += f" [tech: {tech_str}]"
+
             approach = ArchitectureApproach(
                 name=template["name"],
-                summary=f"{template['philosophy']} for: {goal}",
+                summary=summary,
                 pros=list(template["default_pros"]),
                 cons=list(template["default_cons"]),
                 effort=template["effort"],
                 risk=template["risk"],
             )
+
+            # If constraints are provided, add them to considerations
+            if constraints:
+                for constraint in constraints:
+                    approach.considerations.append(constraint)
+
             approaches.append(approach)
 
         return approaches
@@ -147,6 +184,12 @@ class ArchitectureDesigner:
             lines.append("**Cons:**")
             for con in approach.cons:
                 lines.append(f"- {con}")
+
+            if approach.considerations:
+                lines.append("")
+                lines.append("**Considerations:**")
+                for consideration in approach.considerations:
+                    lines.append(f"- {consideration}")
 
             if approach.key_decisions:
                 lines.append("")

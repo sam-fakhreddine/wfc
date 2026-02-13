@@ -355,11 +355,21 @@ docs/
 **WFC has**:
 ```
 docs/
-├── ARCHITECTURE.md
-├── CONTRIBUTING.md
-├── PERSONAS.md
-├── AGENT_SKILLS_COMPLIANCE.md
-└── WFC_MAX.md
+├── architecture/
+│   ├── ARCHITECTURE.md
+│   ├── PLANNING.md
+│   └── PROGRESSIVE_DISCLOSURE.md
+├── workflow/
+│   ├── CONTRIBUTING.md
+│   └── WFC_IMPLEMENTATION.md
+├── quality/
+│   ├── PERSONAS.md
+│   └── QUALITY_SYSTEM.md
+├── reference/
+│   ├── AGENT_SKILLS_COMPLIANCE.md
+│   └── REGISTRY.md
+└── history/
+    └── WFC_MAX.md
 ```
 
 **WFC should reorganize**:

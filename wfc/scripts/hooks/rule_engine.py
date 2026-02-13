@@ -14,7 +14,7 @@ import logging
 import re
 from functools import lru_cache
 from pathlib import Path
-from typing import Any, Optional
+from typing import Optional
 
 from wfc.scripts.hooks.config_loader import load_rules
 

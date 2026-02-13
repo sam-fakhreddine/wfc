@@ -14,7 +14,7 @@ from .tasks_generator import TasksGenerator
 from .properties_generator import PropertiesGenerator
 from .test_plan_generator import TestPlanGenerator
 from .plan_history import PlanHistory, create_plan_metadata
-from .architecture_designer import ArchitectureDesigner, ArchitectureApproach
+from .architecture_designer import ArchitectureDesigner
 
 
 @dataclass
@@ -44,9 +44,9 @@ Output Directory: {self.output_dir}
 - ARCHITECTURE-OPTIONS.md: {self.output_dir / "ARCHITECTURE-OPTIONS.md"}
 
 Goal: {self.interview_result.goal}{arch_line}
-Tasks: {len(open(self.tasks_file).read().count('## TASK-'))} tasks
-Properties: {len(open(self.properties_file).read().count('## PROP-'))} properties
-Tests: {len(open(self.test_plan_file).read().count('### TEST-'))} test cases
+Tasks: {self.tasks_file.read_text(encoding='utf-8').count('## TASK-')} tasks
+Properties: {self.properties_file.read_text(encoding='utf-8').count('## PROP-')} properties
+Tests: {self.test_plan_file.read_text(encoding='utf-8').count('### TEST-')} test cases
 """
 
 

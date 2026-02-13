@@ -29,9 +29,7 @@ enabled: true
 event: file
 action: warn
 conditions:
-  - field: new_text
-    operator: regex_match
-    pattern: "console\\.log\\("
+  - field: new_text, operator: regex_match, pattern: "console\\.log\\("
 ---
 
 Avoid console.log() in production code. Use the project logger instead:
@@ -53,9 +51,7 @@ enabled: true                  # Optional: disable without deleting (default: tr
 event: file                    # Required: "file", "bash", or "all"
 action: warn                   # Required: "block" or "warn"
 conditions:                    # Required: list of conditions (AND logic)
-  - field: new_text            # Field to check
-    operator: regex_match      # Comparison operator
-    pattern: "pattern_here"    # Expected value/pattern
+  - field: new_text, operator: regex_match, pattern: "pattern_here"
 ---
 
 Human-readable message shown when the rule triggers.
@@ -110,9 +106,7 @@ enabled: true
 event: file
 action: block
 conditions:
-  - field: file_path
-    operator: ends_with
-    value: ".env"
+  - field: file_path, operator: ends_with, value: ".env"
 ---
 
 Do not write directly to .env files. Use .env.example for templates
@@ -128,9 +122,7 @@ enabled: true
 event: file
 action: warn
 conditions:
-  - field: new_text
-    operator: regex_match
-    pattern: "TODO(?!\\s*\\(\\w+-\\d+\\))"
+  - field: new_text, operator: regex_match, pattern: "TODO(?!\\s*\\(\\w+-\\d+\\))"
 ---
 
 TODOs should reference a ticket: `TODO(PROJ-123)`.
@@ -146,9 +138,7 @@ enabled: true
 event: bash
 action: block
 conditions:
-  - field: command
-    operator: contains
-    value: "push --force"
+  - field: command, operator: contains, value: "push --force"
 ---
 
 Force push is blocked by project policy. Use `--force-with-lease` instead
@@ -164,12 +154,8 @@ enabled: true
 event: file
 action: warn
 conditions:
-  - field: new_text
-    operator: regex_match
-    pattern: "from\\s+\\S+\\s+import\\s+\\*"
-  - field: file_path
-    operator: ends_with
-    value: ".py"
+  - field: new_text, operator: regex_match, pattern: "from\\s+\\S+\\s+import\\s+\\*"
+  - field: file_path, operator: ends_with, value: ".py"
 ---
 
 Wildcard imports (`from x import *`) pollute the namespace.
@@ -187,12 +173,8 @@ enabled: true
 event: file
 action: warn
 conditions:
-  - field: file_path
-    operator: ends_with
-    value: ".py"
-  - field: new_text
-    operator: regex_match
-    pattern: ":\\s*Any\\b"
+  - field: file_path, operator: ends_with, value: ".py"
+  - field: new_text, operator: regex_match, pattern: ":\\s*Any\\b"
 ---
 
 Avoid using `Any` type annotation. Use specific types or generics.

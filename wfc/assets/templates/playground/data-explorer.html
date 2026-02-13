@@ -79,7 +79,7 @@
 <div class="toolbar">
   <h2>Data Explorer</h2>
   <input type="text" id="searchInput" placeholder="Search keys or values...">
-  <button onclick="copyFormatted()">Copy Formatted</button>
+  <button onclick="copyFormatted(event)">Copy Formatted</button>
 </div>
 
 <div class="input-panel">
@@ -226,12 +226,12 @@
     stats.textContent = '';
   }
 
-  function copyFormatted() {
+  function copyFormatted(e) {
     try {
       const data = JSON.parse(jsonInput.value);
       const text = JSON.stringify(data, null, 2);
       navigator.clipboard.writeText(text).then(() => {
-        const btn = event.target;
+        const btn = e.currentTarget;
         btn.textContent = 'Copied!';
         setTimeout(() => btn.textContent = 'Copy Formatted', 1500);
       });

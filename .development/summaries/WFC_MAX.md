@@ -209,10 +209,10 @@ make test-coverage
 **Complete documentation**:
 - `QUICKSTART.md` - Get started in 5 minutes
 - `CONTRIBUTING.md` - How to contribute
-- `docs/ARCHITECTURE.md` - System design
-- `docs/PERSONAS.md` - Expert persona reference
-- `docs/AGENT_SKILLS_COMPLIANCE.md` - Compliance details
-- `docs/WFC_MAX.md` - This file
+- `docs/architecture/ARCHITECTURE.md` - System design
+- `docs/quality/PERSONAS.md` - Expert persona reference
+- `docs/reference/AGENT_SKILLS_COMPLIANCE.md` - Compliance details
+- `docs/history/WFC_MAX.md` - This file
 - `wfc/references/TOKEN_MANAGEMENT.md` - Token optimization
 - `wfc/references/ULTRA_MINIMAL_RESULTS.md` - Performance data
 
@@ -288,7 +288,7 @@ wfc lint --fix              # Lint + auto-fix
 8. ✅ **Professional CLI** - wfc command for everything
 9. ✅ **Easy development** - `make dev` and you're ready
 10. ✅ **Meta-recursive** - wfc-newskill generates compliant skills
-11. ✅ **OWASP LLM Top 10** - 9/9 applicable risks mitigated ([analysis](OWASP_LLM_TOP10_MITIGATIONS.md))
+11. ✅ **OWASP LLM Top 10** - 9/9 applicable risks mitigated ([analysis](../security/OWASP_LLM_TOP10_MITIGATIONS.md))
 
 ## Philosophy
 

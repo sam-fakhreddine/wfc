@@ -2,8 +2,8 @@
 Session-scoped state manager for WFC hooks.
 
 Tracks which warnings have been shown to avoid duplicate noise.
-State is scoped to the current session (parent PID + session start time)
-and persisted as JSON in a temp directory.
+State is scoped to the current session (parent PID) and persisted as
+JSON in a temp directory.
 """
 
 from __future__ import annotations
@@ -89,4 +89,4 @@ class HookState:
             if self._path.exists():
                 self._path.unlink()
         except OSError:
-            pass
+            pass  # Fail-open: hook bugs should never block the user
