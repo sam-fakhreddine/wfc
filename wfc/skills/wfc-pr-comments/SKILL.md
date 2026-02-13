@@ -50,32 +50,60 @@ If no PR is found, tell the user and stop.
 
 Display: `PR #N: <title> (<head> -> <base>)`
 
-### Step 2: FETCH COMMENTS
+### Step 2: FETCH UNRESOLVED COMMENTS
 
-Fetch all review comments from the PR. Run these two `gh api` calls:
+Fetch only **unresolved** review comments from the PR. Use GraphQL — the REST API does not expose thread resolution status.
 
 ```bash
-# Inline review comments (comments on specific lines of code)
-gh api repos/{owner}/{repo}/pulls/{number}/comments --paginate
-
-# Review-level comments (top-level review bodies)
-gh api repos/{owner}/{repo}/pulls/{number}/reviews --paginate
+gh api graphql -f query='
+  query($owner: String!, $repo: String!, $number: Int!) {
+    repository(owner: $owner, name: $repo) {
+      pullRequest(number: $number) {
+        reviewThreads(first: 100) {
+          nodes {
+            isResolved
+            isOutdated
+            path
+            line
+            startLine
+            diffSide
+            comments(first: 50) {
+              nodes {
+                id
+                body
+                author { login }
+                createdAt
+                path
+                diffHunk
+                originalLine
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+' -f owner='{owner}' -f repo='{repo}' -F number={number}
 ```
 
-Extract from each comment:
+**Filter:** Only process threads where `isResolved` is `false`. Skip all resolved threads entirely — they have already been addressed.
+
+Optionally also skip threads where `isOutdated` is `true` (the code has changed since the comment was made), but flag these to the user in the triage table.
+
+Extract from each unresolved thread's first comment:
 - `id` — unique identifier
-- `user.login` — author
+- `author.login` — who wrote it
 - `body` — comment text
 - `path` — file being commented on
-- `line` or `original_line` — line number
-- `diff_hunk` — surrounding diff context
-- `created_at` — timestamp
+- `line` / `originalLine` — line number
+- `diffHunk` — surrounding diff context
+- `createdAt` — timestamp
 
-**Deduplication:** If two comments reference the same file + line + substantially identical message, treat them as one.
+**Deduplication:** If two threads reference the same file + line + substantially identical message, treat them as one.
 
 **Group by file** for display purposes.
 
-If there are zero comments, tell the user and stop.
+If there are zero unresolved comments, tell the user "All review threads are resolved" and stop.
 
 ### Step 3: TRIAGE
 
