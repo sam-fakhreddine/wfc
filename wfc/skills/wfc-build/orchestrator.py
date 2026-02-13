@@ -15,7 +15,7 @@ import sys
 wfc_root = Path(__file__).parent.parent.parent
 sys.path.insert(0, str(wfc_root))
 
-from wfc.shared.extended_thinking import ExtendedThinkingDecider, enable_thinking
+from wfc.shared.extended_thinking import ExtendedThinkingDecider  # noqa: E402
 
 
 @dataclass
@@ -212,7 +212,7 @@ class BuildOrchestrator:
         CRITICAL: Delegates to Task tool, does NOT implement.
         """
         print("\n📋 Task breakdown:")
-        print(f"   Single agent will:")
+        print("   Single agent will:")
         print(f"   - Implement: {spec.goal}")
         print(f"   - Affect: {', '.join(spec.files_affected)}")
         print(f"   - Follow: {spec.tech_stack}")
@@ -379,7 +379,6 @@ class BuildOrchestrator:
             "",
             "## Workflow (TDD - STRICT)",
             "",
-        ])
             "1. UNDERSTAND",
             "   - Read task description above",
             "   - Review existing files (if any)",
@@ -410,7 +409,7 @@ class BuildOrchestrator:
             "   - Verify all acceptance criteria met",
             "   - Produce agent report",
             "   - Include: files changed, tests added, quality check results",
-        ]
+        ])
 
         return '\n'.join(prompt_parts)
 
