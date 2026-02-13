@@ -176,6 +176,21 @@ git push origin main  # Push when ready
 - ❌ Skip consensus review
 - ❌ Let WFC push to main/master (it won't - PRs only)
 - ❌ Force push without understanding changes
+- ❌ Commit task summaries, dev logs, or scratch notes to the repo
+
+### Development Workspace
+
+**`.development/`** is the local-only workspace (gitignored). All dev artifacts go here:
+
+```
+.development/
+├── summaries/    # Task completion summaries, session recaps
+├── plans/        # Working plans, TASKS.md drafts, properties, test plans
+├── backups/      # File backups, old versions before rewrites
+└── scratch/      # Temporary notes, experiments, one-off scripts
+```
+
+**Rule:** Never commit development artifacts (summaries, progress logs, scratch notes) to the repo. Keep them in `.development/` where they stay local and organized.
 
 ## 📂 Project Structure
 
