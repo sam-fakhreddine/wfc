@@ -38,9 +38,15 @@ This skips all prompts and uses sensible defaults:
 ├── wfc-review/
 ├── wfc-implement/
 ├── wfc-plan/
+├── wfc-safeguard/
+├── wfc-rules/
+├── wfc-playground/
+├── ... (17 skills total)
 └── wfc/              # Shared resources
     ├── personas/
-    └── shared/
+    ├── shared/
+    ├── scripts/hooks/       # Hook infrastructure
+    └── templates/           # Reusable templates
 ```
 
 **When to use:** You only have Claude Code installed
@@ -52,9 +58,15 @@ This skips all prompts and uses sensible defaults:
 ├── wfc-review/
 ├── wfc-implement/
 ├── wfc-plan/
+├── wfc-safeguard/
+├── wfc-rules/
+├── wfc-playground/
+├── ... (17 skills total)
 └── wfc/              # Shared resources
     ├── personas/
-    └── shared/
+    ├── shared/
+    ├── scripts/hooks/       # Hook infrastructure
+    └── templates/           # Reusable templates
 ```
 
 **When to use:** You only have Kiro installed
@@ -66,8 +78,13 @@ This skips all prompts and uses sensible defaults:
 ├── skills/
 │   ├── wfc-review/
 │   ├── wfc-implement/
-│   └── ...
-└── personas/
+│   ├── wfc-safeguard/
+│   ├── wfc-rules/
+│   ├── wfc-playground/
+│   └── ... (17 skills total)
+├── personas/
+├── scripts/hooks/                       # Hook infrastructure
+└── templates/                           # Reusable templates
 
 ~/.claude/skills/
 ├── wfc-review -> ~/.wfc/skills/wfc-review  # Symlinks
@@ -128,10 +145,14 @@ WFC implements progressive disclosure for optimal performance:
 # Start Claude Code in your project
 claude
 
-# Use any WFC skill
+# Use any WFC skill (17 available)
 /wfc-review
 /wfc-implement
 /wfc-plan
+/wfc-safeguard
+/wfc-rules
+/wfc-playground
+# ... and more
 ```
 
 ### In Kiro
@@ -140,10 +161,14 @@ claude
 # Start Kiro in your project
 kiro
 
-# Use any WFC skill
+# Use any WFC skill (17 available)
 /wfc-review
 /wfc-implement
 /wfc-plan
+/wfc-safeguard
+/wfc-rules
+/wfc-playground
+# ... and more
 ```
 
 ### In Both Simultaneously
@@ -183,6 +208,18 @@ git pull
 
 # Updates only the installed platform
 ```
+
+### What Gets Preserved During Updates
+
+The installer preserves user customizations across updates:
+
+- **User rules** (`.wfc/rules/`) - Custom rules defined via wfc-rules are never overwritten
+- **Configuration** (`.wfc_branding`, `wfc.config.json`) - Settings preserved on refresh
+- **Custom personas** - User-added personas in custom directories are retained
+
+The installer also now installs additional infrastructure:
+- **Hook system** (`scripts/hooks/`) - Extensible workflow hooks for patterns like post-review simplification and confidence filtering
+- **Templates** (`templates/`) - Reusable templates including playground sandbox environments
 
 ---
 

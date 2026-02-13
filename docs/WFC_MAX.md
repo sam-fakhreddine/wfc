@@ -8,7 +8,7 @@ WFC now operates at **maximum** level with professional-grade tooling, automatio
 
 ### 1. Agent Skills Compliance ✅
 
-**All 11 skills validated** against official spec:
+**All 17 skills validated** against official spec:
 - Valid frontmatter (only allowed fields)
 - Hyphenated names (no colons)
 - Comprehensive descriptions
@@ -219,7 +219,7 @@ make test-coverage
 ## The Complete Stack
 
 ```
-WFC^MAX = Agent Skills Compliance
+WFC^MAX = Agent Skills Compliance (17 skills)
           + 99% Token Reduction
           + File Reference Architecture
           + Professional CLI
@@ -229,6 +229,10 @@ WFC^MAX = Agent Skills Compliance
           + Code Quality Tools
           + Comprehensive Tests
           + Complete Documentation
+          + PreToolUse Hook Infrastructure (wfc-safeguard, wfc-rules)
+          + Interactive Playground (wfc-playground)
+          + 56 Expert Personas (Silent Failure Hunter, Code Simplifier)
+          + OWASP LLM Top 10: 9/9 applicable risks mitigated
 ```
 
 ## Quick Command Reference
@@ -275,7 +279,7 @@ wfc lint --fix              # Lint + auto-fix
 ## WFC^MAX Guarantees
 
 1. ✅ **No broken skills** - Pre-commit hooks prevent it
-2. ✅ **Agent Skills compliant** - All 11 skills validated
+2. ✅ **Agent Skills compliant** - All 17 skills validated
 3. ✅ **99% token reduction** - Measured with benchmarks
 4. ✅ **CI/CD validated** - GitHub Actions on every push
 5. ✅ **Code quality** - black + ruff automated
@@ -284,6 +288,7 @@ wfc lint --fix              # Lint + auto-fix
 8. ✅ **Professional CLI** - wfc command for everything
 9. ✅ **Easy development** - `make dev` and you're ready
 10. ✅ **Meta-recursive** - wfc-newskill generates compliant skills
+11. ✅ **OWASP LLM Top 10** - 9/9 applicable risks mitigated ([analysis](OWASP_LLM_TOP10_MITIGATIONS.md))
 
 ## Philosophy
 
@@ -303,16 +308,23 @@ wfc lint --fix              # Lint + auto-fix
 
 Want to go even further?
 
+**Achieved**:
+- ✅ PreToolUse hook infrastructure (wfc-safeguard - real-time security enforcement)
+- ✅ Custom rule engine (wfc-rules - user-defined .wfc/rules/*.md)
+- ✅ Interactive playground (wfc-playground - sandboxed experimentation)
+- ✅ 56 expert personas (Silent Failure Hunter, Code Simplifier)
+- ✅ Confidence filtering in reviews
+- ✅ Architecture designer in planning
+- ✅ Post-review simplification pass
+
 **Potential additions**:
 - 🔄 Performance profiling (py-spy integration)
 - 🔄 Docker containerization
 - 🔄 VS Code extension
 - 🔄 Web dashboard for review results
-- 🔄 Metrics/telemetry collection
 - 🔄 Integration tests with real repositories
 - 🔄 Skill versioning and migration tools
 - 🔄 Multi-language support (TypeScript, Go, Rust)
-- 🔄 Plugin system for custom analyzers
 - 🔄 LLM cost tracking
 
 **But honestly?** WFC^MAX is already **World Fucking Class**.

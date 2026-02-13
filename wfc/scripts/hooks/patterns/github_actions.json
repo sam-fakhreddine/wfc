@@ -1,0 +1,20 @@
+{
+  "patterns": [
+    {
+      "id": "gha-script-injection",
+      "pattern": "\\$\\{\\{\\s*github\\.event\\.",
+      "description": "GitHub Actions script injection via event context in run: block",
+      "action": "block",
+      "event": "file",
+      "file_patterns": [".github/workflows/*.yml", ".github/workflows/*.yaml"]
+    },
+    {
+      "id": "gha-pull-request-target",
+      "pattern": "pull_request_target:",
+      "description": "pull_request_target can expose secrets to forks",
+      "action": "warn",
+      "event": "file",
+      "file_patterns": [".github/workflows/*.yml", ".github/workflows/*.yaml"]
+    }
+  ]
+}

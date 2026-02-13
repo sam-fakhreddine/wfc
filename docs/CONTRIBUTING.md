@@ -16,7 +16,7 @@ Identify a gap in current coverage:
 - **Domain experts** (Legal tech, Education, Energy, etc.)
 - **Specialized skills** (GraphQL, WebAssembly, etc.)
 
-Check existing personas to avoid duplicates:
+Check existing personas to avoid duplicates (currently 56 personas across 9 panels):
 ```bash
 grep -r "\"name\":" wfc/personas/panels/
 ```
@@ -25,7 +25,7 @@ grep -r "\"name\":" wfc/personas/panels/
 
 Create JSON file in appropriate panel:
 ```bash
-# Choose panel: engineering, security, architecture, quality, data, product, operations, domain-experts, specialists
+# Choose panel: engineering, security, architecture, quality (10 personas), data, product, operations, domain-experts, specialists
 cd wfc/personas/panels/{panel}/
 touch MY_EXPERT_ID.json
 ```
@@ -195,6 +195,45 @@ For new features (CLI commands, integrations, etc.):
 4. **Test**: Add tests in `wfc/tests/`
 5. **Document**: Update relevant docs
 6. **Submit PR**: Clear description of changes
+
+### Adding Hook Patterns
+
+WFC uses a hook system (`wfc/scripts/hooks/`) for extensible behavior at key workflow points (e.g., post-review simplification, confidence filtering). To add a new hook pattern:
+
+1. **Create a hook module** in `wfc/scripts/hooks/`
+2. **Implement the hook interface** - each hook receives context from the workflow step and returns modified context or signals
+3. **Register the hook** with the orchestrator so it fires at the correct workflow phase
+4. **Add tests** covering the hook behavior
+5. **Submit PR** explaining what workflow phase the hook targets and why
+
+### Adding Rules
+
+WFC supports custom rules via the wfc-rules skill. User-defined rules live in `.wfc/rules/` and are preserved across updates. To contribute built-in rules:
+
+1. **Create a rule definition** following the existing rule schema
+2. **Place it** in the appropriate rules directory
+3. **Test** that the rule fires correctly during review or implementation
+4. **Document** the rule's purpose, trigger conditions, and expected behavior
+
+### Available Skills (17 total)
+
+WFC currently provides 17 Agent Skills compliant skills. When contributing, be aware of the full set:
+
+- **wfc-review** - Multi-agent consensus review
+- **wfc-plan** - Adaptive planning with architecture design phase
+- **wfc-implement** - Parallel implementation engine
+- **wfc-build** - Intentional Vibe quick feature building
+- **wfc-security** - STRIDE threat analysis
+- **wfc-architecture** - Architecture docs + C4 diagrams
+- **wfc-test** - Property-based test generation
+- **wfc-observe** - Observability from properties
+- **wfc-isthissmart** - 7-dimension analysis
+- **wfc-vibe** - Default conversational mode
+- **wfc-init** - Project initialization
+- **wfc-safeguard** - Defensive coding safeguards
+- **wfc-rules** - Custom rule definition and enforcement
+- **wfc-playground** - Sandbox experimentation environment
+- Plus additional utility skills
 
 ### Documentation Improvements
 

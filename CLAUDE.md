@@ -117,6 +117,9 @@ WFC workflow (NEW):
 | Generate tests | `/wfc-test` | Property-based tests |
 | Add monitoring | `/wfc-observe` | Observability from properties |
 | Validate idea | `/wfc-isthissmart` | 7-dimension analysis |
+| Security hooks | `/wfc-safeguard` | Real-time pattern enforcement |
+| Custom rules | `/wfc-rules` | Markdown-based code standards |
+| Visual exploration | `/wfc-playground` | Interactive HTML prototyping |
 
 **Note:** wfc-vibe is the default conversational mode. Just chat naturally - when you're ready to implement, say "let's plan this" or "let's build this".
 
@@ -189,17 +192,26 @@ WFC - World Fucking Class
 │   │   │   ├── token_manager.py          # Token optimization (99% reduction)
 │   │   │   ├── ultra_minimal_prompts.py  # 200-token prompts
 │   │   │   └── file_reference_prompts.py # File refs not content
+│   │   ├── hooks/                # Hook infrastructure
+│   │   │   ├── pretooluse_hook.py        # PreToolUse hook handler
+│   │   │   ├── security_hook.py          # Security enforcement
+│   │   │   ├── rule_engine.py            # Custom rule engine
+│   │   │   ├── config_loader.py          # Hook configuration
+│   │   │   ├── hook_state.py             # Hook state management
+│   │   │   └── patterns/                 # Security patterns (JSON)
 │   │   └── skills/               # Skill implementations
 │   │       └── review/
 │   │           ├── orchestrator.py       # Review workflow
 │   │           ├── consensus.py          # Consensus algorithm
 │   │           └── agents.py             # Agent logic
 │   ├── references/               # Progressive disclosure docs
-│   │   ├── personas/             # 54 expert personas (JSON)
+│   │   ├── personas/             # 56 expert personas (JSON)
 │   │   ├── ARCHITECTURE.md
 │   │   ├── TOKEN_MANAGEMENT.md
 │   │   └── ULTRA_MINIMAL_RESULTS.md
 │   └── assets/                   # Templates, configs
+│       └── templates/
+│           └── playground/       # HTML playground templates
 │
 ├── ~/.claude/skills/wfc-*/      # Installed skills (Agent Skills compliant)
 │   ├── wfc-review/               # Multi-agent consensus review
@@ -208,7 +220,10 @@ WFC - World Fucking Class
 │   ├── wfc-security/             # STRIDE threat analysis
 │   ├── wfc-architecture/         # Architecture docs + C4 diagrams
 │   ├── wfc-test/                 # Property-based test generation
-│   └── ... (11 total)
+│   ├── wfc-safeguard/            # Real-time security enforcement hooks
+│   ├── wfc-rules/                # Markdown-based custom enforcement rules
+│   ├── wfc-playground/           # Interactive HTML playground generator
+│   └── ... (17 total)
 │
 ├── docs/                         # Documentation
 │   ├── AGENT_SKILLS_COMPLIANCE.md
@@ -374,15 +389,15 @@ make test-coverage
 3. Returns them for Claude Code to execute via Task tool
 
 **PersonaOrchestrator** (`wfc/scripts/personas/persona_orchestrator.py`):
-- Selects 5 relevant experts from 54 reviewers
+- Selects 5 relevant experts from 56 reviewers
 - Uses semantic matching (file types, properties, context)
 - Diversity scoring ensures varied perspectives
 
-**54 Expert Personas** (`wfc/references/personas/panels/`):
+**56 Expert Personas** (`wfc/references/personas/panels/`):
 - Security specialists (AppSec, CloudSec, CryptoSec, etc.)
 - Architecture experts (Distributed, Microservices, etc.)
 - Performance specialists (Backend, Frontend, Database, etc.)
-- Quality experts (Testing, Observability, Documentation, etc.)
+- Quality experts (Testing, Observability, Documentation, Silent Failure Hunter, Code Simplifier, etc.)
 
 ### Consensus Algorithm
 
@@ -400,7 +415,7 @@ make test-coverage
 
 ### Agent Skills Compliance
 
-All 11 WFC skills are Agent Skills compliant:
+All 17 WFC skills are Agent Skills compliant:
 - Valid frontmatter (only: name, description, license)
 - Hyphenated names (wfc-review, not wfc-review)
 - Comprehensive descriptions
@@ -481,8 +496,8 @@ All 11 WFC skills are Agent Skills compliant:
 - Reduction: 93%
 
 **Agent Skills Compliance**:
-- Valid skills: 11/11 (100%)
-- XML generation: 11/11 (100%)
+- Valid skills: 17/17 (100%)
+- XML generation: 17/17 (100%)
 
 ## 🔍 Quick Reference
 
@@ -495,6 +510,10 @@ All 11 WFC skills are Agent Skills compliant:
 **Persona Orchestrator**: `wfc/scripts/personas/persona_orchestrator.py`
 **Review Orchestrator**: `wfc/scripts/skills/review/orchestrator.py`
 **Consensus Algorithm**: `wfc/scripts/skills/review/consensus.py`
+**Hook Infrastructure**: `wfc/scripts/hooks/pretooluse_hook.py`
+**Security Patterns**: `wfc/scripts/hooks/patterns/security.json`
+**Architecture Designer**: `wfc/skills/wfc-plan/architecture_designer.py`
+**Playground Templates**: `wfc/assets/templates/playground/`
 **Installed Skills**: `~/.claude/skills/wfc-*/`
 
 ### Testing
@@ -525,6 +544,7 @@ All 11 WFC skills are Agent Skills compliant:
 - **docs/SUPERCLAUDE_LEARNINGS.md** - Learnings from SuperClaude
 - **wfc/references/TOKEN_MANAGEMENT.md** - Token optimization
 - **wfc/references/ULTRA_MINIMAL_RESULTS.md** - Performance data
+- **docs/OWASP_LLM_TOP10_MITIGATIONS.md** - OWASP LLM Top 10 coverage analysis
 
 ---
 

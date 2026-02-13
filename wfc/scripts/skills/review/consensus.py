@@ -32,6 +32,7 @@ class ConsensusResult:
     consensus_areas: Optional[List[str]] = None  # Issues mentioned by 3+ reviewers
     unique_insights: Optional[List[str]] = None  # Issues only 1 reviewer caught
     divergent_views: Optional[List[str]] = None  # Disagreement areas
+    filtered_count: int = 0  # Comments filtered by confidence
 
     def to_dict(self) -> Dict[str, Any]:
         result = {
@@ -50,6 +51,8 @@ class ConsensusResult:
             "total_comments": len(self.all_comments),
             "summary": self.summary,
         }
+
+        result["filtered_count"] = self.filtered_count
 
         if self.consensus_areas:
             result["consensus_areas"] = self.consensus_areas
@@ -89,6 +92,7 @@ class ConsensusAlgorithm:
         reviews: List[AgentReview],
         relevance_scores: Optional[Dict[str, float]] = None,
         weight_by_relevance: bool = False,
+        confidence_threshold: int = 80,
     ) -> ConsensusResult:
         """
         Calculate consensus from agent reviews.
@@ -111,10 +115,18 @@ class ConsensusAlgorithm:
         else:
             overall_score = self._calculate_fixed_weighted_score(reviews)
 
-        # Collect all comments
-        all_comments = []
+        # Collect all comments with confidence filtering
+        all_comments_unfiltered = []
         for review in reviews:
-            all_comments.extend(review.comments)
+            all_comments_unfiltered.extend(review.comments)
+
+        # Filter by confidence (critical severity bypasses filter)
+        all_comments = [
+            c
+            for c in all_comments_unfiltered
+            if c.confidence >= confidence_threshold or c.severity == "critical"
+        ]
+        filtered_count = len(all_comments_unfiltered) - len(all_comments)
 
         # Check for critical issues
         has_critical = any(comment.severity == "critical" for comment in all_comments)
@@ -145,6 +157,7 @@ class ConsensusAlgorithm:
             consensus_areas=consensus_areas,
             unique_insights=unique_insights,
             divergent_views=divergent_views,
+            filtered_count=filtered_count,
         )
 
     def _calculate_fixed_weighted_score(self, reviews: List[AgentReview]) -> float:

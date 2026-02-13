@@ -75,7 +75,7 @@ Not for typo fixes, documentation-only changes.
 
 ## Validation Results
 
-All 11 WFC skills validated with `skills-ref`:
+All 17 WFC skills validated with `skills-ref`:
 
 ```bash
 cd /Users/samfakhreddine/repos/agentskills/skills-ref
@@ -89,16 +89,22 @@ done
 
 **Results**:
 - ✅ wfc-architecture
+- ✅ wfc-build
 - ✅ wfc-implement
+- ✅ wfc-init
 - ✅ wfc-isthissmart
 - ✅ wfc-newskill
 - ✅ wfc-observe
 - ✅ wfc-plan
+- ✅ wfc-playground
 - ✅ wfc-retro
 - ✅ wfc-review
+- ✅ wfc-rules
 - ✅ wfc-safeclaude
+- ✅ wfc-safeguard
 - ✅ wfc-security
 - ✅ wfc-test
+- ✅ wfc-vibe
 
 ## XML Prompt Generation
 
@@ -194,20 +200,26 @@ This keeps initial context small (~2-3k tokens) while providing deep knowledge w
 
 ## Files Modified
 
-### All WFC Skills (11 total)
+### All WFC Skills (17 total)
 
 Updated frontmatter in:
 - `~/.claude/skills/wfc-architecture/SKILL.md`
+- `~/.claude/skills/wfc-build/SKILL.md`
 - `~/.claude/skills/wfc-implement/SKILL.md`
+- `~/.claude/skills/wfc-init/SKILL.md`
 - `~/.claude/skills/wfc-isthissmart/SKILL.md`
 - `~/.claude/skills/wfc-newskill/SKILL.md`
 - `~/.claude/skills/wfc-observe/SKILL.md`
 - `~/.claude/skills/wfc-plan/SKILL.md`
+- `~/.claude/skills/wfc-playground/SKILL.md`
 - `~/.claude/skills/wfc-retro/SKILL.md`
 - `~/.claude/skills/wfc-review/SKILL.md`
+- `~/.claude/skills/wfc-rules/SKILL.md`
 - `~/.claude/skills/wfc-safeclaude/SKILL.md`
+- `~/.claude/skills/wfc-safeguard/SKILL.md`
 - `~/.claude/skills/wfc-security/SKILL.md`
 - `~/.claude/skills/wfc-test/SKILL.md`
+- `~/.claude/skills/wfc-vibe/SKILL.md`
 
 ### wfc-newskill References (new)
 

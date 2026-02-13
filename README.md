@@ -9,7 +9,7 @@
 ```
 ┌─────────────────────────────────────────────────────────────────┐
 │  WORLD FUCKING CLASS                                            │
-│  54 Expert AI Agents • Parallel Execution • 92% Token Reduction│
+│  56 Expert AI Agents • Parallel Execution • 92% Token Reduction│
 └─────────────────────────────────────────────────────────────────┘
 ```
 
@@ -38,7 +38,7 @@ LATE DISCOVERY OF CRITICAL ISSUES
 ### WFC Architecture
 
 ```
-ENGINEERING TEAM [54 SPECIALISTS]
+ENGINEERING TEAM [56 SPECIALISTS]
     ↓
 PARALLEL TDD AGENTS [UP TO 5 CONCURRENT]
     ↓
@@ -54,13 +54,13 @@ SYSTEMATIC QUALITY ENFORCEMENT
 | ENGINEERING  |    11 | Python, Node, Go, Rust, React, iOS, Android  |
 | SECURITY     |     8 | AppSec, PenTest, Cloud Security, Compliance  |
 | ARCHITECTURE |     7 | Solutions, APIs, Microservices, Event-Driven |
-| QUALITY      |     8 | Performance, Load Testing, Code Review, A11y |
+| QUALITY      |    10 | Performance, Load Testing, Code Review, A11y |
 | DATA         |     4 | SQL, NoSQL, Data Engineering, ML             |
 | PRODUCT      |     3 | Developer Experience, Technical PM           |
 | OPERATIONS   |     4 | SRE, Platform, DevOps, Observability         |
 | DOMAIN       |     5 | Fintech, Healthcare, E-commerce, Gaming      |
 | SPECIALISTS  |     4 | WCAG, Performance Optimization, i18n         |
-| **TOTAL**    |**54** | **READY TO WORK**                            |
+| **TOTAL**    |**56** | **READY TO WORK**                            |
 
 ---
 
@@ -136,7 +136,7 @@ EACH AGENT WORKFLOW:
 ```
 INPUT: Code + Context + Properties
     ↓
-SELECTOR: Auto-picks 5 from 54 experts
+SELECTOR: Auto-picks 5 from 56 experts
     ↓
 REVIEW: Independent parallel analysis
     ↓
@@ -224,6 +224,9 @@ NSFW [Default]       → World Fucking Class    [No Bullshit]
 | `wfc-safeclaude`   | Safe command allowlist        | .claude/settings.local.json          |
 | `wfc-isthissmart`  | Critical thinking advisor     | 7-dimension analysis                 |
 | `wfc-newskill`     | Create new WFC skills         | Skill scaffolding                    |
+| `wfc-safeguard`    | Real-time security hooks      | PreToolUse enforcement               |
+| `wfc-rules`        | Custom enforcement rules      | Markdown-based rule enforcement      |
+| `wfc-playground`   | Interactive HTML playgrounds  | Design/data/concept templates        |
 
 ---
 
@@ -270,14 +273,32 @@ Five templates for unambiguous, testable requirements:
 
 | METRIC                    | VALUE  |
 |:--------------------------|-------:|
-| Expert personas           | 54     |
+| Expert personas           | 56     |
 | Max parallel agents       | 5      |
 | Token reduction           | 92%    |
 | Quality tools (Trunk.io)  | 100+   |
 | Platform support          | 8+     |
 | Test coverage             | >80%   |
 
-### 4.4 SEE SOMETHING SAY SOMETHING
+### 4.4 OWASP LLM Top 10 Coverage
+
+WFC mitigates **9/9 applicable risks** from the [OWASP Top 10 for LLM Applications 2025](https://genai.owasp.org/resource/owasp-top-10-for-llm-applications-2025/):
+
+| Risk | Defense |
+|---|---|
+| Prompt Injection | 94% prompt surface reduction + JSON schema + real-time hook blocking |
+| Sensitive Info Disclosure | Secret pattern detection + file path refs (not content) + prompt caps |
+| Supply Chain | Hash-pinned uv.lock + zero runtime dependencies |
+| Data Poisoning | Schema-validated personas + enabled gating + trusted sources only |
+| Improper Output Handling | Confidence filtering + JSON parse fallback + path validation |
+| Excessive Agency | PreToolUse hooks + tool allowlists + PR-only workflow |
+| System Prompt Leakage | Ultra-minimal prompts (200 tokens) + no secrets in prompts |
+| Misinformation | Multi-agent consensus (4-5 reviewers) + divergence detection |
+| Unbounded Consumption | 150K token hard budget + adaptive condensing + model tiers |
+
+Full analysis: [docs/OWASP_LLM_TOP10_MITIGATIONS.md](docs/OWASP_LLM_TOP10_MITIGATIONS.md)
+
+### 4.5 SEE SOMETHING SAY SOMETHING
 
 **OPERATIONAL PATTERN DETECTION**
 

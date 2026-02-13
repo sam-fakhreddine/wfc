@@ -11,7 +11,7 @@
 **WFC (World Fucking Class)** transforms multi-agent code review through:
 - **99% token reduction** via ultra-minimal prompts + file references
 - **Agent Skills compliance** for Claude Code integration
-- **54 expert personas** with automatic selection
+- **56 expert personas** with automatic selection
 - **Weighted consensus** algorithm for quality decisions
 
 **Core Mission**: Provide production-grade, token-efficient, multi-agent consensus code review that is:
@@ -31,7 +31,7 @@ WFC is a **Python package** with:
 - File reference architecture (send paths, not content)
 - Token budget manager (accurate tiktoken counting)
 - Consensus algorithm (weighted voting)
-- 11 Agent Skills compliant skills
+- 17 Agent Skills compliant skills
 - Professional CLI (`wfc` command)
 - Automated validation (pre-commit + CI/CD)
 
@@ -46,17 +46,26 @@ WFC Architecture v0.1.0
 │   │   │   ├── file_reference_prompts.py   # File refs not content
 │   │   │   ├── persona_executor.py         # Prepare subagent tasks
 │   │   │   └── persona_orchestrator.py     # Select personas
+│   │   ├── hooks/                   # Hook infrastructure
+│   │   │   ├── pretooluse_hook.py          # PreToolUse hook handler
+│   │   │   ├── security_hook.py            # Security enforcement
+│   │   │   ├── rule_engine.py              # Custom rule engine
+│   │   │   ├── config_loader.py            # Hook configuration
+│   │   │   ├── hook_state.py               # Hook state management
+│   │   │   └── patterns/                   # Security patterns (JSON)
 │   │   └── skills/                 # Skill implementations
 │   │       └── review/
 │   │           ├── orchestrator.py         # Review workflow
 │   │           ├── consensus.py            # Consensus algorithm
 │   │           └── agents.py               # Agent logic
 │   ├── references/                 # Progressive disclosure
-│   │   ├── personas/               # 54 expert personas (JSON)
+│   │   ├── personas/               # 56 expert personas (JSON)
 │   │   ├── ARCHITECTURE.md
 │   │   ├── TOKEN_MANAGEMENT.md
 │   │   └── ULTRA_MINIMAL_RESULTS.md
 │   └── assets/                     # Templates, configs
+│       └── templates/
+│           └── playground/         # HTML playground templates
 │
 ├── Installed Skills (~/.claude/skills/wfc-*)
 │   ├── wfc-review/                 # Multi-agent consensus review
@@ -65,7 +74,10 @@ WFC Architecture v0.1.0
 │   ├── wfc-security/               # STRIDE threat analysis
 │   ├── wfc-architecture/           # Architecture docs + C4 diagrams
 │   ├── wfc-test/                   # Property-based tests
-│   └── ... (11 total)
+│   ├── wfc-safeguard/              # Real-time security enforcement hooks
+│   ├── wfc-rules/                  # Markdown-based custom enforcement rules
+│   ├── wfc-playground/             # Interactive HTML playground generator
+│   └── ... (17 total)
 │
 ├── Tests (tests/)
 │   ├── test_implement_e2e.py       # End-to-end tests
@@ -574,7 +586,7 @@ for level in levels:
 ### Agent Skills Compliance
 
 **Target**: 100% skills validated
-**Current**: 11/11 (100%)
+**Current**: 17/17 (100%)
 
 **Measurement**: `make validate`
 

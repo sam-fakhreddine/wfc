@@ -19,7 +19,7 @@ personas/
 │   ├── engineering/           # 11 personas
 │   ├── security/              # 8 personas
 │   ├── architecture/          # 7 personas
-│   ├── quality/               # 8 personas
+│   ├── quality/               # 10 personas
 │   ├── data/                  # 4 personas
 │   ├── product/               # 3 personas
 │   ├── operations/            # 4 personas
@@ -30,6 +30,10 @@ personas/
 ├── persona_executor.py        # Subagent execution
 └── registry.json              # Fast lookup index
 ```
+
+**New in quality panel**: Silent Failure Hunter (error-handling) and Code Simplifier (simplification) bring the quality panel to 10 personas.
+
+**Total**: 56 personas across 9 panels.
 
 **Persona Definition**:
 Each persona is a JSON file containing:
@@ -272,6 +276,46 @@ DEFAULTS = {
 }
 ```
 
+### 7. Hook System (`wfc/scripts/hooks/`)
+
+**Purpose**: Extensible hook infrastructure for injecting behavior at key workflow points
+
+Hooks allow patterns like post-review simplification, confidence filtering, and custom rule enforcement to be added without modifying core workflow logic. New hook patterns can be added by creating a hook module in `wfc/scripts/hooks/` and registering it with the orchestrator.
+
+### 8. Templates (`wfc/assets/templates/`)
+
+**Purpose**: Reusable templates for skill outputs and playground experiments
+
+Includes templates for playground sandbox environments (`wfc/assets/templates/playground/`), enabling rapid prototyping and experimentation workflows via the wfc-playground skill.
+
+### 9. Skills (17 total)
+
+WFC provides 17 Agent Skills compliant skills installed at `~/.claude/skills/wfc-*/`:
+
+| Skill | Purpose |
+|-------|---------|
+| wfc-review | Multi-agent consensus review |
+| wfc-plan | Adaptive planning with architecture design phase |
+| wfc-implement | Parallel implementation engine |
+| wfc-build | Intentional Vibe quick feature building |
+| wfc-security | STRIDE threat analysis |
+| wfc-architecture | Architecture docs + C4 diagrams |
+| wfc-test | Property-based test generation |
+| wfc-observe | Observability from properties |
+| wfc-isthissmart | 7-dimension analysis |
+| wfc-vibe | Default conversational mode |
+| wfc-init | Project initialization |
+| wfc-safeguard | Defensive coding safeguards |
+| wfc-rules | Custom rule definition and enforcement |
+| wfc-playground | Sandbox experimentation environment |
+| ... | (additional utility skills) |
+
+### 10. Architecture Designer (`wfc/skills/wfc-plan/architecture_designer.py`)
+
+**Purpose**: Enhanced planning phase that generates architecture decisions before implementation
+
+The architecture designer runs during `wfc-plan` to produce architecture decision records (ADRs) and structural guidance. It evaluates trade-offs, selects patterns, and feeds constraints into the implementation phase so agents have clear architectural boundaries.
+
 ## Extension Points
 
 ### Adding New Personas
@@ -308,7 +352,7 @@ class CustomConsensus(Consensus):
 
 ## Performance Characteristics
 
-- **Persona Selection**: O(P) where P = number of personas (~54)
+- **Persona Selection**: O(P) where P = number of personas (~56)
 - **Review Execution**: O(N) where N = num_reviewers (5), reviews run in parallel
 - **Consensus**: O(N) linear in number of reviews
 - **Registry Lookup**: O(1) with indexes
@@ -323,5 +367,5 @@ class CustomConsensus(Consensus):
 
 ---
 
-**Version**: 1.0.0
-**Last Updated**: 2026-02-10
+**Version**: 1.1.0
+**Last Updated**: 2026-02-13

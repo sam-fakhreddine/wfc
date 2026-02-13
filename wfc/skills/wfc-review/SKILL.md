@@ -173,6 +173,28 @@ Each reviewer follows the systematic 6-step checklist (see `CHECKLIST.md`):
 }
 ```
 
+## Confidence Filtering
+
+Review comments include confidence scores (0-100). Low-confidence findings are automatically filtered:
+
+- **Default threshold**: 80 (configurable)
+- **Critical severity**: Always shown regardless of confidence
+- **Report shows**: "12 reported (8 filtered as low-confidence)"
+
+## Post-Review Simplification
+
+Use `--simplify` to run an optional Code Simplifier pass after review approval:
+
+```bash
+/wfc-review TASK-001 --simplify
+```
+
+When enabled, the Code Simplifier persona analyzes approved code for:
+- Unnecessary complexity
+- Redundant abstractions
+- Deep nesting
+- Over-engineering
+
 ## Philosophy
 
 **ELEGANT**: Simple agent logic, clear consensus rules

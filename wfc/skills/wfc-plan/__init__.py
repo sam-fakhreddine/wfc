@@ -11,10 +11,16 @@ from .tasks_generator import TasksGenerator, Task
 from .properties_generator import PropertiesGenerator, Property
 from .test_plan_generator import TestPlanGenerator, TestCase
 from .orchestrator import PlanOrchestrator, PlanResult
+from .architecture_designer import ArchitectureDesigner, ArchitectureApproach
 from .cli import PlanCLI
 
 # Keep mock for backwards compatibility
-from .mock import generate_mock_plan, MOCK_TASKS, MOCK_PROPERTIES, MOCK_TEST_PLAN
+from .mock import (
+    generate_mock_plan,
+    MOCK_TASKS,
+    MOCK_PROPERTIES,
+    MOCK_TEST_PLAN,
+)
 
 __all__ = [
     "AdaptiveInterviewer",
@@ -28,6 +34,8 @@ __all__ = [
     "TestCase",
     "PlanOrchestrator",
     "PlanResult",
+    "ArchitectureDesigner",
+    "ArchitectureApproach",
     "PlanCLI",
     "generate_mock_plan",
     "MOCK_TASKS",

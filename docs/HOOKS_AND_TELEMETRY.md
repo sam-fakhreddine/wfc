@@ -174,6 +174,39 @@ exit 0
 
 ---
 
+## PreToolUse Hook Infrastructure (NEW)
+
+WFC now includes a real-time security and rule enforcement system via Claude Code PreToolUse hooks.
+
+### Components
+
+- **Unified Dispatcher** (`wfc/scripts/hooks/pretooluse_hook.py`) - Main entry point, reads JSON from stdin
+- **Security Hook** (`wfc/scripts/hooks/security_hook.py`) - Pattern-based security checker
+- **Rule Engine** (`wfc/scripts/hooks/rule_engine.py`) - Configurable rule evaluator
+- **Config Loader** (`wfc/scripts/hooks/config_loader.py`) - Loads .wfc/rules/*.md files
+- **Hook State** (`wfc/scripts/hooks/hook_state.py`) - Session-scoped warning deduplication
+
+### Security Patterns
+
+Patterns defined in `wfc/scripts/hooks/patterns/`:
+- `security.json` - 11 patterns (eval, os.system, innerHTML, pickle, hardcoded secrets, SQL injection, etc.)
+- `github_actions.json` - 2 patterns (script injection, pull_request_target)
+
+### Custom Rules
+
+Users can create `.wfc/rules/*.md` files with YAML frontmatter:
+- Conditions: regex_match, contains, not_contains, equals, starts_with, ends_with
+- Actions: block (exit 2) or warn (stderr)
+- Events: file (Write/Edit) or bash (Bash tool)
+
+### Fail-Open Design
+
+All hooks are fail-open: internal errors always exit 0 (never block due to hook bugs).
+
+For how hooks contribute to OWASP LLM Top 10 mitigation, see [OWASP_LLM_TOP10_MITIGATIONS.md](OWASP_LLM_TOP10_MITIGATIONS.md).
+
+---
+
 ## Phase 6: Telemetry & Tracking ✅
 
 ### Overview

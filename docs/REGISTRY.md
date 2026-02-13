@@ -178,6 +178,14 @@ Auto-generated index of all WFC documentation.
 - **Topics:** agent, architecture, implement, implementation, merge, orchestrator, plan, quality, review, rollback
 - **Skills:** wfc-implement
 
+### OWASP LLM Top 10 Mitigations
+- **Path:** `OWASP_LLM_TOP10_MITIGATIONS.md`
+- **ID:** `owasp_llm_top10_mitigations`
+- **Summary:** Analysis of how WFC mitigates 9/9 applicable risks from the OWASP Top 10 for LLM Applications 2025 through real-time hooks, multi-agent consensus, token budgets, and supply chain controls.
+- **Size:** TBD
+- **Topics:** security, owasp, llm, hooks, consensus, safeguard, rules, supply-chain
+- **Skills:** wfc-safeguard, wfc-rules, wfc-review, wfc-security
+
 ### WFC^MAX - Maximum World Fucking Class
 - **Path:** `WFC_MAX.md`
 - **ID:** `wfc_max`

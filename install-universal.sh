@@ -177,6 +177,11 @@ if [ "$EXISTING_INSTALL" = true ]; then
                 if [ -f "$HOME/.wfc/.wfc_branding" ]; then
                     cp "$HOME/.wfc/.wfc_branding" "$BACKUP_DIR/"
                 fi
+                # Backup user rules if they exist
+                if [ -d "$HOME/.wfc/rules" ]; then
+                    cp -r "$HOME/.wfc/rules" "$BACKUP_DIR/rules"
+                    echo -e "   Backed up user rules"
+                fi
                 echo -e "${GREEN}✓${RESET} Backup saved to: ${CYAN}$BACKUP_DIR${RESET}"
                 KEEP_SETTINGS=false
                 ;;
@@ -613,6 +618,25 @@ if [ "$STRATEGY" = "symlink" ]; then
         cp -r "$SCRIPT_DIR/wfc/references/personas"/* "$WFC_ROOT/personas/"
     fi
 
+    # Copy hooks infrastructure
+    if [ -d "$SCRIPT_DIR/wfc/scripts/hooks" ]; then
+        echo "  • Installing hook infrastructure..."
+        mkdir -p "$WFC_ROOT/scripts/hooks"
+        cp -r "$SCRIPT_DIR/wfc/scripts/hooks"/* "$WFC_ROOT/scripts/hooks/"
+    fi
+
+    # Copy templates
+    if [ -d "$SCRIPT_DIR/wfc/assets/templates" ]; then
+        echo "  • Installing templates..."
+        mkdir -p "$WFC_ROOT/templates"
+        cp -r "$SCRIPT_DIR/wfc/assets/templates"/* "$WFC_ROOT/templates/"
+    fi
+
+    # Preserve user rules (never overwrite)
+    if [ -d "$WFC_ROOT/rules" ]; then
+        echo "  • Preserving user rules (.wfc/rules/)"
+    fi
+
 else
     # Direct mode: install skills DIRECTLY to platform skills directory
     # CRITICAL: Skills must be at ~/.claude/skills/wfc-*/ NOT ~/.claude/skills/wfc/skills/wfc-*/
@@ -657,6 +681,25 @@ else
         # Create wfc/ subdirectory for shared resources
         mkdir -p "$WFC_ROOT/wfc/personas"
         cp -r "$SCRIPT_DIR/wfc/references/personas"/* "$WFC_ROOT/wfc/personas/"
+    fi
+
+    # Copy hooks infrastructure
+    if [ -d "$SCRIPT_DIR/wfc/scripts/hooks" ]; then
+        echo "  • Installing hook infrastructure..."
+        mkdir -p "$WFC_ROOT/wfc/scripts/hooks"
+        cp -r "$SCRIPT_DIR/wfc/scripts/hooks"/* "$WFC_ROOT/wfc/scripts/hooks/"
+    fi
+
+    # Copy templates
+    if [ -d "$SCRIPT_DIR/wfc/assets/templates" ]; then
+        echo "  • Installing templates..."
+        mkdir -p "$WFC_ROOT/wfc/templates"
+        cp -r "$SCRIPT_DIR/wfc/assets/templates"/* "$WFC_ROOT/wfc/templates/"
+    fi
+
+    # Preserve user rules (never overwrite)
+    if [ -d "$WFC_ROOT/wfc/rules" ]; then
+        echo "  • Preserving user rules (.wfc/rules/)"
     fi
 fi
 
@@ -710,12 +753,16 @@ if [ "$STRATEGY" = "symlink" ]; then
         # Remove existing symlinks
         [ -L "$target/personas" ] && rm "$target/personas"
         [ -L "$target/shared" ] && rm "$target/shared"
+        [ -L "$target/scripts" ] && rm "$target/scripts"
+        [ -L "$target/templates" ] && rm "$target/templates"
 
         # Create symlinks
         ln -sf "$WFC_ROOT/personas" "$target/personas"
         [ -d "$WFC_ROOT/shared" ] && ln -sf "$WFC_ROOT/shared" "$target/shared"
+        [ -d "$WFC_ROOT/scripts" ] && ln -sf "$WFC_ROOT/scripts" "$target/scripts"
+        [ -d "$WFC_ROOT/templates" ] && ln -sf "$WFC_ROOT/templates" "$target/templates"
 
-        echo "  └─ Shared resources"
+        echo "  └─ Shared resources (personas, hooks, templates)"
         echo ""
     done
 fi
@@ -763,6 +810,9 @@ echo "  • ${CYAN}/wfc-architecture${RESET} - C4 diagrams & ADRs"
 echo "  • ${CYAN}/wfc-observe${RESET}      - Observability instrumentation"
 echo "  • ${CYAN}/wfc-retro${RESET}        - AI-powered retrospectives"
 echo "  • ${CYAN}/wfc-safeclaude${RESET}   - Safe command allowlist"
+echo "  • ${CYAN}/wfc-safeguard${RESET}    - Real-time security hooks"
+echo "  • ${CYAN}/wfc-rules${RESET}        - Custom enforcement rules"
+echo "  • ${CYAN}/wfc-playground${RESET}   - Interactive HTML playgrounds"
 echo "  • ${CYAN}/wfc-isthissmart${RESET}  - Critical thinking advisor"
 echo "  • ${CYAN}/wfc-newskill${RESET}     - Create new WFC skills"
 echo "  • ${CYAN}/wfc-init${RESET}        - Project initialization tool"

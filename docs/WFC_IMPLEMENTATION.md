@@ -309,6 +309,8 @@ This generates:
 - `plan/PROPERTIES.md` - Formal properties (SAFETY, LIVENESS, etc.)
 - `plan/TEST-PLAN.md` - Test specifications
 
+**Architecture Design Phase**: The planner now includes an architecture designer (`wfc/skills/wfc-plan/architecture_designer.py`) that evaluates trade-offs, selects patterns, and produces architecture decision records (ADRs) before tasks are generated. This gives implementation agents clear architectural boundaries and constraints to work within.
+
 ### 2. Execute Implementation
 
 ```bash

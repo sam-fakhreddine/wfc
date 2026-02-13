@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>WFC Data Explorer</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    background: #1a1a2e; color: #e0e0e0; height: 100vh;
+    display: grid; grid-template-columns: 1fr 1fr;
+    grid-template-rows: auto 1fr;
+  }
+  .toolbar {
+    grid-column: 1 / 3; background: #16213e; padding: 12px 20px;
+    display: flex; align-items: center; gap: 12px;
+    border-bottom: 1px solid #0f3460;
+  }
+  .toolbar h2 { color: #e94560; font-size: 16px; margin-right: 12px; }
+  .toolbar input[type="text"] {
+    flex: 1; padding: 8px 14px; background: #0f3460; border: 1px solid #1a1a4e;
+    border-radius: 6px; color: #e0e0e0; font-size: 14px;
+  }
+  .toolbar input::placeholder { color: #5a5a7a; }
+  .toolbar button {
+    padding: 8px 16px; background: #e94560; color: #fff; border: none;
+    border-radius: 6px; cursor: pointer; font-size: 13px; white-space: nowrap;
+  }
+  .toolbar button:hover { background: #c73650; }
+  .input-panel {
+    padding: 16px; border-right: 1px solid #0f3460;
+    display: flex; flex-direction: column;
+  }
+  .input-panel label {
+    font-size: 12px; color: #a0a0b0; text-transform: uppercase;
+    letter-spacing: 0.5px; margin-bottom: 8px;
+  }
+  .input-panel textarea {
+    flex: 1; padding: 14px; background: #0d1b2a; border: 1px solid #0f3460;
+    border-radius: 8px; color: #7ec8e3; font-family: 'SF Mono', 'Fira Code', monospace;
+    font-size: 13px; resize: none; line-height: 1.5;
+  }
+  .input-panel .actions { margin-top: 10px; display: flex; gap: 8px; }
+  .input-panel .actions button {
+    padding: 6px 14px; background: #0f3460; color: #e0e0e0; border: 1px solid #1a1a4e;
+    border-radius: 6px; cursor: pointer; font-size: 12px;
+  }
+  .input-panel .actions button:hover { background: #1a3a6e; }
+  .output-panel { padding: 16px; overflow: auto; }
+  .output-panel label {
+    font-size: 12px; color: #a0a0b0; text-transform: uppercase;
+    letter-spacing: 0.5px; margin-bottom: 8px; display: block;
+  }
+  .tree { font-family: 'SF Mono', 'Fira Code', monospace; font-size: 13px; }
+  .tree-node { padding: 2px 0; }
+  .tree-key { color: #e94560; }
+  .tree-string { color: #7ec8e3; }
+  .tree-number { color: #ffd700; }
+  .tree-bool { color: #50fa7b; }
+  .tree-null { color: #888; font-style: italic; }
+  .tree-toggle {
+    cursor: pointer; user-select: none; display: inline-block;
+    width: 16px; color: #888;
+  }
+  .tree-toggle:hover { color: #e94560; }
+  .tree-children { margin-left: 20px; }
+  .tree-children.collapsed { display: none; }
+  .error-msg { color: #ff6b6b; padding: 20px; font-size: 14px; }
+  .stats {
+    margin-top: 10px; font-size: 12px; color: #5a5a7a;
+    border-top: 1px solid #0f3460; padding-top: 8px;
+  }
+  .highlight { background: #e9456033; border-radius: 2px; }
+</style>
+</head>
+<body>
+
+<div class="toolbar">
+  <h2>Data Explorer</h2>
+  <input type="text" id="searchInput" placeholder="Search keys or values...">
+  <button onclick="copyFormatted()">Copy Formatted</button>
+</div>
+
+<div class="input-panel">
+  <label>JSON Input</label>
+  <textarea id="jsonInput" placeholder="Paste JSON here...">{
+  "name": "WFC",
+  "version": "2.0.0",
+  "features": [
+    {"name": "review", "agents": 5, "active": true},
+    {"name": "plan", "agents": 1, "active": true},
+    {"name": "implement", "agents": 8, "active": false}
+  ],
+  "config": {
+    "token_budget": 150000,
+    "reduction": "99%",
+    "personas": 54
+  }
+}</textarea>
+  <div class="actions">
+    <button onclick="parseJSON()">Parse</button>
+    <button onclick="formatInput()">Format</button>
+    <button onclick="minifyInput()">Minify</button>
+    <button onclick="clearAll()">Clear</button>
+  </div>
+</div>
+
+<div class="output-panel">
+  <label>Tree View</label>
+  <div id="treeView"></div>
+  <div class="stats" id="stats"></div>
+</div>
+
+<script>
+  const jsonInput = document.getElementById('jsonInput');
+  const treeView = document.getElementById('treeView');
+  const stats = document.getElementById('stats');
+  const searchInput = document.getElementById('searchInput');
+
+  function parseJSON() {
+    try {
+      const data = JSON.parse(jsonInput.value);
+      treeView.innerHTML = '';
+      treeView.appendChild(buildTree(data, ''));
+      updateStats(data);
+    } catch (e) {
+      treeView.innerHTML = `<div class="error-msg">Parse Error: ${e.message}</div>`;
+      stats.textContent = '';
+    }
+  }
+
+  function buildTree(data, path) {
+    const container = document.createElement('div');
+    if (data === null) {
+      container.innerHTML = '<span class="tree-null">null</span>';
+      return container;
+    }
+    if (typeof data !== 'object') {
+      const cls = typeof data === 'string' ? 'tree-string'
+        : typeof data === 'number' ? 'tree-number'
+        : typeof data === 'boolean' ? 'tree-bool' : '';
+      const val = typeof data === 'string' ? `"${data}"` : String(data);
+      container.innerHTML = `<span class="${cls}">${val}</span>`;
+      return container;
+    }
+    const isArr = Array.isArray(data);
+    const entries = isArr
+      ? data.map((v, i) => [i, v])
+      : Object.entries(data);
+
+    entries.forEach(([key, val]) => {
+      const node = document.createElement('div');
+      node.className = 'tree-node';
+      const childPath = path ? `${path}.${key}` : String(key);
+
+      if (val !== null && typeof val === 'object') {
+        const toggle = document.createElement('span');
+        toggle.className = 'tree-toggle';
+        toggle.textContent = '\u25BC';
+        const children = document.createElement('div');
+        children.className = 'tree-children';
+        children.appendChild(buildTree(val, childPath));
+
+        toggle.addEventListener('click', () => {
+          const collapsed = children.classList.toggle('collapsed');
+          toggle.textContent = collapsed ? '\u25B6' : '\u25BC';
+        });
+
+        const bracket = Array.isArray(val)
+          ? `[${val.length}]` : `{${Object.keys(val).length}}`;
+        node.appendChild(toggle);
+        node.insertAdjacentHTML('beforeend',
+          `<span class="tree-key">${key}</span>: ${bracket}`);
+        node.appendChild(children);
+      } else {
+        node.insertAdjacentHTML('beforeend',
+          '<span class="tree-toggle"> </span>');
+        node.insertAdjacentHTML('beforeend',
+          `<span class="tree-key">${key}</span>: `);
+        node.appendChild(buildTree(val, childPath));
+      }
+      container.appendChild(node);
+    });
+    return container;
+  }
+
+  function updateStats(data) {
+    const count = (obj) => {
+      if (obj === null || typeof obj !== 'object') return 1;
+      const entries = Array.isArray(obj) ? obj : Object.values(obj);
+      return entries.reduce((s, v) => s + count(v), 0);
+    };
+    const keys = (obj) => {
+      if (obj === null || typeof obj !== 'object') return 0;
+      const e = Object.keys(obj).length;
+      return e + Object.values(obj).reduce((s, v) => s + keys(v), 0);
+    };
+    const depth = (obj) => {
+      if (obj === null || typeof obj !== 'object') return 0;
+      const vals = Array.isArray(obj) ? obj : Object.values(obj);
+      return 1 + (vals.length ? Math.max(...vals.map(depth)) : 0);
+    };
+    stats.textContent =
+      `Values: ${count(data)} | Keys: ${keys(data)} | Max depth: ${depth(data)} | ` +
+      `Size: ${new Blob([jsonInput.value]).size} bytes`;
+  }
+
+  function formatInput() {
+    try {
+      const data = JSON.parse(jsonInput.value);
+      jsonInput.value = JSON.stringify(data, null, 2);
+    } catch (_) {}
+  }
+
+  function minifyInput() {
+    try {
+      const data = JSON.parse(jsonInput.value);
+      jsonInput.value = JSON.stringify(data);
+    } catch (_) {}
+  }
+
+  function clearAll() {
+    jsonInput.value = '';
+    treeView.innerHTML = '';
+    stats.textContent = '';
+  }
+
+  function copyFormatted() {
+    try {
+      const data = JSON.parse(jsonInput.value);
+      const text = JSON.stringify(data, null, 2);
+      navigator.clipboard.writeText(text).then(() => {
+        const btn = event.target;
+        btn.textContent = 'Copied!';
+        setTimeout(() => btn.textContent = 'Copy Formatted', 1500);
+      });
+    } catch (_) {}
+  }
+
+  searchInput.addEventListener('input', () => {
+    const query = searchInput.value.toLowerCase();
+    document.querySelectorAll('.tree-node').forEach(node => {
+      if (!query) { node.classList.remove('highlight'); return; }
+      const text = node.textContent.toLowerCase();
+      node.classList.toggle('highlight', text.includes(query));
+    });
+  });
+
+  parseJSON();
+</script>
+</body>
+</html>

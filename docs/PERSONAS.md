@@ -4,7 +4,7 @@
 
 ## Overview
 
-WFC includes **54 expert personas** across **9 specialized panels**. Each persona brings unique expertise, perspective, and focus areas to code reviews.
+WFC includes **56 expert personas** across **9 specialized panels**. Each persona brings unique expertise, perspective, and focus areas to code reviews.
 
 ## Panel Structure
 
@@ -55,7 +55,7 @@ WFC includes **54 expert personas** across **9 specialized panels**. Each person
 | `CLOUD_ARCHITECT` | Cloud Architecture Specialist | AWS/Azure/GCP, IaC, scalability | Cloud architecture, infrastructure |
 | `INTEGRATION_ARCHITECT` | Integration Architecture Specialist | ESB, API gateway, integration patterns | System integration, API management |
 
-### 4. Quality Panel (8 personas)
+### 4. Quality Panel (10 personas)
 
 **Purpose**: Quality assurance and testing specialists
 
@@ -69,6 +69,8 @@ WFC includes **54 expert personas** across **9 specialized panels**. Each person
 | `CHAOS_ENGINEER` | Chaos Engineering Specialist | Chaos Monkey, resilience, failure modes | Resilience testing, chaos engineering |
 | `ACCESSIBILITY_TESTER` | Accessibility QA Specialist | WCAG testing, screen readers | Accessibility testing, a11y compliance |
 | `SECURITY_TESTER` | Security QA Specialist | SAST, DAST, security scanning | Security testing, vulnerability scanning |
+| `SILENT_FAILURE_HUNTER` | Silent Failure Hunter | Error Handling Analysis, Failure Mode Analysis, Observability Gaps | Finding empty catch blocks, swallowed errors, missing logging, silent failures |
+| `CODE_SIMPLIFIER` | Code Simplifier | Code Simplification, Refactoring, Readability Optimization | Unnecessary complexity, over-engineering, deep nesting, premature abstraction |
 
 ### 5. Data Panel (4 personas)
 
@@ -156,5 +158,5 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for how to add your own personas to exten
 
 ---
 
-**Current Count**: 54 personas
-**Last Updated**: 2026-02-10
+**Current Count**: 56 personas
+**Last Updated**: 2026-02-13

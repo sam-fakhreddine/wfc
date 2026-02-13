@@ -113,7 +113,7 @@ Or specify files:
 WFC will:
 
 1. **Analyze your code** - Detect tech stack (Python? React? Go?)
-2. **Select 5 expert personas** - From 54 specialists (security, architecture, performance, etc.)
+2. **Select 5 expert personas** - From 56 specialists (security, architecture, performance, etc.)
 3. **Spawn independent subagents** - Each persona runs as a separate Claude Code subagent via Task tool
 4. **Parallel execution** - All reviews happen concurrently with true isolation (no context bleeding)
 5. **Consensus synthesis** - Weighted scoring, consensus areas, unique insights
@@ -161,7 +161,7 @@ Each subagent runs in its own subprocess with:
 ## Example Review Output
 
 ```
-🎭 Selected Expert Personas (5/54)
+🎭 Selected Expert Personas (5/56)
 
 1. BACKEND_PYTHON_SENIOR (Relevance: 0.92)
 2. APPSEC_SPECIALIST (Relevance: 0.89)
@@ -218,10 +218,12 @@ Now Claude will automatically use WFC for reviews!
 
 ## Available Skills
 
-WFC includes 11 skills:
+WFC includes 17 skills:
 
 | Skill | What It Does | Trigger |
 |-------|--------------|---------|
+| `wfc-vibe` | Natural brainstorming mode | "let's brainstorm" |
+| `wfc-build` | Quick feature builder | "build this feature" |
 | `wfc-review` | **Multi-agent consensus code review** | "review this code" |
 | `wfc-plan` | Structured implementation planning | "plan this feature" |
 | `wfc-implement` | Parallel TDD implementation | "implement this plan" |
@@ -233,6 +235,9 @@ WFC includes 11 skills:
 | `wfc-safeclaude` | Safe command allowlist | "reduce approval prompts" |
 | `wfc-retro` | Retrospective analysis | "run retrospective" |
 | `wfc-newskill` | Create new WFC skills | "create a skill" |
+| `wfc-safeguard` | Real-time security hooks | Security enforcement |
+| `wfc-rules` | Custom enforcement rules | Code standards |
+| `wfc-playground` | Interactive HTML playgrounds | Visual exploration |
 
 ## Common Workflows
 
@@ -306,6 +311,12 @@ ls ~/.claude/skills/wfc/personas/panels/
 ```
 
 Should show 9 panels with JSON files.
+
+## Security
+
+WFC mitigates 9/9 applicable risks from the OWASP Top 10 for LLM Applications 2025 through real-time hooks, multi-agent consensus, token budgets, and supply chain controls.
+
+See [docs/OWASP_LLM_TOP10_MITIGATIONS.md](docs/OWASP_LLM_TOP10_MITIGATIONS.md) for the full analysis.
 
 ## Next Steps
 

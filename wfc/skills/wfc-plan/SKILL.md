@@ -99,6 +99,27 @@ plans/
 - **Traceable** - See evolution of project planning
 - **Reference** - Compare approaches across time
 
+## Architecture Design Phase
+
+After the interview, WFC generates 2-3 architecture approaches:
+
+### Option 1: Minimal Changes
+- Smallest diff, maximum code reuse
+- Lowest risk, fastest to implement
+- Best for simple features or hotfixes
+
+### Option 2: Clean Architecture
+- Proper abstractions, maintainability-first
+- Best long-term design
+- Higher initial effort
+
+### Option 3: Pragmatic Balance
+- Speed + quality tradeoff
+- Addresses key concerns without over-engineering
+- Best for most features
+
+The approaches are saved to `ARCHITECTURE-OPTIONS.md` for reference.
+
 ## Interview Process
 
 The adaptive interview gathers:
