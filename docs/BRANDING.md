@@ -76,7 +76,7 @@ Your choice is saved in `~/.wfc/.wfc_branding` and applied across all platforms.
 
 ```bash
 cd /path/to/wfc
-./install-universal.sh
+./install.sh
 ```
 
 Choose a different mode when prompted. Your skills and configuration are preserved.

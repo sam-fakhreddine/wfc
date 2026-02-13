@@ -7,10 +7,25 @@
 ```bash
 git clone https://github.com/sam-fakhreddine/wfc.git
 cd wfc
-./install-universal.sh
+./install.sh
 ```
 
 The installer detects your platform(s) and asks where to install.
+
+**Note:** `install.sh` is a symlink to `install-universal.sh` (the universal installer).
+
+## CI/Non-Interactive Mode
+
+For CI or automated installation, use the `--ci` flag:
+
+```bash
+./install.sh --ci
+```
+
+This skips all prompts and uses sensible defaults:
+- Existing install: Refresh (keep settings)
+- Branding: NSFW (World Fucking Class)
+- Platform: All detected platforms
 
 ---
 
@@ -154,7 +169,7 @@ Changes made in one platform automatically sync to the other:
 ```bash
 cd ~/path/to/wfc-repo
 git pull
-./install-universal.sh
+./install.sh
 
 # Updates automatically sync to both Claude Code and Kiro
 ```
@@ -164,7 +179,7 @@ git pull
 ```bash
 cd ~/path/to/wfc-repo
 git pull
-./install-universal.sh
+./install.sh
 
 # Updates only the installed platform
 ```
@@ -180,7 +195,7 @@ When you run the installer on an existing installation, you'll get reinstall opt
 **Use when:** You want to update files but keep all settings
 
 ```bash
-./install-universal.sh
+./install.sh
 
 # Choose: "1) Refresh installation"
 ```
@@ -203,7 +218,7 @@ When you run the installer on an existing installation, you'll get reinstall opt
 **Use when:** You want to switch between SFW and NSFW modes
 
 ```bash
-./install-universal.sh
+./install.sh
 
 # Choose: "2) Change branding mode"
 ```
@@ -226,7 +241,7 @@ When you run the installer on an existing installation, you'll get reinstall opt
 **Use when:** You want to reset everything to defaults
 
 ```bash
-./install-universal.sh
+./install.sh
 
 # Choose: "3) Full reinstall"
 ```
@@ -254,7 +269,7 @@ When you run the installer on an existing installation, you'll get reinstall opt
 **Use when:** You don't want to make any changes
 
 ```bash
-./install-universal.sh
+./install.sh
 
 # Choose: "4) Cancel"
 ```
@@ -305,7 +320,7 @@ python3 ~/.wfc/scripts/personas/progressive_registry.py
 ```bash
 # Re-run installer
 cd ~/path/to/wfc-repo
-./install-universal.sh
+./install.sh
 ```
 
 ### Skills Not Showing Up

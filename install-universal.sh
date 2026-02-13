@@ -5,8 +5,9 @@ set -e
 # Detects and installs to: Claude Code, Kiro, OpenCode, Cursor, VS Code, Codex, Antigravity
 #
 # Usage:
-#   ./install-universal.sh          - Interactive installation
-#   ./install-universal.sh --help   - Show this help message
+#   ./install-universal.sh                - Interactive installation
+#   ./install-universal.sh --help         - Show this help message
+#   ./install-universal.sh --ci           - Non-interactive CI mode
 #
 # Features:
 #   - Auto-detects installed Agent Skills platforms
@@ -16,17 +17,24 @@ set -e
 #   - Progressive disclosure (92% token reduction)
 #   - Symlink support for multi-platform sync
 
-VERSION="0.4.0"
+VERSION="0.5.0"
+
+# Non-interactive mode flag
+CI_MODE=false
+if [ "$1" = "--ci" ] || [ "$1" = "--non-interactive" ]; then
+    CI_MODE=true
+fi
 
 # Show help
 if [ "$1" = "--help" ] || [ "$1" = "-h" ]; then
     cat << 'EOF'
-WFC Universal Installer v0.4.0
+WFC Universal Installer v0.5.0
 ==============================
 
 USAGE:
-    ./install-universal.sh          Interactive installation
-    ./install-universal.sh --help   Show this help
+    ./install-universal.sh                Interactive installation
+    ./install-universal.sh --help         Show this help
+    ./install-universal.sh --ci           Non-interactive CI mode
 
 FEATURES:
     - Auto-detects Agent Skills platforms
@@ -34,6 +42,12 @@ FEATURES:
     - Reinstall options for existing installations
     - Multi-platform symlink support
     - Progressive disclosure (92% token reduction)
+
+CI MODE:
+    --ci flag enables non-interactive installation with these defaults:
+    - Existing install: Refresh (keep settings)
+    - Branding: NSFW (World Fucking Class)
+    - Platform: Claude Code only (or first detected)
 
 SUPPORTED PLATFORMS:
     - Claude Code     (~/.claude/skills)
@@ -95,107 +109,133 @@ fi
 
 # Reinstall options if existing installation detected
 if [ "$EXISTING_INSTALL" = true ]; then
-    echo -e "${YELLOW}⚠${RESET}  Existing WFC installation detected"
-    if [ -n "$EXISTING_BRANDING" ]; then
-        echo -e "   Current: ${CYAN}$EXISTING_BRANDING${RESET} (${EXISTING_MODE})"
-    fi
-    echo ""
-    echo -e "${BOLD}What would you like to do?${RESET}"
-    echo ""
-    echo -e "1) ${GREEN}Refresh installation${RESET} (keep current settings)"
-    echo -e "   └─ Update files, preserve branding and config"
-    echo ""
-    echo -e "2) ${YELLOW}Change branding mode${RESET}"
-    echo -e "   └─ Switch between SFW/NSFW, keep everything else"
-    echo ""
-    echo -e "3) ${RED}Full reinstall${RESET} (reset all settings)"
-    echo -e "   └─ Clean install, reconfigure everything"
-    echo ""
-    echo -e "4) ${BLUE}Cancel${RESET}"
-    echo -e "   └─ Exit without changes"
-    echo ""
-    read -p "Choose (1-4): " REINSTALL_CHOICE
+    if [ "$CI_MODE" = true ]; then
+        # CI mode: always refresh
+        echo -e "${YELLOW}⚠${RESET}  CI mode: Refreshing existing installation..."
+        KEEP_SETTINGS=true
+        if [ -n "$EXISTING_MODE" ]; then
+            WFC_MODE="$EXISTING_MODE"
+            if [ "$WFC_MODE" = "sfw" ]; then
+                WFC_NAME="Workflow Champion"
+                WFC_TAGLINE="Professional Multi-Agent Framework"
+            else
+                WFC_NAME="World Fucking Class"
+                WFC_TAGLINE="Multi-Agent Framework That Doesn't Fuck Around"
+            fi
+        fi
+    else
+        # Interactive mode
+        echo -e "${YELLOW}⚠${RESET}  Existing WFC installation detected"
+        if [ -n "$EXISTING_BRANDING" ]; then
+            echo -e "   Current: ${CYAN}$EXISTING_BRANDING${RESET} (${EXISTING_MODE})"
+        fi
+        echo ""
+        echo -e "${BOLD}What would you like to do?${RESET}"
+        echo ""
+        echo -e "1) ${GREEN}Refresh installation${RESET} (keep current settings)"
+        echo -e "   └─ Update files, preserve branding and config"
+        echo ""
+        echo -e "2) ${YELLOW}Change branding mode${RESET}"
+        echo -e "   └─ Switch between SFW/NSFW, keep everything else"
+        echo ""
+        echo -e "3) ${RED}Full reinstall${RESET} (reset all settings)"
+        echo -e "   └─ Clean install, reconfigure everything"
+        echo ""
+        echo -e "4) ${BLUE}Cancel${RESET}"
+        echo -e "   └─ Exit without changes"
+        echo ""
+        read -p "Choose (1-4): " REINSTALL_CHOICE
 
-    case $REINSTALL_CHOICE in
-        1)
-            # Refresh - keep existing settings
-            echo -e "${GREEN}✓${RESET} Refreshing installation..."
-            KEEP_SETTINGS=true
-            if [ -n "$EXISTING_MODE" ]; then
-                WFC_MODE="$EXISTING_MODE"
-                if [ "$WFC_MODE" = "sfw" ]; then
-                    WFC_NAME="Workflow Champion"
-                    WFC_TAGLINE="Professional Multi-Agent Framework"
-                else
-                    WFC_NAME="World Fucking Class"
-                    WFC_TAGLINE="Multi-Agent Framework That Doesn't Fuck Around"
+        case $REINSTALL_CHOICE in
+            1)
+                # Refresh - keep existing settings
+                echo -e "${GREEN}✓${RESET} Refreshing installation..."
+                KEEP_SETTINGS=true
+                if [ -n "$EXISTING_MODE" ]; then
+                    WFC_MODE="$EXISTING_MODE"
+                    if [ "$WFC_MODE" = "sfw" ]; then
+                        WFC_NAME="Workflow Champion"
+                        WFC_TAGLINE="Professional Multi-Agent Framework"
+                    else
+                        WFC_NAME="World Fucking Class"
+                        WFC_TAGLINE="Multi-Agent Framework That Doesn't Fuck Around"
+                    fi
                 fi
-            fi
-            ;;
-        2)
-            # Change branding
-            echo -e "${GREEN}✓${RESET} Changing branding mode..."
-            KEEP_SETTINGS=true
-            CHANGE_BRANDING=true
-            ;;
-        3)
-            # Full reinstall
-            echo -e "${YELLOW}⚠${RESET}  Full reinstall - backing up current config..."
-            BACKUP_DIR="$HOME/.wfc_backup_$(date +%Y%m%d_%H%M%S)"
-            mkdir -p "$BACKUP_DIR"
-            if [ -f "$HOME/.wfc/.wfc_branding" ]; then
-                cp "$HOME/.wfc/.wfc_branding" "$BACKUP_DIR/"
-            fi
-            echo -e "${GREEN}✓${RESET} Backup saved to: ${CYAN}$BACKUP_DIR${RESET}"
-            KEEP_SETTINGS=false
-            ;;
-        4)
-            echo -e "${BLUE}Cancelled${RESET}"
-            exit 0
-            ;;
-        *)
-            echo -e "${RED}✗${RESET} Invalid choice"
-            exit 1
-            ;;
-    esac
-    echo ""
+                ;;
+            2)
+                # Change branding
+                echo -e "${GREEN}✓${RESET} Changing branding mode..."
+                KEEP_SETTINGS=true
+                CHANGE_BRANDING=true
+                ;;
+            3)
+                # Full reinstall
+                echo -e "${YELLOW}⚠${RESET}  Full reinstall - backing up current config..."
+                BACKUP_DIR="$HOME/.wfc_backup_$(date +%Y%m%d_%H%M%S)"
+                mkdir -p "$BACKUP_DIR"
+                if [ -f "$HOME/.wfc/.wfc_branding" ]; then
+                    cp "$HOME/.wfc/.wfc_branding" "$BACKUP_DIR/"
+                fi
+                echo -e "${GREEN}✓${RESET} Backup saved to: ${CYAN}$BACKUP_DIR${RESET}"
+                KEEP_SETTINGS=false
+                ;;
+            4)
+                echo -e "${BLUE}Cancelled${RESET}"
+                exit 0
+                ;;
+            *)
+                echo -e "${RED}✗${RESET} Invalid choice"
+                exit 1
+                ;;
+        esac
+        echo ""
+    fi
 fi
 
 # Branding mode selection (skip if keeping settings and not changing)
 if [ "${KEEP_SETTINGS:-false}" = false ] || [ "${CHANGE_BRANDING:-false}" = true ]; then
-echo -e "${BOLD}🎨 Choose branding mode:${RESET}"
-echo ""
-echo -e "1) ${BOLD}SFW${RESET} (Safe For Work)  → ${GREEN}Workflow Champion${RESET}"
-echo -e "   └─ Professional language, corporate-friendly"
-echo ""
-echo -e "2) ${BOLD}NSFW${RESET} (Default)        → ${MAGENTA}World Fucking Class${RESET}"
-echo -e "   └─ Original branding, no bullshit"
-echo ""
-read -p "Choose mode (1-2) [default: 2]: " BRANDING_CHOICE
+    if [ "$CI_MODE" = true ]; then
+        # CI mode: default to NSFW
+        WFC_NAME="World Fucking Class"
+        WFC_ACRONYM="WFC"
+        WFC_TAGLINE="Multi-Agent Framework That Doesn't Fuck Around"
+        WFC_MODE="nsfw"
+        echo -e "${GREEN}✓${RESET} CI mode: Using ${MAGENTA}World Fucking Class${RESET} (NSFW)"
+    else
+        echo -e "${BOLD}🎨 Choose branding mode:${RESET}"
+        echo ""
+        echo -e "1) ${BOLD}SFW${RESET} (Safe For Work)  → ${GREEN}Workflow Champion${RESET}"
+        echo -e "   └─ Professional language, corporate-friendly"
+        echo ""
+        echo -e "2) ${BOLD}NSFW${RESET} (Default)        → ${MAGENTA}World Fucking Class${RESET}"
+        echo -e "   └─ Original branding, no bullshit"
+        echo ""
+        read -p "Choose mode (1-2) [default: 2]: " BRANDING_CHOICE
 
-case $BRANDING_CHOICE in
-    1)
-        WFC_NAME="Workflow Champion"
-        WFC_ACRONYM="WFC"
-        WFC_TAGLINE="Professional Multi-Agent Framework"
-        WFC_MODE="sfw"
-        echo -e "${GREEN}✓${RESET} Selected: ${GREEN}Workflow Champion${RESET} (SFW)"
-        ;;
-    2|"")
-        WFC_NAME="World Fucking Class"
-        WFC_ACRONYM="WFC"
-        WFC_TAGLINE="Multi-Agent Framework That Doesn't Fuck Around"
-        WFC_MODE="nsfw"
-        echo -e "${GREEN}✓${RESET} Selected: ${MAGENTA}World Fucking Class${RESET} (NSFW)"
-        ;;
-    *)
-        echo -e "${RED}✗${RESET} Invalid choice, defaulting to NSFW"
-        WFC_NAME="World Fucking Class"
-        WFC_ACRONYM="WFC"
-        WFC_TAGLINE="Multi-Agent Framework That Doesn't Fuck Around"
-        WFC_MODE="nsfw"
-        ;;
-esac
+        case $BRANDING_CHOICE in
+            1)
+                WFC_NAME="Workflow Champion"
+                WFC_ACRONYM="WFC"
+                WFC_TAGLINE="Professional Multi-Agent Framework"
+                WFC_MODE="sfw"
+                echo -e "${GREEN}✓${RESET} Selected: ${GREEN}Workflow Champion${RESET} (SFW)"
+                ;;
+            2|"")
+                WFC_NAME="World Fucking Class"
+                WFC_ACRONYM="WFC"
+                WFC_TAGLINE="Multi-Agent Framework That Doesn't Fuck Around"
+                WFC_MODE="nsfw"
+                echo -e "${GREEN}✓${RESET} Selected: ${MAGENTA}World Fucking Class${RESET} (NSFW)"
+                ;;
+            *)
+                echo -e "${RED}✗${RESET} Invalid choice, defaulting to NSFW"
+                WFC_NAME="World Fucking Class"
+                WFC_ACRONYM="WFC"
+                WFC_TAGLINE="Multi-Agent Framework That Doesn't Fuck Around"
+                WFC_MODE="nsfw"
+                ;;
+        esac
+    fi
 fi
 
 echo ""
@@ -299,7 +339,7 @@ fi
 # Count detected platforms
 DETECTED_COUNT=0
 for platform in "${!PLATFORMS[@]}"; do
-    ((DETECTED_COUNT++))
+    DETECTED_COUNT=$((DETECTED_COUNT + 1))
 done
 
 echo ""
@@ -349,7 +389,7 @@ for platform in claude kiro opencode cursor vscode codex antigravity goose; do
         esac
         echo -e "${MENU_INDEX}) ${name} only"
         MENU_OPTIONS[$MENU_INDEX]="$platform"
-        ((MENU_INDEX++))
+        MENU_INDEX=$((MENU_INDEX + 1))
     fi
 done
 
@@ -358,26 +398,52 @@ if [ $DETECTED_COUNT -gt 1 ]; then
     echo -e "${MENU_INDEX}) ${BOLD}All detected platforms${RESET} (recommended - uses symlinks)"
     MENU_OPTIONS[$MENU_INDEX]="all"
     ALL_OPTION_INDEX=$MENU_INDEX
-    ((MENU_INDEX++))
+    MENU_INDEX=$((MENU_INDEX + 1))
 fi
 
 # Add "Custom selection" option if more than two
 if [ $DETECTED_COUNT -gt 2 ]; then
     echo -e "${MENU_INDEX}) Custom selection"
     MENU_OPTIONS[$MENU_INDEX]="custom"
-    ((MENU_INDEX++))
+    MENU_INDEX=$((MENU_INDEX + 1))
 fi
 
 echo ""
-read -p "Choose (1-$((MENU_INDEX-1))): " CHOICE
 
-# Validate choice
-if [ -z "$CHOICE" ] || [ "$CHOICE" -lt 1 ] || [ "$CHOICE" -ge $MENU_INDEX ]; then
-    echo -e "${RED}✗${RESET} Invalid choice"
-    exit 1
+# CI mode: select all platforms automatically
+if [ "$CI_MODE" = true ]; then
+    if [ $DETECTED_COUNT -eq 1 ]; then
+        # Single platform: select it directly
+        for platform in "${!PLATFORMS[@]}"; do
+            SELECTED_OPTION="$platform"
+            case $platform in
+                claude) name="Claude Code" ;;
+                kiro) name="Kiro (AWS)" ;;
+                opencode) name="OpenCode" ;;
+                cursor) name="Cursor" ;;
+                vscode) name="VS Code" ;;
+                codex) name="OpenAI Codex" ;;
+                antigravity) name="Google Antigravity" ;;
+                goose) name="Goose" ;;
+            esac
+            echo -e "${CYAN}CI mode:${RESET} Installing to ${name}"
+        done
+    else
+        # Multiple platforms: use "all" strategy
+        echo -e "${CYAN}CI mode:${RESET} Installing to all detected platforms"
+        SELECTED_OPTION="all"
+    fi
+else
+    read -p "Choose (1-$((MENU_INDEX-1))): " CHOICE
+
+    # Validate choice
+    if [ -z "$CHOICE" ] || [ "$CHOICE" -lt 1 ] || [ "$CHOICE" -ge $MENU_INDEX ]; then
+        echo -e "${RED}✗${RESET} Invalid choice"
+        exit 1
+    fi
+
+    SELECTED_OPTION="${MENU_OPTIONS[$CHOICE]}"
 fi
-
-SELECTED_OPTION="${MENU_OPTIONS[$CHOICE]}"
 
 # Process selection
 declare -A INSTALL_TO
@@ -410,7 +476,7 @@ elif [ "$SELECTED_OPTION" = "custom" ]; then
             esac
             echo -e "${INDEX}) ${name}"
             CUSTOM_MAP[$INDEX]=$platform
-            ((INDEX++))
+            INDEX=$((INDEX + 1))
         fi
     done
     echo ""
@@ -425,7 +491,7 @@ elif [ "$SELECTED_OPTION" = "custom" ]; then
     # Determine strategy
     INSTALL_COUNT=0
     for platform in "${!INSTALL_TO[@]}"; do
-        ((INSTALL_COUNT++))
+        INSTALL_COUNT=$((INSTALL_COUNT + 1))
     done
 
     if [ $INSTALL_COUNT -gt 1 ]; then
@@ -498,7 +564,7 @@ if [ -d "$SCRIPT_DIR/skills" ]; then
             skill_name=$(basename "$skill_dir")
             echo "    ├─ $skill_name"
             cp -r "$skill_dir" "$WFC_ROOT/skills/" 2>/dev/null || true
-            ((SKILLS_FOUND++))
+            SKILLS_FOUND=$((SKILLS_FOUND + 1))
         fi
     done
 fi
@@ -511,7 +577,7 @@ if [ -d "$HOME/.claude/skills" ]; then
             if [ ! -d "$WFC_ROOT/skills/$skill_name" ]; then
                 echo "    ├─ $skill_name (from ~/.claude/skills)"
                 cp -r "$skill_dir" "$WFC_ROOT/skills/" 2>/dev/null || true
-                ((SKILLS_FOUND++))
+                SKILLS_FOUND=$((SKILLS_FOUND + 1))
             fi
         fi
     done

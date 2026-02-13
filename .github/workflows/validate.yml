@@ -32,9 +32,8 @@ jobs:
 
     - name: Install WFC skills
       run: |
-        mkdir -p ~/.claude/skills
         chmod +x install.sh
-        ./install.sh <<< 'y'
+        ./install.sh --ci
 
     - name: Run tests
       run: |
@@ -65,9 +64,8 @@ jobs:
 
     - name: Install WFC skills
       run: |
-        mkdir -p ~/.claude/skills
         chmod +x install.sh
-        ./install.sh <<< 'y'
+        ./install.sh --ci
 
     - name: Install validation dependencies
       run: pip install pyyaml
