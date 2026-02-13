@@ -17,19 +17,7 @@ set -e
 #   - Progressive disclosure (92% token reduction)
 #   - Symlink support for multi-platform sync
 
-# Check ~/.claude/skills for already installed WFC skills
-    if [ -d "$HOME/.claude/skills" ]; then
-        for skill_dir in "$HOME/.claude/skills"/wfc-*; do
-            if [ -d "$skill_dir" ]; then
-                skill_name=$(basename "$skill_dir")
-                if [ ! -d "$WFC_ROOT/skills/$skill_name" ]; then
-                    echo "    ├─ $skill_name (from ~/.claude/skills)"
-                    cp -r "$skill_dir" "$WFC_ROOT/skills/"
-                    SKILLS_FOUND=$((SKILLS_FOUND + 1))
-                fi
-            fi
-        done
-    fi
+VERSION="0.6.0"
 
 # Non-interactive mode flag
 CI_MODE=false
@@ -592,10 +580,25 @@ if [ "$STRATEGY" = "symlink" ]; then
         for skill_dir in "$HOME/.claude/skills"/wfc-*; do
             if [ -d "$skill_dir" ]; then
                 skill_name=$(basename "$skill_dir")
-                if [ ! -d "$WFC_ROOT/skills/$skill_name" ]; then
-                    echo "    ├─ $skill_name (from ~/.claude/skills)"
-                    cp -r "$skill_dir" "$WFC_ROOT/skills/"
+                # Check if this is a meta-skill directory (contains sub-skills)
+                if [ -d "$skill_dir/wkills" ]; then
+                    # Meta-skill - install directly to skills root
+                    target="$WFC_ROOT/skills/"
+                    echo "    ├─ $skill_name (meta-skill from ~/.claude/skills)"
+                    if [ ! -d "$target" ]; then
+                        mkdir -p "$target"
+                    fi
+                    cp -r "$skill_dir"/* "$target/" 2>/dev/null || true
                     SKILLS_FOUND=$((SKILLS_FOUND + 1))
+                else
+                    # Regular skill - install in skills subdirectory
+                    target="$WFC_ROOT/skills/"
+                    if [ ! -d "$target/$skill_name" ]; then
+                        mkdir -p "$target/$skill_name"
+                        echo "    ├─ $skill_name"
+                    else
+                        echo "    ├─ $skill_name (already exists)"
+                    fi
                 fi
             fi
         done
