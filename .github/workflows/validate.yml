@@ -72,6 +72,8 @@ jobs:
     - name: Install validation dependencies
       run: pip install pyyaml
 
+    # Validates SKILL.md frontmatter per Agent Skills spec
+    # Reference: https://github.com/anthropics/skills
     - name: Validate all WFC skills
       run: |
         python3 << 'PYEOF'
