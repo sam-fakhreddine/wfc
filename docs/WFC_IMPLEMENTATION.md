@@ -263,7 +263,7 @@ wfc implement --skip-quality
 
 ### Prerequisites
 
-- Python >=3.10
+- Python >=3.12
 - Git
 - Claude Code
 - (Recommended) Trunk.io: `curl https://get.trunk.io -fsSL | bash`

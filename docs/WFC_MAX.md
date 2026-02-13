@@ -149,11 +149,11 @@ With file reference architecture:
 ```toml
 [tool.black]
 line-length = 100
-target-version = ['py310']
+target-version = ['py312']
 
 [tool.ruff]
 line-length = 100
-target-version = "py310"
+target-version = "py312"
 ```
 
 ### 8. Development Workflow ✅

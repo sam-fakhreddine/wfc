@@ -140,7 +140,7 @@ plugins:
 
 runtimes:
   enabled:
-    - python@3.10.8
+    - python@3.12.0
     - go@1.21.0
     - node@18.12.1
     - rust@1.75.0
