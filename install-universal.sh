@@ -5,9 +5,9 @@ set -e
 # Detects and installs to: Claude Code, Kiro, OpenCode, Cursor, VS Code, Codex, Antigravity
 #
 # Usage:
-#   ./install-universal.sh                - Interactive installation
-#   ./install-universal.sh --help         - Show this help message
-#   ./install-universal.sh --ci           - Non-interactive CI mode
+#   ./install.sh                      - Interactive installation
+#   ./install.sh --help               - Show this help message
+#   ./install.sh --ci                 - Non-interactive CI mode
 #
 # Features:
 #   - Auto-detects installed Agent Skills platforms
@@ -17,7 +17,7 @@ set -e
 #   - Progressive disclosure (92% token reduction)
 #   - Symlink support for multi-platform sync
 
-VERSION="0.5.0"
+VERSION="0.6.0"
 
 # Non-interactive mode flag
 CI_MODE=false
@@ -28,13 +28,13 @@ fi
 # Show help
 if [ "$1" = "--help" ] || [ "$1" = "-h" ]; then
     cat << 'EOF'
-WFC Universal Installer v0.5.0
+WFC Universal Installer v0.6.0
 ==============================
 
 USAGE:
-    ./install-universal.sh                Interactive installation
-    ./install-universal.sh --help         Show this help
-    ./install-universal.sh --ci           Non-interactive CI mode
+    ./install.sh                 Interactive installation
+    ./install.sh --help          Show this help
+    ./install.sh --ci            Non-interactive CI mode
 
 FEATURES:
     - Auto-detects Agent Skills platforms
@@ -47,7 +47,7 @@ CI MODE:
     --ci flag enables non-interactive installation with these defaults:
     - Existing install: Refresh (keep settings)
     - Branding: NSFW (World Fucking Class)
-    - Platform: Claude Code only (or first detected)
+    - Platform: All detected platforms (uses symlink strategy)
 
 SUPPORTED PLATFORMS:
     - Claude Code     (~/.claude/skills)
@@ -81,6 +81,7 @@ DOCUMENTATION:
 EOF
     exit 0
 fi
+
 BOLD="\033[1m"
 GREEN="\033[0;32m"
 BLUE="\033[0;34m"
@@ -353,7 +354,7 @@ if [ $DETECTED_COUNT -eq 0 ]; then
     echo -e "  • Kiro (AWS):        ${CYAN}https://kiro.dev${RESET}"
     echo -e "  • OpenCode:          ${CYAN}https://opencode.ai${RESET}"
     echo -e "  • Cursor:            ${CYAN}https://cursor.com${RESET}"
-    echo -e "  • VS Code:           ${CYAN}https://code.visualstudio.com${RESET}"
+    echo -e "  • VS Code:           ${CYAN}https://code.visualstudio.com/${RESET}"
     echo -e "  • OpenAI Codex:      ${CYAN}https://developers.openai.com/codex${RESET}"
     echo -e "  • Google Antigravity:${CYAN}https://antigravity.dev${RESET}"
     echo ""
@@ -507,19 +508,25 @@ fi
 
 echo ""
 
+# ============================================================================
+# CRITICAL FIX: Correct directory structure for Agent Skills
+# ============================================================================
+
 # Determine installation root
 if [ "$STRATEGY" = "symlink" ]; then
+    # Multi-platform: use ~/.wfc as source of truth
     WFC_ROOT="$HOME/.wfc"
     echo -e "${BLUE}Root directory:${RESET} $WFC_ROOT (source of truth)"
 else
     # Direct install to single platform
+    # CRITICAL: For single platform, install DIRECTLY to platform skills dir
+    # NOT nested under a wfc/ subdirectory
     for platform in "${!INSTALL_TO[@]}"; do
-        WFC_ROOT="${PLATFORM_PATHS[$platform]}/wfc"
+        # Install directly to platform path, NOT nested
+        WFC_ROOT="${PLATFORM_PATHS[$platform]}"
     done
     echo -e "${BLUE}Installing to:${RESET} $WFC_ROOT"
 fi
-
-echo ""
 
 # Create installation directory
 mkdir -p "$WFC_ROOT"
@@ -542,52 +549,100 @@ echo ""
 # Determine source directory
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
-# Core package (if exists)
-if [ -d "$SCRIPT_DIR/wfc" ]; then
-    echo "  • Copying core package..."
-    cp -r "$SCRIPT_DIR/wfc"/* "$WFC_ROOT/" 2>/dev/null || true
-fi
+# ============================================================================
+# CRITICAL FIX: Correct skill installation structure
+# ============================================================================
 
-# Individual skills (from ~/.claude/skills or local directory)
 echo "  • Installing skills..."
 
-# Create skills directory
-mkdir -p "$WFC_ROOT/skills"
+if [ "$STRATEGY" = "symlink" ]; then
+    # Multi-platform: copy to ~/.wfc/skills first
+    mkdir -p "$WFC_ROOT/skills"
 
-# Find skills
-SKILLS_FOUND=0
+    SKILLS_FOUND=0
 
-# Check local skills directory
-if [ -d "$SCRIPT_DIR/skills" ]; then
-    for skill_dir in "$SCRIPT_DIR/skills"/wfc-*; do
-        if [ -d "$skill_dir" ]; then
-            skill_name=$(basename "$skill_dir")
-            echo "    ├─ $skill_name"
-            cp -r "$skill_dir" "$WFC_ROOT/skills/" 2>/dev/null || true
-            SKILLS_FOUND=$((SKILLS_FOUND + 1))
-        fi
-    done
-fi
-
-# Check ~/.claude/skills for already installed WFC skills
-if [ -d "$HOME/.claude/skills" ]; then
-    for skill_dir in "$HOME/.claude/skills"/wfc-*; do
-        if [ -d "$skill_dir" ]; then
-            skill_name=$(basename "$skill_dir")
-            if [ ! -d "$WFC_ROOT/skills/$skill_name" ]; then
-                echo "    ├─ $skill_name (from ~/.claude/skills)"
-                cp -r "$skill_dir" "$WFC_ROOT/skills/" 2>/dev/null || true
+    # Check local skills directory (in wfc/skills)
+    if [ -d "$SCRIPT_DIR/wfc/skills" ]; then
+        for skill_dir in "$SCRIPT_DIR/wfc/skills"/wfc-*; do
+            if [ -d "$skill_dir" ]; then
+                skill_name=$(basename "$skill_dir")
+                echo "    ├─ $skill_name"
+                # Remove old version if exists
+                [ -d "$WFC_ROOT/skills/$skill_name" ] && rm -rf "$WFC_ROOT/skills/$skill_name"
+                cp -r "$skill_dir" "$WFC_ROOT/skills/"
                 SKILLS_FOUND=$((SKILLS_FOUND + 1))
             fi
-        fi
-    done
-fi
+        done
+    fi
 
-echo "  • Found $SKILLS_FOUND WFC skills"
+    # Check ~/.claude/skills for already installed WFC skills
+    if [ -d "$HOME/.claude/skills" ]; then
+        for skill_dir in "$HOME/.claude/skills"/wfc-*; do
+            if [ -d "$skill_dir" ]; then
+                skill_name=$(basename "$skill_dir")
+                if [ ! -d "$WFC_ROOT/skills/$skill_name" ]; then
+                    echo "    ├─ $skill_name (from ~/.claude/skills)"
+                    cp -r "$skill_dir" "$WFC_ROOT/skills/"
+                    SKILLS_FOUND=$((SKILLS_FOUND + 1))
+                fi
+            fi
+        done
+    fi
 
-# Copy shared resources
-if [ -d "$SCRIPT_DIR/wfc/personas" ] || [ -d "$WFC_ROOT/personas" ]; then
-    echo "  • Shared resources (personas, config)"
+    echo "  • Found $SKILLS_FOUND WFC skills"
+
+    # Copy shared resources to ~/.wfc
+    if [ -d "$SCRIPT_DIR/wfc/references/personas" ]; then
+        echo "  • Copying shared resources..."
+        mkdir -p "$WFC_ROOT/personas"
+        cp -r "$SCRIPT_DIR/wfc/references/personas"/* "$WFC_ROOT/personas/"
+    fi
+
+else
+    # Direct mode: install skills DIRECTLY to platform skills directory
+    # CRITICAL: Skills must be at ~/.claude/skills/wfc-*/ NOT ~/.claude/skills/wfc/skills/wfc-*/
+
+    SKILLS_FOUND=0
+
+    # Check local skills directory (in wfc/skills)
+    if [ -d "$SCRIPT_DIR/wfc/skills" ]; then
+        for skill_dir in "$SCRIPT_DIR/wfc/skills"/wfc-*; do
+            if [ -d "$skill_dir" ]; then
+                skill_name=$(basename "$skill_dir")
+                target="$WFC_ROOT/$skill_name"
+                echo "    ├─ $skill_name"
+                # Remove old version if exists
+                [ -d "$target" ] && rm -rf "$target"
+                cp -r "$skill_dir" "$target"
+                SKILLS_FOUND=$((SKILLS_FOUND + 1))
+            fi
+        done
+    fi
+
+    # Check ~/.claude/skills for already installed WFC skills
+    if [ -d "$HOME/.claude/skills" ]; then
+        for skill_dir in "$HOME/.claude/skills"/wfc-*; do
+            if [ -d "$skill_dir" ]; then
+                skill_name=$(basename "$skill_dir")
+                target="$WFC_ROOT/$skill_name"
+                if [ ! -d "$target" ]; then
+                    echo "    ├─ $skill_name (from ~/.claude/skills)"
+                    cp -r "$skill_dir" "$target"
+                    SKILLS_FOUND=$((SKILLS_FOUND + 1))
+                fi
+            fi
+        done
+    fi
+
+    echo "  • Found $SKILLS_FOUND WFC skills"
+
+    # Copy shared resources
+    if [ -d "$SCRIPT_DIR/wfc/references/personas" ]; then
+        echo "  • Copying shared resources..."
+        # Create wfc/ subdirectory for shared resources
+        mkdir -p "$WFC_ROOT/wfc/personas"
+        cp -r "$SCRIPT_DIR/wfc/references/personas"/* "$WFC_ROOT/wfc/personas/"
+    fi
 fi
 
 echo ""
@@ -616,7 +671,7 @@ if [ "$STRATEGY" = "symlink" ]; then
         # Create platform skills directory
         mkdir -p "$platform_path"
 
-        # Link each skill
+        # Link each skill DIRECTLY to platform skills directory
         for skill in "$WFC_ROOT/skills"/wfc-*; do
             if [ -d "$skill" ]; then
                 skill_name=$(basename "$skill")
@@ -634,21 +689,18 @@ if [ "$STRATEGY" = "symlink" ]; then
         done
 
         # Link shared resources
-        if [ -d "$WFC_ROOT/personas" ]; then
-            target="$platform_path/wfc"
-            mkdir -p "$target"
+        target="$platform_path/wfc"
+        mkdir -p "$target"
 
-            # Remove existing symlinks
-            [ -L "$target/personas" ] && rm "$target/personas"
-            [ -L "$target/shared" ] && rm "$target/shared"
+        # Remove existing symlinks
+        [ -L "$target/personas" ] && rm "$target/personas"
+        [ -L "$target/shared" ] && rm "$target/shared"
 
-            # Create symlinks
-            ln -sf "$WFC_ROOT/personas" "$target/personas"
-            [ -d "$WFC_ROOT/shared" ] && ln -sf "$WFC_ROOT/shared" "$target/shared"
+        # Create symlinks
+        ln -sf "$WFC_ROOT/personas" "$target/personas"
+        [ -d "$WFC_ROOT/shared" ] && ln -sf "$WFC_ROOT/shared" "$target/shared"
 
-            echo "  └─ Shared resources"
-        fi
-
+        echo "  └─ Shared resources"
         echo ""
     done
 fi
