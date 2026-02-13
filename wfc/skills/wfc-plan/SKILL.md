@@ -2,9 +2,6 @@
 name: wfc-plan
 description: Adaptive planning system that converts requirements into structured implementation plans. Conducts intelligent interview to understand goals, then generates TASKS.md (with dependencies), PROPERTIES.md (formal properties like SAFETY, PERFORMANCE), and TEST-PLAN.md. Use when starting new features, projects, or refactoring efforts that need structured planning. Triggers on "plan this feature", "break down these requirements", "create implementation plan", or explicit /wfc-plan. Ideal for medium-to-large features requiring coordination. Not for quick bug fixes or single-file changes.
 license: MIT
-user-invocable: true
-disable-model-invocation: false
-argument-hint: [output_directory]
 ---
 
 # WFC:PLAN - Adaptive Planning with Formal Properties

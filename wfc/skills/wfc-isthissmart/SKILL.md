@@ -2,9 +2,6 @@
 name: wfc-isthissmart
 description: Critical thinking advisor that analyzes plans, ideas, and technical approaches across 7 dimensions (feasibility, complexity, risk, value, alternatives, assumptions, trade-offs). Provides discerning but constructive feedback to ensure smart decisions before committing time and resources. Use when evaluating new features, architectural decisions, or technical approaches. Triggers on "is this a good idea", "should I do this", "analyze this approach", "what do you think of this plan", or explicit /wfc-isthissmart. Ideal for architectural decisions, feature planning, and technology choices. Not for implementation details or code review.
 license: MIT
-user-invocable: true
-disable-model-invocation: false
-argument-hint: [idea or --plan or --architecture]
 ---
 
 # WFC:ISTHISSMART - Thoughtful Advisor

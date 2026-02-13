@@ -120,6 +120,7 @@ WFC workflow (NEW):
 | Security hooks | `/wfc-safeguard` | Real-time pattern enforcement |
 | Custom rules | `/wfc-rules` | Markdown-based code standards |
 | Visual exploration | `/wfc-playground` | Interactive HTML prototyping |
+| Fix PR comments | `/wfc-pr-comments` | Triage & fix review feedback |
 
 **Note:** wfc-vibe is the default conversational mode. Just chat naturally - when you're ready to implement, say "let's plan this" or "let's build this".
 

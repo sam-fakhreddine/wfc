@@ -2,9 +2,6 @@
 name: wfc-architecture
 description: Architecture documentation generation and analysis. Creates comprehensive ARCHITECTURE.md with C4 diagrams (Context, Container, Component) in Mermaid format, generates Architecture Decision Records (ADRs), and audits code alignment with documentation. Use when starting new projects, documenting existing systems, or verifying architectural consistency. Triggers on "document architecture", "create architecture diagrams", "audit architecture alignment", or explicit /wfc-architecture. Ideal for onboarding, architecture reviews, and maintaining up-to-date system documentation. Not for code implementation or detailed API specs.
 license: MIT
-user-invocable: true
-disable-model-invocation: false
-argument-hint: [--generate or --audit]
 ---
 
 # WFC:ARCHITECTURE - Architecture Generation & Analysis

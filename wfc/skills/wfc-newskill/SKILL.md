@@ -2,9 +2,6 @@
 name: wfc-newskill
 description: Meta-skill for creating new WFC skills. Conducts structured interview to understand skill requirements, generates skill prompt and SKILL.md structure, and optionally auto-builds implementation using wfc-plan → wfc-implement workflow. Use when extending WFC with new capabilities or creating custom workflow automations. Triggers on "create a new skill", "build a WFC skill for", "I want to add a skill that", or explicit /wfc-newskill. Ideal for WFC extension and custom automation. Not for general feature implementation or one-off scripts.
 license: MIT
-user-invocable: true
-disable-model-invocation: false
-argument-hint: [--build or --from-chat]
 ---
 
 # WFC:NEWSKILL - Meta-Skill Builder
