@@ -70,7 +70,7 @@ if [ -d "${WFC_INSTALL_DIR}/skills" ]; then
             # Copy skill to flattened location
             cp -R "$skill_dir" "$target_dir"
 
-            ((skill_count++))
+            skill_count=$((skill_count + 1))
         fi
     done
 
@@ -92,5 +92,5 @@ echo "   - Overview: ${SCRIPT_DIR}/README.md"
 echo "   - Personas: ${SCRIPT_DIR}/docs/PERSONAS.md"
 echo "   - Architecture: ${SCRIPT_DIR}/docs/ARCHITECTURE.md"
 echo ""
-echo "🎯 Current Personas: $(find "${WFC_INSTALL_DIR}/personas/panels" -name "*.json" 2>/dev/null | wc -l | xargs) expert reviewers across 9 panels"
+echo "🎯 Current Personas: $(find "${WFC_INSTALL_DIR}/references/personas/panels" -name "*.json" 2>/dev/null | wc -l | xargs) expert reviewers across 9 panels"
 echo ""

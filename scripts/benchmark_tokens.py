@@ -26,10 +26,12 @@ except ImportError:
 
 def load_sample_persona() -> Dict:
     """Load a sample persona for benchmarking."""
-    personas_dir = Path.home() / "repos/wfc/wfc/references/personas/panels"
+    # Use path relative to the repository root
+    repo_root = Path(__file__).parent.parent
+    personas_dir = repo_root / "wfc" / "references" / "personas" / "panels"
 
     # Try to load Security-AppSec as a representative persona
-    persona_files = list(personas_dir.glob("*.json"))
+    persona_files = list(personas_dir.glob("**/*.json"))
 
     if not persona_files:
         print(f"❌ No personas found in {personas_dir}")

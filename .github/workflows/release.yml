@@ -37,7 +37,7 @@ jobs:
           echo "version=$VERSION" >> $GITHUB_OUTPUT
 
           # Count personas
-          PERSONA_COUNT=$(find wfc/personas/panels -name "*.json" | wc -l)
+          PERSONA_COUNT=$(find wfc/references/personas/panels -name "*.json" | wc -l)
 
           # Create release notes
           cat > release_notes.md << EOF

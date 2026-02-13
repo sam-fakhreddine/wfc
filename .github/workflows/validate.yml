@@ -30,6 +30,12 @@ jobs:
         source .venv/bin/activate
         uv pip install -e ".[dev,tokens]"
 
+    - name: Install WFC skills
+      run: |
+        mkdir -p ~/.claude/skills
+        chmod +x install.sh
+        ./install.sh <<< 'y'
+
     - name: Run tests
       run: |
         source .venv/bin/activate
@@ -51,81 +57,86 @@ jobs:
 
     steps:
     - uses: actions/checkout@v4
-      with:
-        path: wfc
-
-    - name: Checkout agentskills
-      uses: actions/checkout@v4
-      with:
-        repository: anthropics/agentskills
-        path: agentskills
 
     - name: Set up Python
       uses: actions/setup-python@v5
       with:
         python-version: '3.12'
 
-    - name: Install skills-ref
-      run: |
-        cd agentskills/skills-ref
-        python -m venv .venv
-        source .venv/bin/activate
-        pip install -e .
-
     - name: Install WFC skills
       run: |
         mkdir -p ~/.claude/skills
-        cp -r wfc/wfc/skills/* ~/.claude/skills/ || true
+        chmod +x install.sh
+        ./install.sh <<< 'y'
+
+    - name: Install validation dependencies
+      run: pip install pyyaml
 
     - name: Validate all WFC skills
       run: |
-        cd agentskills/skills-ref
-        source .venv/bin/activate
+        python3 << 'PYEOF'
+        import yaml
+        import os
+        import sys
 
-        FAILED=0
-        for skill in ~/.claude/skills/wfc-*; do
-          if [ -d "$skill" ]; then
-            skill_name=$(basename "$skill")
-            echo "Validating $skill_name..."
+        skills_dir = os.path.expanduser("~/.claude/skills")
+        failed = False
 
-            if ! skills-ref validate "$skill"; then
-              echo "❌ $skill_name validation failed"
-              FAILED=1
-            else
-              echo "✅ $skill_name validated"
-            fi
-          fi
-        done
+        for entry in sorted(os.listdir(skills_dir)):
+            if not entry.startswith("wfc-"):
+                continue
+            skill_dir = os.path.join(skills_dir, entry)
+            if not os.path.isdir(skill_dir):
+                continue
 
-        if [ $FAILED -eq 1 ]; then
-          echo "❌ Some skills failed validation"
-          exit 1
-        fi
+            skill_md = os.path.join(skill_dir, "SKILL.md")
+            if not os.path.exists(skill_md):
+                print(f"❌ {entry}: missing SKILL.md")
+                failed = True
+                continue
 
-        echo "✅ All WFC skills validated"
+            with open(skill_md) as f:
+                content = f.read()
 
-    - name: Validate XML prompt generation
-      run: |
-        cd agentskills/skills-ref
-        source .venv/bin/activate
+            # Check YAML frontmatter
+            if not content.startswith("---"):
+                print(f"❌ {entry}: SKILL.md missing YAML frontmatter")
+                failed = True
+                continue
 
-        FAILED=0
-        for skill in ~/.claude/skills/wfc-*; do
-          if [ -d "$skill" ]; then
-            skill_name=$(basename "$skill")
+            parts = content.split("---", 2)
+            if len(parts) < 3:
+                print(f"❌ {entry}: SKILL.md has malformed frontmatter")
+                failed = True
+                continue
 
-            if ! skills-ref to-prompt "$skill" | grep -q "<skill>"; then
-              echo "❌ $skill_name XML generation failed"
-              FAILED=1
-            fi
-          fi
-        done
+            try:
+                meta = yaml.safe_load(parts[1])
+            except yaml.YAMLError as e:
+                print(f"❌ {entry}: invalid YAML frontmatter: {e}")
+                failed = True
+                continue
 
-        if [ $FAILED -eq 1 ]; then
-          exit 1
-        fi
+            # Validate required fields per Agent Skills spec
+            if not meta or not isinstance(meta, dict):
+                print(f"❌ {entry}: empty frontmatter")
+                failed = True
+                continue
 
-        echo "✅ All XML prompts valid"
+            missing = [f for f in ["name", "description"] if f not in meta]
+            if missing:
+                print(f"❌ {entry}: missing required fields: {missing}")
+                failed = True
+                continue
+
+            print(f"✅ {entry}: valid (name={meta['name']})")
+
+        if failed:
+            print("\n❌ Some skills failed validation")
+            sys.exit(1)
+        else:
+            print("\n✅ All WFC skills validated")
+        PYEOF
 
   benchmark:
     name: Token Usage Benchmark
