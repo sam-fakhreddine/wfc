@@ -56,6 +56,9 @@ wfc-*-prompt.md
 *DEMONSTRATION*.md
 *BUILD_COMPLETE*.md
 
+# Development notes (local only - task summaries, dev logs, scratch)
+.development/
+
 # Entire.io session data (local-only by default, privacy-first)
 .entire/
 entire/checkpoints/
