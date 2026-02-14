@@ -852,7 +852,7 @@ if [ "${INSTALL_TO[claude]}" = true ] || [ "${PLATFORMS[claude]}" = true ]; then
         mkdir -p "$HOOKS_DEST/_checkers"
 
         # Copy hook scripts
-        for hook_file in file_checker.py tdd_enforcer.py context_monitor.py _util.py; do
+        for hook_file in file_checker.py tdd_enforcer.py context_monitor.py _util.py register_hooks.py; do
             if [ -f "$HOOKS_SRC/$hook_file" ]; then
                 cp "$HOOKS_SRC/$hook_file" "$HOOKS_DEST/$hook_file"
                 echo "    ├─ $hook_file"
@@ -883,17 +883,20 @@ if [ "${INSTALL_TO[claude]}" = true ] || [ "${PLATFORMS[claude]}" = true ]; then
         echo -e "${GREEN}  ✓${RESET} Quality hooks installed to ~/.wfc/scripts/hooks/"
     fi
 
-    # Register hooks in project .claude/settings.json if it exists and doesn't have WFC hooks
-    SETTINGS_FILE=".claude/settings.json"
-    if [ -f "$SETTINGS_FILE" ]; then
-        if ! grep -q "file_checker.py" "$SETTINGS_FILE" 2>/dev/null; then
-            echo -e "${YELLOW}  ℹ${RESET} To enable PostToolUse hooks, add to $SETTINGS_FILE:"
-            echo '    "PostToolUse": [{ "matcher": "Write|Edit", "hooks": ['
-            echo '      {"type":"command","command":"uv run python ~/.wfc/scripts/hooks/file_checker.py"},'
-            echo '      {"type":"command","command":"uv run python ~/.wfc/scripts/hooks/tdd_enforcer.py"}'
-            echo '    ]}]'
+    # Upsert WFC hooks into ~/.claude/settings.json (never clobbers existing settings)
+    REGISTER_SCRIPT="$HOOKS_DEST/register_hooks.py"
+    GLOBAL_SETTINGS="$HOME/.claude/settings.json"
+    if [ -f "$REGISTER_SCRIPT" ]; then
+        echo "  • Registering hooks in ~/.claude/settings.json (upsert)..."
+        if command -v python3 >/dev/null 2>&1; then
+            python3 "$REGISTER_SCRIPT" "$GLOBAL_SETTINGS"
+            echo -e "${GREEN}  ✓${RESET} Hooks registered (existing settings preserved)"
+        elif command -v python >/dev/null 2>&1; then
+            python "$REGISTER_SCRIPT" "$GLOBAL_SETTINGS"
+            echo -e "${GREEN}  ✓${RESET} Hooks registered (existing settings preserved)"
         else
-            echo -e "${GREEN}  ✓${RESET} Hooks already registered in $SETTINGS_FILE"
+            echo -e "${YELLOW}  ⚠${RESET} Python not found — run manually:"
+            echo "      python3 $REGISTER_SCRIPT $GLOBAL_SETTINGS"
         fi
     fi
 
