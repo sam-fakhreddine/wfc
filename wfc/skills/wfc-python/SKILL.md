@@ -1,12 +1,420 @@
 ---
 name: wfc-python
-description: Internal Python development guidelines and preferred libraries for WFC projects. Defines the standard Python toolkit including python-dotenv (config), fire (CLI), faker (test data), joblib (parallelism), orjson (fast JSON), structlog (logging), and tenacity (retries). Referenced by wfc-build, wfc-implement, and wfc-test when scaffolding or reviewing Python code. Not a user-invocable skill.
+description: Internal Python development standards for WFC projects. Enforces Python 3.12+, black formatting, full typing, PEP 562 lazy imports, SOLID/DRY principles, three-tier architecture, 500-line file limit, and Pythonic conventions. Defines preferred libraries (python-dotenv, fire, faker, joblib, orjson, structlog, tenacity). Referenced by wfc-build, wfc-implement, wfc-test, and wfc-review. Not a user-invocable skill.
 license: MIT
 ---
 
 # WFC:PYTHON - Python Development Standards
 
 Internal skill that defines how WFC builds Python projects. Referenced by other skills during implementation and review.
+
+## Python Coding Standards
+
+**These are non-negotiable.** Every Python file WFC produces must follow these conventions.
+
+### Python 3.12+ Required
+
+Target `requires-python = ">=3.12"`. Use modern features:
+
+```python
+# type statement (3.12+) - replaces TypeAlias
+type Vector = list[float]
+type Handler[T] = Callable[[T], Awaitable[None]]
+type Result[T, E] = T | E
+
+# Generic syntax on classes/functions (3.12+)
+class Repository[T]:
+    def get(self, id: str) -> T | None: ...
+    def list(self, *, limit: int = 100) -> list[T]: ...
+
+def transform[T, R](items: Iterable[T], fn: Callable[[T], R]) -> list[R]:
+    return [fn(item) for item in items]
+
+# f-string improvements (3.12+) - nested quotes, multiline
+msg = f"User {user.name!r} has {len(user.roles)} roles"
+query = f"""
+    SELECT * FROM {table}
+    WHERE status = {status!r}
+"""
+
+# ExceptionGroup + except* (3.11+)
+try:
+    async with TaskGroup() as tg:
+        tg.create_task(fetch_users())
+        tg.create_task(fetch_orders())
+except* ValueError as eg:
+    for exc in eg.exceptions:
+        log.error("validation_failed", error=str(exc))
+except* ConnectionError as eg:
+    log.error("connection_failed", count=len(eg.exceptions))
+
+# match/case (3.10+)
+match response.status_code:
+    case 200:
+        return orjson.loads(response.content)
+    case 404:
+        return None
+    case 429:
+        raise RateLimitError(retry_after=response.headers.get("Retry-After"))
+    case status if status >= 500:
+        raise ServerError(status)
+    case _:
+        raise UnexpectedStatus(response.status_code)
+
+# Structural pattern matching with guards
+match event:
+    case {"type": "click", "target": str(target)} if target.startswith("#"):
+        handle_anchor(target)
+    case {"type": "submit", "data": dict(data)}:
+        process_form(data)
+```
+
+### Black Formatting (Non-Negotiable)
+
+Black is the **only** formatter. No exceptions, no overrides.
+
+```toml
+# pyproject.toml
+[tool.black]
+line-length = 88
+target-version = ["py312"]
+```
+
+**Rules**:
+- Line length: 88 (black default)
+- No `# fmt: off` / `# fmt: on` unless absolutely unavoidable
+- No single-line compound statements: `if x: return` goes on two lines
+- Trailing commas on multi-line collections (black enforces this)
+- Double quotes for strings (black default)
+
+### Full Type Annotations (Mandatory)
+
+Every function signature, every return type, every class attribute. No untyped code.
+
+```python
+from collections.abc import Callable, Iterable, Sequence
+from typing import Any, Self
+
+# Function signatures - always typed
+def process_batch(
+    items: Sequence[dict[str, Any]],
+    *,
+    batch_size: int = 100,
+    on_error: Callable[[Exception], None] | None = None,
+) -> list[ProcessResult]:
+    ...
+
+# Class attributes - always typed
+class Config:
+    host: str
+    port: int
+    debug: bool = False
+    tags: list[str] = field(default_factory=list)
+
+# Use modern union syntax
+def find_user(user_id: str) -> User | None:  # Not Optional[User]
+    ...
+
+# Use collections.abc, not typing
+def merge(a: Iterable[int], b: Iterable[int]) -> list[int]:  # Not List, Iterable from typing
+    ...
+
+# Use Self for fluent interfaces (3.11+)
+class Builder:
+    def with_name(self, name: str) -> Self:
+        self.name = name
+        return self
+```
+
+**Rules**:
+- `str | None` not `Optional[str]`
+- `list[int]` not `List[int]`
+- `dict[str, Any]` not `Dict[str, Any]`
+- `collections.abc.Callable` not `typing.Callable`
+- Use `Self` for methods returning own type
+- Use `type` statement for type aliases (3.12+)
+- Use generics syntax on classes `class Foo[T]:` (3.12+)
+
+### PEP 562 - Module-Level `__getattr__`
+
+Use PEP 562 for lazy imports in `__init__.py` files. Keeps import time fast.
+
+```python
+# wfc/skills/wfc-python/__init__.py pattern
+__version__ = "0.1.0"
+
+# Lightweight exports available immediately
+PREFERRED_LIBRARIES = { ... }
+
+# Heavy imports loaded on demand via PEP 562
+def __getattr__(name: str) -> Any:
+    if name == "PythonStandards":
+        from wfc.skills.wfc_python.standards import PythonStandards
+        return PythonStandards
+    if name == "LibraryRegistry":
+        from wfc.skills.wfc_python.registry import LibraryRegistry
+        return LibraryRegistry
+    raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
+
+def __dir__() -> list[str]:
+    return [
+        *__all__,
+        "PythonStandards",
+        "LibraryRegistry",
+    ]
+```
+
+**Rules**:
+- Every `__init__.py` should use PEP 562 for non-trivial imports
+- Keep module-level imports to stdlib and lightweight constants
+- Heavy dependencies load lazily through `__getattr__`
+- Always implement `__dir__` alongside `__getattr__` for discoverability
+
+### 500-Line File Limit (Hard Cap)
+
+No Python file exceeds 500 lines. If it does, it needs to be split.
+
+**How to split**:
+- Extract classes into their own modules
+- Group related functions into submodules
+- Use `__init__.py` with PEP 562 to re-export the public API
+
+```
+# BAD: one monolithic file
+utils.py (800 lines)
+
+# GOOD: split by responsibility
+utils/
+├── __init__.py       # PEP 562 re-exports
+├── text.py           # Text processing functions
+├── dates.py          # Date/time helpers
+└── validation.py     # Input validation
+```
+
+**Rules**:
+- 500 lines is a hard cap, not a target - shorter is better
+- If a file is approaching 300 lines, consider if it has multiple responsibilities
+- Tests can be longer than 500 lines only if they cannot logically split
+
+### Three-Tier Architecture
+
+Separate **presentation**, **business logic**, and **data access**. Never mix tiers.
+
+```
+project/
+├── api/              # PRESENTATION: HTTP handlers, CLI, serialization
+│   ├── routes.py     #   Request/response handling only
+│   └── schemas.py    #   Input/output shapes (Pydantic, dataclasses)
+├── services/         # BUSINESS LOGIC: Rules, orchestration, workflows
+│   ├── orders.py     #   OrderService: business rules
+│   └── payments.py   #   PaymentService: payment workflows
+├── repositories/     # DATA ACCESS: Database, APIs, file I/O
+│   ├── orders.py     #   OrderRepository: queries, persistence
+│   └── cache.py      #   CacheRepository: Redis/disk cache
+└── models/           # DOMAIN: Pure data structures, no behavior
+    └── order.py      #   Order dataclass, enums, value objects
+```
+
+**Tier rules**:
+
+| Tier | Can Import | Cannot Import |
+|------|-----------|---------------|
+| Presentation | Services, Models | Repositories |
+| Business Logic | Repositories, Models | Presentation |
+| Data Access | Models | Presentation, Services |
+| Models | stdlib only | Everything else |
+
+```python
+# GOOD: presentation calls service, service calls repository
+class OrderAPI:
+    def __init__(self, service: OrderService) -> None:
+        self.service = service
+
+    def create(self, request: CreateOrderRequest) -> OrderResponse:
+        order = self.service.create_order(request.to_domain())
+        return OrderResponse.from_domain(order)
+
+class OrderService:
+    def __init__(self, repo: OrderRepository) -> None:
+        self.repo = repo
+
+    def create_order(self, order: Order) -> Order:
+        # business rules here
+        return self.repo.save(order)
+
+# BAD: API handler directly queries database
+class OrderAPI:
+    def create(self, request):
+        db.execute("INSERT INTO orders ...")  # NO - tier violation
+```
+
+### SOLID Principles
+
+**S - Single Responsibility**: One reason to change per class/module.
+```python
+# BAD: class does validation, persistence, and notification
+class OrderProcessor:
+    def process(self, order):
+        self.validate(order)
+        self.save_to_db(order)
+        self.send_email(order)
+
+# GOOD: separate responsibilities
+class OrderValidator:
+    def validate(self, order: Order) -> ValidationResult: ...
+
+class OrderRepository:
+    def save(self, order: Order) -> Order: ...
+
+class OrderNotifier:
+    def notify(self, order: Order) -> None: ...
+```
+
+**O - Open/Closed**: Extend via new classes, not modifying existing ones.
+```python
+# Use Protocol for extension points
+from typing import Protocol
+
+class Exporter(Protocol):
+    def export(self, data: list[dict[str, Any]]) -> bytes: ...
+
+class CSVExporter:
+    def export(self, data: list[dict[str, Any]]) -> bytes: ...
+
+class JSONExporter:
+    def export(self, data: list[dict[str, Any]]) -> bytes: ...
+
+# Adding PDFExporter doesn't modify existing code
+```
+
+**L - Liskov Substitution**: Subtypes must be substitutable.
+
+**I - Interface Segregation**: Use `Protocol` with narrow interfaces.
+```python
+# BAD: fat interface
+class Repository(Protocol):
+    def get(self, id: str) -> Model: ...
+    def list(self) -> list[Model]: ...
+    def save(self, model: Model) -> None: ...
+    def delete(self, id: str) -> None: ...
+    def export(self) -> bytes: ...
+
+# GOOD: segregated
+class Readable(Protocol):
+    def get(self, id: str) -> Model: ...
+
+class Writable(Protocol):
+    def save(self, model: Model) -> None: ...
+```
+
+**D - Dependency Inversion**: Depend on abstractions (Protocol), not concretions.
+```python
+# GOOD: constructor injection with Protocol
+class OrderService:
+    def __init__(
+        self,
+        repo: OrderRepository,     # Protocol, not concrete class
+        notifier: Notifier,         # Protocol, not SmtpNotifier
+    ) -> None:
+        self.repo = repo
+        self.notifier = notifier
+```
+
+### DRY - Don't Repeat Yourself
+
+- Extract repeated logic into functions when used 3+ times
+- Use base classes or mixins for shared behavior across classes
+- Shared constants go in a `constants.py` or the relevant module
+- But: don't create premature abstractions for 1-2 uses
+
+### Pythonic Conventions
+
+```python
+# Comprehensions over manual loops for transforms
+squares = [x**2 for x in numbers if x > 0]
+lookup = {item.id: item for item in items}
+
+# Context managers for resource management
+with open(path) as f:
+    data = f.read()
+
+# Unpacking
+first, *rest = items
+x, y = point
+
+# Walrus operator for compute-and-check
+if (match := pattern.search(text)) is not None:
+    process(match.group(1))
+
+# Enumerate, zip - never manual indexing
+for i, item in enumerate(items):
+    ...
+for key, value in zip(keys, values, strict=True):
+    ...
+
+# EAFP over LBYL
+try:
+    value = mapping[key]
+except KeyError:
+    value = default
+
+# Dataclasses for data containers (not plain dicts)
+@dataclass(frozen=True, slots=True)
+class Point:
+    x: float
+    y: float
+
+# slots=True for performance (3.10+)
+# frozen=True for immutability when appropriate
+# kw_only=True to prevent positional arg mistakes (3.10+)
+
+# Use pathlib, not os.path
+from pathlib import Path
+config_path = Path.home() / ".config" / "app" / "settings.json"
+
+# Use enum for fixed sets of values
+from enum import StrEnum  # 3.11+
+
+class Status(StrEnum):
+    PENDING = "pending"
+    ACTIVE = "active"
+    ARCHIVED = "archived"
+```
+
+### Elegance Rules
+
+- Simplest solution that works. No cleverness for its own sake.
+- If a stdlib solution exists, use it before reaching for a library
+- Flat is better than nested - max 3 levels of indentation
+- Early returns over deep nesting
+- Explicit is better than implicit - no magic
+
+```python
+# BAD: clever but unreadable
+result = (lambda f: (lambda x: x(x))(lambda y: f(lambda *a: y(y)(*a))))(func)
+
+# GOOD: clear and direct
+result = func(input_data)
+
+# BAD: deep nesting
+def process(data):
+    if data:
+        if data.valid:
+            if data.ready:
+                return transform(data)
+            else:
+                return None
+        else:
+            return None
+    else:
+        return None
+
+# GOOD: early returns
+def process(data: Data | None) -> Result | None:
+    if not data or not data.valid or not data.ready:
+        return None
+    return transform(data)
+```
 
 ## Preferred Libraries
 
@@ -396,6 +804,8 @@ When generating tests for Python code:
 ### wfc-review
 
 When reviewing Python code, flag:
+
+**Library violations**:
 - `print()` statements that should use `structlog`
 - `import json` that should use `orjson`
 - Hand-rolled retry loops that should use `tenacity`
@@ -404,14 +814,38 @@ When reviewing Python code, flag:
 - Hand-written test fixtures that could use `faker`
 - Sequential loops that could use `joblib.Parallel`
 
+**Coding standard violations**:
+- Missing type annotations on any function/method
+- Files exceeding 500 lines
+- `Optional[X]` instead of `X | None`
+- `typing.List`, `typing.Dict` instead of `list`, `dict`
+- `TypeAlias` instead of `type` statement (3.12+)
+- Tier violations (presentation importing data access directly)
+- Classes with multiple responsibilities (SRP violation)
+- Deep nesting (>3 levels) instead of early returns
+- `os.path` instead of `pathlib.Path`
+- Magic strings instead of `StrEnum`
+- Missing `slots=True` on dataclasses
+- `# fmt: off` without justification
+- Non-black-formatted code
+
 ## Python Runtime Rules
 
-These rules apply to all WFC Python projects (from CLAUDE.md):
+These rules apply to all WFC Python projects:
 
 - **Always** use `uv` for Python operations (`uv run`, `uv pip install`)
 - **Never** use bare `python`, `pip`, or `python -m`
 - **Always** use `pytest` as the test framework
-- **Always** use `black` for formatting and `ruff` for linting
+- **Always** use `black` for formatting (line-length 88, target py312)
+- **Always** use `ruff` for linting
+- **Always** target Python 3.12+ (`requires-python = ">=3.12"`)
+- **Always** use full type annotations on all signatures
+- **Always** use PEP 562 (`__getattr__` / `__dir__`) in `__init__.py`
+- **Always** follow three-tier architecture (presentation / logic / data)
+- **Always** apply SOLID principles (especially SRP and DI via Protocol)
+- **Never** exceed 500 lines per file
+- **Never** use `Optional`, `List`, `Dict`, `Tuple` from `typing` (use builtins)
+- **Never** skip type annotations on public functions
 
 ---
 
