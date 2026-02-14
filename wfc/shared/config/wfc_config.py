@@ -13,7 +13,7 @@ Design principles:
 import copy
 import json
 from pathlib import Path
-from typing import Dict, Any, Optional
+from typing import Any, Dict, Optional
 
 
 class WFCConfig:
@@ -74,7 +74,7 @@ class WFCConfig:
                 },
             },
             "entire_io": {
-                "enabled": True,  # ON BY DEFAULT: Privacy-first, local-only session capture
+                "enabled": True,
                 "local_only": True,
                 "create_checkpoints": True,
                 "checkpoint_phases": [
@@ -101,43 +101,50 @@ class WFCConfig:
                 "retention": {"max_sessions": 100, "auto_cleanup": True},
             },
             "merge": {
-                "strategy": "pr",  # NEW DEFAULT (Phase 2): "pr" = GitHub PR workflow, "direct" = local merge
+                "strategy": "pr",
                 "pr": {
-                    "enabled": True,  # PR workflow enabled by default
-                    "base_branch": "main",  # Target branch for PRs
-                    "draft": True,  # Create draft PRs by default
-                    "auto_push": True,  # Automatically push branch before creating PR
-                    "require_gh_cli": True,  # Fail if gh CLI not available
+                    "enabled": True,
+                    "base_branch": "develop",
+                    "draft": True,
+                    "auto_push": True,
+                    "require_gh_cli": True,
                 },
                 "direct": {
-                    "enabled": True,  # Direct merge still available as fallback
-                    "cleanup_worktree": True,  # Clean up worktree after successful merge
+                    "enabled": True,
+                    "cleanup_worktree": True,
                 },
             },
+            "branching": {
+                "integration_branch": "develop",
+                "release_branch": "main",
+                "agent_prefix": "claude",
+                "rc_soak_hours": 24,
+                "auto_merge_agent_prs": True,
+            },
             "workflow_enforcement": {
-                "enabled": True,  # Workflow enforcement enabled by default
-                "mode": "warning",  # "warning" = soft enforcement (warn, don't block), "strict" = block violations
-                "track_violations": True,  # Log violations to telemetry
-                "protected_branches": ["main", "master"],  # Branches that trigger warnings
-                "require_wfc_origin": False,  # Don't enforce WFC-only commits (yet)
+                "enabled": True,
+                "mode": "warning",
+                "track_violations": True,
+                "protected_branches": ["main", "master", "develop"],
+                "require_wfc_origin": False,
             },
             "build": {
-                "max_questions": 5,  # Maximum questions in quick interview
-                "auto_assess_complexity": True,  # Automatically assess complexity from interview
-                "dry_run_default": False,  # Default to actual implementation (not dry-run)
-                "xl_recommendation_threshold": 10,  # Files threshold for XL recommendation
-                "interview_timeout_seconds": 30,  # Max time for interview (PROP-008)
-                "enforce_tdd": True,  # Enforce TDD workflow (PROP-007)
-                "enforce_quality_gates": True,  # Enforce quality checks (PROP-001)
-                "enforce_review": True,  # Enforce consensus review (PROP-002)
-                "auto_push": False,  # Never auto-push to remote (PROP-003)
+                "max_questions": 5,
+                "auto_assess_complexity": True,
+                "dry_run_default": False,
+                "xl_recommendation_threshold": 10,
+                "interview_timeout_seconds": 30,
+                "enforce_tdd": True,
+                "enforce_quality_gates": True,
+                "enforce_review": True,
+                "auto_push": False,
             },
             "vibe": {
-                "reminder_frequency": [8, 12],  # Reminder every 8-12 messages (randomized)
-                "max_scope_suggestions": 1,  # Max 1 scope suggestion per conversation
-                "context_summarization_timeout": 5000,  # Max 5s for summarization (PROP-007)
-                "transition_preview": True,  # Show preview before transition
-                "auto_detect_scope": True,  # Automatically detect growing scope
+                "reminder_frequency": [8, 12],
+                "max_scope_suggestions": 1,
+                "context_summarization_timeout": 5000,
+                "transition_preview": True,
+                "auto_detect_scope": True,
             },
         }
 
@@ -161,15 +168,12 @@ class WFCConfig:
         if self._config is not None:
             return self._config
 
-        # Start with defaults
         config = self._defaults()
 
-        # Merge global config if it exists
         global_config = self._load_file(self._global_config_path())
         if global_config:
             config = self._deep_merge(config, global_config)
 
-        # Merge project config if it exists
         project_config_path = self.project_root / self.PROJECT_CONFIG_NAME
         project_config = self._load_file(project_config_path)
         if project_config:
@@ -219,14 +223,12 @@ class WFCConfig:
         config = self.load()
         keys = key_path.split(".")
 
-        # Navigate to parent dict
         current = config
         for key in keys[:-1]:
             if key not in current:
                 current[key] = {}
             current = current[key]
 
-        # Set the value
         current[keys[-1]] = value
 
     def _load_file(self, path: Path) -> Optional[Dict[str, Any]]:
@@ -257,16 +259,13 @@ class WFCConfig:
 
         for key, value in override.items():
             if key in result and isinstance(result[key], dict) and isinstance(value, dict):
-                # Recursively merge nested dicts
                 result[key] = WFCConfig._deep_merge(result[key], value)
             else:
-                # Override wins - deep copy to prevent shared references
                 result[key] = copy.deepcopy(value)
 
         return result
 
 
-# Convenience function for quick config access
 def get_config(project_root: Optional[Path] = None) -> WFCConfig:
     """
     Get WFC configuration instance.
@@ -281,7 +280,6 @@ def get_config(project_root: Optional[Path] = None) -> WFCConfig:
 
 
 if __name__ == "__main__":
-    # Simple test
     config = get_config()
     print("WFC Config loaded:")
     print(f"  Default model: {config.get('llm.default_model')}")

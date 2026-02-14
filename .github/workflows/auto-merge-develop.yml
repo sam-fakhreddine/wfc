@@ -1,0 +1,32 @@
+name: Auto-Merge Agent PRs to Develop
+
+# Enables auto-merge for claude/* branches targeting develop.
+# Human branches (feat/*, fix/*) still require manual merge.
+
+on:
+  pull_request:
+    types: [opened, synchronize]
+    branches: [develop]
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  auto-merge:
+    name: Enable Auto-Merge for Agent PRs
+    runs-on: ubuntu-latest
+    if: startsWith(github.head_ref, 'claude/')
+
+    steps:
+      - name: Enable auto-merge (squash)
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          echo "Enabling auto-merge for agent PR #${{ github.event.pull_request.number }}"
+          echo "Branch: ${{ github.head_ref }} -> develop"
+          gh pr merge ${{ github.event.pull_request.number }} \
+            --auto \
+            --squash \
+            --repo ${{ github.repository }}
+          echo "Auto-merge enabled. PR will merge when all status checks pass."

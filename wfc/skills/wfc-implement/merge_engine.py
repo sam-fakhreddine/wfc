@@ -16,18 +16,18 @@ FAILURE PHILOSOPHY (Critical User Requirement):
 Main branch must ALWAYS be in passing state.
 """
 
-from dataclasses import dataclass, field
-from enum import Enum
-from pathlib import Path
-from typing import List, Dict, Any, Optional, Tuple
 import re
 import shlex
 import subprocess
 import time
+from dataclasses import dataclass, field
+from enum import Enum
+from pathlib import Path
+from typing import Any, Dict, List, Optional, Tuple
 
 from wfc.shared.config import WFCConfig
 from wfc.shared.schemas import Task, TaskStatus
-from wfc.shared.utils import GitHelper, GitError
+from wfc.shared.utils import GitError, GitHelper
 
 
 class FailureSeverity(Enum):
@@ -40,9 +40,9 @@ class FailureSeverity(Enum):
     - CRITICAL: Immediate failure (security, data loss)
     """
 
-    WARNING = "warning"  # Do NOT block
-    ERROR = "error"  # BLOCK submission
-    CRITICAL = "critical"  # IMMEDIATE failure
+    WARNING = "warning"
+    ERROR = "error"
+    CRITICAL = "critical"
 
 
 class MergeStatus(Enum):
@@ -68,32 +68,25 @@ class MergeResult:
     merge_sha: Optional[str] = None
     revert_sha: Optional[str] = None
 
-    # Rebase info
     rebase_required: bool = False
     conflicts_resolved: int = 0
 
-    # Integration test info
     integration_tests_passed: bool = False
     integration_test_duration_ms: int = 0
     failed_tests: List[str] = field(default_factory=list)
 
-    # Failure severity
     failure_severity: Optional[FailureSeverity] = None
 
-    # Rollback info
     rollback_reason: Optional[str] = None
     recovery_plan_generated: bool = False
 
-    # Retry info
     should_retry: bool = False
     retry_count: int = 0
     max_retries: int = 2
 
-    # Worktree preservation
     worktree_preserved: bool = False
     worktree_path: Optional[str] = None
 
-    # PR info (NEW - Phase 2)
     pr_created: bool = False
     pr_url: Optional[str] = None
     pr_number: Optional[int] = None
@@ -126,7 +119,6 @@ class MergeResult:
         }
 
 
-# Allowed integration test commands - prevents arbitrary command execution from config
 ALLOWED_TEST_COMMANDS = {
     "pytest",
     "uv run pytest",
@@ -141,7 +133,6 @@ ALLOWED_TEST_COMMANDS = {
     "make check",
 }
 
-# Shell metacharacters that indicate injection attempts
 _SHELL_METACHAR_PATTERN = re.compile(r"[;&|`$(){}]")
 
 
@@ -149,10 +140,8 @@ def validate_test_command(command: str) -> Optional[str]:
     """Validate integration test command. Returns error message or None if valid."""
     if not command:
         return "Empty test command"
-    # Check against whitelist (command may have additional args like -v)
     parts = command.split()
     base_cmd = parts[0] if parts else ""
-    # Also check first two words for commands like "uv run"
     base_two = " ".join(parts[:2]) if len(parts) >= 2 else base_cmd
     base_three = " ".join(parts[:3]) if len(parts) >= 3 else base_two
 
@@ -225,7 +214,6 @@ class MergeEngine:
         )
 
         try:
-            # Step 1: Rebase onto latest main
             result.status = MergeStatus.REBASING
             rebase_success = self._rebase(worktree_path, branch)
             result.rebase_required = True
@@ -235,24 +223,20 @@ class MergeEngine:
                 result.rollback_reason = "Rebase failed with conflicts"
                 result.failure_severity = FailureSeverity.ERROR
                 result.worktree_preserved = True
-                # Conflicts are not retryable - need human intervention
                 result.should_retry = False
                 return result
 
-            # Step 2: Re-run tests in worktree after rebase
             test_result = self._run_worktree_tests(worktree_path)
             if not test_result["passed"]:
                 result.status = MergeStatus.FAILED
                 result.rollback_reason = f"Tests failed after rebase: {test_result['failures']}"
                 result.failure_severity = self._classify_test_failure(test_result)
                 result.worktree_preserved = True
-                # Determine if retryable
                 result.should_retry = self._should_retry(result)
                 return result
 
-            # Step 3: Merge to main
             result.status = MergeStatus.MERGING
-            merge_sha = self._merge_to_main(branch)
+            merge_sha = self._merge_to_integration(branch)
             result.merge_sha = merge_sha
 
             if not merge_sha:
@@ -263,7 +247,6 @@ class MergeEngine:
                 result.should_retry = False
                 return result
 
-            # Step 4: Run integration tests on main
             result.status = MergeStatus.TESTING
             test_passed, test_duration, failed_tests, test_output = self._run_integration_tests()
             result.integration_tests_passed = test_passed
@@ -271,25 +254,20 @@ class MergeEngine:
             result.failed_tests = failed_tests
 
             if not test_passed:
-                # Step 5: ROLLBACK - Main must be kept clean
                 result.status = MergeStatus.FAILED
                 result.rollback_reason = f"Integration tests failed: {len(failed_tests)} tests"
                 result.failure_severity = self._classify_test_failure(
                     {"passed": False, "failures": failed_tests, "output": test_output}
                 )
 
-                # Perform atomic rollback
                 self._rollback(merge_sha, result)
 
-                # Preserve worktree for investigation
                 result.worktree_preserved = True
 
-                # Determine if retryable
                 result.should_retry = self._should_retry(result)
 
                 return result
 
-            # Step 6: Success! Clean up worktree if configured
             result.status = MergeStatus.MERGED
             if self.config.get("worktree.cleanup_on_success", True):
                 self._cleanup_worktree(worktree_path)
@@ -307,7 +285,6 @@ class MergeEngine:
             result.should_retry = False
             return result
         finally:
-            # Record duration
             result.integration_test_duration_ms = int((time.time() - start_time) * 1000)
 
     def create_pr(
@@ -349,7 +326,6 @@ class MergeEngine:
         )
 
         try:
-            # Step 1: Rebase onto latest main
             result.status = MergeStatus.REBASING
             rebase_success = self._rebase(worktree_path, branch)
             result.rebase_required = True
@@ -362,7 +338,6 @@ class MergeEngine:
                 result.should_retry = False
                 return result
 
-            # Step 2: Run tests in worktree after rebase
             test_result = self._run_worktree_tests(worktree_path)
             if not test_result["passed"]:
                 result.status = MergeStatus.FAILED
@@ -374,18 +349,15 @@ class MergeEngine:
 
             result.integration_tests_passed = True
 
-            # Step 3 & 4: Push branch and create PR
             from wfc.wfc_tools.gitwork.api.pr import get_pr_operations
 
             pr_ops = get_pr_operations(self.project_root)
 
-            # Get PR config
             pr_config = self.config.get("merge.pr", {})
-            base_branch = pr_config.get("base_branch", "main")
+            base_branch = pr_config.get("base_branch", "develop")
             draft = pr_config.get("draft", True)
             auto_push = pr_config.get("auto_push", True)
 
-            # Create task dict for PR
             task_dict = {
                 "id": task.id,
                 "title": task.title,
@@ -396,7 +368,6 @@ class MergeEngine:
                 ),
             }
 
-            # Create PR
             pr_result = pr_ops.create_pr(
                 branch=branch,
                 task=task_dict,
@@ -406,13 +377,11 @@ class MergeEngine:
                 auto_push=auto_push,
             )
 
-            # Update result with PR info
             result.pr_created = pr_result.success
             result.pr_url = pr_result.pr_url
             result.pr_number = pr_result.pr_number
             result.branch_pushed = pr_result.pushed
 
-            # Log PR creation telemetry (Phase 6)
             try:
                 from wfc.shared.telemetry_auto import log_event
 
@@ -433,14 +402,11 @@ class MergeEngine:
                     },
                 )
             except Exception:
-                # Telemetry failure should not break workflow
                 pass
 
             if pr_result.success:
-                result.status = (
-                    MergeStatus.MERGED
-                )  # Consider PR creation as "merge" workflow complete
-                result.worktree_preserved = True  # Keep worktree for user review
+                result.status = MergeStatus.MERGED
+                result.worktree_preserved = True
             else:
                 result.status = MergeStatus.FAILED
                 result.rollback_reason = f"PR creation failed: {pr_result.message}"
@@ -458,12 +424,36 @@ class MergeEngine:
             result.should_retry = False
             return result
         finally:
-            # Record duration
             result.integration_test_duration_ms = int((time.time() - start_time) * 1000)
+
+    def _get_integration_branch(self) -> str:
+        """
+        Get the integration branch name from config with develop-exists guard.
+
+        Falls back to 'main' if the configured integration branch doesn't exist
+        on the remote, preventing breakage for teams without a develop branch.
+
+        Returns:
+            Branch name to use as integration target
+        """
+        branch = self.config.get("branching.integration_branch", "develop")
+        try:
+            returncode, stdout, _ = self.git.run(
+                "ls-remote", "--heads", "origin", branch, check=False
+            )
+            if returncode == 0 and stdout.strip():
+                return branch
+            print(
+                f"Warning: Integration branch '{branch}' not found on remote, "
+                f"falling back to 'main'"
+            )
+            return "main"
+        except GitError:
+            return branch
 
     def _rebase(self, worktree_path: Path, branch: str) -> bool:
         """
-        Rebase branch onto latest main (in worktree).
+        Rebase branch onto latest integration branch (in worktree).
 
         Args:
             worktree_path: Path to worktree
@@ -473,15 +463,13 @@ class MergeEngine:
             True if successful, False if conflicts
         """
         worktree_git = GitHelper(worktree_path)
+        integration_branch = self._get_integration_branch()
 
         try:
-            # Fetch latest main
-            worktree_git.run("fetch", "origin", "main")
+            worktree_git.run("fetch", "origin", integration_branch)
 
-            # Rebase
-            worktree_git.rebase("origin/main")
+            worktree_git.rebase(f"origin/{integration_branch}")
 
-            # Check for conflicts
             if worktree_git.has_conflicts():
                 return False
 
@@ -506,7 +494,7 @@ class MergeEngine:
                 cwd=worktree_path,
                 capture_output=True,
                 text=True,
-                timeout=300,  # 5 minutes
+                timeout=300,
             )
 
             passed = result.returncode == 0
@@ -519,14 +507,13 @@ class MergeEngine:
             }
 
         except FileNotFoundError:
-            # No pytest - assume pass
             return {"passed": True, "failures": [], "output": "No test runner"}
         except subprocess.TimeoutExpired:
             return {"passed": False, "failures": ["Test timeout (>5 minutes)"], "output": "Timeout"}
 
-    def _merge_to_main(self, branch: str) -> str:
+    def _merge_to_integration(self, branch: str) -> str:
         """
-        Merge branch to main (fast-forward preferred).
+        Merge branch to integration branch (fast-forward preferred).
 
         Args:
             branch: Branch to merge
@@ -534,17 +521,14 @@ class MergeEngine:
         Returns:
             Merge commit SHA
         """
-        # Checkout main
-        self.git.checkout("main")
+        integration_branch = self._get_integration_branch()
+        self.git.checkout(integration_branch)
 
-        # Try fast-forward first
         try:
             self.git.merge(branch, ff_only=True)
         except GitError:
-            # Fast-forward not possible, do regular merge
             self.git.merge(branch, ff_only=False)
 
-        # Get merge commit SHA
         return self.git.current_commit()
 
     def _run_integration_tests(self) -> Tuple[bool, int, List[str], str]:
@@ -557,7 +541,6 @@ class MergeEngine:
         test_command = self.config.get("integration_tests.command", "pytest")
         timeout = self.config.get("integration_tests.timeout_seconds", 300)
 
-        # Validate test command against allowlist
         error = validate_test_command(test_command)
         if error:
             return (False, 0, [error], f"Rejected: {error}")
@@ -565,7 +548,6 @@ class MergeEngine:
         start_time = time.time()
 
         try:
-            # Run tests using shlex.split for safe argument parsing (shell=False)
             cmd_list = shlex.split(test_command)
             result = subprocess.run(
                 cmd_list,
@@ -586,7 +568,6 @@ class MergeEngine:
         except subprocess.TimeoutExpired:
             return False, timeout * 1000, ["TIMEOUT"], f"Tests timed out (>{timeout}s)"
         except FileNotFoundError:
-            # No test command - consider pass (don't block if no tests)
             return True, 0, [], f"Test command '{test_command}' not found"
         except Exception as e:
             return False, 0, [f"ERROR: {str(e)}"], str(e)
@@ -597,7 +578,7 @@ class MergeEngine:
         for line in output.split("\n"):
             if "FAILED" in line or "ERROR" in line:
                 failures.append(line.strip())
-        return failures[:20]  # Limit to first 20
+        return failures[:20]
 
     def _rollback(self, merge_sha: str, result: MergeResult) -> None:
         """
@@ -608,24 +589,19 @@ class MergeEngine:
             result: MergeResult to update
         """
         try:
-            # Revert merge
             self.git.revert(merge_sha, no_edit=True)
             revert_sha = self.git.current_commit()
             result.revert_sha = revert_sha
             result.status = MergeStatus.ROLLED_BACK
 
-            # Verify main is clean
             test_passed, _, _, _ = self._run_integration_tests()
             if not test_passed:
-                # Main is STILL broken - this is critical!
                 raise Exception("Main branch is broken after rollback - pre-existing issue!")
 
-            # Generate recovery plan
             self._generate_recovery_plan(result)
             result.recovery_plan_generated = True
 
         except Exception as e:
-            # Rollback failed - this is very bad
             result.rollback_reason = f"Rollback failed: {str(e)}"
             raise
 
@@ -647,7 +623,6 @@ class MergeEngine:
         output = test_result.get("output", "")
         failures = test_result.get("failures", [])
 
-        # Check for critical failures
         critical_keywords = [
             "security",
             "vulnerability",
@@ -663,11 +638,9 @@ class MergeEngine:
             if keyword.lower() in output.lower():
                 return FailureSeverity.CRITICAL
 
-        # Check if it's just warnings (should not block)
         if all("warning" in f.lower() or "deprecated" in f.lower() for f in failures):
             return FailureSeverity.WARNING
 
-        # Default: ERROR (blocks but retryable)
         return FailureSeverity.ERROR
 
     def _should_retry(self, result: MergeResult) -> bool:
@@ -685,15 +658,12 @@ class MergeEngine:
         - Only retry on ERROR severity (not WARNING or CRITICAL)
         - Don't retry conflicts (need human intervention)
         """
-        # Already at max retries?
         if result.retry_count >= result.max_retries:
             return False
 
-        # Only retry ERRORs (not warnings or critical failures)
         if result.failure_severity != FailureSeverity.ERROR:
             return False
 
-        # Don't retry rebase conflicts
         if "conflict" in result.rollback_reason.lower():
             return False
 
@@ -714,7 +684,6 @@ class MergeEngine:
                 timeout=30,
             )
         except Exception:
-            # Cleanup failed - not critical, will be cleaned up later
             pass
 
     def _generate_recovery_plan(self, result: MergeResult) -> None:
@@ -779,7 +748,6 @@ cd {result.worktree_path}
 Generated: {time.strftime("%Y-%m-%d %H:%M:%S")}
 """
 
-        # Write to file
         plan_file = self.project_root / f"PLAN-{result.task_id}.md"
         plan_file.write_text(plan)
 
@@ -794,13 +762,10 @@ def prepare_task_for_retry(task: Task) -> Task:
     Returns:
         Updated task ready for re-queue
     """
-    # Add retry tag
     task.tags.append("retry")
 
-    # Reset status to queued
     task.status = TaskStatus.QUEUED
 
-    # Clear agent assignment
     task.assigned_agent = None
     task.worktree_path = None
     task.branch_name = None
@@ -824,7 +789,6 @@ def log_merge_operation(result: MergeResult, telemetry_file: Path) -> None:
         **result.to_dict(),
     }
 
-    # Append to telemetry file
     with open(telemetry_file, "a") as f:
         f.write(json.dumps(log_entry) + "\n")
 
@@ -835,7 +799,6 @@ if __name__ == "__main__":
 
     from wfc.shared.schemas import TaskComplexity
 
-    # Test 1: Successful merge
     print("\n1. Testing successful merge:")
     result = MergeResult(
         task_id="TASK-001",
@@ -848,7 +811,6 @@ if __name__ == "__main__":
     print(f"   Merge SHA: {result.merge_sha}")
     print("   ✅ Success")
 
-    # Test 2: Failed merge with retry
     print("\n2. Testing failed merge (ERROR severity, retryable):")
     result = MergeResult(
         task_id="TASK-002",
@@ -861,8 +823,7 @@ if __name__ == "__main__":
         worktree_path="/tmp/worktree-002",
     )
 
-    engine = None  # Would need real engine for _should_retry
-    # Manually test retry logic
+    engine = None
     should_retry = (
         result.retry_count < result.max_retries and result.failure_severity == FailureSeverity.ERROR
     )
@@ -874,7 +835,6 @@ if __name__ == "__main__":
     print(f"   Retry count: {result.retry_count}/{result.max_retries}")
     print("   ✅ Retry logic correct")
 
-    # Test 3: Task retry preparation
     print("\n3. Testing task retry preparation:")
     task = Task(
         id="TASK-003",
@@ -890,7 +850,6 @@ if __name__ == "__main__":
     print(f"   Retry tags: {updated_task.tags.count('retry')}")
     print("   ✅ Task prepared for retry")
 
-    # Test 4: Failure classification
     print("\n4. Testing failure classification:")
 
     print("   a. Warning (should not block):")
@@ -899,7 +858,6 @@ if __name__ == "__main__":
         "failures": ["DeprecationWarning: old API", "PendingDeprecationWarning"],
         "output": "WARNING: Deprecated",
     }
-    # Would call engine._classify_test_failure(test_result)
     print("      Expected: WARNING")
 
     print("   b. Error (should block, retryable):")

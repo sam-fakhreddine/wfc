@@ -1,0 +1,123 @@
+name: Develop Health Check
+
+# Self-healing: runs full tests on every push to develop.
+# On failure: auto-reverts last merge and creates a bug issue.
+
+on:
+  push:
+    branches: [develop]
+
+permissions:
+  contents: write
+  issues: write
+
+jobs:
+  health-check:
+    name: Full Test Suite
+    runs-on: ubuntu-latest
+
+    # REVERT LOOP GUARD: Skip if commit is from bot or is a revert
+    if: >-
+      github.actor != 'github-actions[bot]' &&
+      !startsWith(github.event.head_commit.message, 'Revert')
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 2  # Need parent for revert
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install UV
+        run: |
+          curl -LsSf https://astral.sh/uv/install.sh | sh
+          echo "$HOME/.cargo/bin" >> $GITHUB_PATH
+
+      - name: Install dependencies
+        run: |
+          uv pip install --system -e ".[dev]"
+
+      - name: Install WFC skills
+        run: |
+          chmod +x install.sh
+          ./install.sh --ci
+
+      - name: Run full test suite
+        id: tests
+        run: |
+          uv run pytest tests/ -v --tb=short 2>&1 | tee test-output.txt
+          echo "exit_code=${PIPESTATUS[0]}" >> $GITHUB_OUTPUT
+        continue-on-error: true
+
+      - name: Check test results
+        id: check
+        run: |
+          if [ "${{ steps.tests.outputs.exit_code }}" != "0" ]; then
+            echo "failed=true" >> $GITHUB_OUTPUT
+          else
+            echo "failed=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Auto-revert on failure
+        if: steps.check.outputs.failed == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          echo "Tests failed on develop. Auto-reverting last commit..."
+
+          LAST_SHA="${{ github.sha }}"
+          LAST_MSG=$(git log -1 --pretty=format:"%s" "$LAST_SHA")
+
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+          git revert --no-edit "$LAST_SHA"
+          git push origin develop
+
+          echo "Reverted commit $LAST_SHA: $LAST_MSG"
+
+      - name: Create bug issue on failure
+        if: steps.check.outputs.failed == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          LAST_SHA="${{ github.sha }}"
+          LAST_MSG=$(git log -1 --pretty=format:"%s" "$LAST_SHA")
+          LAST_AUTHOR=$(git log -1 --pretty=format:"%an" "$LAST_SHA")
+          TEST_OUTPUT=$(tail -50 test-output.txt)
+
+          gh issue create \
+            --repo "${{ github.repository }}" \
+            --title "Auto-revert: $LAST_MSG" \
+            --label "agent-ready,bug,priority-high" \
+            --body "$(cat <<EOF
+          ## Auto-Reverted Commit
+
+          **Commit:** $LAST_SHA
+          **Message:** $LAST_MSG
+          **Author:** $LAST_AUTHOR
+          **Reverted by:** develop-health.yml (self-healing)
+
+          ## Test Output (last 50 lines)
+
+          \`\`\`
+          $TEST_OUTPUT
+          \`\`\`
+
+          ## Action Required
+
+          This commit broke the develop branch test suite and was automatically reverted.
+          The \`agent-ready\` label means an agent will pick this up for investigation and fix.
+
+          ## Context
+
+          - Workflow run: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          - Branch: develop
+          EOF
+          )"
+
+          echo "Bug issue created with agent-ready label"

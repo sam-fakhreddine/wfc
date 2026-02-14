@@ -157,7 +157,7 @@ Orchestrator
 
 - **Consumes**: TASKS.md, PROPERTIES.md, TEST-PLAN.md (from wfc-plan)
 - **Integrates**: wfc-consensus-review (for code review)
-- **Produces**: Merged code on main, telemetry records, agent reports
+- **Produces**: PR to develop branch, telemetry records, agent reports
 
 ## Philosophy
 
@@ -171,22 +171,25 @@ WFC creates feature branches, pushes them, and opens GitHub PRs for team review.
 
 ```
 WFC workflow:
-  Implement → Quality → Review → Push Branch → Create GitHub PR
-                                                    ↓
-                                          [WFC STOPS HERE]
-                                                    ↓
-                                  You review and merge PR on GitHub
+  Implement -> Quality -> Review -> Push Branch -> Create GitHub PR to develop
+                                                        |
+                                                  [WFC STOPS HERE]
+                                                        |
+                                      Auto-merge for claude/* branches
+                                      Manual review for feat/* branches
 ```
+
+Agent branches (claude/*) auto-merge to develop when CI passes. Human branches require manual review. Release candidates are cut from develop to main on a schedule.
 
 **What WFC does:**
 - Creates feature branches
 - Pushes branches to remote
-- Creates GitHub PRs (draft by default)
+- Creates GitHub PRs targeting develop (draft by default)
 
 **What WFC never does:**
 - Push directly to main/master
 - Force push
-- Merge PRs (you decide when to merge)
+- Merge PRs to main (you decide when to cut releases)
 
 **Legacy mode:** Set `"merge.strategy": "direct"` in wfc.config.json for local-only merge.
 
