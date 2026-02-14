@@ -121,6 +121,7 @@ WFC workflow (NEW):
 | Custom rules | `/wfc-rules` | Markdown-based code standards |
 | Visual exploration | `/wfc-playground` | Interactive HTML prototyping |
 | Fix PR comments | `/wfc-pr-comments` | Triage & fix review feedback |
+| Sync rules | `/wfc-sync` | Discover patterns & sync rules |
 | Agentic workflows | `/wfc-agentic` | Generate gh-aw workflows |
 
 **Note:** wfc-vibe is the default conversational mode. Just chat naturally - when you're ready to implement, say "let's plan this" or "let's build this".
@@ -215,6 +216,14 @@ WFC - World Fucking Class
 │   │   │   ├── rule_engine.py            # Custom rule engine
 │   │   │   ├── config_loader.py          # Hook configuration
 │   │   │   ├── hook_state.py             # Hook state management
+│   │   │   ├── file_checker.py           # PostToolUse auto-lint dispatcher
+│   │   │   ├── tdd_enforcer.py           # PostToolUse TDD reminders
+│   │   │   ├── context_monitor.py        # PostToolUse context window tracking
+│   │   │   ├── _util.py                  # Shared hook utilities
+│   │   │   ├── _checkers/               # Language-specific quality checkers
+│   │   │   │   ├── python.py            # ruff + pyright
+│   │   │   │   ├── typescript.py        # prettier + eslint + tsc
+│   │   │   │   └── go.py                # gofmt + go vet + golangci-lint
 │   │   │   └── patterns/                 # Security patterns (JSON)
 │   │   └── skills/               # Skill implementations
 │   │       └── review/
@@ -240,8 +249,9 @@ WFC - World Fucking Class
 │   ├── wfc-safeguard/            # Real-time security enforcement hooks
 │   ├── wfc-rules/                # Markdown-based custom enforcement rules
 │   ├── wfc-playground/           # Interactive HTML playground generator
+│   ├── wfc-sync/                # Rule/pattern discovery & sync
 │   ├── wfc-agentic/             # GitHub Agentic Workflows (gh-aw) generator
-│   └── ... (18 total)
+│   └── ... (20 total)
 │
 ├── docs/                         # Documentation (organized by topic)
 │   ├── architecture/             # System design, planning

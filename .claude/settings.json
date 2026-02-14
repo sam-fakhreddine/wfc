@@ -73,6 +73,28 @@
             "command": "entire hooks claude-code post-todo"
           }
         ]
+      },
+      {
+        "matcher": "Write|Edit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "uv run python wfc/scripts/hooks/file_checker.py"
+          },
+          {
+            "type": "command",
+            "command": "uv run python wfc/scripts/hooks/tdd_enforcer.py"
+          }
+        ]
+      },
+      {
+        "matcher": "Read|Write|Edit|Bash|Task|Skill|Grep|Glob",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "uv run python wfc/scripts/hooks/context_monitor.py"
+          }
+        ]
       }
     ]
   },
