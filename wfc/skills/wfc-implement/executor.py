@@ -293,7 +293,6 @@ class ExecutionEngine:
         Returns:
             Tuple of (passed: bool, review_report: Optional[Dict])
         """
-        from wfc.skills import wfc_review
         from wfc_review.mock import mock_review
 
         result = mock_review(

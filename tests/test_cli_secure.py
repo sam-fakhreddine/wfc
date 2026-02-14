@@ -6,9 +6,7 @@ Following TDD: RED phase - tests should fail before implementation.
 """
 
 import pytest
-import subprocess
 from pathlib import Path
-from typing import List
 from unittest.mock import patch, MagicMock
 import sys
 

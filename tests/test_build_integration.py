@@ -4,7 +4,6 @@ Tests for WFC Build Integration
 Verifies wfc-build integrates with WFC config, telemetry, and safety properties
 """
 
-import pytest
 from pathlib import Path
 from wfc.shared.config.wfc_config import WFCConfig
 from wfc.scripts.skills.build.orchestrator import BuildOrchestrator

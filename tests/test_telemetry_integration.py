@@ -9,14 +9,13 @@ import json
 import tempfile
 from pathlib import Path
 from datetime import datetime, timedelta
-from unittest.mock import patch, MagicMock
+from unittest.mock import patch
 
 from wfc.shared.telemetry_auto import (
     AutoTelemetry,
     log_event,
     get_workflow_metrics,
     print_workflow_metrics,
-    get_telemetry,
 )
 
 
@@ -394,7 +393,6 @@ class TestWorkflowMetrics:
 
                 # Should not raise exception
                 import io
-                import sys
 
                 captured_output = io.StringIO()
                 with patch("sys.stdout", new=captured_output):

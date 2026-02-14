@@ -5,11 +5,9 @@ Tests pre-commit, commit-msg, and pre-push hooks with various scenarios.
 """
 
 import pytest
-import subprocess
 import tempfile
 from pathlib import Path
 from unittest.mock import patch, MagicMock, mock_open
-import sys
 import io
 
 # Import hook modules

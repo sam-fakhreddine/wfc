@@ -47,7 +47,7 @@ class CommitOperations:
         if message and _FLAG_PATTERN.match(message):
             return {
                 "success": False,
-                "message": f"Invalid commit message: starts with '-'",
+                "message": "Invalid commit message: starts with '-'",
             }
 
         # Validate file paths
