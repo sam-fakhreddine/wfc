@@ -1,6 +1,17 @@
 #!/usr/bin/env bash
 set -e
 
+# Require bash 4+ for associative arrays (declare -A)
+if [ "${BASH_VERSINFO[0]}" -lt 4 ]; then
+    for candidate in /opt/homebrew/bin/bash /usr/local/bin/bash; do
+        if [ -x "$candidate" ]; then
+            exec "$candidate" "$0" "$@"
+        fi
+    done
+    echo "Error: bash 4+ required. Install with: brew install bash"
+    exit 1
+fi
+
 # WFC Universal Installer - Agent Skills Standard Compatible
 # Detects and installs to: Claude Code, Kiro, OpenCode, Cursor, VS Code, Codex, Antigravity
 #

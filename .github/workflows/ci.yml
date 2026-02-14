@@ -67,10 +67,6 @@ jobs:
           uv pip install --system pytest pytest-cov
           uv pip install --system -e .
 
-      - name: Ensure bash 4+ on macOS
-        if: runner.os == 'macOS'
-        run: echo "/opt/homebrew/bin" >> $GITHUB_PATH
-
       - name: Install WFC skills
         run: |
           chmod +x install.sh
@@ -198,10 +194,6 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Ensure bash 4+ on macOS
-        if: runner.os == 'macOS'
-        run: echo "/opt/homebrew/bin" >> $GITHUB_PATH
-
       - name: Create mock Claude directory
         run: mkdir -p ~/.claude/skills
 
@@ -223,7 +215,7 @@ jobs:
           fi
 
           # Check persona library
-          persona_count=$(find ~/.claude/skills/wfc/references/personas/panels -name "*.json" 2>/dev/null | wc -l)
+          persona_count=$(find ~/.claude/skills/wfc/personas/panels -name "*.json" 2>/dev/null | wc -l)
           if [ "$persona_count" -lt 50 ]; then
               echo "❌ Persona library incomplete (found $persona_count, expected ≥50)"
               exit 1
