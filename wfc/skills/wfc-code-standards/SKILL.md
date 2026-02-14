@@ -1,12 +1,75 @@
 ---
 name: wfc-code-standards
-description: Language-agnostic coding standards for all WFC projects. Enforces architecture (three-tier, functional core/imperative shell, SOLID, composition over inheritance, immutability by default, least privilege API surface), code quality (500-line limit, DRY, early returns, structured errors, idempotent operations, fail fast at boundaries), observability (structured logging, no print/console.log), testing philosophy (unit/integration/e2e, fixtures, parametrization), async safety (never block the event loop), dependency management (lock files, CVE scanning, version pinning), and documentation (public API docstrings). Referenced by all language-specific skills. Not a user-invocable skill.
+description: Language-agnostic coding standards for all WFC projects. Enforces the Defensive Programming Standard (DPS) across 13 dimensions including architecture (three-tier, functional core/imperative shell, SOLID, composition over inheritance, immutability by default, least privilege API surface), code quality (500-line limit, DRY, early returns, structured errors, idempotent operations, fail fast at boundaries), boundary validation (schema-first, reject unknown, safe access), state management (enumerated states, transition maps, guarded transitions), error contracts (structured errors with correlation IDs), retry and timeout (explicit timeouts, bounded retries, backoff), observability (structured logging, metrics, correlation IDs), concurrency safety (optimistic locking, no shared mutable state), security (parameterized queries, least privilege, rate limiting), configuration (explicit defaults, fail-fast startup, env validation), infrastructure requirements (health checks, graceful shutdown, DLQ), testing philosophy (unit/integration/e2e, required negative test categories), async safety (never block the event loop), and dependency management (lock files, CVE scanning, version pinning). Referenced by all language-specific skills. Not a user-invocable skill.
 license: MIT
 ---
 
 # WFC:CODE-STANDARDS - Universal Coding Standards
 
 Language-agnostic standards that apply to **every** WFC project regardless of language. Language-specific skills (wfc-python, etc.) inherit these and add tooling-specific rules.
+
+All standards are organized around the **Defensive Programming Standard (DPS)** — 13 dimensions that ensure production-grade code from the first line.
+
+## Definition of Done (DPS-0)
+
+A feature is not complete until ALL applicable items are satisfied:
+
+- [ ] All external inputs validated at the boundary (DPS-1)
+- [ ] All mutating operations are idempotent (DPS-2)
+- [ ] All state transitions enforced via explicit rules (DPS-3)
+- [ ] All errors return structured responses (DPS-4)
+- [ ] All external calls have timeouts and retry caps (DPS-5)
+- [ ] All logs are structured with correlation IDs (DPS-6)
+- [ ] All shared state access is race-free (DPS-7)
+- [ ] All permissions are least-privilege (DPS-8)
+- [ ] All config has explicit defaults and startup validation (DPS-9)
+- [ ] All new services have health checks (DPS-10)
+- [ ] All new features have negative test cases (DPS-11)
+- [ ] All list/search APIs implement pagination
+
+This checklist applies to new features and significant modifications. Pure refactors that don't change behavior are exempt from items they don't touch.
+
+## Agent Pre-Completion Checklist
+
+Before you declare your task done, walk through these 11 checks. If any answer is "no", you're not done.
+
+```
+ 1. TESTS PASS       — Did you run the full suite? Do YOUR new tests pass?
+                       Not just "no errors" — the tests you wrote actually assert something.
+
+ 2. UNHAPPY PATHS    — Did you test what happens when things go wrong?
+                       Bad input, timeouts, retries exhausted, duplicate calls, partial failure.
+
+ 3. BOUNDARIES       — Is every external input validated before it touches logic?
+                       API params, file contents, env vars, config — validated at the gate, not deep inside.
+
+ 4. TIMEOUTS         — Does every external call have an explicit timeout?
+                       HTTP, subprocess, database, sockets. No unbounded waits. Ever.
+
+ 5. ERRORS TALK      — Do your errors say what went wrong, why, and how to trace it?
+                       Structured (code + message + correlationId). No bare "except: pass". No silent swallows.
+
+ 6. NO SECRETS LEAK  — Are logs, error messages, and URLs free of secrets and PII?
+                       grep your diff for API keys, passwords, tokens. If in doubt, it leaks.
+
+ 7. STATE IS GUARDED — If you changed state transitions, are they explicit and validated?
+                       Enum states. Transition map. Invalid moves raise, not silently no-op.
+
+ 8. IDEMPOTENT       — Can your operation run twice without breaking anything?
+                       Upserts not blind inserts. Dedup before side effects. Retries are safe.
+
+ 9. SIMPLE           — Did you write the simplest thing that works?
+                       No abstractions for one-time ops. No feature flags nobody asked for.
+                       Three similar lines > premature helper function.
+
+10. CLEAN DIFF       — Is your diff ONLY what was asked for?
+                       No drive-by refactors. No unrelated "improvements". No dev artifacts committed.
+
+11. DEBTS DOCUMENTED — Did you leave any hacks, workarounds, or shortcuts?
+                       Every TODO/FIXME/HACK has: what, why, and what the real fix looks like.
+                       If you tried something simple because the proper solution was out of scope,
+                       say so explicitly. Future agents need the trail. No silent tech debt.
+```
 
 ## Architecture
 
@@ -167,7 +230,7 @@ Extract when you see 3+ repetitions. Not 2 - that's premature abstraction. At 3,
 5. **Explicit over implicit** - named constants over magic values, clear names over clever abbreviations
 6. **Delete dead code** - commented-out code and unused imports are noise, not documentation
 
-### Error Handling
+### Error Handling and Error Contract (DPS-4)
 
 **Rules**:
 - Define a structured exception/error hierarchy per project (base error, then domain errors)
@@ -176,17 +239,39 @@ Extract when you see 3+ repetitions. Not 2 - that's premature abstraction. At 3,
 - Add context to errors when re-throwing: what operation failed, what input caused it
 - Use error groups/multi-errors when multiple operations can fail independently
 
+**Error contract**: All errors returned to callers MUST include:
+
+```json
+{
+  "code": "MACHINE_READABLE_CODE",
+  "message": "Human-readable description of what went wrong",
+  "correlationId": "req-abc-123"
+}
+```
+
+- **Machine-readable code**: Stable string that clients can switch on (e.g., `ORDER_NOT_FOUND`, `RATE_LIMIT_EXCEEDED`). Never use HTTP status codes as error codes — they're transport, not domain
+- **Human-readable message**: Describes what went wrong in terms the caller can act on. No raw stack traces. No "something went wrong"
+- **Correlation ID**: Links this error to logs, traces, and upstream requests. Propagated from request context, not generated per error
+- **No raw stack traces to callers**: Stack traces go to logs (with correlation ID). Callers get structured errors. Internal details are security risks and useless to API consumers
+
 **Philosophy**: Errors are data. They carry context. They have types. They are part of the API contract.
 
-### Fail Fast
+### Boundary Validation (DPS-1)
 
 Detect bad state at the boundary. Reject it immediately with a clear error. Never let invalid data propagate into the system where it becomes a mystery bug three layers deep.
 
-**Rules**:
-- **Validate at system boundaries**: HTTP handlers, CLI parsers, queue consumers, config loaders. This is where external data enters - validate it once, completely, before it touches business logic.
-- **Reject, don't correct**: If input is invalid, return an error. Don't silently coerce or guess what the caller meant. `"5"` is not `5` unless your contract explicitly says so.
-- **Fail loudly**: An assertion failure, a clear exception, a non-zero exit code. Never return a default value when the real answer is "this shouldn't happen."
-- **Preconditions at function entry**: Public functions that require non-null, non-empty, or bounded inputs should assert it in the first lines, not discover it mid-computation.
+**Schema validation at entry**:
+- Validate the **shape** of all external input before touching it: required fields present, types correct, enums in range, sizes bounded
+- Use schema libraries (pydantic, zod, JSON Schema, protobuf) — hand-rolled validation drifts from intent
+- **No business logic executes before validation passes** — validation is the first thing that happens at every entry point
+
+**Validation rules**:
+- **Reject unknown fields**: If the schema doesn't define it, reject it. Silent acceptance of extra fields hides API misuse and version drift
+- **Enforce max payload size**: Every ingress point (HTTP, queue, file upload) has an explicit size cap. No unbounded reads
+- **Validate enum values against allowed set**: Don't trust that a string is one of your valid states — check it
+- **Normalize inputs**: Trim whitespace, normalize case where appropriate — do this in the validation layer, not scattered through business logic
+- **Validate semantics, not just shape**: A date in the future, a negative quantity, an email without `@` — shape says "it's a string", semantics says "it's valid"
+- **Safe access on external data**: Use `payload.get("key", default)` not `payload["key"]` — external data is untrusted
 
 ```
 # BAD: silent propagation
@@ -194,29 +279,31 @@ def process_order(order):
     # order.items could be None... we'll find out 3 functions later
     total = calculate_total(order.items)
 
-# GOOD: fail fast
+# GOOD: validate at boundary
 def process_order(order):
     if not order.items:
         raise InvalidOrderError("Order must have at least one item", order_id=order.id)
     total = calculate_total(order.items)
 ```
 
-**The tradeoff**: Fail fast at boundaries, trust internally. Once data passes validation at the entry point, internal functions can trust their inputs. Don't re-validate the same data at every layer - that's defensive programming, not fail-fast.
+**Preconditions at function entry**: Public functions that require non-null, non-empty, or bounded inputs should assert it in the first lines, not discover it mid-computation.
+
+**Internal service calls**: Treat responses from other services as external data. Validate before use. Never assume optional fields exist. APIs change without warning — even internal ones.
 
 ### Defensive at Boundaries, Trust Internally
 
-Related to fail fast: put all your armor at the gates, not inside the castle.
+Related to boundary validation: put all your armor at the gates, not inside the castle.
 
 **Validate here** (system boundaries):
 - User input (HTTP requests, CLI args, form data)
 - External API responses (they can change without warning)
+- Internal service responses (treat as untrusted — APIs drift)
 - Configuration files and environment variables
 - Queue messages and event payloads
 - File contents read from disk
 
 **Trust here** (internal code):
 - Function-to-function calls within the same module
-- Service-to-service calls within the same trust boundary
 - Data that already passed boundary validation
 - Return values from your own functions
 
@@ -266,6 +353,126 @@ Operations should be safe to retry. Running the same operation twice must produc
 | Cron jobs / scheduled tasks | Check last-run state before executing |
 | Provisioning / IaC | Declarative desired state, not imperative steps |
 
+### State Management (DPS-3)
+
+No implicit states. Every stateful entity must have explicitly enumerated states and guarded transitions.
+
+**Rules**:
+- **Enumerate all states**: Use enums, Literal types, or constant sets — never raw strings for state values
+- **Define an explicit transition map**: Valid transitions are declared, not scattered across if/else chains. The map IS the documentation
+- **Guard every transition**: Setting state must validate that the transition from current → target is legal. Invalid transitions raise explicit errors, never silently no-op
+- **No orphan states**: Every state must be reachable and every state must have at least one exit (except terminal states)
+
+```
+# BAD: implicit state, no guards
+order.status = "shipped"  # Was it even "paid"? Who knows.
+
+# GOOD: explicit transitions
+TRANSITIONS = {
+    "pending": {"paid", "cancelled"},
+    "paid": {"shipped", "refunded"},
+    "shipped": {"delivered", "returned"},
+    "delivered": set(),  # terminal
+    "cancelled": set(),  # terminal
+}
+
+def transition(order, target):
+    if target not in TRANSITIONS.get(order.status, set()):
+        raise InvalidTransitionError(f"Cannot go from {order.status} to {target}")
+    order.status = target
+```
+
+**Why**: Implicit state machines are the #1 source of "but how did it get into THAT state?" bugs. When transitions are explicit, invalid states are impossible and debugging is trivial — you read the map.
+
+### Retry and Timeout (DPS-5)
+
+All external calls must have explicit timeouts and bounded retry policies. This applies to ALL calls — not just async.
+
+**Timeout rules**:
+- **Every HTTP request** must set `timeout=` — no unbounded waits
+- **Every subprocess call** must set `timeout=` — no runaway processes
+- **Every database query** must have a statement timeout or connection timeout
+- **Every socket operation** must call `settimeout()` or equivalent
+- **Every file operation over network** (NFS, S3, etc.) must have a timeout
+
+**Retry rules**:
+- **Max attempts must be explicit** — no infinite retry loops
+- **Backoff strategy required** — exponential backoff preferred, never fixed-interval hammering
+- **Total timeout cap** — the sum of all retries must have an upper bound
+- **No `time.sleep()` in retry loops without a cap** — unbounded backoff is a hung process
+- **Retries must be idempotent** — if the operation isn't safe to retry, don't retry it
+
+**Timeout defaults** (override per use case):
+| Call Type | Default Timeout |
+|-----------|----------------|
+| HTTP API call | 30 seconds |
+| Database query | 10 seconds |
+| Subprocess | 60 seconds |
+| Queue publish | 5 seconds |
+| File I/O (network) | 30 seconds |
+
+```
+# BAD: unbounded wait
+response = requests.get(url)
+
+# GOOD: explicit timeout + retry
+for attempt in range(3):
+    try:
+        response = requests.get(url, timeout=30)
+        break
+    except requests.Timeout:
+        if attempt == 2:
+            raise
+        time.sleep(2 ** attempt)  # exponential backoff, capped at 3 attempts
+```
+
+### Security Standard (DPS-8)
+
+Security is not a feature — it's a constraint on every feature.
+
+**Rules**:
+- **Parameterized queries only**: Never concatenate user input into SQL, NoSQL, LDAP, or shell commands. Use parameterized queries, prepared statements, or ORM methods
+- **Principle of least privilege**: Database users, API tokens, IAM roles, file permissions — scope to the minimum required. No wildcards (`*`) unless explicitly justified in a comment
+- **Rate limiting on public endpoints**: Every public-facing API must have rate limits. No exceptions
+- **Secrets management**: Secrets come from environment variables or secret managers, never hardcoded, never in URLs, never in logs, never in error responses
+- **Input sanitization**: Beyond validation (DPS-1), sanitize for the output context — HTML-encode for web, shell-escape for commands, parameterize for queries
+
+### Configuration Standard (DPS-9)
+
+Config is the boundary between your code and the environment. Treat it defensively.
+
+**Rules**:
+- **Explicit defaults for all config values**: `None` without downstream handling is a crash waiting to happen. Every config key has a documented, safe default
+- **Feature flags default to OFF**: New features ship disabled. Enable explicitly after verification. A missing flag means "off", not "on"
+- **Fail at startup on missing critical config**: If the service cannot function without `DATABASE_URL`, crash immediately at startup with a clear error message — don't wait until the first request hits the missing config
+- **Environment variables validated at startup**: Read all env vars once, validate types and ranges, fail fast if invalid. No lazy `os.getenv()` scattered through business logic
+- **Config is immutable after load**: Parse once, freeze, inject everywhere. No runtime config mutation
+
+```
+# BAD: lazy access, no default, crashes at runtime
+def handle_request():
+    db_url = os.getenv("DATABASE_URL")  # None if not set
+    connect(db_url)  # crashes here, at request time
+
+# GOOD: validated at startup
+def load_config():
+    db_url = os.environ.get("DATABASE_URL")
+    if not db_url:
+        raise SystemExit("FATAL: DATABASE_URL not set")
+    return AppConfig(database_url=db_url)
+```
+
+### Infrastructure Requirements (DPS-10)
+
+Infrastructure is part of defensive programming. A service without a health check is a service you can't monitor.
+
+**Required for new services**:
+- **Health check endpoint**: `/health` or `/healthz` that returns 200 when the service can process requests and 503 when it can't (e.g., database unreachable)
+- **Graceful shutdown**: Handle SIGTERM/SIGINT — stop accepting new work, drain in-flight requests, close connections, exit cleanly. Never hard-kill with active transactions
+- **Dead-letter queue (DLQ)**: Async message consumers must have a DLQ for messages that fail after max retries. Unprocessable messages must not block the queue
+- **Concurrency limits**: Define max concurrent requests, workers, connections. No unbounded concurrency — it's a resource exhaustion vector
+- **Alarms defined alongside the service**: Monitoring is not an afterthought. Service deployment includes alert definitions for error rate, latency, and DLQ depth
+
 ## Observability
 
 ### Structured Logging
@@ -307,6 +514,23 @@ log.info("order_processing", order_id=order_id)
 | **warning** | Degraded but functional: retrying, fallback used, deprecated call |
 | **error** | Operation failed but system continues: payment failed, API timeout |
 | **critical/fatal** | System cannot continue: database unreachable, config missing |
+
+### Metrics (DPS-6)
+
+Logs tell you *what happened*. Metrics tell you *how the system is doing*.
+
+**Required metrics for new services/endpoints**:
+- **Error rate**: Count of errors per endpoint/operation, bucketed by error code
+- **Latency**: p50, p95, p99 response time per endpoint
+- **Retry count**: How often retries fire — a spike means an upstream is degraded
+- **Queue depth**: For async consumers — growing depth means consumers can't keep up
+- **Saturation**: Connection pool usage, thread pool usage, memory — how close to limits
+
+**Alarm thresholds** (define alongside the service, not as afterthoughts):
+- Sustained error rate above baseline
+- p99 latency above SLA threshold
+- DLQ depth growing (messages that can't be processed)
+- Health check failures
 
 ## Testing Philosophy
 
@@ -352,6 +576,21 @@ test_edge_case
 - **One assertion focus per test**: A test should verify one behavior. Multiple assertions are fine when they all verify aspects of the same behavior. Multiple unrelated assertions mean multiple tests.
 - **Deterministic test data**: Seed random generators. Use factories with fixed seeds. Tests must be reproducible - same input, same output, every run.
 - **No test interdependence**: Tests must pass in any order. No test may depend on another test's side effects.
+
+### Required Negative Test Categories (DPS-11)
+
+Every new feature MUST include tests for these scenarios. Happy-path-only tests are incomplete.
+
+| Category | What to Test |
+|----------|-------------|
+| **Invalid inputs** | Wrong types, empty values, too large, malformed, boundary values (0, -1, MAX_INT) |
+| **Invalid state transitions** | Operation called when entity is in the wrong state |
+| **Retry exhaustion** | All retries fail — does the system handle it gracefully? |
+| **Timeout behavior** | External call times out — does the system surface a clear error? |
+| **Duplicate processing** | Same event/request arrives twice — is the result idempotent? |
+| **Partial failure** | One of N operations fails midway — does the system roll back or leave consistent state? |
+
+Tests that only cover the happy path give false confidence. The bugs that wake you up at 3am are always in the unhappy paths.
 
 ### Coverage
 
@@ -450,6 +689,13 @@ When reviewing code in any language, flag:
 - Functions mutating their arguments instead of returning new values
 - Shared mutable state between threads/tasks without synchronization
 
+**Concurrency and data integrity violations (DPS-7)**:
+- Read-modify-write without optimistic locking (version field, ETag, conditional write)
+- Shared mutable state between concurrent operations without synchronization
+- Race-prone patterns (check-then-act without atomicity)
+- Database migrations that drop columns still read by running code (must be backward compatible)
+- Background/async jobs that aren't idempotent
+
 **Observability violations**:
 - print/console.log for logging
 - String interpolation in log calls
@@ -468,12 +714,43 @@ When reviewing code in any language, flag:
 - Missing timeouts on external calls
 - Swallowed cancellation signals
 
-**Idempotency violations**:
+**Idempotency violations (DPS-2)**:
 - Blind inserts that create duplicates on retry
 - Delete operations that error on missing resources
 - Side effects without idempotency guards (duplicate emails, double charges)
 - Migrations / scripts that break when run twice
 - Queue consumers without dedup
+
+**State management violations (DPS-3)**:
+- State stored as raw strings instead of enums/Literal types
+- State transitions via ad-hoc if/else without a transition map
+- Setting state without validating the transition is legal
+- Orphan states (unreachable or no exit path)
+
+**Retry and timeout violations (DPS-5)**:
+- HTTP/subprocess/socket calls without explicit timeout
+- Retry loops without max attempt cap
+- No backoff strategy (fixed-interval hammering)
+- `time.sleep()` in retry loops without total timeout cap
+
+**Security violations (DPS-8)**:
+- String concatenation in SQL/NoSQL/shell commands (must use parameterized)
+- Wildcard permissions without justification comment
+- Missing rate limiting on public endpoints
+- Secrets in URLs, logs, or error responses
+
+**Configuration violations (DPS-9)**:
+- Config values with `None` default and no null handling downstream
+- Feature flags defaulting to ON (must default OFF)
+- Missing config causing runtime crash instead of startup failure
+- Environment variables read lazily without startup validation
+
+**Infrastructure violations (DPS-10)**:
+- New service without health check endpoint
+- No graceful shutdown handling (SIGTERM/SIGINT)
+- Async consumer without dead-letter queue
+- No concurrency limits on parallel operations
+- Monitoring/alarms missing from service deployment
 
 **Dependency violations**:
 - Lock file not committed

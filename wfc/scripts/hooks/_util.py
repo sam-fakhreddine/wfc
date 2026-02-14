@@ -1,17 +1,26 @@
-"""Shared utilities for WFC PostToolUse hooks.
+"""Shared utilities for WFC hooks.
 
 Provides color codes, session path helpers, file-length checks,
-and stdin parsing used across file_checker, tdd_enforcer, and
-context_monitor.
+stdin parsing, and regex timeout helpers used across PreToolUse
+and PostToolUse hooks.
 """
 
 from __future__ import annotations
 
 import json
+import logging
 import os
+import platform
+import re
 import subprocess
 import sys
+import threading
+from contextlib import contextmanager
+from functools import lru_cache
 from pathlib import Path
+from typing import Optional
+
+logger = logging.getLogger(__name__)
 
 RED = "\033[0;31m"
 YELLOW = "\033[0;33m"
@@ -86,6 +95,75 @@ def get_edited_file_from_stdin() -> Path | None:
     return None
 
 
+_SIGALRM_AVAILABLE = (
+    platform.system() != "Windows"
+    and hasattr(__import__("signal"), "SIGALRM")
+    and threading.current_thread() is threading.main_thread()
+)
+
+
+class RegexTimeout(Exception):
+    """Raised when regex compilation or matching times out."""
+
+
+def _regex_timeout_handler(signum, frame):
+    raise RegexTimeout("Regex operation timed out")
+
+
+@contextmanager
+def regex_timeout(seconds: int = 1):
+    """Context manager for regex operations with timeout protection.
+
+    On Unix main thread: uses SIGALRM for hard timeout.
+    On Windows or non-main threads: no-op (degrades gracefully with warning on first use).
+    """
+    if not _SIGALRM_AVAILABLE:
+        yield
+        return
+
+    import signal
+
+    old_handler = signal.signal(signal.SIGALRM, _regex_timeout_handler)
+    signal.alarm(seconds)
+    try:
+        yield
+    finally:
+        signal.alarm(0)
+        signal.signal(signal.SIGALRM, old_handler)
+
+
+@lru_cache(maxsize=256)
+def compile_regex(pattern: str) -> Optional[re.Pattern]:
+    """Compile a regex pattern with caching and timeout protection.
+
+    Returns None on invalid patterns or compilation timeout.
+    The timeout is baked in (1 second) — not a parameter — because
+    lru_cache keys must be stable.
+    """
+    try:
+        with regex_timeout(1):
+            return re.compile(pattern)
+    except (re.error, RegexTimeout) as e:
+        logger.debug("Regex pattern failed '%s': %s", pattern, e)
+        return None
+
+
+def safe_regex_search(pattern: str, text: str) -> bool:
+    """Search text against a regex pattern with timeout protection.
+
+    Returns False on timeout, invalid pattern, or no match.
+    """
+    compiled = compile_regex(pattern)
+    if compiled is None:
+        return False
+    try:
+        with regex_timeout(1):
+            return bool(compiled.search(text))
+    except RegexTimeout:
+        logger.warning("Regex match timed out for pattern: %s", pattern[:50])
+        return False
+
+
 def check_file_length(file_path: Path) -> bool:
     """Warn if file exceeds length thresholds.
 
@@ -104,8 +182,7 @@ def check_file_length(file_path: Path) -> bool:
             file=sys.stderr,
         )
         print(
-            f"   Split into smaller, focused modules "
-            f"(<{FILE_LENGTH_WARN} lines each).",
+            f"   Split into smaller, focused modules (<{FILE_LENGTH_WARN} lines each).",
             file=sys.stderr,
         )
         return True

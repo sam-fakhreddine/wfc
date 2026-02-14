@@ -5,25 +5,11 @@ Conventional commits with task and property references.
 Format: type(scope): description [TASK-XXX] [PROP-XXX]
 """
 
-import subprocess
 import re
-from typing import List, Optional, Dict
+import subprocess
+from typing import Dict, List, Optional
 
-_FLAG_PATTERN = re.compile(r"^-")
-
-
-def validate_file_path(path: str) -> bool:
-    """Validate file path - no traversal or injection."""
-    if not path:
-        return False
-    if ".." in path:
-        return False
-    if _FLAG_PATTERN.match(path):
-        return False
-    # Reject null bytes
-    if "\x00" in path:
-        return False
-    return True
+from .validators import is_flag_injection, validate_file_path
 
 
 class CommitOperations:
@@ -43,14 +29,12 @@ class CommitOperations:
 
         Format: type(scope): description [TASK-XXX] [PROP-XXX, PROP-YYY]
         """
-        # Validate message doesn't start with '-' (flag injection)
-        if message and _FLAG_PATTERN.match(message):
+        if message and is_flag_injection(message):
             return {
                 "success": False,
                 "message": "Invalid commit message: starts with '-'",
             }
 
-        # Validate file paths
         if files:
             for f in files:
                 if not validate_file_path(f):
@@ -59,10 +43,8 @@ class CommitOperations:
                         "message": f"Invalid file path: {f}",
                     }
 
-        # Build formatted message
         formatted = self._format_message(message, task_id, properties, type, scope)
 
-        # Validate
         validation = self.validate_message(formatted)
         if not validation["valid"]:
             return {
@@ -71,14 +53,11 @@ class CommitOperations:
             }
 
         try:
-            # Stage files if provided
             if files:
                 subprocess.run(["git", "add"] + files, check=True)
 
-            # Commit
             subprocess.run(["git", "commit", "-m", formatted], check=True, capture_output=True)
 
-            # Get commit SHA
             result = subprocess.run(
                 ["git", "rev-parse", "HEAD"], check=True, capture_output=True, text=True
             )
@@ -93,8 +72,6 @@ class CommitOperations:
 
     def validate_message(self, message: str) -> Dict:
         """Validate commit message format"""
-        # Pattern: type(scope): description [TASK-XXX] [PROP-XXX]
-        # Scope and refs are optional
         pattern = (
             r"^(feat|fix|chore|refactor|test|docs|ci|security|perf|style)(\([a-z0-9-]+\))?: .+"
         )
@@ -114,27 +91,22 @@ class CommitOperations:
 
     def amend(self, message: Optional[str] = None, files: Optional[List[str]] = None) -> Dict:
         """Amend last commit (safe - checks if pushed)"""
-        # Validate message if provided
-        if message and _FLAG_PATTERN.match(message):
+        if message and is_flag_injection(message):
             return {"success": False, "message": "Invalid commit message: starts with '-'"}
 
-        # Validate file paths
         if files:
             for f in files:
                 if not validate_file_path(f):
                     return {"success": False, "message": f"Invalid file path: {f}"}
 
         try:
-            # Check if commit is pushed
             result = subprocess.run(["git", "log", "@{u}..HEAD"], capture_output=True, text=True)
             if not result.stdout.strip():
                 return {"success": False, "message": "Cannot amend: commit already pushed"}
 
-            # Stage files if provided
             if files:
                 subprocess.run(["git", "add"] + files, check=True)
 
-            # Amend
             cmd = ["git", "commit", "--amend"]
             if message:
                 cmd.extend(["-m", message])
@@ -143,7 +115,6 @@ class CommitOperations:
 
             subprocess.run(cmd, check=True, capture_output=True)
 
-            # Get new SHA
             result = subprocess.run(
                 ["git", "rev-parse", "HEAD"], check=True, capture_output=True, text=True
             )
@@ -164,17 +135,14 @@ class CommitOperations:
         scope: Optional[str],
     ) -> str:
         """Format message with task and property refs"""
-        # Base format
         if scope:
             formatted = f"{type}({scope}): {message}"
         else:
             formatted = f"{type}: {message}"
 
-        # Add task ref
         if task_id:
             formatted += f" [{task_id}]"
 
-        # Add property refs
         if properties and len(properties) > 0:
             props_str = ", ".join(properties)
             formatted += f" [{props_str}]"
@@ -186,7 +154,6 @@ class CommitOperations:
         return f"chore: {message}"
 
 
-# Singleton
 _instance = CommitOperations()
 
 

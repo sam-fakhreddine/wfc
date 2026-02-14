@@ -15,13 +15,12 @@ Non-blocking: returns exit code 2 to show warnings without interrupting.
 from __future__ import annotations
 
 import json
-import os
 import sys
 import time
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-from _util import CYAN, MAGENTA, NC, RED, YELLOW, get_session_cache_path, get_session_id
+from _util import NC, RED, YELLOW, get_session_cache_path, get_session_id
 
 THRESHOLD_WARN = 80
 THRESHOLD_STOP = 90

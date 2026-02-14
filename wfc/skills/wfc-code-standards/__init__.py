@@ -73,7 +73,6 @@ STANDARDS: dict[str, str | int | bool] = {
     "immutability_by_default": True,
     "least_privilege_api_surface": True,
     "factory_patterns": True,
-
     # Code quality
     "max_file_lines": 500,
     "dry_threshold": 3,  # extract at 3+ repetitions
@@ -86,14 +85,12 @@ STANDARDS: dict[str, str | int | bool] = {
     "fail_fast_at_boundaries": True,
     "defensive_at_boundaries_only": True,
     "no_dead_code": True,
-
     # Observability
     "structured_logging": True,
     "no_print_logging": True,
     "no_string_interpolation_in_logs": True,
     "context_binding": True,
     "no_pii_in_logs": True,
-
     # Testing
     "test_organization_three_tier": True,
     "fixtures_over_setup": True,
@@ -101,20 +98,17 @@ STANDARDS: dict[str, str | int | bool] = {
     "deterministic_test_data": True,
     "min_coverage_business_logic": 80,
     "mock_at_boundaries": True,
-
     # Async safety
     "no_blocking_in_async": True,
     "timeouts_on_external_calls": True,
     "cpu_in_thread_pool": True,
     "cancellation_safety": True,
-
     # Dependencies
     "lockfile_committed": True,
     "frozen_install_in_ci": True,
     "cve_scanning": True,
     "min_version_constraints": True,
     "split_dependencies": True,
-
     # Documentation
     "public_api_docstrings": True,
 }

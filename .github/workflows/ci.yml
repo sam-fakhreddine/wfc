@@ -2,9 +2,9 @@ name: CI
 
 on:
   push:
-    branches: [ main ]
+    branches: [ main, develop, 'rc/**' ]
   pull_request:
-    branches: [ main ]
+    branches: [ main, develop ]
 
 jobs:
   lint:
@@ -61,6 +61,10 @@ jobs:
 
       - name: Install UV
         run: curl -LsSf https://astral.sh/uv/install.sh | sh
+
+      - name: Install bash 4+ on macOS
+        if: runner.os == 'macOS'
+        run: brew install bash
 
       - name: Install dependencies
         run: |
@@ -174,10 +178,10 @@ jobs:
           uv pip install --system build twine
 
       - name: Build package
-        run: uv run python -m build
+        run: python -m build
 
       - name: Check package
-        run: uv run twine check dist/*
+        run: python -m twine check dist/*
 
       - name: Test installation
         run: |
@@ -194,13 +198,17 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Install bash 4+ on macOS
+        if: runner.os == 'macOS'
+        run: brew install bash
+
       - name: Create mock Claude directory
         run: mkdir -p ~/.claude/skills
 
       - name: Test install script
         run: |
           chmod +x install.sh
-          ./install.sh <<< 'y'
+          printf '2\n1\n' | ./install.sh
 
       - name: Verify installation
         run: |
@@ -215,7 +223,7 @@ jobs:
           fi
 
           # Check persona library
-          persona_count=$(find ~/.claude/skills/wfc/references/personas/panels -name "*.json" 2>/dev/null | wc -l)
+          persona_count=$(find ~/.claude/skills/wfc/personas/panels -name "*.json" 2>/dev/null | wc -l)
           if [ "$persona_count" -lt 50 ]; then
               echo "❌ Persona library incomplete (found $persona_count, expected ≥50)"
               exit 1

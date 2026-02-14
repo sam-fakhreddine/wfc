@@ -13,11 +13,11 @@ Usage:
     wfc version                                       - Show version
 """
 
-import sys
-import subprocess
 import argparse
+import subprocess
+import sys
 from pathlib import Path
-from typing import Optional, List
+from typing import List, Optional
 
 
 def run_command(cmd: List[str], cwd: Optional[Path] = None, check: bool = True) -> int:
@@ -35,6 +35,7 @@ def run_command(cmd: List[str], cwd: Optional[Path] = None, check: bool = True) 
     Returns:
         Process exit code
     """
+    # SECURITY: shell=False + list args prevents shell injection (H-01 fix).
     result = subprocess.run(
         args=cmd, shell=False, cwd=cwd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True
     )
@@ -72,8 +73,6 @@ def cmd_validate(all_skills: bool = False, xml: bool = False):
     for skill in wfc_skills:
         skill_name = skill.name
 
-        # Validate structure
-        # Using list args for security - no shell=True
         cmd = ["skills-ref", "validate", str(skill)]
         result = run_command(cmd, check=False, cwd=skills_ref_dir)
 
@@ -83,15 +82,13 @@ def cmd_validate(all_skills: bool = False, xml: bool = False):
         else:
             print(f"✅ {skill_name} validated")
 
-        # Validate XML if requested
         if xml and result == 0:
-            # Using list args - grep as separate process
             cmd = ["skills-ref", "to-prompt", str(skill)]
-            # Pipe to grep - use subprocess directly for pipe
             import subprocess as sp
 
+            # SECURITY: shell=False, list args; cmd built from Path objects, not user input.
             proc = sp.run(cmd, cwd=skills_ref_dir, stdout=sp.PIPE, text=True)
-            grep_proc = sp.run(["grep", "-q", "<skill>"], input=proc.stdout, shell=False)
+            grep_proc = sp.run(["grep", "-q", "<skill>"], input=proc.stdout, text=True, shell=False)
             xml_result = grep_proc.returncode
 
             if xml_result != 0:
@@ -197,9 +194,8 @@ def cmd_implement(
     print("🚀 WFC Implement - Multi-Agent Parallel Implementation")
     print("=" * 60)
 
-    # Determine tasks file
     if not tasks_file:
-        tasks_file = "plan/TASKS-wfc-implement.md"  # Default
+        tasks_file = "plan/TASKS-wfc-implement.md"
 
     tasks_path = Path(tasks_file)
 
@@ -213,21 +209,19 @@ def cmd_implement(
 
     print(f"📋 Tasks file: {tasks_file}")
 
-    # Import orchestrator (using PEP 562 import bridge for hyphenated directories)
     try:
-        from wfc.skills import wfc_implement  # noqa: F401 — activates PEP 562 bridge
         from wfc_implement.orchestrator import WFCOrchestrator
+
         from wfc.shared.config import WFCConfig
+        from wfc.skills import wfc_implement  # noqa: F401 — activates PEP 562 bridge
     except ImportError as e:
         print(f"❌ Failed to import wfc-implement: {e}")
         print("\nMake sure WFC is installed:")
         print("  wfc install --dev")
         sys.exit(1)
 
-    # Load config
     config = WFCConfig()
 
-    # Override agent count if specified
     if agents:
         print(f"👥 Agents: {agents} (override)")
         config.set("orchestration.max_agents", agents)
@@ -236,32 +230,27 @@ def cmd_implement(
         max_agents = config.get("orchestration.max_agents", 5)
         print(f"👥 Agents: {max_agents} (from config)")
 
-    # Entire.io status (enabled by default)
     if enable_entire:
-        # Force enable even if config says false
         print("📹 Entire.io: ENABLED (forced via --enable-entire)")
         config.set("entire_io.enabled", True)
     else:
-        entire_enabled = config.get("entire_io.enabled", True)  # Default: True
+        entire_enabled = config.get("entire_io.enabled", True)
         if entire_enabled:
             print("📹 Entire.io: ENABLED (capturing agent sessions)")
         else:
             print("📹 Entire.io: DISABLED (set entire_io.enabled=false in config)")
 
-    # Warn if skipping quality
     if skip_quality:
         print("⚠️  WARNING: Skipping quality checks (NOT RECOMMENDED)")
         print("   Quality gate saves 50%+ review tokens")
 
     print()
 
-    # Dry run mode
     if dry_run:
         print("🔍 DRY RUN MODE - Showing plan without executing")
         print("=" * 60)
         print()
 
-        # Parse tasks file (using PEP 562 import bridge)
         try:
             from wfc_implement.parser import parse_tasks
 
@@ -271,7 +260,6 @@ def cmd_implement(
             print(f"📊 Dependency levels: {max(task_graph.get_dependency_levels().values()) + 1}")
             print()
 
-            # Show tasks by level
             levels = task_graph.get_dependency_levels()
             max_level = max(levels.values()) if levels else 0
 
@@ -296,20 +284,16 @@ def cmd_implement(
 
         return
 
-    # Execute mode
     print("🎯 EXECUTE MODE - Starting implementation")
     print("=" * 60)
     print()
 
     try:
-        # Create orchestrator
         orchestrator = WFCOrchestrator(config=config, project_root=Path.cwd())
 
-        # Run implementation
         print("⚙️  Initializing orchestrator...")
         result = orchestrator.run(tasks_path)
 
-        # Display results
         print()
         print("=" * 60)
         print("📊 IMPLEMENTATION COMPLETE")
@@ -351,34 +335,26 @@ def main():
 
     subparsers = parser.add_subparsers(dest="command", help="Command to run")
 
-    # Validate
     validate_parser = subparsers.add_parser("validate", help="Validate WFC skills")
     validate_parser.add_argument("--all", action="store_true", help="Validate all skills")
     validate_parser.add_argument("--xml", action="store_true", help="Also validate XML generation")
 
-    # Test
     test_parser = subparsers.add_parser("test", help="Run tests")
     test_parser.add_argument("--coverage", action="store_true", help="Run with coverage")
 
-    # Benchmark
     benchmark_parser = subparsers.add_parser("benchmark", help="Run token benchmarks")
     benchmark_parser.add_argument("--compare", action="store_true", help="Compare against targets")
 
-    # Lint
     lint_parser = subparsers.add_parser("lint", help="Run linters")
     lint_parser.add_argument("--fix", action="store_true", help="Auto-fix issues")
 
-    # Format
     subparsers.add_parser("format", help="Format code")
 
-    # Install
     install_parser = subparsers.add_parser("install", help="Install WFC")
     install_parser.add_argument("--dev", action="store_true", help="Install dev dependencies")
 
-    # Version
     subparsers.add_parser("version", help="Show version")
 
-    # Implement
     implement_parser = subparsers.add_parser("implement", help="Execute implementation tasks")
     implement_parser.add_argument(
         "--tasks", type=str, help="Path to TASKS.md (default: plan/TASKS.md)"
@@ -402,7 +378,6 @@ def main():
         parser.print_help()
         sys.exit(1)
 
-    # Dispatch commands
     if args.command == "validate":
         cmd_validate(all_skills=args.all, xml=args.xml)
     elif args.command == "test":

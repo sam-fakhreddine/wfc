@@ -5,14 +5,14 @@ PROBLEM: Python cannot import modules with hyphens in directory names.
    `import wfc.skills.wfc-implement`  # SyntaxError
 
 SOLUTION: Use PEP 562 __getattr__ to provide underscored aliases.
-   `from wfc.skills import wfc_implement`  # Works! ✅
+   `from wfc.skills import wfc_implement`  # Works!
 
 WHY THIS APPROACH:
-- ✅ Maintains Agent Skills naming (hyphens in SKILL.md, directories)
-- ✅ Provides valid Python import paths (underscores)
-- ✅ Lazy loading (only imports what's needed)
-- ✅ PEP 562 compliant (Python 3.7+)
-- ✅ No symlinks or directory renaming needed
+- Maintains Agent Skills naming (hyphens in SKILL.md, directories)
+- Provides valid Python import paths (underscores)
+- Lazy loading (only imports what's needed)
+- PEP 562 compliant (Python 3.7+)
+- No symlinks or directory renaming needed
 
 BEST PRACTICE REFERENCE:
 - PEP 8: Module names should use underscores
@@ -23,12 +23,11 @@ BEST PRACTICE REFERENCE:
 from __future__ import annotations
 
 import importlib
+import sys
 from pathlib import Path
 from typing import Any
 
-# Mapping of hyphenated directory names to underscored Python module names
-# Format: "python_name": "directory_name"
-_SKILL_ALIAS_MAP = {
+_SKILL_ALIAS_MAP: dict[str, str] = {
     "wfc_architecture": "wfc-architecture",
     "wfc_build": "wfc-build",
     "wfc_implement": "wfc-implement",
@@ -49,56 +48,60 @@ _SKILL_ALIAS_MAP = {
     "wfc_vibe": "wfc-vibe",
 }
 
-# Cache for already imported modules
 _imported_cache: dict[str, Any] = {}
 
 
-def __getattr__(name: str) -> Any:
+def _register_skill_module(name: str, module: Any) -> None:
+    """Register an imported skill module in sys.modules.
+
+    Registers under both ``wfc.skills.<name>`` (namespaced) and bare ``<name>``
+    (top-level). The top-level registration is required for the two-step PEP 562
+    import pattern::
+
+        from wfc.skills import wfc_implement   # triggers __getattr__
+        from wfc_implement.parser import X      # needs bare registration
+
+    Without the top-level entry, Python cannot resolve sub-imports from the
+    bare module name.
     """
-    PEP 562 __getattr__ for lazy importing hyphenated skill modules.
+    qualified_name = f"wfc.skills.{name}"
+    if qualified_name not in sys.modules:
+        sys.modules[qualified_name] = module
+    if name not in sys.modules:
+        sys.modules[name] = module
+
+
+def _discover_skills(skills_dir: Path) -> None:
+    """Auto-discover skill directories not yet in the alias map.
+
+    Scans ``skills_dir`` for ``wfc-*`` subdirectories and adds any missing
+    entries to ``_SKILL_ALIAS_MAP`` and ``__all__``.
+    """
+    for skill_dir in skills_dir.iterdir():
+        if skill_dir.is_dir() and skill_dir.name.startswith("wfc-"):
+            underscored = skill_dir.name.replace("-", "_")
+            if underscored not in _SKILL_ALIAS_MAP:
+                _SKILL_ALIAS_MAP[underscored] = skill_dir.name
+                __all__.append(underscored)
+
+
+def __getattr__(name: str) -> Any:
+    """PEP 562 __getattr__ for lazy importing hyphenated skill modules.
 
     Called when an attribute is not found normally.
-    Enables: from wfc.skills import wfc_implement
-
-    Args:
-        name: Module name being imported (e.g., "wfc_implement")
-
-    Returns:
-        The imported module
-
-    Raises:
-        AttributeError: If name is not in alias map
-        ImportError: If the underlying module import fails
+    Enables: ``from wfc.skills import wfc_implement``
     """
     if name in _imported_cache:
         return _imported_cache[name]
 
     if name not in _SKILL_ALIAS_MAP:
-        # Not a known skill alias - let Python raise AttributeError
         raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
 
-    # Map underscored name to hyphenated directory
     hyphenated_name = _SKILL_ALIAS_MAP[name]
 
-    # Import using importlib to handle hyphenated directory
     try:
-        # Import the hyphenated directory as a module
-        # e.g., from "wfc-architecture" import module
         module = importlib.import_module(f".{hyphenated_name}", package="wfc.skills")
-
-        # Register with both names in sys.modules for proper imports
-        import sys
-
-        full_underscored_name = f"wfc.skills.{name}"
-        top_level_underscored_name = name  # e.g., "wfc_implement"
-
-        if full_underscored_name not in sys.modules:
-            sys.modules[full_underscored_name] = module
-
-        # Also register at top level for direct imports
-        if top_level_underscored_name not in sys.modules:
-            sys.modules[top_level_underscored_name] = module
-
+        _register_skill_module(name, module)
         _imported_cache[name] = module
         return module
     except ImportError as e:
@@ -108,39 +111,20 @@ def __getattr__(name: str) -> Any:
 
 
 def __dir__() -> list[str]:
-    """
-    Return list of available attributes for dir() and tab completion.
-    Includes all aliased skill names.
-    """
+    """Return list of available attributes for dir() and tab completion."""
     return list(_SKILL_ALIAS_MAP.keys())
 
 
-# Export list for __all__
 __all__ = list(_SKILL_ALIAS_MAP.keys())
 
 
-# Diagnostic function (optional, for debugging)
 def list_skills() -> dict[str, str]:
-    """
-    Return mapping of all available skill aliases.
-
-    Returns:
-        Dict mapping underscored names to hyphenated directories
-    """
+    """Return mapping of all available skill aliases."""
     return _SKILL_ALIAS_MAP.copy()
 
 
-# Verify skills directory exists
 _skills_dir = Path(__file__).parent
 if not _skills_dir.is_dir():
     raise ImportError(f"Skills directory not found: {_skills_dir}")
 
-
-# Auto-discover any skills not in the map (for future-proofing)
-for skill_dir in _skills_dir.iterdir():
-    if skill_dir.is_dir() and skill_dir.name.startswith("wfc-"):
-        # Convert hyphenated to underscored
-        underscored = skill_dir.name.replace("-", "_")
-        if underscored not in _SKILL_ALIAS_MAP:
-            _SKILL_ALIAS_MAP[underscored] = skill_dir.name
-            __all__.append(underscored)
+_discover_skills(_skills_dir)

@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import json
-import os
 import re
 import shutil
 import subprocess
@@ -38,13 +37,7 @@ def strip_typescript_comments(file_path: Path) -> bool:
     modified = False
 
     for line in lines:
-        if (
-            "//" not in line
-            or '"//' in line
-            or "'//" in line
-            or "`//" in line
-            or "://" in line
-        ):
+        if "//" not in line or '"//' in line or "'//" in line or "`//" in line or "://" in line:
             new_lines.append(line)
             continue
 
@@ -117,9 +110,7 @@ def check_typescript(file_path: Path) -> tuple[int, str]:
 
     eslint_bin = find_tool("eslint", project_root)
     tsc_bin = (
-        find_tool("tsc", project_root)
-        if file_path.suffix in {".ts", ".tsx", ".mts"}
-        else None
+        find_tool("tsc", project_root) if file_path.suffix in {".ts", ".tsx", ".mts"} else None
     )
 
     if not (eslint_bin or tsc_bin):
@@ -129,14 +120,10 @@ def check_typescript(file_path: Path) -> tuple[int, str]:
     has_issues = False
 
     if eslint_bin:
-        has_issues, results = _run_eslint(
-            eslint_bin, file_path, project_root, has_issues, results
-        )
+        has_issues, results = _run_eslint(eslint_bin, file_path, project_root, has_issues, results)
 
     if tsc_bin:
-        has_issues, results = _run_tsc(
-            tsc_bin, file_path, project_root, has_issues, results
-        )
+        has_issues, results = _run_tsc(tsc_bin, file_path, project_root, has_issues, results)
 
     if has_issues:
         _print_typescript_issues(file_path, results)
@@ -208,14 +195,10 @@ def _run_tsc(
         else:
             cmd.append(str(file_path))
 
-        result = subprocess.run(
-            cmd, capture_output=True, text=True, check=False, cwd=project_root
-        )
+        result = subprocess.run(cmd, capture_output=True, text=True, check=False, cwd=project_root)
         output = result.stdout + result.stderr
         if result.returncode != 0:
-            error_lines = [
-                line for line in output.splitlines() if "error TS" in line
-            ]
+            error_lines = [line for line in output.splitlines() if "error TS" in line]
             if error_lines:
                 has_issues = True
                 results["tsc"] = (len(error_lines), error_lines)
@@ -239,8 +222,7 @@ def _print_typescript_issues(file_path: Path, results: dict[str, tuple]) -> None
         plural = "issue" if total == 1 else "issues"
         print("", file=sys.stderr)
         print(
-            f"  ESLint: {total} {plural} "
-            f"({total_errors} errors, {total_warnings} warnings)",
+            f"  ESLint: {total} {plural} " f"({total_errors} errors, {total_warnings} warnings)",
             file=sys.stderr,
         )
         print("  " + "-" * 38, file=sys.stderr)

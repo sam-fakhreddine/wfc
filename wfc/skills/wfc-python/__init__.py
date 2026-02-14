@@ -45,7 +45,6 @@ from typing import Any
 
 __version__ = "0.1.0"
 
-# UV-exclusive toolchain
 TOOLCHAIN: dict[str, str] = {
     "package_manager": "uv",
     "run": "uv run",
@@ -56,7 +55,6 @@ TOOLCHAIN: dict[str, str] = {
     "global_tool": "uv tool install",
 }
 
-# Standard library set for quick reference by other skills
 PREFERRED_LIBRARIES: dict[str, str] = {
     "config": "python-dotenv",
     "cli": "fire",
@@ -67,7 +65,6 @@ PREFERRED_LIBRARIES: dict[str, str] = {
     "retry": "tenacity",
 }
 
-# Preferred frameworks for specific domains
 PREFERRED_FRAMEWORKS: dict[str, str] = {
     "validation": "pydantic",
     "http-client": "httpx",
@@ -81,7 +78,9 @@ CORE_DEPENDENCIES: list[str] = [
     "structlog>=24.1",
     "tenacity>=8.2",
     "pydantic>=2.6",
+    "pydantic-settings>=2.2",
     "httpx>=0.27",
+    "joblib>=1.3",
 ]
 
 API_DEPENDENCIES: list[str] = [
@@ -100,38 +99,23 @@ DEV_DEPENDENCIES: list[str] = [
     "pytest-asyncio>=0.23",
 ]
 
-# Python-specific standards. Universal standards (three_tier, solid, etc.)
-# are defined in wfc-code-standards and inherited automatically.
 CODING_STANDARDS: dict[str, str | int | bool | list[str]] = {
-    # Python language
     "python_version": ">=3.12",
     "type_annotations": True,
     "pep562_lazy_imports": True,
     "slots_on_dataclasses": True,
-
-    # Python tooling
     "formatter": "black",
     "line_length": 88,
     "linter": "ruff",
     "type_checker": "mypy --strict",
     "uv_exclusive": True,
-
-    # Python logging
-    "centralized_logging": True,       # structlog.configure() once at entry
-    "thread_identified_logging": True,  # thread_name + thread_id in every log
-
-    # Python testing
-    "pytest_exclusive": True,           # unittest forbidden
-    "docstrings_google_style": True,    # Google style, not numpy/sphinx
-
-    # Black-owned PEP 8 rules that ruff must ignore to avoid conflicts
+    "centralized_logging": True,
+    "thread_identified_logging": True,
+    "pytest_exclusive": True,
+    "docstrings_google_style": True,
     "ruff_black_ignore": ["E111", "E114", "E117", "E501", "W191", "E203"],
 }
 
-# Structured banned patterns for other skills to scan code against.
-# Each entry has: id, regex pattern (compiled), human description, and suggested fix.
-# Patterns are designed to avoid false positives (e.g. won't flag "uv pip install"
-# when checking for bare "pip install", won't flag "except ValueError:" for bare except).
 BANNED_PATTERNS: list[dict[str, str | re.Pattern[str]]] = [
     {
         "id": "pip-install",
@@ -171,7 +155,9 @@ BANNED_PATTERNS: list[dict[str, str | re.Pattern[str]]] = [
     },
     {
         "id": "import-requests",
-        "pattern": re.compile(r"^\s*(?:from\s+requests\s+import|import\s+requests)\b", re.MULTILINE),
+        "pattern": re.compile(
+            r"^\s*(?:from\s+requests\s+import|import\s+requests)\b", re.MULTILINE
+        ),
         "description": "requests library (use httpx instead)",
         "fix": "import httpx",
     },
@@ -227,9 +213,7 @@ BANNED_PATTERNS: list[dict[str, str | re.Pattern[str]]] = [
     },
     {
         "id": "print-statement",
-        "pattern": re.compile(
-            r"^\s*print\s*\((?!.*#\s*noqa)", re.MULTILINE
-        ),
+        "pattern": re.compile(r"^\s*print\s*\((?!.*#\s*noqa)", re.MULTILINE),
         "description": "print() statement (use structlog for all logging)",
         "fix": "log = structlog.get_logger(); log.info('event', key=value)",
     },
@@ -243,9 +227,7 @@ BANNED_PATTERNS: list[dict[str, str | re.Pattern[str]]] = [
     },
     {
         "id": "stdlib-logging",
-        "pattern": re.compile(
-            r"^\s*import\s+logging\b(?!.*#\s*noqa)", re.MULTILINE
-        ),
+        "pattern": re.compile(r"^\s*import\s+logging\b(?!.*#\s*noqa)", re.MULTILINE),
         "description": "stdlib logging (use structlog exclusively)",
         "fix": "import structlog; log = structlog.get_logger()",
     },
@@ -269,20 +251,19 @@ BANNED_PATTERNS: list[dict[str, str | re.Pattern[str]]] = [
     },
 ]
 
-# Legacy alias - flat list of human-readable descriptions for backward compat
 BANNED: list[str] = [p["description"] for p in BANNED_PATTERNS]  # type: ignore[misc]
 
 __all__ = [
-    "TOOLCHAIN",
-    "PREFERRED_LIBRARIES",
-    "PREFERRED_FRAMEWORKS",
-    "CORE_DEPENDENCIES",
     "API_DEPENDENCIES",
-    "CLI_DEPENDENCIES",
-    "DEV_DEPENDENCIES",
-    "CODING_STANDARDS",
     "BANNED",
     "BANNED_PATTERNS",
+    "CLI_DEPENDENCIES",
+    "CODING_STANDARDS",
+    "CORE_DEPENDENCIES",
+    "DEV_DEPENDENCIES",
+    "PREFERRED_FRAMEWORKS",
+    "PREFERRED_LIBRARIES",
+    "TOOLCHAIN",
     "check_violations",
 ]
 
@@ -296,21 +277,17 @@ def check_violations(source: str) -> list[dict[str, str]]:
     for entry in BANNED_PATTERNS:
         pattern: re.Pattern[str] = entry["pattern"]  # type: ignore[assignment]
         if pattern.search(source):
-            violations.append({
-                "id": str(entry["id"]),
-                "description": str(entry["description"]),
-                "fix": str(entry["fix"]),
-            })
+            violations.append(
+                {
+                    "id": str(entry["id"]),
+                    "description": str(entry["description"]),
+                    "fix": str(entry["fix"]),
+                }
+            )
     return violations
 
 
-# PEP 562 - guard against invalid attribute access on this module.
-# No lazy imports needed here since all exports are lightweight dicts/lists.
-# If heavier objects are added later (e.g. a RuleEngine), add them to _LAZY_IMPORTS
-# and load on first access.
-_LAZY_IMPORTS: dict[str, str] = {
-    # "RuleEngine": "wfc.skills.wfc_python.rule_engine",  # example for future use
-}
+_LAZY_IMPORTS: dict[str, str] = {}
 
 
 def __getattr__(name: str) -> Any:
@@ -319,7 +296,7 @@ def __getattr__(name: str) -> Any:
 
         module = importlib.import_module(_LAZY_IMPORTS[name])
         value = getattr(module, name)
-        globals()[name] = value  # cache so __getattr__ isn't called again
+        globals()[name] = value
         return value
     raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
 

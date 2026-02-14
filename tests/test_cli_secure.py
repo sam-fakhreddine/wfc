@@ -10,7 +10,6 @@ from pathlib import Path
 from unittest.mock import patch, MagicMock
 import sys
 
-# Add parent directory to path for imports
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from wfc.cli import run_command
@@ -21,14 +20,11 @@ class TestRunCommandSecurity:
 
     def test_run_command_accepts_list_of_strings(self):
         """run_command should accept List[str] instead of str."""
-        # This should work after fix
         if hasattr(run_command, "__annotations__") and "cmd" in run_command.__annotations__:
-            # Check type annotation if available
             import inspect
 
             sig = inspect.signature(run_command)
             cmd_annotation = sig.parameters["cmd"].annotation
-            # Should be list or similar, not just str
             assert cmd_annotation != str, "cmd parameter should not be str only"
 
     def test_simple_command_works(self):
@@ -38,15 +34,11 @@ class TestRunCommandSecurity:
 
     def test_shell_metacharacters_not_executed(self):
         """Shell metacharacters should not be executed (security test)."""
-        # This attempts to inject `; rm -rf /` but should fail safely
-        # With shell=True, this would execute the malicious command
-        # With shell=False and list args, echo should just print the string
         result = run_command(["echo", "hello; rm -rf /"], check=False)
         assert result == 0
 
     def test_pipe_not_executed(self):
         """Pipe operator should not be executed."""
-        # Attempts to pipe to another command - should not work
         result = run_command(["echo", "test| cat"], check=False)
         assert result == 0
 
@@ -68,7 +60,6 @@ class TestRunCommandAllCallSites:
         """cmd_validate should use list arguments."""
         import inspect
 
-        # Import directly to avoid namespace issues
         import sys
         from pathlib import Path
 
@@ -76,7 +67,6 @@ class TestRunCommandAllCallSites:
         import wfc.cli as cli_module
 
         source = inspect.getsource(cli_module.cmd_validate)
-        # Should not have string-based shell commands
         assert 'run_command("' not in source, "cmd_validate should use list arguments"
 
     def test_test_command_uses_list(self):
@@ -91,14 +81,14 @@ class TestRunCommandAllCallSites:
         source = inspect.getsource(cli_module.cmd_test)
         assert 'run_command("' not in source, "cmd_test should use list arguments"
 
-    # Skip benchmark test due to regex issues - the core security tests cover the important cases
     def test_benchmark_command_uses_list(self):
-        """cmd_benchmark should use list arguments - SKIPPED due to test complexity."""
-        import pytest
+        """cmd_benchmark should use list arguments (non-shell, list-based invocation)."""
+        import inspect
 
-        pytest.skip(
-            "Test skipped due to regex pattern complexity - security tests cover the critical cases"
-        )
+        import wfc.cli as cli_module
+
+        source = inspect.getsource(cli_module.cmd_benchmark)
+        assert 'run_command("' not in source, "cmd_benchmark should use list arguments"
 
 
 class TestSubprocessShellFalse:
@@ -111,14 +101,11 @@ class TestSubprocessShellFalse:
 
         run_command(["echo", "test"], check=False)
 
-        # Verify subprocess.run was called
         assert mock_run.called, "subprocess.run should be called"
         call_kwargs = mock_run.call_args[1]
 
-        # Check shell=False
         assert call_kwargs.get("shell") == False, "shell should be False"
 
-        # Check cmd is a list
         assert isinstance(call_kwargs.get("args"), list), "args should be a list"
         assert "capture_output" in call_kwargs or "stdout" in call_kwargs
 

@@ -11,21 +11,17 @@ All regex compilation is cached via @lru_cache for performance.
 from __future__ import annotations
 
 import logging
-import re
-import signal
 import time
-from functools import lru_cache
 from pathlib import Path
 from typing import Optional
 
+from wfc.scripts.hooks._util import safe_regex_search
 from wfc.scripts.hooks.config_loader import load_rules
 
 logger = logging.getLogger(__name__)
 
-# Default rules directory (relative to project root)
 DEFAULT_RULES_DIR = ".wfc/rules"
 
-# Map of tool names to the fields they provide
 TOOL_FIELD_MAP: dict[str, dict[str, str]] = {
     "Write": {
         "new_text": "content",
@@ -45,33 +41,6 @@ TOOL_FIELD_MAP: dict[str, dict[str, str]] = {
 }
 
 
-class RegexTimeout(Exception):
-    """Raised when regex compilation or matching times out."""
-
-    pass
-
-
-def _regex_timeout_handler(signum, frame):
-    raise RegexTimeout("Regex operation timed out")
-
-
-@lru_cache(maxsize=128)
-def _compile_regex(pattern: str, timeout_seconds: int = 1) -> Optional[re.Pattern]:
-    """Compile a regex pattern with caching. Returns None on invalid or complex patterns."""
-    try:
-        old_handler = signal.signal(signal.SIGALRM, _regex_timeout_handler)
-        signal.alarm(timeout_seconds)
-        try:
-            compiled = re.compile(pattern)
-        finally:
-            signal.alarm(0)
-            signal.signal(signal.SIGALRM, old_handler)
-        return compiled
-    except (re.error, RegexTimeout) as e:
-        logger.debug("Regex pattern failed '%s': %s", pattern, e)
-        return None
-
-
 def _get_field_value(field_name: str, tool_name: str, tool_input: dict) -> Optional[str]:
     """
     Resolve a rule condition field to the actual value from tool_input.
@@ -84,14 +53,12 @@ def _get_field_value(field_name: str, tool_name: str, tool_input: dict) -> Optio
     """
     tool_fields = TOOL_FIELD_MAP.get(tool_name, {})
 
-    # Check if this is a virtual field name
     actual_key = tool_fields.get(field_name, field_name)
     value = tool_input.get(actual_key)
 
     if value is not None:
         return str(value)
 
-    # Fallback: try the field name directly
     value = tool_input.get(field_name)
     return str(value) if value is not None else None
 
@@ -125,21 +92,7 @@ def _evaluate_condition(condition: dict, tool_name: str, tool_input: dict) -> bo
         return False
 
     if operator == "regex_match":
-        compiled = _compile_regex(str(expected))
-        if compiled is None:
-            return False
-        try:
-            old_handler = signal.signal(signal.SIGALRM, _regex_timeout_handler)
-            signal.alarm(1)
-            try:
-                result = bool(compiled.search(actual))
-            finally:
-                signal.alarm(0)
-                signal.signal(signal.SIGALRM, old_handler)
-            return result
-        except RegexTimeout:
-            logger.warning("Regex match timed out for pattern: %s", str(expected)[:50])
-            return False
+        return safe_regex_search(str(expected), actual)
 
     elif operator == "contains":
         return str(expected) in actual
@@ -165,7 +118,7 @@ def _matches_event(rule: dict, tool_name: str) -> bool:
     """Check if a rule applies to the given tool (event type)."""
     event = rule.get("event", "")
     if not event:
-        return True  # No event filter = matches all
+        return True
 
     if event == "file" and tool_name in ("Write", "Edit", "NotebookEdit"):
         return True
@@ -207,7 +160,6 @@ def evaluate(
             time.strftime("%Y-%m-%dT%H:%M:%S"),
             _bypass_count,
         )
-        # CRITICAL: Never block due to rule engine bugs
         return {}
 
 
@@ -233,22 +185,18 @@ def _evaluate_impl(
     warn_reasons: list[str] = []
 
     for rule in rules:
-        # Skip disabled rules
         if not rule.get("enabled", True):
             continue
 
-        # Check event type match
         if not _matches_event(rule, tool_name):
             continue
 
-        # Evaluate all conditions (AND logic - all must match)
         conditions = rule.get("conditions", [])
         if not conditions:
             continue
 
         all_match = True
         for condition in conditions:
-            # Handle both dict conditions and list-of-dicts
             if isinstance(condition, dict):
                 cond_dict = condition
             else:
@@ -261,7 +209,6 @@ def _evaluate_impl(
         if not all_match:
             continue
 
-        # Rule matched - determine action
         action = rule.get("action", "warn")
         name = rule.get("name", "unnamed-rule")
         body = rule.get("body", "")
@@ -272,7 +219,6 @@ def _evaluate_impl(
         elif action == "warn":
             warn_reasons.append(f"[{name}] {reason_text}")
 
-    # Blocks take priority
     if block_reasons:
         return {
             "decision": "block",

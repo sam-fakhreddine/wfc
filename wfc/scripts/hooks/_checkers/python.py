@@ -39,6 +39,7 @@ def strip_python_comments(file_path: Path) -> bool:
         r"#\s*FIXME",
         r"#\s*XXX",
         r"#\s*NOTE",
+        r"#\s*SECURITY",
     ]
     preserve_re = re.compile("|".join(preserve_patterns), re.IGNORECASE)
 
@@ -132,9 +133,7 @@ def check_python(file_path: Path) -> tuple[int, str]:
             )
             output = result.stdout + result.stderr
             error_pattern = re.compile(r":\d+:\d+: [A-Z]{1,3}\d+")
-            error_lines = [
-                line for line in output.splitlines() if error_pattern.search(line)
-            ]
+            error_lines = [line for line in output.splitlines() if error_pattern.search(line)]
             if error_lines:
                 has_issues = True
                 results["ruff"] = (len(error_lines), error_lines)

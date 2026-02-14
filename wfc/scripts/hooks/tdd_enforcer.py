@@ -27,17 +27,50 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 from _util import NC, YELLOW
 
 EXCLUDED_EXTENSIONS = [
-    ".md", ".rst", ".txt", ".json", ".yaml", ".yml", ".toml",
-    ".ini", ".cfg", ".lock", ".sum", ".env", ".env.example", ".sql",
-    ".html", ".css", ".scss", ".svg", ".png", ".jpg", ".gif",
+    ".md",
+    ".rst",
+    ".txt",
+    ".json",
+    ".yaml",
+    ".yml",
+    ".toml",
+    ".ini",
+    ".cfg",
+    ".lock",
+    ".sum",
+    ".env",
+    ".env.example",
+    ".sql",
+    ".html",
+    ".css",
+    ".scss",
+    ".svg",
+    ".png",
+    ".jpg",
+    ".gif",
 ]
 
 EXCLUDED_DIRS = [
-    "/cdk/", "/infra/", "/infrastructure/", "/terraform/", "/pulumi/",
-    "/stacks/", "/cloudformation/", "/deploy/", "/migrations/",
-    "/alembic/", "/generated/", "/proto/", "/__generated__/",
-    "/dist/", "/build/", "/node_modules/", "/.venv/", "/venv/",
-    "/__pycache__/", "/.development/",
+    "/cdk/",
+    "/infra/",
+    "/infrastructure/",
+    "/terraform/",
+    "/pulumi/",
+    "/stacks/",
+    "/cloudformation/",
+    "/deploy/",
+    "/migrations/",
+    "/alembic/",
+    "/generated/",
+    "/proto/",
+    "/__generated__/",
+    "/dist/",
+    "/build/",
+    "/node_modules/",
+    "/.venv/",
+    "/venv/",
+    "/__pycache__/",
+    "/.development/",
 ]
 
 
@@ -142,9 +175,7 @@ def has_python_test_file(impl_path: str) -> bool:
             return True
 
     test_dirs = _find_test_dirs(path.parent)
-    return _search_test_dirs(
-        test_dirs, "", [f"test_{module_name}.py", f"{module_name}_test.py"]
-    )
+    return _search_test_dirs(test_dirs, "", [f"test_{module_name}.py", f"{module_name}_test.py"])
 
 
 def has_typescript_test_file(impl_path: str) -> bool:
@@ -227,9 +258,7 @@ def is_trivial_edit(tool_name: str, tool_input: dict) -> bool:
 
     added = [line for line in new_lines if line not in old_lines]
     removed = [line for line in old_lines if line not in new_lines]
-    if added and not removed and all(
-        re.match(r"^[A-Z][A-Z_0-9]*\s*=\s*", line) for line in added
-    ):
+    if added and not removed and all(re.match(r"^[A-Z][A-Z_0-9]*\s*=\s*", line) for line in added):
         return True
 
     return False

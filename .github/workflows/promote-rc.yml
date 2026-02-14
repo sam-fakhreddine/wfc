@@ -1,0 +1,184 @@
+name: Promote Release Candidate
+
+# Checks for open RC PRs to main. If CI is green and soak period passed,
+# merges to main and tags the release.
+
+on:
+  schedule:
+    - cron: '0 */6 * * *'  # Every 6 hours
+  workflow_dispatch:
+    inputs:
+      soak_hours:
+        description: 'Soak hours override (0 for immediate promotion)'
+        required: false
+        default: '24'
+        type: string
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  promote:
+    name: Promote RC to Main
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Find open RC PRs
+        id: find-rc
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          # Find open PRs from rc/* to main
+          RC_PR=$(gh pr list \
+            --base main \
+            --state open \
+            --json number,headRefName,createdAt,statusCheckRollup \
+            --jq '[.[] | select(.headRefName | startswith("rc/"))] | first')
+
+          if [ "$RC_PR" = "null" ] || [ -z "$RC_PR" ]; then
+            echo "No open RC PRs found."
+            echo "has_rc=false" >> $GITHUB_OUTPUT
+            exit 0
+          fi
+
+          PR_NUMBER=$(echo "$RC_PR" | jq -r '.number')
+          PR_BRANCH=$(echo "$RC_PR" | jq -r '.headRefName')
+          PR_CREATED=$(echo "$RC_PR" | jq -r '.createdAt')
+
+          echo "has_rc=true" >> $GITHUB_OUTPUT
+          echo "pr_number=$PR_NUMBER" >> $GITHUB_OUTPUT
+          echo "pr_branch=$PR_BRANCH" >> $GITHUB_OUTPUT
+          echo "pr_created=$PR_CREATED" >> $GITHUB_OUTPUT
+
+          echo "Found RC PR #$PR_NUMBER ($PR_BRANCH), created at $PR_CREATED"
+
+      - name: Check soak period
+        if: steps.find-rc.outputs.has_rc == 'true'
+        id: soak
+        run: |
+          SOAK_HOURS="${{ inputs.soak_hours || '24' }}"
+          PR_CREATED="${{ steps.find-rc.outputs.pr_created }}"
+
+          # Calculate age in hours
+          CREATED_EPOCH=$(date -d "$PR_CREATED" +%s 2>/dev/null || date -jf "%Y-%m-%dT%H:%M:%SZ" "$PR_CREATED" +%s 2>/dev/null || echo 0)
+          NOW_EPOCH=$(date +%s)
+          AGE_HOURS=$(( (NOW_EPOCH - CREATED_EPOCH) / 3600 ))
+
+          echo "RC PR age: ${AGE_HOURS}h, required soak: ${SOAK_HOURS}h"
+
+          if [ "$AGE_HOURS" -ge "$SOAK_HOURS" ]; then
+            echo "Soak period passed."
+            echo "soak_passed=true" >> $GITHUB_OUTPUT
+          else
+            REMAINING=$(( SOAK_HOURS - AGE_HOURS ))
+            echo "Soak period not met. ${REMAINING}h remaining."
+            echo "soak_passed=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Check CI status
+        if: steps.find-rc.outputs.has_rc == 'true' && steps.soak.outputs.soak_passed == 'true'
+        id: ci
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          PR_NUMBER="${{ steps.find-rc.outputs.pr_number }}"
+
+          # Check all status checks passed
+          CHECKS=$(gh pr checks "$PR_NUMBER" --repo "${{ github.repository }}" 2>&1 || true)
+
+          if echo "$CHECKS" | grep -qi "fail\|error"; then
+            echo "CI checks not green. Cannot promote."
+            echo "$CHECKS"
+            echo "ci_green=false" >> $GITHUB_OUTPUT
+          else
+            echo "All CI checks passed."
+            echo "ci_green=true" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Promote RC
+        if: >-
+          steps.find-rc.outputs.has_rc == 'true' &&
+          steps.soak.outputs.soak_passed == 'true' &&
+          steps.ci.outputs.ci_green == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          PR_NUMBER="${{ steps.find-rc.outputs.pr_number }}"
+          PR_BRANCH="${{ steps.find-rc.outputs.pr_branch }}"
+
+          # Extract version from branch name (rc/vX.Y.Z -> X.Y.Z)
+          VERSION="${PR_BRANCH#rc/v}"
+
+          echo "Promoting RC: PR #$PR_NUMBER, version v$VERSION"
+
+          # Merge the PR
+          gh pr merge "$PR_NUMBER" \
+            --repo "${{ github.repository }}" \
+            --merge \
+            --subject "Release v$VERSION"
+
+          echo "PR #$PR_NUMBER merged to main."
+
+      - name: Checkout and update build-info
+        if: >-
+          steps.find-rc.outputs.has_rc == 'true' &&
+          steps.soak.outputs.soak_passed == 'true' &&
+          steps.ci.outputs.ci_green == 'true'
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 1
+
+      - name: Update .build-info.json with promotion data
+        if: >-
+          steps.find-rc.outputs.has_rc == 'true' &&
+          steps.soak.outputs.soak_passed == 'true' &&
+          steps.ci.outputs.ci_green == 'true'
+        run: |
+          PR_BRANCH="${{ steps.find-rc.outputs.pr_branch }}"
+          VERSION="${PR_BRANCH#rc/v}"
+
+          if [ -f .build-info.json ]; then
+            # Update with promotion timestamp and tag
+            TEMP=$(mktemp)
+            jq \
+              --arg promoted_at "$(date -u +%Y-%m-%dT%H:%M:%SZ)" \
+              --arg promoted_tag "v$VERSION" \
+              '.promoted_at = $promoted_at | .promoted_tag = $promoted_tag' \
+              .build-info.json > "$TEMP" && mv "$TEMP" .build-info.json
+
+            git config user.name "github-actions[bot]"
+            git config user.email "github-actions[bot]@users.noreply.github.com"
+            git add .build-info.json
+            git commit -m "chore: update .build-info.json with promotion data for v$VERSION" || true
+            git push origin main || true
+          fi
+
+      - name: Tag release
+        if: >-
+          steps.find-rc.outputs.has_rc == 'true' &&
+          steps.soak.outputs.soak_passed == 'true' &&
+          steps.ci.outputs.ci_green == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          PR_BRANCH="${{ steps.find-rc.outputs.pr_branch }}"
+          VERSION="${PR_BRANCH#rc/v}"
+
+          git tag "v$VERSION"
+          git push origin "v$VERSION"
+
+          echo "Tagged v$VERSION. release.yml + publish.yml will fire."
+
+      - name: Delete RC branch
+        if: >-
+          steps.find-rc.outputs.has_rc == 'true' &&
+          steps.soak.outputs.soak_passed == 'true' &&
+          steps.ci.outputs.ci_green == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          PR_BRANCH="${{ steps.find-rc.outputs.pr_branch }}"
+          git push origin --delete "$PR_BRANCH" || true
+          echo "Deleted RC branch: $PR_BRANCH"
