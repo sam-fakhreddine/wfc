@@ -1,0 +1,139 @@
+name: Agent Dispatch
+
+# Autonomous agent dispatch: reads agent-ready issues, claims them,
+# and invokes Claude Code on a self-hosted runner.
+
+on:
+  schedule:
+    - cron: '0 */2 * * 0,6'  # Every 2h on weekends (Sat, Sun)
+    - cron: '0 */6 * * 1-5'  # Every 6h on weekdays (Mon-Fri)
+  workflow_dispatch:
+    inputs:
+      max_issues:
+        description: 'Maximum issues to dispatch'
+        required: false
+        default: '3'
+        type: string
+  issues:
+    types: [labeled]
+
+permissions:
+  contents: write
+  issues: write
+  pull-requests: write
+
+jobs:
+  dispatch:
+    name: Dispatch Agent Work
+    runs-on: self-hosted
+    labels: [wfc-agent]
+
+    # Only run on label event if it's agent-ready
+    if: >-
+      github.event_name != 'issues' ||
+      github.event.label.name == 'agent-ready'
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          ref: develop
+          fetch-depth: 0
+
+      - name: Detect stale assignments
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          echo "Checking for stale agent assignments..."
+
+          # Find issues assigned to bot for >2h without a PR link
+          STALE_ISSUES=$(gh issue list \
+            --repo "${{ github.repository }}" \
+            --label "agent-ready" \
+            --assignee "@me" \
+            --state open \
+            --json number,updatedAt \
+            --jq '[.[] | select(
+              (now - (.updatedAt | fromdateiso8601)) > 7200
+            )] | .[].number')
+
+          for ISSUE_NUM in $STALE_ISSUES; do
+            echo "Unassigning stale issue #$ISSUE_NUM"
+            gh issue edit "$ISSUE_NUM" \
+              --repo "${{ github.repository }}" \
+              --remove-assignee "@me"
+            gh issue comment "$ISSUE_NUM" \
+              --repo "${{ github.repository }}" \
+              --body "Agent assignment timed out (>2h without PR). Re-entering dispatch queue."
+          done
+
+      - name: Find agent-ready issues
+        id: find-issues
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          MAX_ISSUES="${{ inputs.max_issues || '3' }}"
+
+          # Find unassigned agent-ready issues
+          ISSUES=$(gh issue list \
+            --repo "${{ github.repository }}" \
+            --label "agent-ready" \
+            --state open \
+            --json number,title,body \
+            --jq "[.[] | select(.assignees | length == 0)] | .[:$MAX_ISSUES]")
+
+          ISSUE_COUNT=$(echo "$ISSUES" | jq 'length')
+          echo "Found $ISSUE_COUNT unassigned agent-ready issues"
+          echo "issue_count=$ISSUE_COUNT" >> $GITHUB_OUTPUT
+          echo "issues=$ISSUES" >> $GITHUB_OUTPUT
+
+      - name: Process issues
+        if: steps.find-issues.outputs.issue_count != '0'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+        run: |
+          ISSUES='${{ steps.find-issues.outputs.issues }}'
+
+          echo "$ISSUES" | jq -c '.[]' | while read -r ISSUE; do
+            ISSUE_NUM=$(echo "$ISSUE" | jq -r '.number')
+            ISSUE_TITLE=$(echo "$ISSUE" | jq -r '.title')
+            ISSUE_BODY=$(echo "$ISSUE" | jq -r '.body')
+
+            echo "=========================================="
+            echo "Processing issue #$ISSUE_NUM: $ISSUE_TITLE"
+            echo "=========================================="
+
+            # Claim issue
+            gh issue edit "$ISSUE_NUM" \
+              --repo "${{ github.repository }}" \
+              --add-assignee "@me"
+
+            gh issue comment "$ISSUE_NUM" \
+              --repo "${{ github.repository }}" \
+              --body "Agent dispatched. Working on this issue..."
+
+            # Invoke Claude Code with issue context
+            # The agent will: /wfc-build -> TDD -> review -> push claude/* -> PR to develop
+            claude --print --dangerously-skip-permissions \
+              "You are working on GitHub issue #$ISSUE_NUM.
+
+              Title: $ISSUE_TITLE
+
+              Description:
+              $ISSUE_BODY
+
+              Instructions:
+              1. Use /wfc-build to implement the fix/feature described in the issue
+              2. Create a PR targeting the develop branch
+              3. Reference issue #$ISSUE_NUM in the PR description
+              4. After the PR is created, comment on issue #$ISSUE_NUM with the PR link
+
+              Important:
+              - Follow all WFC conventions (TDD, quality gates, review)
+              - Branch name must start with claude/
+              - Target develop branch, never main
+              " 2>&1 || true
+
+            echo "Agent completed work on issue #$ISSUE_NUM"
+          done

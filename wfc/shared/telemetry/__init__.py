@@ -1,5 +1,21 @@
-"""WFC Telemetry System - ELEGANT & SIMPLE"""
+"""WFC Telemetry System - re-exports from canonical telemetry_auto module.
 
-from .wfc_telemetry import WFCTelemetry, TelemetryRecord, get_telemetry
+All consumers should import directly from wfc.shared.telemetry_auto.
+This __init__.py exists for backwards compatibility only.
+"""
 
-__all__ = ["WFCTelemetry", "TelemetryRecord", "get_telemetry"]
+from wfc.shared.telemetry_auto import (
+    AutoTelemetry,
+    get_telemetry,
+    log_event,
+    get_workflow_metrics,
+    print_workflow_metrics,
+)
+
+__all__ = [
+    "AutoTelemetry",
+    "get_telemetry",
+    "log_event",
+    "get_workflow_metrics",
+    "print_workflow_metrics",
+]

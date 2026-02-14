@@ -18,7 +18,7 @@ Simplified workflow that skips formal planning but maintains all WFC quality inf
 4. **TDD Workflow** - Each subagent follows TEST → IMPLEMENT → REFACTOR
 5. **Quality Gates** - Formatters, linters, tests (pre-review)
 6. **Consensus Review** - Route through wfc-review
-7. **Auto-Merge** - Merge to main (or rollback on failure)
+7. **Auto-Merge** - Merge to develop via PR (or rollback on failure)
 
 ## Usage
 
@@ -212,7 +212,7 @@ User: /wfc-build "add doc loader"
 - **Merge engine** - Auto-merge with rollback capability
 
 ### Produces:
-- Merged code on main branch
+- PR targeting develop branch (auto-merge for agent branches)
 - Agent reports (telemetry)
 - Review reports
 
@@ -294,26 +294,33 @@ Done! ✅ Rate limiting added to API
 **INTENTIONAL:** Vibe coding + WFC guardrails = professional quality
 **DELEGATED:** Orchestrator NEVER implements, ALWAYS delegates
 
-## Git Safety Policy
+## Git Workflow Policy (PR-First)
 
-**CRITICAL:** WFC NEVER pushes to remote. User must push manually.
+WFC creates feature branches, pushes them, and opens GitHub PRs for team review.
 
 ```
 WFC workflow:
-  Build → Quality → Review → Merge to LOCAL main → Integration tests
-                                    ↓
-                            [WFC STOPS HERE]
-                                    ↓
-                         User reviews and pushes:
-                            git push origin main
+  Build -> Quality -> Review -> Push Branch -> Create GitHub PR to develop
+                                                    |
+                                              [WFC STOPS HERE]
+                                                    |
+                                  Auto-merge for claude/* branches
+                                  Manual review for feat/* branches
 ```
 
-**Why:**
-- ✅ User control before remote changes
-- ✅ Review merged result before push
-- ✅ Respects branch protection rules
-- ✅ Easy to revert before push
-- ✅ User decides: push, PR, or revert
+Agent branches (claude/*) auto-merge to develop when CI passes. Human branches require manual review. Release candidates are cut from develop to main on a schedule.
+
+**What WFC does:**
+- Creates feature branches
+- Pushes branches to remote
+- Creates GitHub PRs targeting develop (draft by default)
+
+**What WFC never does:**
+- Push directly to main/master
+- Force push
+- Merge PRs to main (you decide when to cut releases)
+
+**Legacy mode:** Set `"merge.strategy": "direct"` in wfc.config.json for local-only merge.
 
 See [GIT_SAFETY_POLICY.md](../../../docs/security/GIT_SAFETY_POLICY.md) for complete policy.
 

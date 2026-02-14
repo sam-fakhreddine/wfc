@@ -4,10 +4,13 @@ Branch operations API
 Conservative type classification: chore by default, feat only for new user-facing capability.
 """
 
-import subprocess
 import re
-from typing import Dict, List, Optional
+import subprocess
 from dataclasses import dataclass
+from typing import Dict, List, Optional
+
+from .validators import validate_ref_name as validate_branch_name
+from .validators import validate_task_id
 
 
 @dataclass
@@ -27,7 +30,11 @@ class BranchOperations:
     PROTECTED_BRANCHES = ["main", "master", "develop", "production"]
 
     def create(
-        self, task_id: str, title: str, base_ref: str = "main", type_override: Optional[str] = None
+        self,
+        task_id: str,
+        title: str,
+        base_ref: str = "develop",
+        type_override: Optional[str] = None,
     ) -> BranchResult:
         """
         Create branch for task.
@@ -40,20 +47,43 @@ class BranchOperations:
         - test: test additions
         - security: security fixes
         """
-        # Classify type (conservative)
+        if not validate_task_id(task_id):
+            return BranchResult(
+                branch_name="",
+                created_from=base_ref,
+                type_classified="",
+                success=False,
+                message=f"Invalid task_id: {task_id}",
+            )
+
+        if not validate_branch_name(base_ref):
+            return BranchResult(
+                branch_name="",
+                created_from=base_ref,
+                type_classified="",
+                success=False,
+                message=f"Invalid base_ref: {base_ref}",
+            )
+
         if type_override:
             branch_type = type_override
         else:
             branch_type = self._classify_type(title)
 
-        # Create slug from title
         slug = self._slugify(title)
 
-        # Format branch name
         branch_name = f"{branch_type}/{task_id}-{slug}"
 
+        if not validate_branch_name(branch_name):
+            return BranchResult(
+                branch_name=branch_name,
+                created_from=base_ref,
+                type_classified=branch_type,
+                success=False,
+                message=f"Invalid branch name: {branch_name}",
+            )
+
         try:
-            # Create branch
             subprocess.run(
                 ["git", "checkout", "-b", branch_name, base_ref], check=True, capture_output=True
             )
@@ -76,7 +106,9 @@ class BranchOperations:
 
     def delete(self, branch_name: str, force: bool = False) -> Dict:
         """Delete branch with safety checks"""
-        # Never delete protected branches
+        if not validate_branch_name(branch_name):
+            return {"success": False, "message": f"Invalid branch name: {branch_name}"}
+
         if branch_name in self.PROTECTED_BRANCHES:
             return {"success": False, "message": f"Cannot delete protected branch: {branch_name}"}
 
@@ -106,7 +138,7 @@ class BranchOperations:
 
     def validate_name(self, name: str) -> Dict:
         """Validate branch name against convention"""
-        pattern = r"^(feat|fix|chore|refactor|test|security|hotfix)/TASK-\d{3}-.+$"
+        pattern = r"^(claude|feat|fix|chore|refactor|test|security|hotfix)/TASK-\d{3}-.+$"
         valid = bool(re.match(pattern, name))
 
         violations = []
@@ -124,27 +156,21 @@ class BranchOperations:
         """
         title_lower = title.lower()
 
-        # Explicit feature indicators
         if any(word in title_lower for word in ["add new", "new feature", "user can"]):
             return "feat"
 
-        # Bug fixes
         if any(word in title_lower for word in ["fix", "bug", "issue", "error"]):
             return "fix"
 
-        # Security
         if any(word in title_lower for word in ["security", "vulnerability", "cve"]):
             return "security"
 
-        # Tests
         if any(word in title_lower for word in ["test", "spec", "coverage"]):
             return "test"
 
-        # Refactoring
         if any(word in title_lower for word in ["refactor", "restructure", "cleanup"]):
             return "refactor"
 
-        # Default: chore (conservative)
         return "chore"
 
     def _slugify(self, text: str, max_length: int = 40) -> str:
@@ -156,12 +182,11 @@ class BranchOperations:
         return slug
 
 
-# Singleton instance
 _instance = BranchOperations()
 
 
 def create(
-    task_id: str, title: str, base_ref: str = "main", type_override: Optional[str] = None
+    task_id: str, title: str, base_ref: str = "develop", type_override: Optional[str] = None
 ) -> BranchResult:
     """Create branch"""
     return _instance.create(task_id, title, base_ref, type_override)

@@ -157,7 +157,7 @@ Orchestrator
 
 - **Consumes**: TASKS.md, PROPERTIES.md, TEST-PLAN.md (from wfc-plan)
 - **Integrates**: wfc-consensus-review (for code review)
-- **Produces**: Merged code on main, telemetry records, agent reports
+- **Produces**: PR to develop branch, telemetry records, agent reports
 
 ## Philosophy
 
@@ -165,26 +165,33 @@ Orchestrator
 **MULTI-TIER**: Presentation/Logic/Data/Config cleanly separated
 **PARALLEL**: Maximum concurrency where safe (agents, tasks, reviews)
 
-## Git Safety Policy
+## Git Workflow Policy (PR-First)
 
-**CRITICAL:** WFC NEVER pushes to remote. User must push manually.
+WFC creates feature branches, pushes them, and opens GitHub PRs for team review.
 
 ```
 WFC workflow:
-  Implement → Quality → Review → Merge to LOCAL main → Integration tests
-                                        ↓
-                                [WFC STOPS HERE]
-                                        ↓
-                             User reviews and pushes:
-                                git push origin main
+  Implement -> Quality -> Review -> Push Branch -> Create GitHub PR to develop
+                                                        |
+                                                  [WFC STOPS HERE]
+                                                        |
+                                      Auto-merge for claude/* branches
+                                      Manual review for feat/* branches
 ```
 
-**Why:**
-- ✅ User control before remote changes
-- ✅ Review merged result before push
-- ✅ Respects branch protection rules
-- ✅ Easy to revert before push
-- ✅ User decides: push, PR, or revert
+Agent branches (claude/*) auto-merge to develop when CI passes. Human branches require manual review. Release candidates are cut from develop to main on a schedule.
+
+**What WFC does:**
+- Creates feature branches
+- Pushes branches to remote
+- Creates GitHub PRs targeting develop (draft by default)
+
+**What WFC never does:**
+- Push directly to main/master
+- Force push
+- Merge PRs to main (you decide when to cut releases)
+
+**Legacy mode:** Set `"merge.strategy": "direct"` in wfc.config.json for local-only merge.
 
 See [GIT_SAFETY_POLICY.md](../../../docs/security/GIT_SAFETY_POLICY.md) for complete policy.
 

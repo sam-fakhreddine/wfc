@@ -7,13 +7,63 @@ Install and manage git hooks without replacing existing ones.
 from pathlib import Path
 from typing import Dict, List
 
+# NOTE: Allowlist of hook types supported by WFC — NOT all valid git hooks.
+VALID_HOOKS: frozenset[str] = frozenset(
+    {
+        "pre-commit",
+        "prepare-commit-msg",
+        "commit-msg",
+        "post-commit",
+        "pre-rebase",
+        "post-rebase",
+        "pre-push",
+        "post-push",
+        "pre-merge",
+        "post-merge",
+        "pre-checkout",
+        "post-checkout",
+        "pre-auto-gc",
+        "post-auto-gc",
+    }
+)
+
+
+def is_hook_type_valid(hook_type: str) -> bool:
+    """Check if hook type is in the whitelist."""
+    return hook_type in VALID_HOOKS
+
+
+def has_path_traversal(hook_type: str) -> bool:
+    """Check for path traversal sequences in hook type."""
+    return ".." in hook_type or "/" in hook_type
+
 
 def install(hook_type: str, script: str) -> Dict:
-    """Install git hook"""
+    """
+    Install git hook with validation.
+
+    Args:
+        hook_type: Type of hook to install
+        script: Content to write to hook file
+
+    Returns:
+        Dict with success status and message
+    """
+    if not is_hook_type_valid(hook_type):
+        return {
+            "success": False,
+            "message": f"Invalid hook type: {hook_type}. Valid hooks: {', '.join(sorted(VALID_HOOKS))}",
+        }
+
+    if has_path_traversal(hook_type):
+        return {
+            "success": False,
+            "message": f"Invalid hook type: {hook_type}. Path traversal not allowed.",
+        }
+
     hook_path = Path(".git/hooks") / hook_type
 
     try:
-        # Create hook file
         hook_path.parent.mkdir(parents=True, exist_ok=True)
         hook_path.write_text(script)
         hook_path.chmod(0o755)
@@ -39,6 +89,12 @@ def manage() -> List[Dict]:
 
 def wrap(hook_type: str, new_script: str) -> Dict:
     """Wrap existing hook (never replace)"""
+    if not is_hook_type_valid(hook_type):
+        return {
+            "success": False,
+            "message": f"Invalid hook type: {hook_type}. Valid hooks: {', '.join(sorted(VALID_HOOKS))}",
+        }
+
     hook_path = Path(".git/hooks") / hook_type
 
     try:
@@ -46,7 +102,6 @@ def wrap(hook_type: str, new_script: str) -> Dict:
         if hook_path.exists():
             existing = hook_path.read_text()
 
-        # Combine scripts
         wrapped = f"""#!/bin/bash
 # WFC-managed hook
 {new_script}

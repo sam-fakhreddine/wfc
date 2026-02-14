@@ -1,10 +1,21 @@
 """Test suite for WFC Universal Installer using Docker."""
 
+import shutil
 import subprocess
 import pytest
-from pathlib import Path
 
 
+def _docker_available():
+    if not shutil.which("docker"):
+        return False
+    try:
+        r = subprocess.run(["docker", "info"], capture_output=True, timeout=10)
+        return r.returncode == 0
+    except (subprocess.TimeoutExpired, OSError):
+        return False
+
+
+@pytest.mark.skipif(not _docker_available(), reason="Docker not available")
 class TestInstaller:
     """Test suite for WFC installer."""
 
@@ -23,7 +34,6 @@ class TestInstaller:
 
         request.addfinalizer(cleanup)
 
-        # Build image first
         result = subprocess.run(
             [
                 "docker",
@@ -157,7 +167,6 @@ class TestInstaller:
             text=True,
         )
 
-        # Check for "Installation complete" message
         assert result.returncode == 0, f"CI install failed: {result.stderr}"
         assert (
             "Installation complete" in result.stdout or "✓ Installation complete" in result.stdout

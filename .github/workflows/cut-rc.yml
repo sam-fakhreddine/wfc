@@ -1,0 +1,199 @@
+name: Cut Release Candidate
+
+# Creates RC branch from develop and opens PR to main.
+# Runs on schedule (Friday 18:00 UTC) or manual trigger.
+
+on:
+  schedule:
+    - cron: '0 18 * * 5'  # Friday 18:00 UTC
+  workflow_dispatch:
+    inputs:
+      version_bump:
+        description: 'Version bump type'
+        required: false
+        default: 'auto'
+        type: choice
+        options:
+          - auto
+          - patch
+          - minor
+          - major
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  cut-rc:
+    name: Cut Release Candidate
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout develop
+        uses: actions/checkout@v4
+        with:
+          ref: develop
+          fetch-depth: 0
+
+      - name: Check guards
+        id: guards
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          # Guard 1: Check develop CI is green
+          DEVELOP_STATUS=$(gh api repos/${{ github.repository }}/commits/develop/status --jq '.state')
+          if [ "$DEVELOP_STATUS" != "success" ] && [ "$DEVELOP_STATUS" != "" ]; then
+            echo "Develop CI not green (status: $DEVELOP_STATUS). Skipping RC cut."
+            echo "should_cut=false" >> $GITHUB_OUTPUT
+            exit 0
+          fi
+
+          # Guard 2: Check for new commits since last tag
+          LAST_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "")
+          if [ -n "$LAST_TAG" ]; then
+            NEW_COMMITS=$(git rev-list "$LAST_TAG"..HEAD --count)
+            if [ "$NEW_COMMITS" -eq 0 ]; then
+              echo "No new commits since $LAST_TAG. Skipping RC cut."
+              echo "should_cut=false" >> $GITHUB_OUTPUT
+              exit 0
+            fi
+            echo "commits_since_last=$NEW_COMMITS" >> $GITHUB_OUTPUT
+          else
+            echo "No previous tags found. First release."
+            echo "commits_since_last=0" >> $GITHUB_OUTPUT
+          fi
+
+          # Guard 3: No open auto-merge PRs to develop (wait for in-flight work)
+          OPEN_AUTO_MERGE=$(gh pr list --base develop --state open --json autoMergeRequest --jq '[.[] | select(.autoMergeRequest != null)] | length')
+          if [ "$OPEN_AUTO_MERGE" -gt 0 ]; then
+            echo "$OPEN_AUTO_MERGE auto-merge PRs still open. Waiting for in-flight work."
+            echo "should_cut=false" >> $GITHUB_OUTPUT
+            exit 0
+          fi
+
+          echo "should_cut=true" >> $GITHUB_OUTPUT
+
+      - name: Determine version
+        if: steps.guards.outputs.should_cut == 'true'
+        id: version
+        run: |
+          # Get last tag version
+          LAST_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "v0.0.0")
+          LAST_VERSION="${LAST_TAG#v}"
+
+          IFS='.' read -r MAJOR MINOR PATCH <<< "$LAST_VERSION"
+
+          BUMP_TYPE="${{ inputs.version_bump || 'auto' }}"
+
+          if [ "$BUMP_TYPE" = "auto" ]; then
+            # Analyze commits for conventional commit types
+            LAST_TAG_REF=$(git rev-parse "$LAST_TAG" 2>/dev/null || echo "")
+            if [ -n "$LAST_TAG_REF" ]; then
+              COMMITS=$(git log "$LAST_TAG"..HEAD --pretty=format:"%s")
+            else
+              COMMITS=$(git log --pretty=format:"%s")
+            fi
+
+            if echo "$COMMITS" | grep -qi "BREAKING CHANGE\|^.*!:"; then
+              BUMP_TYPE="major"
+            elif echo "$COMMITS" | grep -qi "^feat"; then
+              BUMP_TYPE="minor"
+            else
+              BUMP_TYPE="patch"
+            fi
+          fi
+
+          case "$BUMP_TYPE" in
+            major) MAJOR=$((MAJOR + 1)); MINOR=0; PATCH=0 ;;
+            minor) MINOR=$((MINOR + 1)); PATCH=0 ;;
+            patch) PATCH=$((PATCH + 1)) ;;
+          esac
+
+          NEW_VERSION="$MAJOR.$MINOR.$PATCH"
+          echo "version=$NEW_VERSION" >> $GITHUB_OUTPUT
+          echo "bump_type=$BUMP_TYPE" >> $GITHUB_OUTPUT
+          echo "Version: v$NEW_VERSION (bump: $BUMP_TYPE)"
+
+      - name: Generate commit summary
+        if: steps.guards.outputs.should_cut == 'true'
+        id: summary
+        run: |
+          LAST_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "")
+
+          if [ -n "$LAST_TAG" ]; then
+            COMMIT_JSON=$(git log "$LAST_TAG"..HEAD --pretty=format:'{"sha":"%h","message":"%s"}' | head -20 | jq -s '.')
+          else
+            COMMIT_JSON=$(git log --pretty=format:'{"sha":"%h","message":"%s"}' | head -20 | jq -s '.')
+          fi
+
+          echo "commit_json=$COMMIT_JSON" >> $GITHUB_OUTPUT
+
+      - name: Create RC branch
+        if: steps.guards.outputs.should_cut == 'true'
+        id: rc
+        run: |
+          RC_BRANCH="rc/v${{ steps.version.outputs.version }}"
+          echo "rc_branch=$RC_BRANCH" >> $GITHUB_OUTPUT
+
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+          git checkout -b "$RC_BRANCH"
+
+      - name: Write .build-info.json
+        if: steps.guards.outputs.should_cut == 'true'
+        run: |
+          cat > .build-info.json << EOF
+          {
+            "version": "${{ steps.version.outputs.version }}",
+            "rc_branch": "${{ steps.rc.outputs.rc_branch }}",
+            "rc_cut_at": "$(date -u +%Y-%m-%dT%H:%M:%SZ)",
+            "rc_cut_from": "develop",
+            "rc_cut_sha": "${{ github.sha }}",
+            "promoted_at": null,
+            "promoted_tag": null,
+            "soak_hours": 24,
+            "commits_since_last_release": ${{ steps.guards.outputs.commits_since_last || 0 }},
+            "version_bump": "${{ steps.version.outputs.bump_type }}"
+          }
+          EOF
+
+          git add .build-info.json
+          git commit -m "chore: write .build-info.json for v${{ steps.version.outputs.version }}"
+
+      - name: Push RC branch and create PR
+        if: steps.guards.outputs.should_cut == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          RC_BRANCH="${{ steps.rc.outputs.rc_branch }}"
+          VERSION="${{ steps.version.outputs.version }}"
+
+          git push origin "$RC_BRANCH"
+
+          gh pr create \
+            --base main \
+            --head "$RC_BRANCH" \
+            --title "Release v$VERSION" \
+            --body "$(cat <<'EOF'
+          ## Release Candidate v${{ steps.version.outputs.version }}
+
+          **Cut from:** develop at ${{ github.sha }}
+          **Bump type:** ${{ steps.version.outputs.bump_type }}
+          **Soak period:** 24 hours
+
+          ### What happens next
+
+          1. CI runs on this PR (required checks must pass)
+          2. After 24h soak with green CI, `promote-rc.yml` auto-merges to main
+          3. Tag `v${{ steps.version.outputs.version }}` is created
+          4. `release.yml` + `publish.yml` fire automatically
+
+          ### Safety
+
+          - Do NOT merge this manually (promote-rc handles it)
+          - If issues found: close this PR, fix on develop, re-cut RC
+          EOF
+          )"
+
+          echo "RC PR created: $RC_BRANCH -> main"

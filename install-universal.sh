@@ -1,23 +1,41 @@
 #!/usr/bin/env bash
 set -e
 
+# Require bash 4+ for associative arrays (declare -A)
+if [ "${BASH_VERSINFO[0]}" -lt 4 ]; then
+    for candidate in /opt/homebrew/bin/bash /usr/local/bin/bash; do
+        if [ -x "$candidate" ]; then
+            exec "$candidate" "$0" "$@"
+        fi
+    done
+    echo "Error: bash 4+ required. Install with: brew install bash"
+    exit 1
+fi
+
 # WFC Universal Installer - Agent Skills Standard Compatible
 # Detects and installs to: Claude Code, Kiro, OpenCode, Cursor, VS Code, Codex, Antigravity
 #
 # Usage:
-#   ./install.sh                      - Interactive installation
-#   ./install.sh --help               - Show this help message
-#   ./install.sh --ci                 - Non-interactive CI mode
+#   ./install-universal.sh              - Interactive (local clone)
+#   ./install-universal.sh --ci         - Non-interactive CI mode
+#   ./install-universal.sh --help       - Show help
+#
+# Remote install:
+#   curl -fsSL https://raw.githubusercontent.com/sam-fakhreddine/wfc/main/install-universal.sh | bash
 #
 # Features:
 #   - Auto-detects installed Agent Skills platforms
 #   - Supports 8+ platforms (Claude Code, Kiro, OpenCode, etc.)
+#   - Remote install via curl pipe (clones repo to /tmp)
 #   - Branding modes: SFW (Workflow Champion) or NSFW (World Fucking Class)
+#   - PostToolUse quality hooks (auto-lint, TDD, context monitor)
 #   - Reinstall options: refresh, change branding, or full reset
 #   - Progressive disclosure (92% token reduction)
 #   - Symlink support for multi-platform sync
 
-VERSION="0.6.0"
+VERSION="0.7.0"
+REPO="sam-fakhreddine/wfc"
+REPO_URL="https://github.com/${REPO}.git"
 
 # Non-interactive mode flag
 CI_MODE=false
@@ -90,9 +108,73 @@ CYAN="\033[0;36m"
 MAGENTA="\033[0;35m"
 RESET="\033[0m"
 
+# ============================================================================
+# REMOTE INSTALL: If running via curl pipe, clone repo first
+# ============================================================================
+SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" 2>/dev/null )" 2>/dev/null && pwd 2>/dev/null )" || SCRIPT_DIR=""
+REMOTE_INSTALL=false
+
+if [ -z "$SCRIPT_DIR" ] || [ ! -d "$SCRIPT_DIR/wfc/skills" ]; then
+    # Running via curl pipe or from outside repo - clone to /tmp
+    REMOTE_INSTALL=true
+    CLONE_DIR="/tmp/wfc-install-$$"
+
+    echo -e "${BOLD}📡 Remote install - fetching WFC...${RESET}"
+
+    if ! command -v git >/dev/null 2>&1; then
+        echo -e "${RED}✗${RESET} git is required. Install git first."
+        exit 1
+    fi
+
+    git clone --depth 1 "$REPO_URL" "$CLONE_DIR" 2>/dev/null
+    SCRIPT_DIR="$CLONE_DIR"
+    echo -e "${GREEN}✓${RESET} WFC fetched"
+    echo ""
+
+    # Cleanup on exit
+    trap "rm -rf $CLONE_DIR" EXIT
+fi
+
+# ============================================================================
+# DEPENDENCY CHECK
+# ============================================================================
+check_dependencies() {
+    local missing=()
+
+    if ! command -v uv >/dev/null 2>&1; then
+        missing+=("uv")
+    fi
+    if ! command -v git >/dev/null 2>&1; then
+        missing+=("git")
+    fi
+
+    if [ ${#missing[@]} -gt 0 ]; then
+        echo -e "${YELLOW}⚠${RESET}  Optional dependencies not found: ${missing[*]}"
+
+        if [[ " ${missing[*]} " =~ " uv " ]]; then
+            echo -e "   Install uv: ${CYAN}curl -LsSf https://astral.sh/uv/install.sh | sh${RESET}"
+        fi
+        echo ""
+    fi
+
+    # Check for quality tools (informational)
+    local quality_tools=()
+    command -v ruff >/dev/null 2>&1 && quality_tools+=("ruff")
+    command -v black >/dev/null 2>&1 && quality_tools+=("black")
+    command -v prettier >/dev/null 2>&1 && quality_tools+=("prettier")
+    command -v eslint >/dev/null 2>&1 && quality_tools+=("eslint")
+    command -v gofmt >/dev/null 2>&1 && quality_tools+=("gofmt")
+
+    if [ ${#quality_tools[@]} -gt 0 ]; then
+        echo -e "${GREEN}✓${RESET} Quality tools detected: ${quality_tools[*]}"
+    fi
+}
+
 echo -e "${BOLD}🏆 WFC Universal Installer v${VERSION}${RESET}"
 echo -e "   ${CYAN}Agent Skills Standard Compatible${RESET}"
 echo ""
+
+check_dependencies
 
 # Check for existing installation
 EXISTING_INSTALL=false
@@ -351,19 +433,27 @@ echo ""
 
 # Handle no platforms detected
 if [ $DETECTED_COUNT -eq 0 ]; then
-    echo -e "${YELLOW}⚠${RESET}  No Agent Skills compatible platforms detected"
-    echo ""
-    echo -e "${BOLD}Install one of these platforms:${RESET}"
-    echo -e "  • Claude Code:       ${CYAN}https://claude.ai/download${RESET}"
-    echo -e "  • Kiro (AWS):        ${CYAN}https://kiro.dev${RESET}"
-    echo -e "  • OpenCode:          ${CYAN}https://opencode.ai${RESET}"
-    echo -e "  • Cursor:            ${CYAN}https://cursor.com${RESET}"
-    echo -e "  • VS Code:           ${CYAN}https://code.visualstudio.com/${RESET}"
-    echo -e "  • OpenAI Codex:      ${CYAN}https://developers.openai.com/codex${RESET}"
-    echo -e "  • Google Antigravity:${CYAN}https://antigravity.dev${RESET}"
-    echo ""
-    echo -e "Then re-run this installer."
-    exit 1
+    if [ "$CI_MODE" = true ]; then
+        echo -e "${CYAN}CI mode:${RESET} No platforms detected — auto-creating ~/.claude/skills"
+        mkdir -p "$HOME/.claude/skills"
+        PLATFORMS[claude]=true
+        PLATFORM_PATHS[claude]="$HOME/.claude/skills"
+        DETECTED_COUNT=1
+    else
+        echo -e "${YELLOW}⚠${RESET}  No Agent Skills compatible platforms detected"
+        echo ""
+        echo -e "${BOLD}Install one of these platforms:${RESET}"
+        echo -e "  • Claude Code:       ${CYAN}https://claude.ai/download${RESET}"
+        echo -e "  • Kiro (AWS):        ${CYAN}https://kiro.dev${RESET}"
+        echo -e "  • OpenCode:          ${CYAN}https://opencode.ai${RESET}"
+        echo -e "  • Cursor:            ${CYAN}https://cursor.com${RESET}"
+        echo -e "  • VS Code:           ${CYAN}https://code.visualstudio.com/${RESET}"
+        echo -e "  • OpenAI Codex:      ${CYAN}https://developers.openai.com/codex${RESET}"
+        echo -e "  • Google Antigravity:${CYAN}https://antigravity.dev${RESET}"
+        echo ""
+        echo -e "Then re-run this installer."
+        exit 1
+    fi
 fi
 
 # Show summary
@@ -766,6 +856,72 @@ if [ "$STRATEGY" = "symlink" ]; then
     done
 fi
 
+# ============================================================================
+# HOOK REGISTRATION: Install PostToolUse quality hooks for Claude Code
+# ============================================================================
+if [ "${INSTALL_TO[claude]}" = true ] || [ "${PLATFORMS[claude]}" = true ]; then
+    echo -e "${BOLD}🪝 Registering PostToolUse quality hooks...${RESET}"
+    echo ""
+
+    HOOKS_SRC="$SCRIPT_DIR/wfc/scripts/hooks"
+    HOOKS_DEST="$HOME/.wfc/scripts/hooks"
+
+    if [ -d "$HOOKS_SRC" ]; then
+        mkdir -p "$HOOKS_DEST"
+        mkdir -p "$HOOKS_DEST/_checkers"
+
+        # Copy hook scripts
+        for hook_file in file_checker.py tdd_enforcer.py context_monitor.py _util.py register_hooks.py; do
+            if [ -f "$HOOKS_SRC/$hook_file" ]; then
+                cp "$HOOKS_SRC/$hook_file" "$HOOKS_DEST/$hook_file"
+                echo "    ├─ $hook_file"
+            fi
+        done
+
+        # Copy language checkers
+        for checker_file in __init__.py python.py typescript.py go.py; do
+            if [ -f "$HOOKS_SRC/_checkers/$checker_file" ]; then
+                cp "$HOOKS_SRC/_checkers/$checker_file" "$HOOKS_DEST/_checkers/$checker_file"
+                echo "    ├─ _checkers/$checker_file"
+            fi
+        done
+
+        # Copy security hooks
+        for sec_file in pretooluse_hook.py security_hook.py rule_engine.py config_loader.py hook_state.py __init__.py __main__.py; do
+            if [ -f "$HOOKS_SRC/$sec_file" ]; then
+                cp "$HOOKS_SRC/$sec_file" "$HOOKS_DEST/$sec_file"
+            fi
+        done
+
+        # Copy patterns
+        if [ -d "$HOOKS_SRC/patterns" ]; then
+            mkdir -p "$HOOKS_DEST/patterns"
+            cp "$HOOKS_SRC/patterns"/*.json "$HOOKS_DEST/patterns/" 2>/dev/null || true
+        fi
+
+        echo -e "${GREEN}  ✓${RESET} Quality hooks installed to ~/.wfc/scripts/hooks/"
+    fi
+
+    # Upsert WFC hooks into ~/.claude/settings.json (never clobbers existing settings)
+    REGISTER_SCRIPT="$HOOKS_DEST/register_hooks.py"
+    GLOBAL_SETTINGS="$HOME/.claude/settings.json"
+    if [ -f "$REGISTER_SCRIPT" ]; then
+        echo "  • Registering hooks in ~/.claude/settings.json (upsert)..."
+        if command -v python3 >/dev/null 2>&1; then
+            python3 "$REGISTER_SCRIPT" "$GLOBAL_SETTINGS"
+            echo -e "${GREEN}  ✓${RESET} Hooks registered (existing settings preserved)"
+        elif command -v python >/dev/null 2>&1; then
+            python "$REGISTER_SCRIPT" "$GLOBAL_SETTINGS"
+            echo -e "${GREEN}  ✓${RESET} Hooks registered (existing settings preserved)"
+        else
+            echo -e "${YELLOW}  ⚠${RESET} Python not found — run manually:"
+            echo "      python3 $REGISTER_SCRIPT $GLOBAL_SETTINGS"
+        fi
+    fi
+
+    echo ""
+fi
+
 # Success!
 echo -e "${GREEN}${BOLD}✓ Installation complete!${RESET}"
 echo ""
@@ -817,6 +973,7 @@ echo "  • ${CYAN}/wfc-pr-comments${RESET} - PR comment triage & fix"
 echo "  • ${CYAN}/wfc-newskill${RESET}     - Create new WFC skills"
 echo "  • ${CYAN}/wfc-init${RESET}        - Project initialization tool"
 echo "  • ${CYAN}/wfc-vibe${RESET}         - Natural brainstorming mode"
+echo "  • ${CYAN}/wfc-sync${RESET}        - Sync rules & discover patterns"
 echo "  • ${CYAN}/wfc-agentic${RESET}     - GitHub Agentic Workflows (gh-aw)"
 
 echo ""

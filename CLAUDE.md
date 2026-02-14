@@ -75,34 +75,46 @@ wfc validate                     # Validate skills (after install)
 - Complex dependencies
 - Need formal properties (SAFETY, LIVENESS, etc.)
 
-### Git Workflow Policy (v2.0 - PR-First)
+### Git Workflow Policy (v3.0 - Autonomous Branching)
 
 **Versioning:** Use autosemver for automatic semantic versioning (BREAKING CHANGES, feat:, fix:)
 
-**NEW DEFAULT**: WFC creates GitHub PRs for team collaboration.
+**DEFAULT**: WFC targets `develop` as the integration branch. Release candidates are cut from develop to main on a schedule.
 
 ```
-WFC workflow (NEW):
-  Build/Plan → Implement → Quality → Review → Push Branch → Create GitHub PR
-                                                                    ↓
-                                                          [WFC STOPS HERE]
-                                                                    ↓
-                                            You review PR and merge via GitHub
+WFC autonomous loop:
+  Issue (agent-ready) -> Agent Dispatch -> /wfc-build -> TDD -> Review
+                                                                  |
+                                                          Push claude/* branch
+                                                                  |
+                                                        PR to develop (auto-merge)
+                                                                  |
+                                                    develop-health.yml (self-healing)
+                                                                  |
+                                                  cut-rc.yml (Friday 18:00 UTC)
+                                                                  |
+                                                    rc/vX.Y.Z -> PR to main
+                                                                  |
+                                              promote-rc.yml (24h soak + green CI)
+                                                                  |
+                                                        Tag vX.Y.Z -> Release
 ```
 
-**What Changed:**
-- ✅ **NEW**: Pushes feature branches to remote
-- ✅ **NEW**: Creates GitHub PRs automatically
-- ✅ **UNCHANGED**: Never pushes to main/master
-- ✅ **UNCHANGED**: User controls final merge (via GitHub)
-- ✅ **LEGACY**: Direct local merge still available (config: `"merge.strategy": "direct"`)
+**What Changed (v3.0):**
+- NEW: `develop` is the default integration branch (not `main`)
+- NEW: Agent branches use `claude/` prefix and auto-merge to develop
+- NEW: Release candidates (rc/vX.Y.Z) soak 24h before promotion to main
+- NEW: Self-healing on develop (auto-revert + bug issue on test failure)
+- NEW: Autonomous dispatch via GitHub Issues + self-hosted runner
+- UNCHANGED: Never pushes directly to main/master
+- UNCHANGED: User controls final releases (via RC promotion)
 
-**Why PR Workflow:**
-- ✅ Team collaboration (PR reviews)
-- ✅ CI/CD integration (GitHub Actions)
-- ✅ Audit trail (GitHub history)
-- ✅ Branch protection (required reviews)
-- ✅ Modern workflow (industry standard)
+**Why Autonomous Branching:**
+- Agents ship features autonomously (weekends, nights)
+- develop absorbs risk (main stays stable)
+- RC soak period catches integration issues
+- Self-healing prevents broken develop from blocking work
+- Full audit trail via GitHub Issues, PRs, and tags
 
 ### When to Use Which Skill
 
@@ -121,6 +133,7 @@ WFC workflow (NEW):
 | Custom rules | `/wfc-rules` | Markdown-based code standards |
 | Visual exploration | `/wfc-playground` | Interactive HTML prototyping |
 | Fix PR comments | `/wfc-pr-comments` | Triage & fix review feedback |
+| Sync rules | `/wfc-sync` | Discover patterns & sync rules |
 | Agentic workflows | `/wfc-agentic` | Generate gh-aw workflows |
 
 **Note:** wfc-vibe is the default conversational mode. Just chat naturally - when you're ready to implement, say "let's plan this" or "let's build this".
@@ -215,6 +228,14 @@ WFC - World Fucking Class
 │   │   │   ├── rule_engine.py            # Custom rule engine
 │   │   │   ├── config_loader.py          # Hook configuration
 │   │   │   ├── hook_state.py             # Hook state management
+│   │   │   ├── file_checker.py           # PostToolUse auto-lint dispatcher
+│   │   │   ├── tdd_enforcer.py           # PostToolUse TDD reminders
+│   │   │   ├── context_monitor.py        # PostToolUse context window tracking
+│   │   │   ├── _util.py                  # Shared hook utilities
+│   │   │   ├── _checkers/               # Language-specific quality checkers
+│   │   │   │   ├── python.py            # ruff + pyright
+│   │   │   │   ├── typescript.py        # prettier + eslint + tsc
+│   │   │   │   └── go.py                # gofmt + go vet + golangci-lint
 │   │   │   └── patterns/                 # Security patterns (JSON)
 │   │   └── skills/               # Skill implementations
 │   │       └── review/
@@ -240,8 +261,9 @@ WFC - World Fucking Class
 │   ├── wfc-safeguard/            # Real-time security enforcement hooks
 │   ├── wfc-rules/                # Markdown-based custom enforcement rules
 │   ├── wfc-playground/           # Interactive HTML playground generator
+│   ├── wfc-sync/                # Rule/pattern discovery & sync
 │   ├── wfc-agentic/             # GitHub Agentic Workflows (gh-aw) generator
-│   └── ... (18 total)
+│   └── ... (20 total)
 │
 ├── docs/                         # Documentation (organized by topic)
 │   ├── architecture/             # System design, planning

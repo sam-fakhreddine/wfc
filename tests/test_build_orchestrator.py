@@ -4,7 +4,6 @@ Tests for WFC Build Orchestrator
 Verifies orchestration flow and safety properties
 """
 
-import pytest
 from wfc.scripts.skills.build.orchestrator import BuildOrchestrator
 
 
@@ -44,8 +43,10 @@ class TestBuildOrchestrator:
         # For now, test that the recommendation flow exists
         result = self.orchestrator.execute(feature_hint="Test", dry_run=True)
 
+        assert "complexity" in result, "Missing 'complexity' key in result"
+        assert result["complexity"] is not None, "Complexity assessment should not be None"
         # If XL is detected, should return recommendation status
-        if result["complexity"] and result["complexity"].rating == "XL":
+        if result["complexity"].rating == "XL":
             assert result["status"] == "xl_recommendation"
             assert result["complexity"].recommendation != ""
 
@@ -71,11 +72,10 @@ class TestBuildOrchestrator:
         """TEST-015: No auto-push to remote (PROP-003)"""
         result = self.orchestrator.execute(feature_hint="Test", dry_run=False)
 
-        # If implementation result exists, verify no push
-        if result.get("implementation"):
-            impl = result["implementation"]
-            # Should explicitly indicate no push
-            assert impl.get("would_push_to_remote") == False
+        assert "implementation" in result, "Missing 'implementation' key in result"
+        impl = result["implementation"]
+        # Should explicitly indicate no push
+        assert impl.get("would_push_to_remote") == False
 
 
 class TestOrchestrationFlow:
@@ -107,9 +107,14 @@ class TestOrchestrationFlow:
         """Test Phase 3: Implementation routing (placeholder)"""
         result = self.orchestrator.execute(feature_hint="Test", dry_run=False)
 
+        assert "status" in result, "Missing 'status' key in result"
         # Implementation phase should have placeholder
-        if result["status"] not in ["xl_recommendation"]:
-            assert result["implementation"] is not None
+        assert result["status"] not in [
+            "xl_recommendation"
+        ], "XL recommendation should not occur for simple test feature"
+        assert (
+            result["implementation"] is not None
+        ), "Missing 'implementation' in result for non-XL task"
 
 
 class TestSafetyProperties:
@@ -123,26 +128,26 @@ class TestSafetyProperties:
         """Verify PROP-001: Quality gates would be enforced"""
         result = self.orchestrator.execute(feature_hint="Test", dry_run=False)
 
-        if result.get("implementation"):
-            assert result["implementation"].get("would_run_quality_gates") == True
+        assert "implementation" in result, "Missing 'implementation' key in result"
+        assert result["implementation"].get("would_run_quality_gates") == True
 
     def test_prop_002_consensus_review_enforced(self):
         """Verify PROP-002: Consensus review would be enforced"""
         result = self.orchestrator.execute(feature_hint="Test", dry_run=False)
 
-        if result.get("implementation"):
-            assert result["implementation"].get("would_run_consensus_review") == True
+        assert "implementation" in result, "Missing 'implementation' key in result"
+        assert result["implementation"].get("would_run_consensus_review") == True
 
     def test_prop_003_no_auto_push(self):
         """Verify PROP-003: No auto-push to remote"""
         result = self.orchestrator.execute(feature_hint="Test", dry_run=False)
 
-        if result.get("implementation"):
-            assert result["implementation"].get("would_push_to_remote") == False
+        assert "implementation" in result, "Missing 'implementation' key in result"
+        assert result["implementation"].get("would_push_to_remote") == False
 
     def test_prop_007_tdd_enforced(self):
         """Verify PROP-007: TDD workflow would be enforced"""
         result = self.orchestrator.execute(feature_hint="Test", dry_run=False)
 
-        if result.get("implementation"):
-            assert result["implementation"].get("would_enforce_tdd") == True
+        assert "implementation" in result, "Missing 'implementation' key in result"
+        assert result["implementation"].get("would_enforce_tdd") == True

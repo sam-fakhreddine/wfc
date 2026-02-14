@@ -52,9 +52,7 @@ class GitHelper:
         cmd = ["git", "-C", str(self.repo_path)] + list(args)
 
         try:
-            result = subprocess.run(
-                cmd, capture_output=True, text=True, timeout=300  # 5 minute timeout
-            )
+            result = subprocess.run(cmd, capture_output=True, text=True, timeout=300)
 
             if check and result.returncode != 0:
                 raise GitError(
@@ -70,7 +68,7 @@ class GitHelper:
         except FileNotFoundError:
             raise GitError("Git not found in PATH")
 
-    def worktree_add(self, path: Path, branch: str, from_branch: str = "main") -> None:
+    def worktree_add(self, path: Path, branch: str, from_branch: str = "develop") -> None:
         """
         Create a new worktree.
 
@@ -168,7 +166,6 @@ class GitHelper:
         return len(stdout.strip()) > 0
 
 
-# Convenience function
 def get_git(repo_path: Path) -> GitHelper:
     """
     Get GitHelper instance.
@@ -183,7 +180,6 @@ def get_git(repo_path: Path) -> GitHelper:
 
 
 if __name__ == "__main__":
-    # Simple test (requires being in a git repo)
     try:
         git = get_git(Path.cwd())
         print(f"Current branch: {git.current_branch()}")

@@ -4,7 +4,6 @@ Tests for WFC Build Quick Interview
 Verifies PROP-008: Interview completes in <30 seconds
 """
 
-import pytest
 import time
 from wfc.scripts.skills.build.interview import QuickInterview, InterviewResult
 

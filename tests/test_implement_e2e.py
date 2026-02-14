@@ -19,6 +19,9 @@ import sys
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
+# Activate PEP 562 import bridge for hyphenated skill directory (wfc-implement → wfc_implement)
+from wfc.skills import wfc_implement  # noqa: F401
+
 
 class TestE2EBasicWorkflow:
     """Basic end-to-end workflow tests."""
@@ -80,7 +83,7 @@ class TestE2EBasicWorkflow:
         (plan_dir / "TASKS.md").write_text(tasks_content)
 
         # Test that we can parse the tasks
-        from wfc.skills.implement.parser import parse_tasks
+        from wfc_implement.parser import parse_tasks
 
         task_graph = parse_tasks(plan_dir / "TASKS.md")
 
@@ -223,7 +226,7 @@ class TestRollbackScenarios:
 
     def test_merge_rollback_on_failure(self):
         """Test that merge rolls back on integration test failure."""
-        from wfc.skills.implement.merge_engine import MergeStatus, FailureSeverity
+        from wfc_implement.merge_engine import MergeStatus, FailureSeverity
 
         # This tests the rollback logic structure
         # In a real scenario, merge_engine would:
@@ -245,7 +248,7 @@ class TestRollbackScenarios:
 
     def test_worktree_preservation_on_failure(self):
         """Test that worktrees are preserved on failure for investigation."""
-        from wfc.skills.implement.merge_engine import MergeResult
+        from wfc_implement.merge_engine import MergeResult
 
         # Create a mock failed merge result
         result = MergeResult(
@@ -266,7 +269,7 @@ class TestRollbackScenarios:
 
     def test_max_retry_limit(self):
         """Test that retries are limited to max_retries."""
-        from wfc.skills.implement.merge_engine import MergeResult, FailureSeverity
+        from wfc_implement.merge_engine import MergeResult, FailureSeverity
 
         # First failure - should retry
         result1 = MergeResult(
@@ -305,7 +308,7 @@ class TestParallelExecution:
 
     def test_dependency_ordering(self):
         """Test that tasks with dependencies execute in correct order."""
-        from wfc.skills.implement.parser import parse_tasks
+        from wfc_implement.parser import parse_tasks
 
         # Create tasks with dependencies
         tasks_content = """# Implementation Tasks
@@ -379,7 +382,7 @@ class TestTDDWorkflow:
 
     def test_tdd_phases_exist(self):
         """Test that TDD phases are properly defined."""
-        from wfc.skills.implement.agent import AgentPhase
+        from wfc_implement.agent import AgentPhase
 
         # Verify all TDD phases exist
         phases = [phase.value for phase in AgentPhase]
@@ -413,13 +416,18 @@ def test_coverage_check():
             "universal_quality_checker",
         ]:
             module_path = f"wfc.scripts.{component}"
+            try:
+                __import__(module_path)
+            except ImportError as e:
+                pytest.fail(f"Failed to import {module_path}: {e}")
         else:
-            module_path = f"wfc.skills.implement.{component}"
+            # Use PEP 562 bridge for hyphenated skill directory
+            try:
+                import importlib
 
-        try:
-            __import__(module_path)
-        except ImportError as e:
-            pytest.fail(f"Failed to import {module_path}: {e}")
+                importlib.import_module(f".{component}", package="wfc_implement")
+            except ImportError as e:
+                pytest.fail(f"Failed to import wfc_implement.{component}: {e}")
 
 
 if __name__ == "__main__":
