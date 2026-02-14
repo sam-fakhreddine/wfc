@@ -121,6 +121,18 @@ class TestInstallValidation:
 class TestWrapValidation:
     """Test wrap() function behavior."""
 
+    def test_wrap_rejects_invalid_hook_type(self):
+        """wrap() should reject invalid hook types just like install()."""
+        result = wrap("malicious", "echo 'hack'")
+        assert result["success"] is False
+        assert "Invalid hook type" in result["message"]
+
+    def test_wrap_rejects_path_traversal(self):
+        """wrap() should reject path traversal attempts."""
+        result = wrap("../etc/passwd", "echo 'traversal'")
+        assert result["success"] is False
+        assert "Invalid hook type" in result["message"]
+
     def test_wrap_creates_combined_hook(self, tmp_path, monkeypatch):
         """wrap() should combine new script with existing hook."""
         git_hooks = tmp_path / ".git" / "hooks"

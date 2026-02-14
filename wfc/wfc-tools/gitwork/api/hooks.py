@@ -91,6 +91,13 @@ def manage() -> List[Dict]:
 
 def wrap(hook_type: str, new_script: str) -> Dict:
     """Wrap existing hook (never replace)"""
+    # Same validation as install() - prevent path traversal and invalid types
+    if not is_hook_type_valid(hook_type):
+        return {
+            "success": False,
+            "message": f"Invalid hook type: {hook_type}. Valid hooks: {', '.join(sorted(VALID_HOOKS))}",
+        }
+
     hook_path = Path(".git/hooks") / hook_type
 
     try:
