@@ -1,6 +1,6 @@
 ---
 name: wfc-code-standards
-description: Language-agnostic coding standards for all WFC projects. Enforces architecture (three-tier, SOLID, composition over inheritance), code quality (500-line limit, DRY, early returns, structured errors), observability (structured logging, no print/console.log), testing philosophy (unit/integration/e2e, fixtures, parametrization), async safety (never block the event loop), dependency management (lock files, CVE scanning, version pinning), and documentation (public API docstrings). Referenced by all language-specific skills. Not a user-invocable skill.
+description: Language-agnostic coding standards for all WFC projects. Enforces architecture (three-tier, SOLID, composition over inheritance), code quality (500-line limit, DRY, early returns, structured errors, idempotent operations), observability (structured logging, no print/console.log), testing philosophy (unit/integration/e2e, fixtures, parametrization), async safety (never block the event loop), dependency management (lock files, CVE scanning, version pinning), and documentation (public API docstrings). Referenced by all language-specific skills. Not a user-invocable skill.
 license: MIT
 ---
 
@@ -133,6 +133,30 @@ When writing files that represent state (config, data, caches), use atomic write
 3. Atomically rename/move to the target path
 
 This prevents half-written files on crash. A file either exists with complete content or doesn't exist.
+
+### Idempotency
+
+Operations should be safe to retry. Running the same operation twice must produce the same result as running it once.
+
+**Rules**:
+- **Writes**: Use upsert/create-or-update, not blind insert. A retry after a crash shouldn't create duplicates.
+- **Deletes**: Deleting something that doesn't exist is a no-op, not an error.
+- **Side effects**: Guard with idempotency keys or check-before-act patterns. If the effect already happened, skip it.
+- **Migrations**: Schema migrations, data backfills, and deploy scripts must be re-runnable without damage.
+- **APIs**: POST endpoints that create resources should accept client-generated idempotency keys. PUT/DELETE are naturally idempotent.
+
+**Why this matters**: Networks fail. Processes crash. Queues redeliver. Users double-click. If your operation isn't idempotent, every retry is a potential data corruption. Design for "at-least-once" delivery and you never worry about "exactly-once."
+
+**Idempotency patterns by context**:
+
+| Context | Pattern |
+|---------|---------|
+| Database writes | Upsert / ON CONFLICT DO UPDATE |
+| Queue consumers | Dedup by message ID or idempotency key |
+| File operations | Atomic write (temp + rename) |
+| API endpoints | Client-provided idempotency key in header |
+| Cron jobs / scheduled tasks | Check last-run state before executing |
+| Provisioning / IaC | Declarative desired state, not imperative steps |
 
 ## Observability
 
@@ -328,6 +352,13 @@ When reviewing code in any language, flag:
 - Blocking I/O in async functions
 - Missing timeouts on external calls
 - Swallowed cancellation signals
+
+**Idempotency violations**:
+- Blind inserts that create duplicates on retry
+- Delete operations that error on missing resources
+- Side effects without idempotency guards (duplicate emails, double charges)
+- Migrations / scripts that break when run twice
+- Queue consumers without dedup
 
 **Dependency violations**:
 - Lock file not committed

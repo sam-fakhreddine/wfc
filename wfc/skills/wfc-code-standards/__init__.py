@@ -16,6 +16,7 @@ Code Quality:
     - Structured error hierarchies (no bare catch-all)
     - Resource lifecycle via language mechanisms (with/defer/using)
     - Atomic writes for state files
+    - Idempotent operations (safe to retry, no duplicates)
     - Early returns, flat structure, explicit naming
 
 Observability:
@@ -74,6 +75,7 @@ STANDARDS: dict[str, str | int | bool] = {
     "structured_error_handling": True,
     "resource_lifecycle_enforced": True,
     "atomic_writes": True,
+    "idempotent_operations": True,
     "no_dead_code": True,
 
     # Observability
@@ -144,6 +146,13 @@ REVIEW_CHECKLIST: dict[str, list[str]] = {
         "Blocking I/O in async functions",
         "Missing timeouts on external calls",
         "Swallowed cancellation signals",
+    ],
+    "idempotency": [
+        "Blind inserts that create duplicates on retry",
+        "Delete operations that error on missing resources",
+        "Side effects without idempotency guards",
+        "Migrations or scripts that break when run twice",
+        "Queue consumers without dedup",
     ],
     "dependencies": [
         "Lock file not committed",
