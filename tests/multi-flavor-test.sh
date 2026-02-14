@@ -20,7 +20,7 @@ FLAVORS=(
     "archlinux:base"
 )
 
-TEST_DIR="/home/sambou/repos/wfc"
+TEST_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 CONTAINER_NAME_PREFIX="wfc-test-"
 RESULT_DIR="$TEST_DIR/test-results"
 LOG_FILE="$RESULT_DIR/test-suite.log"

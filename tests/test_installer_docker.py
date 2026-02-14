@@ -2,7 +2,6 @@
 
 import subprocess
 import pytest
-from pathlib import Path
 
 
 class TestInstaller:

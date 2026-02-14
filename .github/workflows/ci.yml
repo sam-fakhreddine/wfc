@@ -18,28 +18,30 @@ jobs:
         with:
           python-version: '3.12'
 
+      - name: Install UV
+        run: curl -LsSf https://astral.sh/uv/install.sh | sh
+
       - name: Cache dependencies
         uses: actions/cache@v4
         with:
-          path: ~/.cache/pip
-          key: ${{ runner.os }}-pip-${{ hashFiles('**/pyproject.toml') }}
+          path: ~/.cache/uv
+          key: ${{ runner.os }}-uv-${{ hashFiles('**/pyproject.toml') }}
           restore-keys: |
-            ${{ runner.os }}-pip-
+            ${{ runner.os }}-uv-
 
       - name: Install dependencies
         run: |
-          python -m pip install --upgrade pip
-          pip install black ruff mypy
-          pip install pytest pytest-cov
+          uv pip install --system black ruff mypy
+          uv pip install --system pytest pytest-cov
 
       - name: Run black
-        run: black --check --diff wfc/
+        run: uv run black --check --diff wfc/
 
       - name: Run ruff
-        run: ruff check wfc/
+        run: uv run ruff check wfc/
 
       - name: Run mypy
-        run: mypy wfc/ --ignore-missing-imports || true
+        run: uv run mypy wfc/ --ignore-missing-imports || true
 
   test:
     name: Test Suite
@@ -57,11 +59,13 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
 
+      - name: Install UV
+        run: curl -LsSf https://astral.sh/uv/install.sh | sh
+
       - name: Install dependencies
         run: |
-          python -m pip install --upgrade pip
-          pip install pytest pytest-cov
-          pip install -e .
+          uv pip install --system pytest pytest-cov
+          uv pip install --system -e .
 
       - name: Install WFC skills
         run: |
@@ -70,7 +74,7 @@ jobs:
 
       - name: Run tests
         run: |
-          pytest tests/ -v --cov=wfc --cov-report=xml
+          uv run pytest tests/ -v --cov=wfc --cov-report=xml
 
       - name: Upload coverage
         if: matrix.python-version == '3.12' && matrix.os == 'ubuntu-latest'
@@ -162,21 +166,23 @@ jobs:
         with:
           python-version: '3.12'
 
+      - name: Install UV
+        run: curl -LsSf https://astral.sh/uv/install.sh | sh
+
       - name: Install build tools
         run: |
-          python -m pip install --upgrade pip
-          pip install build twine
+          uv pip install --system build twine
 
       - name: Build package
-        run: python -m build
+        run: uv run python -m build
 
       - name: Check package
-        run: twine check dist/*
+        run: uv run twine check dist/*
 
       - name: Test installation
         run: |
-          pip install dist/*.whl
-          python -c "import sys; print('✅ Package installs successfully')"
+          uv pip install --system dist/*.whl
+          uv run python -c "import sys; print('✅ Package installs successfully')"
 
   install-test:
     name: Test Install Script

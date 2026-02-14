@@ -9,6 +9,22 @@ import subprocess
 import re
 from typing import List, Optional, Dict
 
+_FLAG_PATTERN = re.compile(r"^-")
+
+
+def validate_file_path(path: str) -> bool:
+    """Validate file path - no traversal or injection."""
+    if not path:
+        return False
+    if ".." in path:
+        return False
+    if _FLAG_PATTERN.match(path):
+        return False
+    # Reject null bytes
+    if "\x00" in path:
+        return False
+    return True
+
 
 class CommitOperations:
     """Commit operations for WFC"""
@@ -27,6 +43,22 @@ class CommitOperations:
 
         Format: type(scope): description [TASK-XXX] [PROP-XXX, PROP-YYY]
         """
+        # Validate message doesn't start with '-' (flag injection)
+        if message and _FLAG_PATTERN.match(message):
+            return {
+                "success": False,
+                "message": "Invalid commit message: starts with '-'",
+            }
+
+        # Validate file paths
+        if files:
+            for f in files:
+                if not validate_file_path(f):
+                    return {
+                        "success": False,
+                        "message": f"Invalid file path: {f}",
+                    }
+
         # Build formatted message
         formatted = self._format_message(message, task_id, properties, type, scope)
 
@@ -82,6 +114,16 @@ class CommitOperations:
 
     def amend(self, message: Optional[str] = None, files: Optional[List[str]] = None) -> Dict:
         """Amend last commit (safe - checks if pushed)"""
+        # Validate message if provided
+        if message and _FLAG_PATTERN.match(message):
+            return {"success": False, "message": "Invalid commit message: starts with '-'"}
+
+        # Validate file paths
+        if files:
+            for f in files:
+                if not validate_file_path(f):
+                    return {"success": False, "message": f"Invalid file path: {f}"}
+
         try:
             # Check if commit is pushed
             result = subprocess.run(["git", "log", "@{u}..HEAD"], capture_output=True, text=True)

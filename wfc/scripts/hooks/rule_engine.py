@@ -12,6 +12,8 @@ from __future__ import annotations
 
 import logging
 import re
+import signal
+import time
 from functools import lru_cache
 from pathlib import Path
 from typing import Optional
@@ -43,13 +45,30 @@ TOOL_FIELD_MAP: dict[str, dict[str, str]] = {
 }
 
 
+class RegexTimeout(Exception):
+    """Raised when regex compilation or matching times out."""
+
+    pass
+
+
+def _regex_timeout_handler(signum, frame):
+    raise RegexTimeout("Regex operation timed out")
+
+
 @lru_cache(maxsize=128)
-def _compile_regex(pattern: str) -> Optional[re.Pattern]:
-    """Compile a regex pattern with caching. Returns None on invalid patterns."""
+def _compile_regex(pattern: str, timeout_seconds: int = 1) -> Optional[re.Pattern]:
+    """Compile a regex pattern with caching. Returns None on invalid or complex patterns."""
     try:
-        return re.compile(pattern)
-    except re.error as e:
-        logger.debug("Invalid regex pattern '%s': %s", pattern, e)
+        old_handler = signal.signal(signal.SIGALRM, _regex_timeout_handler)
+        signal.alarm(timeout_seconds)
+        try:
+            compiled = re.compile(pattern)
+        finally:
+            signal.alarm(0)
+            signal.signal(signal.SIGALRM, old_handler)
+        return compiled
+    except (re.error, RegexTimeout) as e:
+        logger.debug("Regex pattern failed '%s': %s", pattern, e)
         return None
 
 
@@ -109,7 +128,18 @@ def _evaluate_condition(condition: dict, tool_name: str, tool_input: dict) -> bo
         compiled = _compile_regex(str(expected))
         if compiled is None:
             return False
-        return bool(compiled.search(actual))
+        try:
+            old_handler = signal.signal(signal.SIGALRM, _regex_timeout_handler)
+            signal.alarm(1)
+            try:
+                result = bool(compiled.search(actual))
+            finally:
+                signal.alarm(0)
+                signal.signal(signal.SIGALRM, old_handler)
+            return result
+        except RegexTimeout:
+            logger.warning("Regex match timed out for pattern: %s", str(expected)[:50])
+            return False
 
     elif operator == "contains":
         return str(expected) in actual
@@ -147,6 +177,9 @@ def _matches_event(rule: dict, tool_name: str) -> bool:
     return False
 
 
+_bypass_count = 0
+
+
 def evaluate(
     input_data: dict,
     rules_dir: Optional[Path] = None,
@@ -163,9 +196,17 @@ def evaluate(
         {"decision": "block", "reason": "..."} if a blocking rule matched.
         {"decision": "warn", "reason": "..."} if a warning rule matched.
     """
+    global _bypass_count
     try:
         return _evaluate_impl(input_data, rules_dir)
-    except Exception:
+    except Exception as e:
+        _bypass_count += 1
+        logger.warning(
+            "Hook bypass: rule_engine exception=%s time=%s bypass_count=%d",
+            type(e).__name__,
+            time.strftime("%Y-%m-%dT%H:%M:%S"),
+            _bypass_count,
+        )
         # CRITICAL: Never block due to rule engine bugs
         return {}
 

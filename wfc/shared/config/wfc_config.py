@@ -10,6 +10,7 @@ Design principles:
 - Simple: JSON files, dict merging, no magic
 """
 
+import copy
 import json
 from pathlib import Path
 from typing import Dict, Any, Optional
@@ -25,113 +26,120 @@ class WFCConfig:
     3. Defaults (built-in)
     """
 
-    GLOBAL_CONFIG_PATH = Path.home() / ".claude" / "wfc.config.json"
     PROJECT_CONFIG_NAME = "wfc.config.json"
 
-    # Default configuration - kept minimal and sensible
-    DEFAULTS: Dict[str, Any] = {
-        "version": "1.0.0",
-        "metrics": {
-            "enabled": True,
-            "directory": str(Path.home() / ".claude" / "metrics"),
-            "format": "jsonl",
-        },
-        "llm": {
-            "default_model": "claude-sonnet-4-20250514",
-            "default_provider": "anthropic",
-            "models": {
-                "sonnet": "claude-sonnet-4-20250514",
-                "opus": "claude-opus-4-20250514",
-                "haiku": "claude-haiku-4-5-20251001",
+    @staticmethod
+    def _global_config_path() -> Path:
+        """Compute global config path at call time (not import time)."""
+        return Path.home() / ".claude" / "wfc.config.json"
+
+    @staticmethod
+    def _defaults() -> Dict[str, Any]:
+        """Return default config with dynamic home directory resolution."""
+        home = Path.home()
+        return {
+            "version": "1.0.0",
+            "metrics": {
+                "enabled": True,
+                "directory": str(home / ".claude" / "metrics"),
+                "format": "jsonl",
             },
-        },
-        "personas": {
-            "enabled": True,
-            "directory": str(Path.home() / ".claude" / "skills" / "wfc" / "personas"),
-            "num_reviewers": 5,
-            "require_diversity": True,
-            "min_relevance_score": 0.3,
-            "synthesis": {
-                "consensus_threshold": 3,
-                "weight_by_relevance": True,
-                "detect_unique_insights": True,
-                "detect_divergent_views": True,
+            "llm": {
+                "default_model": "claude-sonnet-4-20250514",
+                "default_provider": "anthropic",
+                "models": {
+                    "sonnet": "claude-sonnet-4-20250514",
+                    "opus": "claude-opus-4-20250514",
+                    "haiku": "claude-haiku-4-5-20251001",
+                },
             },
-            "selection": {
-                "tech_stack_weight": 0.4,
-                "property_weight": 0.3,
-                "complexity_weight": 0.15,
-                "task_type_weight": 0.1,
-                "domain_weight": 0.05,
+            "personas": {
+                "enabled": True,
+                "directory": str(home / ".claude" / "skills" / "wfc" / "personas"),
+                "num_reviewers": 5,
+                "require_diversity": True,
+                "min_relevance_score": 0.3,
+                "synthesis": {
+                    "consensus_threshold": 3,
+                    "weight_by_relevance": True,
+                    "detect_unique_insights": True,
+                    "detect_divergent_views": True,
+                },
+                "selection": {
+                    "tech_stack_weight": 0.4,
+                    "property_weight": 0.3,
+                    "complexity_weight": 0.15,
+                    "task_type_weight": 0.1,
+                    "domain_weight": 0.05,
+                },
             },
-        },
-        "entire_io": {
-            "enabled": True,  # ON BY DEFAULT: Privacy-first, local-only session capture
-            "local_only": True,
-            "create_checkpoints": True,
-            "checkpoint_phases": [
-                "UNDERSTAND",
-                "TEST_FIRST",
-                "IMPLEMENT",
-                "REFACTOR",
-                "QUALITY_CHECK",
-                "SUBMIT",
-            ],
-            "privacy": {
-                "redact_secrets": True,
-                "max_file_size": 100000,
-                "exclude_patterns": [
-                    "*.env",
-                    "*.key",
-                    "*.pem",
-                    "*secret*",
-                    "*credential*",
-                    ".claude/*",
+            "entire_io": {
+                "enabled": True,  # ON BY DEFAULT: Privacy-first, local-only session capture
+                "local_only": True,
+                "create_checkpoints": True,
+                "checkpoint_phases": [
+                    "UNDERSTAND",
+                    "TEST_FIRST",
+                    "IMPLEMENT",
+                    "REFACTOR",
+                    "QUALITY_CHECK",
+                    "SUBMIT",
                 ],
-                "capture_env": False,
+                "privacy": {
+                    "redact_secrets": True,
+                    "max_file_size": 100000,
+                    "exclude_patterns": [
+                        "*.env",
+                        "*.key",
+                        "*.pem",
+                        "*secret*",
+                        "*credential*",
+                        ".claude/*",
+                    ],
+                    "capture_env": False,
+                },
+                "retention": {"max_sessions": 100, "auto_cleanup": True},
             },
-            "retention": {"max_sessions": 100, "auto_cleanup": True},
-        },
-        "merge": {
-            "strategy": "pr",  # NEW DEFAULT (Phase 2): "pr" = GitHub PR workflow, "direct" = local merge
-            "pr": {
-                "enabled": True,  # PR workflow enabled by default
-                "base_branch": "main",  # Target branch for PRs
-                "draft": True,  # Create draft PRs by default
-                "auto_push": True,  # Automatically push branch before creating PR
-                "require_gh_cli": True,  # Fail if gh CLI not available
+            "merge": {
+                "strategy": "pr",  # NEW DEFAULT (Phase 2): "pr" = GitHub PR workflow, "direct" = local merge
+                "pr": {
+                    "enabled": True,  # PR workflow enabled by default
+                    "base_branch": "main",  # Target branch for PRs
+                    "draft": True,  # Create draft PRs by default
+                    "auto_push": True,  # Automatically push branch before creating PR
+                    "require_gh_cli": True,  # Fail if gh CLI not available
+                },
+                "direct": {
+                    "enabled": True,  # Direct merge still available as fallback
+                    "cleanup_worktree": True,  # Clean up worktree after successful merge
+                },
             },
-            "direct": {
-                "enabled": True,  # Direct merge still available as fallback
-                "cleanup_worktree": True,  # Clean up worktree after successful merge
+            "workflow_enforcement": {
+                "enabled": True,  # Workflow enforcement enabled by default
+                "mode": "warning",  # "warning" = soft enforcement (warn, don't block), "strict" = block violations
+                "track_violations": True,  # Log violations to telemetry
+                "protected_branches": ["main", "master"],  # Branches that trigger warnings
+                "require_wfc_origin": False,  # Don't enforce WFC-only commits (yet)
             },
-        },
-        "workflow_enforcement": {
-            "enabled": True,  # Workflow enforcement enabled by default
-            "mode": "warning",  # "warning" = soft enforcement (warn, don't block), "strict" = block violations
-            "track_violations": True,  # Log violations to telemetry
-            "protected_branches": ["main", "master"],  # Branches that trigger warnings
-            "require_wfc_origin": False,  # Don't enforce WFC-only commits (yet)
-        },
-        "build": {
-            "max_questions": 5,  # Maximum questions in quick interview
-            "auto_assess_complexity": True,  # Automatically assess complexity from interview
-            "dry_run_default": False,  # Default to actual implementation (not dry-run)
-            "xl_recommendation_threshold": 10,  # Files threshold for XL recommendation
-            "interview_timeout_seconds": 30,  # Max time for interview (PROP-008)
-            "enforce_tdd": True,  # Enforce TDD workflow (PROP-007)
-            "enforce_quality_gates": True,  # Enforce quality checks (PROP-001)
-            "enforce_review": True,  # Enforce consensus review (PROP-002)
-            "auto_push": False,  # Never auto-push to remote (PROP-003)
-        },
-        "vibe": {
-            "reminder_frequency": [8, 12],  # Reminder every 8-12 messages (randomized)
-            "max_scope_suggestions": 1,  # Max 1 scope suggestion per conversation
-            "context_summarization_timeout": 5000,  # Max 5s for summarization (PROP-007)
-            "transition_preview": True,  # Show preview before transition
-            "auto_detect_scope": True,  # Automatically detect growing scope
-        },
-    }
+            "build": {
+                "max_questions": 5,  # Maximum questions in quick interview
+                "auto_assess_complexity": True,  # Automatically assess complexity from interview
+                "dry_run_default": False,  # Default to actual implementation (not dry-run)
+                "xl_recommendation_threshold": 10,  # Files threshold for XL recommendation
+                "interview_timeout_seconds": 30,  # Max time for interview (PROP-008)
+                "enforce_tdd": True,  # Enforce TDD workflow (PROP-007)
+                "enforce_quality_gates": True,  # Enforce quality checks (PROP-001)
+                "enforce_review": True,  # Enforce consensus review (PROP-002)
+                "auto_push": False,  # Never auto-push to remote (PROP-003)
+            },
+            "vibe": {
+                "reminder_frequency": [8, 12],  # Reminder every 8-12 messages (randomized)
+                "max_scope_suggestions": 1,  # Max 1 scope suggestion per conversation
+                "context_summarization_timeout": 5000,  # Max 5s for summarization (PROP-007)
+                "transition_preview": True,  # Show preview before transition
+                "auto_detect_scope": True,  # Automatically detect growing scope
+            },
+        }
 
     def __init__(self, project_root: Optional[Path] = None):
         """
@@ -154,10 +162,10 @@ class WFCConfig:
             return self._config
 
         # Start with defaults
-        config = self.DEFAULTS.copy()
+        config = self._defaults()
 
         # Merge global config if it exists
-        global_config = self._load_file(self.GLOBAL_CONFIG_PATH)
+        global_config = self._load_file(self._global_config_path())
         if global_config:
             config = self._deep_merge(config, global_config)
 
@@ -245,15 +253,15 @@ class WFCConfig:
         Returns:
             Merged dictionary
         """
-        result = base.copy()
+        result = copy.deepcopy(base)
 
         for key, value in override.items():
             if key in result and isinstance(result[key], dict) and isinstance(value, dict):
                 # Recursively merge nested dicts
                 result[key] = WFCConfig._deep_merge(result[key], value)
             else:
-                # Override wins
-                result[key] = value
+                # Override wins - deep copy to prevent shared references
+                result[key] = copy.deepcopy(value)
 
         return result
 

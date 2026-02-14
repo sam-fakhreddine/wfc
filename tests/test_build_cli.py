@@ -4,7 +4,6 @@ Tests for WFC Build CLI Interface
 Verifies SKILL.md content and structure for wfc-build skill
 """
 
-import pytest
 from pathlib import Path
 
 
@@ -26,7 +25,8 @@ class TestCLIInterface:
     def test_cli_has_argument_parsing(self):
         """TEST-021: SKILL.md documents argument handling"""
         content = self.skill_path.read_text()
-        assert "argument-hint:" in content
+        # argument-hint: removed for Agent Skills compliance (invalid frontmatter field)
+        # Instead verify usage examples show argument patterns
         assert '/wfc-build "' in content
 
     def test_cli_imports_orchestrator(self):

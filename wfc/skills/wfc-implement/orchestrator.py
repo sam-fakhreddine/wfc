@@ -16,7 +16,7 @@ from typing import List, Dict, Optional, Set, Any
 import time
 
 from wfc.shared.config import WFCConfig
-from wfc.shared.telemetry import TelemetryRecord
+from wfc.shared.telemetry_auto import log_event
 from wfc.shared.schemas import Task, TaskGraph, TaskStatus, TaskComplexity
 from wfc.shared.utils import get_git, get_selector
 
@@ -95,7 +95,7 @@ class WFCOrchestrator:
         self.rollback_count: int = 0  # Track rollback events
 
         # Telemetry
-        self.telemetry = TelemetryRecord("implement", run_id=self._generate_run_id())
+        self.run_id = self._generate_run_id()
 
     def run(self, tasks_file: Path) -> RunResult:
         """
@@ -135,7 +135,7 @@ class WFCOrchestrator:
             total_output += tokens.get("output", 0)
 
         result = RunResult(
-            run_id=self.telemetry.data.get("run_id", "unknown"),
+            run_id=self.run_id,
             tasks_completed=len(self.completed),
             tasks_failed=len(self.failed),
             tasks_rolled_back=self.rollback_count,  # Actual rollback events from merge_engine
@@ -149,12 +149,12 @@ class WFCOrchestrator:
 
         # Aggregate session metadata (if any agents used Entire.io)
         sessions_summary = self._aggregate_sessions()
-        if sessions_summary:
-            self.telemetry.add("entire_sessions", sessions_summary)
 
-        # Record telemetry
-        self.telemetry.add("result", result.to_dict())
-        self.telemetry.save()
+        # Record telemetry via canonical AutoTelemetry
+        telemetry_data = {"run_id": self.run_id, "result": result.to_dict()}
+        if sessions_summary:
+            telemetry_data["entire_sessions"] = sessions_summary
+        log_event("implement_complete", telemetry_data)
 
         return result
 

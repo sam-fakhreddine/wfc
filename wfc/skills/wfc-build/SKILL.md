@@ -294,26 +294,30 @@ Done! ✅ Rate limiting added to API
 **INTENTIONAL:** Vibe coding + WFC guardrails = professional quality
 **DELEGATED:** Orchestrator NEVER implements, ALWAYS delegates
 
-## Git Safety Policy
+## Git Workflow Policy (PR-First)
 
-**CRITICAL:** WFC NEVER pushes to remote. User must push manually.
+WFC creates feature branches, pushes them, and opens GitHub PRs for team review.
 
 ```
 WFC workflow:
-  Build → Quality → Review → Merge to LOCAL main → Integration tests
-                                    ↓
-                            [WFC STOPS HERE]
-                                    ↓
-                         User reviews and pushes:
-                            git push origin main
+  Build → Quality → Review → Push Branch → Create GitHub PR
+                                                ↓
+                                      [WFC STOPS HERE]
+                                                ↓
+                              You review and merge PR on GitHub
 ```
 
-**Why:**
-- ✅ User control before remote changes
-- ✅ Review merged result before push
-- ✅ Respects branch protection rules
-- ✅ Easy to revert before push
-- ✅ User decides: push, PR, or revert
+**What WFC does:**
+- Creates feature branches
+- Pushes branches to remote
+- Creates GitHub PRs (draft by default)
+
+**What WFC never does:**
+- Push directly to main/master
+- Force push
+- Merge PRs (you decide when to merge)
+
+**Legacy mode:** Set `"merge.strategy": "direct"` in wfc.config.json for local-only merge.
 
 See [GIT_SAFETY_POLICY.md](../../../docs/security/GIT_SAFETY_POLICY.md) for complete policy.
 

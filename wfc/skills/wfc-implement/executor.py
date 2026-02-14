@@ -135,7 +135,7 @@ class ExecutionEngine:
         # Decide if extended thinking should be used
         thinking_config = ExtendedThinkingDecider.should_use_extended_thinking(
             complexity=task.complexity.value,
-            properties=task.properties,
+            properties=task.properties_satisfied,
             retry_count=retry_count,
             has_dependencies=len(task.dependencies) > 0 if hasattr(task, "dependencies") else False,
         )
@@ -198,7 +198,7 @@ class ExecutionEngine:
                 "CRITICAL: For all bug fixes, include root cause analysis (WHAT, WHY, WHERE, FIX).",
                 "See wfc/skills/implement/DEBUGGING.md for complete methodology.",
                 "",
-                f"Properties to satisfy: {', '.join(task.properties)}",
+                f"Properties to satisfy: {', '.join(task.properties_satisfied)}",
                 f"Acceptance criteria: {', '.join(task.acceptance_criteria)}",
             ]
         )
@@ -226,8 +226,7 @@ class ExecutionEngine:
             worktree_path=f".worktrees/{task_id}",
             commits=[{"sha": "mock123", "message": f"Implement {task_id}", "files_changed": []}],
             properties_satisfied={},
-            tests_passed=True,
-            test_results={},
+            tests={},
         )
 
     def _process_report(self, report: AgentReport, task: Task) -> None:
@@ -294,7 +293,7 @@ class ExecutionEngine:
         Returns:
             Tuple of (passed: bool, review_report: Optional[Dict])
         """
-        from wfc.skills.review.mock import mock_review
+        from wfc_review.mock import mock_review
 
         result = mock_review(
             files=report.commits[0]["files_changed"] if report.commits else [],

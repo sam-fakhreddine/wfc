@@ -4,7 +4,6 @@ Tests for WFC Vibe Context Summarization
 Verifies context extraction and complexity estimation (PROP-005, PROP-007)
 """
 
-import pytest
 import time
 from wfc.scripts.skills.vibe.summarizer import ContextSummarizer, Message, PlanningContext
 from wfc.scripts.skills.vibe.detector import ScopeDetector

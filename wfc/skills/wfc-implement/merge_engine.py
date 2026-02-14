@@ -20,6 +20,8 @@ from dataclasses import dataclass, field
 from enum import Enum
 from pathlib import Path
 from typing import List, Dict, Any, Optional, Tuple
+import re
+import shlex
 import subprocess
 import time
 
@@ -122,6 +124,48 @@ class MergeResult:
             "pr_number": self.pr_number,
             "branch_pushed": self.branch_pushed,
         }
+
+
+# Allowed integration test commands - prevents arbitrary command execution from config
+ALLOWED_TEST_COMMANDS = {
+    "pytest",
+    "uv run pytest",
+    "python -m pytest",
+    "uv run python -m pytest",
+    "npm test",
+    "npm run test",
+    "yarn test",
+    "cargo test",
+    "go test",
+    "make test",
+    "make check",
+}
+
+# Shell metacharacters that indicate injection attempts
+_SHELL_METACHAR_PATTERN = re.compile(r"[;&|`$(){}]")
+
+
+def validate_test_command(command: str) -> Optional[str]:
+    """Validate integration test command. Returns error message or None if valid."""
+    if not command:
+        return "Empty test command"
+    # Check against whitelist (command may have additional args like -v)
+    parts = command.split()
+    base_cmd = parts[0] if parts else ""
+    # Also check first two words for commands like "uv run"
+    base_two = " ".join(parts[:2]) if len(parts) >= 2 else base_cmd
+    base_three = " ".join(parts[:3]) if len(parts) >= 3 else base_two
+
+    allowed_bases = {cmd.split()[0] for cmd in ALLOWED_TEST_COMMANDS}
+    if (
+        base_cmd not in allowed_bases
+        and base_two not in ALLOWED_TEST_COMMANDS
+        and base_three not in ALLOWED_TEST_COMMANDS
+    ):
+        return f"Command not in allowlist: {command}"
+    if _SHELL_METACHAR_PATTERN.search(command):
+        return f"Shell metacharacters in command: {command}"
+    return None
 
 
 class MergeEngine:
@@ -513,16 +557,23 @@ class MergeEngine:
         test_command = self.config.get("integration_tests.command", "pytest")
         timeout = self.config.get("integration_tests.timeout_seconds", 300)
 
+        # Validate test command against allowlist
+        error = validate_test_command(test_command)
+        if error:
+            return (False, 0, [error], f"Rejected: {error}")
+
         start_time = time.time()
 
         try:
-            # Run tests
+            # Run tests using shlex.split for safe argument parsing (shell=False)
+            cmd_list = shlex.split(test_command)
             result = subprocess.run(
-                test_command.split(),
+                cmd_list,
                 cwd=self.project_root,
                 capture_output=True,
                 text=True,
                 timeout=timeout,
+                shell=False,
             )
 
             duration_ms = int((time.time() - start_time) * 1000)
@@ -564,7 +615,7 @@ class MergeEngine:
             result.status = MergeStatus.ROLLED_BACK
 
             # Verify main is clean
-            test_passed, _, _ = self._run_integration_tests()
+            test_passed, _, _, _ = self._run_integration_tests()
             if not test_passed:
                 # Main is STILL broken - this is critical!
                 raise Exception("Main branch is broken after rollback - pre-existing issue!")
