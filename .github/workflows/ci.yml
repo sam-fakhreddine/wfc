@@ -62,6 +62,10 @@ jobs:
       - name: Install UV
         run: curl -LsSf https://astral.sh/uv/install.sh | sh
 
+      - name: Install bash 4+ on macOS
+        if: runner.os == 'macOS'
+        run: brew install bash
+
       - name: Install dependencies
         run: |
           uv pip install --system pytest pytest-cov
@@ -193,6 +197,10 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
+
+      - name: Install bash 4+ on macOS
+        if: runner.os == 'macOS'
+        run: brew install bash
 
       - name: Create mock Claude directory
         run: mkdir -p ~/.claude/skills
