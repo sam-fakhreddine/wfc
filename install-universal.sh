@@ -422,19 +422,26 @@ echo ""
 
 # Handle no platforms detected
 if [ $DETECTED_COUNT -eq 0 ]; then
-    echo -e "${YELLOW}⚠${RESET}  No Agent Skills compatible platforms detected"
-    echo ""
-    echo -e "${BOLD}Install one of these platforms:${RESET}"
-    echo -e "  • Claude Code:       ${CYAN}https://claude.ai/download${RESET}"
-    echo -e "  • Kiro (AWS):        ${CYAN}https://kiro.dev${RESET}"
-    echo -e "  • OpenCode:          ${CYAN}https://opencode.ai${RESET}"
-    echo -e "  • Cursor:            ${CYAN}https://cursor.com${RESET}"
-    echo -e "  • VS Code:           ${CYAN}https://code.visualstudio.com/${RESET}"
-    echo -e "  • OpenAI Codex:      ${CYAN}https://developers.openai.com/codex${RESET}"
-    echo -e "  • Google Antigravity:${CYAN}https://antigravity.dev${RESET}"
-    echo ""
-    echo -e "Then re-run this installer."
-    exit 1
+    if [ "$CI_MODE" = true ]; then
+        echo -e "${CYAN}CI mode:${RESET} No platforms detected — auto-creating ~/.claude/skills"
+        mkdir -p "$HOME/.claude/skills"
+        PLATFORMS[claude]=true
+        DETECTED_COUNT=1
+    else
+        echo -e "${YELLOW}⚠${RESET}  No Agent Skills compatible platforms detected"
+        echo ""
+        echo -e "${BOLD}Install one of these platforms:${RESET}"
+        echo -e "  • Claude Code:       ${CYAN}https://claude.ai/download${RESET}"
+        echo -e "  • Kiro (AWS):        ${CYAN}https://kiro.dev${RESET}"
+        echo -e "  • OpenCode:          ${CYAN}https://opencode.ai${RESET}"
+        echo -e "  • Cursor:            ${CYAN}https://cursor.com${RESET}"
+        echo -e "  • VS Code:           ${CYAN}https://code.visualstudio.com/${RESET}"
+        echo -e "  • OpenAI Codex:      ${CYAN}https://developers.openai.com/codex${RESET}"
+        echo -e "  • Google Antigravity:${CYAN}https://antigravity.dev${RESET}"
+        echo ""
+        echo -e "Then re-run this installer."
+        exit 1
+    fi
 fi
 
 # Show summary

@@ -33,13 +33,7 @@ def strip_go_comments(file_path: Path) -> bool:
     modified = False
 
     for line in lines:
-        if (
-            "//" not in line
-            or '"//' in line
-            or "'//" in line
-            or "`//" in line
-            or "://" in line
-        ):
+        if "//" not in line or '"//' in line or "'//" in line or "`//" in line or "://" in line:
             new_lines.append(line)
             continue
 
