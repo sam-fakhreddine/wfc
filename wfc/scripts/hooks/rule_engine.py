@@ -138,9 +138,7 @@ def _evaluate_condition(condition: dict, tool_name: str, tool_input: dict) -> bo
                 signal.signal(signal.SIGALRM, old_handler)
             return result
         except RegexTimeout:
-            logger.warning(
-                "Regex match timed out for pattern: %s", str(expected)[:50]
-            )
+            logger.warning("Regex match timed out for pattern: %s", str(expected)[:50])
             return False
 
     elif operator == "contains":

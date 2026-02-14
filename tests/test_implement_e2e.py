@@ -424,6 +424,7 @@ def test_coverage_check():
             # Use PEP 562 bridge for hyphenated skill directory
             try:
                 import importlib
+
                 importlib.import_module(f".{component}", package="wfc_implement")
             except ImportError as e:
                 pytest.fail(f"Failed to import wfc_implement.{component}: {e}")

@@ -88,7 +88,7 @@ def __getattr__(name: str) -> Any:
 
         # Register with both names in sys.modules for proper imports
         import sys
-        full_hyphenated_name = f"wfc.skills.{hyphenated_name}"
+
         full_underscored_name = f"wfc.skills.{name}"
         top_level_underscored_name = name  # e.g., "wfc_implement"
 

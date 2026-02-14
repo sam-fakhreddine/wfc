@@ -7,13 +7,22 @@ Install and manage git hooks without replacing existing ones.
 from pathlib import Path
 from typing import Dict, List, Set
 
-
 # All valid git hook types - prevents path traversal and malicious hook types
 VALID_HOOKS: Set[str] = {
-    "pre-commit", "prepare-commit-msg", "commit-msg",
-    "post-commit", "pre-rebase", "post-rebase",
-    "pre-push", "post-push", "pre-merge", "post-merge",
-    "pre-checkout", "post-checkout", "pre-auto-gc", "post-auto-gc"
+    "pre-commit",
+    "prepare-commit-msg",
+    "commit-msg",
+    "post-commit",
+    "pre-rebase",
+    "post-rebase",
+    "pre-push",
+    "post-push",
+    "pre-merge",
+    "post-merge",
+    "pre-checkout",
+    "post-checkout",
+    "pre-auto-gc",
+    "post-auto-gc",
 }
 
 
@@ -43,14 +52,14 @@ def install(hook_type: str, script: str) -> Dict:
     if not is_hook_type_valid(hook_type):
         return {
             "success": False,
-            "message": f"Invalid hook type: {hook_type}. Valid hooks: {', '.join(sorted(VALID_HOOKS))}"
+            "message": f"Invalid hook type: {hook_type}. Valid hooks: {', '.join(sorted(VALID_HOOKS))}",
         }
 
     # Check for path traversal attempts (contains ..)
     if has_path_traversal(hook_type):
         return {
             "success": False,
-            "message": f"Invalid hook type: {hook_type}. Path traversal not allowed."
+            "message": f"Invalid hook type: {hook_type}. Path traversal not allowed.",
         }
 
     hook_path = Path(".git/hooks") / hook_type
@@ -61,15 +70,9 @@ def install(hook_type: str, script: str) -> Dict:
         hook_path.write_text(script)
         hook_path.chmod(0o755)
 
-        return {
-            "success": True,
-            "message": f"Installed {hook_type} hook"
-        }
+        return {"success": True, "message": f"Installed {hook_type} hook"}
     except Exception as e:
-        return {
-            "success": False,
-            "message": f"Failed to install: {str(e)}"
-        }
+        return {"success": False, "message": f"Failed to install: {str(e)}"}
 
 
 def manage() -> List[Dict]:

@@ -35,10 +35,20 @@ class TestHookTypeValidation:
     def test_valid_hook_types(self):
         """All standard git hook types should be valid."""
         expected_valid = {
-            "pre-commit", "prepare-commit-msg", "commit-msg",
-            "post-commit", "pre-rebase", "post-rebase",
-            "pre-push", "post-push", "pre-merge", "post-merge",
-            "pre-checkout", "post-checkout", "pre-auto-gc", "post-auto-gc",
+            "pre-commit",
+            "prepare-commit-msg",
+            "commit-msg",
+            "post-commit",
+            "pre-rebase",
+            "post-rebase",
+            "pre-push",
+            "post-push",
+            "pre-merge",
+            "post-merge",
+            "pre-checkout",
+            "post-checkout",
+            "pre-auto-gc",
+            "post-auto-gc",
         }
         assert VALID_HOOKS == expected_valid
 

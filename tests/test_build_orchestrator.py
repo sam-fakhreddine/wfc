@@ -4,7 +4,6 @@ Tests for WFC Build Orchestrator
 Verifies orchestration flow and safety properties
 """
 
-import pytest
 from wfc.scripts.skills.build.orchestrator import BuildOrchestrator
 
 
@@ -110,12 +109,12 @@ class TestOrchestrationFlow:
 
         assert "status" in result, "Missing 'status' key in result"
         # Implementation phase should have placeholder
-        assert result["status"] not in ["xl_recommendation"], (
-            "XL recommendation should not occur for simple test feature"
-        )
-        assert result["implementation"] is not None, (
-            "Missing 'implementation' in result for non-XL task"
-        )
+        assert result["status"] not in [
+            "xl_recommendation"
+        ], "XL recommendation should not occur for simple test feature"
+        assert (
+            result["implementation"] is not None
+        ), "Missing 'implementation' in result for non-XL task"
 
 
 class TestSafetyProperties:

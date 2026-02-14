@@ -4,7 +4,6 @@ Tests for WFC Build CLI Interface
 Verifies SKILL.md content and structure for wfc-build skill
 """
 
-import pytest
 from pathlib import Path
 
 

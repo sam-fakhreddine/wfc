@@ -215,7 +215,7 @@ def cmd_implement(
 
     # Import orchestrator (using PEP 562 import bridge for hyphenated directories)
     try:
-        from wfc.skills import wfc_implement
+        from wfc.skills import wfc_implement  # noqa: F401 — activates PEP 562 bridge
         from wfc_implement.orchestrator import WFCOrchestrator
         from wfc.shared.config import WFCConfig
     except ImportError as e:
@@ -263,7 +263,6 @@ def cmd_implement(
 
         # Parse tasks file (using PEP 562 import bridge)
         try:
-            from wfc.skills import wfc_implement
             from wfc_implement.parser import parse_tasks
 
             task_graph = parse_tasks(tasks_path)
