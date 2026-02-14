@@ -31,7 +31,7 @@ Quality systems, review personas, and quality gates.
 
 ### [Reference](reference/)
 Technical reference, compliance, and registries.
-- [AGENT_SKILLS_COMPLIANCE.md](reference/AGENT_SKILLS_COMPLIANCE.md) - Agent Skills spec compliance (17/17)
+- [AGENT_SKILLS_COMPLIANCE.md](reference/AGENT_SKILLS_COMPLIANCE.md) - Agent Skills spec compliance (19/19)
 - [REGISTRY.md](reference/REGISTRY.md) - Documentation registry (human-readable)
 - [REGISTRY.json](reference/REGISTRY.json) - Documentation registry (machine-readable)
 - [PROJECT_INDEX.json](reference/PROJECT_INDEX.json) - Machine-readable project structure

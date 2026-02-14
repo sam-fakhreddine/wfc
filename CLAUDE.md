@@ -241,7 +241,7 @@ WFC - World Fucking Class
 │   ├── wfc-rules/                # Markdown-based custom enforcement rules
 │   ├── wfc-playground/           # Interactive HTML playground generator
 │   ├── wfc-agentic/             # GitHub Agentic Workflows (gh-aw) generator
-│   └── ... (18 total)
+│   └── ... (19 total)
 │
 ├── docs/                         # Documentation (organized by topic)
 │   ├── architecture/             # System design, planning
@@ -356,9 +356,9 @@ Orchestrator → N Agents (parallel) → Quality Gate → Review → Merge → I
 
 ### Key Files
 
-- `wfc/skills/implement/orchestrator.py` - Task orchestration
-- `wfc/skills/implement/agent.py` - TDD workflow
-- `wfc/skills/implement/merge_engine.py` - Rollback & retry
+- `wfc/skills/wfc-implement/orchestrator.py` - Task orchestration
+- `wfc/skills/wfc-implement/agent.py` - TDD workflow
+- `wfc/skills/wfc-implement/merge_engine.py` - Rollback & retry
 - `wfc/scripts/confidence_checker.py` - Confidence-first pattern
 - `wfc/scripts/memory_manager.py` - Cross-session learning
 - `wfc/scripts/token_manager.py` - Budget optimization
@@ -435,7 +435,7 @@ make test-coverage
 
 ### Agent Skills Compliance
 
-All 17 WFC skills are Agent Skills compliant:
+All 19 WFC skills are Agent Skills compliant:
 - Valid frontmatter (only: name, description, license)
 - Hyphenated names (wfc-review, not wfc-review)
 - Comprehensive descriptions
@@ -600,7 +600,7 @@ cd .devcontainer && docker compose build && docker compose up -d
 - **Database Clients**: postgresql-client, redis-tools
 - **Firewall**: iptables-based audit/enforce modes
 - **VS Code Extensions**: Python, ruff, black, ESLint, Prettier, Docker, Copilot, GitLens
-- **WFC Skills**: All 17 skills auto-installed via `install-universal.sh`
+- **WFC Skills**: All 19 skills auto-installed via `install-universal.sh`
 
 ### Workspace Layout
 

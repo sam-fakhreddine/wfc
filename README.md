@@ -110,7 +110,7 @@ WFC mitigates **9/9** applicable OWASP LLM Top 10 risks:
 | `wfc-architecture` | C4 diagrams + ADRs | Document system design |
 | `wfc-isthissmart` | Critical thinking advisor | Validate approach before coding |
 
-[See all 17 skills →](QUICKSTART.md#available-skills)
+[See all 19 skills →](QUICKSTART.md#available-skills)
 
 ### 5. 92% Faster with Progressive Disclosure
 
@@ -332,7 +332,7 @@ cd wfc
 The installer:
 1. Auto-detects your IDE/platform
 2. Offers branding choice (SFW: "Workflow Champion" or NSFW: "World Fucking Class")
-3. Installs all 17 skills to the correct location
+3. Installs all 19 skills to the correct location
 4. Sets up progressive disclosure (92% token reduction)
 
 **Restart your IDE** after installation to load the skills.

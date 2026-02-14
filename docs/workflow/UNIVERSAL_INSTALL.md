@@ -41,7 +41,7 @@ This skips all prompts and uses sensible defaults:
 ├── wfc-safeguard/
 ├── wfc-rules/
 ├── wfc-playground/
-├── ... (17 skills total)
+├── ... (19 skills total)
 └── wfc/              # Shared resources
     ├── personas/
     ├── shared/
@@ -61,7 +61,7 @@ This skips all prompts and uses sensible defaults:
 ├── wfc-safeguard/
 ├── wfc-rules/
 ├── wfc-playground/
-├── ... (17 skills total)
+├── ... (19 skills total)
 └── wfc/              # Shared resources
     ├── personas/
     ├── shared/
@@ -81,7 +81,7 @@ This skips all prompts and uses sensible defaults:
 │   ├── wfc-safeguard/
 │   ├── wfc-rules/
 │   ├── wfc-playground/
-│   └── ... (17 skills total)
+│   └── ... (19 skills total)
 ├── personas/
 ├── scripts/hooks/                       # Hook infrastructure
 └── templates/                           # Reusable templates
