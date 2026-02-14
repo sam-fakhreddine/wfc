@@ -426,6 +426,7 @@ if [ $DETECTED_COUNT -eq 0 ]; then
         echo -e "${CYAN}CI mode:${RESET} No platforms detected — auto-creating ~/.claude/skills"
         mkdir -p "$HOME/.claude/skills"
         PLATFORMS[claude]=true
+        PLATFORM_PATHS[claude]="$HOME/.claude/skills"
         DETECTED_COUNT=1
     else
         echo -e "${YELLOW}⚠${RESET}  No Agent Skills compatible platforms detected"
