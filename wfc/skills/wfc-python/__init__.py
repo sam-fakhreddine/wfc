@@ -1,48 +1,41 @@
 """
 wfc-python - Python Development Standards
 
-Internal skill defining preferred Python libraries, frameworks, coding standards,
-and UV-exclusive toolchain for WFC projects. Referenced by wfc-build, wfc-implement,
-wfc-test, and wfc-review.
+Python-specific skill that inherits universal standards from wfc-code-standards
+and adds Python tooling, libraries, and enforcement patterns.
 
-Toolchain:
-    - UV exclusively (uv run, uv add, uv sync - never pip/pipx/conda/poetry)
+Inherits from wfc-code-standards:
+    - Architecture (three-tier, SOLID, composition, factories)
+    - Code quality (500-line limit, DRY, error handling, resource lifecycle)
+    - Observability (structured logging, no print, no string interpolation)
+    - Testing (unit/integration/e2e, fixtures, parametrize, coverage)
+    - Async safety (no blocking, timeouts, cancellation)
+    - Dependencies (lock files, CVE scanning, version constraints)
+    - Documentation (public API docstrings)
 
-Standards:
-    - Python 3.12+ required (type statement, generic syntax, f-string nesting)
-    - Black formatting (line-length 88, no overrides, PEP 8 synced via ruff ignores)
-    - Full type annotations on all signatures
-    - PEP 562 lazy imports in __init__.py
-    - Three-tier architecture (presentation / logic / data)
-    - SOLID principles (SRP, OCP, LSP, ISP, DIP)
-    - Factory patterns for conditional/registry-based object creation
-    - Composition over inheritance (Protocol, not deep class trees)
-    - Structured error handling (exception hierarchies, no bare except)
-    - Centralized logging (structlog, configure once, thread-identified)
-    - Context managers for all resource lifecycle
-    - Atomic writes (temp file + os.replace, never half-written files)
-    - Thread-safe operations (locks for shared state, named threads)
-    - Google-style docstrings on all public APIs
-    - pytest exclusive (unittest forbidden), pytest-asyncio, pytest-mock
-    - Async safety (no blocking I/O in async, asyncio.to_thread for CPU work)
-    - Lock files committed, version pinning (>=X.Y), CVE scanning (pip-audit)
-    - DRY - extract at 3+ repetitions
-    - 500-line hard cap per file
-    - Pythonic conventions (comprehensions, pathlib, StrEnum, dataclasses)
+Python-specific additions:
+    Toolchain:
+        - UV exclusively (uv run, uv add, uv sync - never pip/pipx/conda/poetry)
 
-Preferred Libraries:
-    - python-dotenv: Configuration from .env files
-    - fire: CLI generation from functions/classes
-    - faker: Realistic test data generation
-    - joblib: Parallel execution and disk caching
-    - orjson: Fast JSON serialization (10-50x stdlib)
-    - structlog: Structured key-value logging
-    - tenacity: Retry with exponential backoff
+    Language:
+        - Python 3.12+ (type statement, generic syntax, f-string nesting)
+        - Black formatting (line-length 88, target py312)
+        - Full type annotations on all signatures
+        - PEP 562 lazy imports in __init__.py
+        - Pythonic conventions (comprehensions, pathlib, StrEnum, dataclasses)
 
-Preferred Frameworks:
-    - pydantic: Data validation at system boundaries
-    - httpx: HTTP client (async-first, replaces requests)
-    - FastAPI: Web API framework
+    Libraries:
+        - python-dotenv, fire, faker, joblib, orjson, structlog, tenacity
+
+    Frameworks:
+        - pydantic, httpx, FastAPI
+
+    Testing:
+        - pytest exclusive (unittest forbidden)
+        - pytest-asyncio, pytest-mock, faker
+
+    Enforcement:
+        - Banned patterns (regex) for automated scanning
 """
 
 from __future__ import annotations
@@ -107,32 +100,30 @@ DEV_DEPENDENCIES: list[str] = [
     "pytest-asyncio>=0.23",
 ]
 
+# Python-specific standards. Universal standards (three_tier, solid, etc.)
+# are defined in wfc-code-standards and inherited automatically.
 CODING_STANDARDS: dict[str, str | int | bool | list[str]] = {
+    # Python language
     "python_version": ">=3.12",
+    "type_annotations": True,
+    "pep562_lazy_imports": True,
+    "slots_on_dataclasses": True,
+
+    # Python tooling
     "formatter": "black",
     "line_length": 88,
     "linter": "ruff",
     "type_checker": "mypy --strict",
-    "max_file_lines": 500,
-    "type_annotations": True,
-    "pep562_lazy_imports": True,
-    "three_tier_architecture": True,
-    "solid_principles": True,
-    "composition_over_inheritance": True,
-    "factory_patterns": True,
-    "structured_error_handling": True,
-    "context_managers_for_resources": True,
-    "atomic_writes": True,
-    "centralized_logging": True,
-    "thread_safe_operations": True,
-    "thread_identified_logging": True,
-    "docstrings_google_style": True,
-    "pytest_exclusive": True,
-    "async_safety": True,
-    "lockfile_committed": True,
-    "cve_scanning": True,
-    "slots_on_dataclasses": True,
     "uv_exclusive": True,
+
+    # Python logging
+    "centralized_logging": True,       # structlog.configure() once at entry
+    "thread_identified_logging": True,  # thread_name + thread_id in every log
+
+    # Python testing
+    "pytest_exclusive": True,           # unittest forbidden
+    "docstrings_google_style": True,    # Google style, not numpy/sphinx
+
     # Black-owned PEP 8 rules that ruff must ignore to avoid conflicts
     "ruff_black_ignore": ["E111", "E114", "E117", "E501", "W191", "E203"],
 }

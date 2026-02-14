@@ -1,16 +1,18 @@
 ---
 name: wfc-python
-description: Internal Python development standards for WFC projects. Enforces Python 3.12+, black formatting, full typing, PEP 562 lazy imports, SOLID/DRY principles, three-tier architecture, 500-line file limit, and Pythonic conventions. Defines preferred libraries (python-dotenv, fire, faker, joblib, orjson, structlog, tenacity). Referenced by wfc-build, wfc-implement, wfc-test, and wfc-review. Not a user-invocable skill.
+description: Python-specific development standards for WFC projects. Inherits universal standards from wfc-code-standards. Adds Python 3.12+ syntax, black formatting, full typing, PEP 562, UV toolchain, and preferred libraries (structlog, orjson, httpx, pydantic, FastAPI, pytest). Referenced by wfc-build, wfc-implement, wfc-test, and wfc-review. Not a user-invocable skill.
 license: MIT
 ---
 
 # WFC:PYTHON - Python Development Standards
 
-Internal skill that defines how WFC builds Python projects. Referenced by other skills during implementation and review.
+Python-specific standards for WFC projects. **Inherits all universal standards from `wfc-code-standards`** (three-tier architecture, SOLID, composition over inheritance, 500-line limit, DRY, structured logging, testing philosophy, async safety, dependency management, documentation).
+
+This skill adds Python-specific: syntax requirements, tooling (UV, black, ruff, mypy), libraries, frameworks, and enforcement patterns.
 
 ## Python Coding Standards
 
-**These are non-negotiable.** Every Python file WFC produces must follow these conventions.
+**These are non-negotiable.** Every Python file WFC produces must follow these conventions, **in addition to** the universal standards in `wfc-code-standards`.
 
 ### Python 3.12+ Required
 
@@ -191,146 +193,38 @@ def __dir__() -> list[str]:
 - Heavy dependencies load lazily through `__getattr__`
 - Always implement `__dir__` alongside `__getattr__` for discoverability
 
-### 500-Line File Limit (Hard Cap)
+### Architecture in Python (see wfc-code-standards)
 
-No Python file exceeds 500 lines. If it does, it needs to be split.
+Three-tier, SOLID, composition over inheritance, DRY, 500-line limit, and elegance rules are defined in `wfc-code-standards`. Below is the **Python-specific implementation**.
 
-**How to split**:
-- Extract classes into their own modules
-- Group related functions into submodules
-- Use `__init__.py` with PEP 562 to re-export the public API
-
-```
-# BAD: one monolithic file
-utils.py (800 lines)
-
-# GOOD: split by responsibility
-utils/
-├── __init__.py       # PEP 562 re-exports
-├── text.py           # Text processing functions
-├── dates.py          # Date/time helpers
-└── validation.py     # Input validation
-```
-
-**Rules**:
-- 500 lines is a hard cap, not a target - shorter is better
-- If a file is approaching 300 lines, consider if it has multiple responsibilities
-- Tests can be longer than 500 lines only if they cannot logically split
-
-### Three-Tier Architecture
-
-Separate **presentation**, **business logic**, and **data access**. Never mix tiers.
-
+**Python project structure** (three-tier):
 ```
 project/
-├── api/              # PRESENTATION: HTTP handlers, CLI, serialization
-│   ├── routes.py     #   Request/response handling only
-│   └── schemas.py    #   Input/output shapes (Pydantic, dataclasses)
-├── services/         # BUSINESS LOGIC: Rules, orchestration, workflows
-│   ├── orders.py     #   OrderService: business rules
-│   └── payments.py   #   PaymentService: payment workflows
-├── repositories/     # DATA ACCESS: Database, APIs, file I/O
-│   ├── orders.py     #   OrderRepository: queries, persistence
-│   └── cache.py      #   CacheRepository: Redis/disk cache
-└── models/           # DOMAIN: Pure data structures, no behavior
-    └── order.py      #   Order dataclass, enums, value objects
+├── api/              # PRESENTATION: FastAPI routes, Pydantic schemas
+│   ├── routes.py
+│   └── schemas.py
+├── services/         # LOGIC: Business rules, orchestration
+│   ├── orders.py
+│   └── payments.py
+├── repositories/     # DATA: Database, APIs, file I/O
+│   ├── orders.py
+│   └── cache.py
+└── models/           # DOMAIN: Dataclasses, enums, value objects
+    └── order.py
 ```
 
-**Tier rules**:
-
-| Tier | Can Import | Cannot Import |
-|------|-----------|---------------|
-| Presentation | Services, Models | Repositories |
-| Business Logic | Repositories, Models | Presentation |
-| Data Access | Models | Presentation, Services |
-| Models | stdlib only | Everything else |
-
+**SOLID in Python** - use `Protocol` for DIP and ISP:
 ```python
-# GOOD: presentation calls service, service calls repository
-class OrderAPI:
-    def __init__(self, service: OrderService) -> None:
-        self.service = service
-
-    def create(self, request: CreateOrderRequest) -> OrderResponse:
-        order = self.service.create_order(request.to_domain())
-        return OrderResponse.from_domain(order)
-
-class OrderService:
-    def __init__(self, repo: OrderRepository) -> None:
-        self.repo = repo
-
-    def create_order(self, order: Order) -> Order:
-        # business rules here
-        return self.repo.save(order)
-
-# BAD: API handler directly queries database
-class OrderAPI:
-    def create(self, request):
-        db.execute("INSERT INTO orders ...")  # NO - tier violation
-```
-
-### SOLID Principles
-
-**S - Single Responsibility**: One reason to change per class/module.
-```python
-# BAD: class does validation, persistence, and notification
-class OrderProcessor:
-    def process(self, order):
-        self.validate(order)
-        self.save_to_db(order)
-        self.send_email(order)
-
-# GOOD: separate responsibilities
-class OrderValidator:
-    def validate(self, order: Order) -> ValidationResult: ...
-
-class OrderRepository:
-    def save(self, order: Order) -> Order: ...
-
-class OrderNotifier:
-    def notify(self, order: Order) -> None: ...
-```
-
-**O - Open/Closed**: Extend via new classes, not modifying existing ones.
-```python
-# Use Protocol for extension points
 from typing import Protocol
 
-class Exporter(Protocol):
-    def export(self, data: list[dict[str, Any]]) -> bytes: ...
-
-class CSVExporter:
-    def export(self, data: list[dict[str, Any]]) -> bytes: ...
-
-class JSONExporter:
-    def export(self, data: list[dict[str, Any]]) -> bytes: ...
-
-# Adding PDFExporter doesn't modify existing code
-```
-
-**L - Liskov Substitution**: Subtypes must be substitutable.
-
-**I - Interface Segregation**: Use `Protocol` with narrow interfaces.
-```python
-# BAD: fat interface
-class Repository(Protocol):
-    def get(self, id: str) -> Model: ...
-    def list(self) -> list[Model]: ...
-    def save(self, model: Model) -> None: ...
-    def delete(self, id: str) -> None: ...
-    def export(self) -> bytes: ...
-
-# GOOD: segregated
+# Interface segregation via Protocol (not ABC)
 class Readable(Protocol):
     def get(self, id: str) -> Model: ...
 
 class Writable(Protocol):
     def save(self, model: Model) -> None: ...
-```
 
-**D - Dependency Inversion**: Depend on abstractions (Protocol), not concretions.
-```python
-# GOOD: constructor injection with Protocol
+# Dependency inversion via constructor injection
 class OrderService:
     def __init__(
         self,
@@ -341,12 +235,14 @@ class OrderService:
         self.notifier = notifier
 ```
 
-### DRY - Don't Repeat Yourself
-
-- Extract repeated logic into functions when used 3+ times
-- Use base classes or mixins for shared behavior across classes
-- Shared constants go in a `constants.py` or the relevant module
-- But: don't create premature abstractions for 1-2 uses
+**Splitting files** - use PEP 562 to re-export:
+```
+utils/
+├── __init__.py       # PEP 562 re-exports
+├── text.py
+├── dates.py
+└── validation.py
+```
 
 ### Pythonic Conventions
 
@@ -402,12 +298,12 @@ class Status(StrEnum):
     ARCHIVED = "archived"
 ```
 
-### Error Handling
+### Error Handling (Python-Specific)
 
-Structured, intentional error handling. No silent failures, no bare excepts.
+See `wfc-code-standards` for error philosophy. Python implementation:
 
 ```python
-# Custom exception hierarchy per domain
+# Exception hierarchy per project
 class AppError(Exception):
     """Base for all application errors."""
 
@@ -425,31 +321,7 @@ class NotFoundError(AppError):
         self.identifier = identifier
         super().__init__(f"{resource} not found: {identifier}")
 
-class ExternalServiceError(AppError):
-    """External dependency failed."""
-```
-
-**Rules**:
-- Never bare `except:` or `except Exception:` without re-raise or structured logging
-- Define a project-level exception hierarchy rooted in one base class
-- Exceptions carry structured context (fields, not just strings)
-- Log errors with structlog context, then raise or handle - never silently swallow
-- Use `ExceptionGroup` + `except*` for concurrent error handling (3.11+)
-
-```python
-# BAD: swallowing errors
-try:
-    result = api_call()
-except Exception:
-    pass  # NO - silent failure
-
-# BAD: bare except
-try:
-    result = api_call()
-except:  # NO - catches SystemExit, KeyboardInterrupt
-    pass
-
-# GOOD: specific, logged, structured
+# GOOD: specific, logged, re-raised with chain
 try:
     result = api_call()
 except httpx.TimeoutException as exc:
@@ -457,29 +329,23 @@ except httpx.TimeoutException as exc:
     raise ExternalServiceError("API timed out") from exc
 ```
 
-### Composition Over Inheritance
+**Python rules**:
+- Exceptions carry structured context (fields, not just strings)
+- Use `from exc` for exception chaining
+- Use `ExceptionGroup` + `except*` for concurrent error handling (3.11+)
+- Log with structlog context, then raise - never silently swallow
 
-Prefer composition and Protocol over deep inheritance trees.
+### Composition in Python
+
+See `wfc-code-standards` for composition philosophy. Python implementation:
 
 ```python
-# BAD: inheritance for code reuse
-class BaseProcessor:
-    def validate(self): ...
-    def transform(self): ...
-    def save(self): ...
-
-class OrderProcessor(BaseProcessor):
-    def process(self):
-        self.validate()
-        self.transform()
-        self.save()
-
-# GOOD: composition with injected collaborators
+# Composition via dataclass + Protocol (not inheritance)
 @dataclass(slots=True)
 class OrderProcessor:
-    validator: Validator
-    transformer: Transformer
-    repo: Repository
+    validator: Validator       # Protocol
+    transformer: Transformer   # Protocol
+    repo: Repository           # Protocol
 
     def process(self, order: Order) -> Order:
         self.validator.validate(order)
@@ -487,42 +353,23 @@ class OrderProcessor:
         return self.repo.save(transformed)
 ```
 
-**Rules**:
-- Max 1 level of inheritance (concrete class extends at most one base)
-- Use Protocol for polymorphism, not ABC (unless you need `__init_subclass__`)
-- Use dataclass composition to assemble behavior from parts
+**Python rules**:
+- Use `Protocol` for polymorphism, not ABC (unless you need `__init_subclass__`)
+- Use `@dataclass(slots=True)` for composed types
 - Mixins only when composition is genuinely awkward (rare)
 
-### Factory Patterns
+### Factory Patterns (Python)
 
-Use factories when object construction is non-trivial, conditional, or involves
-registries. Factories centralize creation logic so callers don't need to know
-concrete types.
+See `wfc-code-standards` for when to use factories. Python implementation:
 
 ```python
 from typing import Protocol
 from dataclasses import dataclass
 
-# Protocol for the product
 class Notifier(Protocol):
     def send(self, message: str, recipient: str) -> None: ...
 
-# Concrete implementations
-@dataclass(slots=True)
-class EmailNotifier:
-    smtp_host: str
-
-    def send(self, message: str, recipient: str) -> None:
-        ...  # send via SMTP
-
-@dataclass(slots=True)
-class SlackNotifier:
-    webhook_url: str
-
-    def send(self, message: str, recipient: str) -> None:
-        ...  # post to Slack webhook
-
-# Factory function - simplest form, use when creation logic is a single branch
+# Factory with match/case (3.10+)
 def create_notifier(channel: str, **kwargs: str) -> Notifier:
     match channel:
         case "email":
@@ -532,7 +379,7 @@ def create_notifier(channel: str, **kwargs: str) -> Notifier:
         case _:
             raise ValueError(f"Unknown notification channel: {channel}")
 
-# Registry-based factory - use when third parties register implementations
+# Registry-based factory for plugins
 _REGISTRY: dict[str, type[Notifier]] = {}
 
 def register_notifier(name: str, cls: type[Notifier]) -> None:
@@ -542,31 +389,15 @@ def get_notifier(name: str, **kwargs: str) -> Notifier:
     if name not in _REGISTRY:
         raise KeyError(f"No notifier registered for {name!r}")
     return _REGISTRY[name](**kwargs)
-
-# Usage - callers never import concrete classes
-notifier = create_notifier("email", smtp_host="mail.example.com")
-notifier.send("Hello", "user@example.com")
 ```
-
-**When to use factories**:
-- Object creation depends on runtime config or environment (e.g. "email" vs "slack")
-- Multiple implementations behind a Protocol - callers shouldn't pick the concrete class
-- Construction requires validation, defaults, or multi-step setup
-- Plugin/registry systems where implementations are registered dynamically
-
-**When NOT to use factories**:
-- Single implementation - just instantiate directly
-- Dataclass with straightforward fields - no factory needed
-- Only 1-2 callers - a factory adds indirection for no benefit
 
 ### Context Managers & Dunder Methods
 
-Implement proper resource management and Pythonic interfaces.
+Python's implementation of resource lifecycle (see `wfc-code-standards` for the universal principle).
 
 ```python
 from contextlib import contextmanager, asynccontextmanager
 
-# Context manager for resource lifecycle
 @contextmanager
 def db_transaction(conn: Connection) -> Iterator[Transaction]:
     tx = conn.begin()
@@ -577,7 +408,6 @@ def db_transaction(conn: Connection) -> Iterator[Transaction]:
         tx.rollback()
         raise
 
-# Async context manager
 @asynccontextmanager
 async def http_session() -> AsyncIterator[httpx.AsyncClient]:
     async with httpx.AsyncClient(timeout=30) as client:
@@ -601,88 +431,32 @@ class Money:
         return self.amount != 0
 ```
 
-**Atomic Writes** - never leave files in a half-written state:
+**Atomic Writes** (Python implementation):
 ```python
 import os
 import tempfile
 from pathlib import Path
 
 def atomic_write(path: Path, content: str | bytes, encoding: str = "utf-8") -> None:
-    """Write to a file atomically via temp file + rename.
-
-    If the process crashes mid-write, the original file remains intact.
-    Works on the same filesystem (os.replace is atomic on POSIX).
-    """
+    """Write atomically via temp file + rename."""
     mode = "wb" if isinstance(content, bytes) else "w"
-    # Write to temp file in the same directory (same filesystem = atomic rename)
-    fd, tmp_path = tempfile.mkstemp(
-        dir=path.parent,
-        prefix=f".{path.name}.",
-        suffix=".tmp",
-    )
+    fd, tmp_path = tempfile.mkstemp(dir=path.parent, prefix=f".{path.name}.", suffix=".tmp")
     try:
         with open(fd, mode, encoding=encoding if mode == "w" else None) as f:
             f.write(content)
             f.flush()
-            os.fsync(f.fileno())  # ensure data hits disk
+            os.fsync(f.fileno())
         os.replace(tmp_path, path)  # atomic on POSIX
     except BaseException:
-        # Clean up temp file on any failure
         with contextlib.suppress(OSError):
             os.unlink(tmp_path)
         raise
 ```
 
-**When to use atomic writes**:
-- Config files, state files, lockfiles - anything where corruption = broken system
-- Any file that other processes may read concurrently
-- Files written from background threads or async tasks
-
-**When NOT needed**:
-- Temporary/scratch files that are disposable
-- Append-only logs (use `open(path, "a")` with line buffering instead)
-
 **Rules**:
-- Always use context managers for resources (files, connections, locks, transactions)
-- **Atomic writes**: Use write-to-temp + `os.replace` for any file that must not be left half-written
-- Prefer `contextlib.contextmanager` over writing `__enter__`/`__exit__` manually
+- Prefer `contextlib.contextmanager` over manual `__enter__`/`__exit__`
 - Implement `__repr__` on all domain objects (dataclass gives this free)
-- Implement `__str__` when human-readable output matters
 - Implement `__eq__` and `__hash__` via `frozen=True` dataclass, not manually
-
-### Elegance Rules
-
-- Simplest solution that works. No cleverness for its own sake.
-- If a stdlib solution exists, use it before reaching for a library
-- Flat is better than nested - max 3 levels of indentation
-- Early returns over deep nesting
-- Explicit is better than implicit - no magic
-
-```python
-# BAD: clever but unreadable
-result = (lambda f: (lambda x: x(x))(lambda y: f(lambda *a: y(y)(*a))))(func)
-
-# GOOD: clear and direct
-result = func(input_data)
-
-# BAD: deep nesting
-def process(data):
-    if data:
-        if data.valid:
-            if data.ready:
-                return transform(data)
-            else:
-                return None
-        else:
-            return None
-    else:
-        return None
-
-# GOOD: early returns
-def process(data: Data | None) -> Result | None:
-    if not data or not data.valid or not data.ready:
-        return None
-    return transform(data)
 ```
 
 ## Preferred Libraries
@@ -1238,7 +1012,7 @@ async def get_user(
 
 ## Async & Concurrency
 
-Use `asyncio` with `TaskGroup` for concurrent I/O. Use `joblib` for CPU-bound parallelism.
+See `wfc-code-standards` for universal async safety rules. Python implementation uses `asyncio` with `TaskGroup` for concurrent I/O and `joblib` for CPU-bound parallelism.
 
 ### When to Use Async
 
@@ -1509,7 +1283,7 @@ def run_workers(tasks: list[Callable[[], None]]) -> None:
 
 ## Docstrings (Google Style)
 
-Every public module, class, and function must have a docstring. We use **Google Style** formatting for automated docs generation (MkDocs/Sphinx).
+See `wfc-code-standards` for universal documentation rules. Python uses **Google Style** formatting for automated docs generation (MkDocs/Sphinx).
 
 ### Format
 
@@ -1592,6 +1366,8 @@ from __future__ import annotations
 - **One-liner docstrings**: OK for trivially obvious functions: `"""Return the user's full name."""`
 
 ## Testing Standards
+
+See `wfc-code-standards` for universal testing philosophy (organization, naming, coverage, mocking). Python-specific:
 
 **We use `pytest`. The `unittest` module is strictly forbidden.**
 
@@ -1743,7 +1519,7 @@ tests/
 
 ## UV Toolchain (Exclusive)
 
-**UV is the only Python toolchain.** No pip, no pipx, no conda, no poetry.
+See `wfc-code-standards` for universal dependency management rules (lock files, version pinning, CVE scanning). Python uses **UV exclusively**. No pip, no pipx, no conda, no poetry.
 
 ### Commands
 
