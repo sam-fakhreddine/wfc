@@ -10,14 +10,18 @@ Toolchain:
 
 Standards:
     - Python 3.12+ required (type statement, generic syntax, f-string nesting)
-    - Black formatting (line-length 88, no overrides)
+    - Black formatting (line-length 88, no overrides, PEP 8 synced via ruff ignores)
     - Full type annotations on all signatures
     - PEP 562 lazy imports in __init__.py
     - Three-tier architecture (presentation / logic / data)
     - SOLID principles (SRP, OCP, LSP, ISP, DIP)
+    - Factory patterns for conditional/registry-based object creation
     - Composition over inheritance (Protocol, not deep class trees)
     - Structured error handling (exception hierarchies, no bare except)
+    - Centralized logging (structlog, configure once, thread-identified)
     - Context managers for all resource lifecycle
+    - Atomic writes (temp file + os.replace, never half-written files)
+    - Thread-safe operations (locks for shared state, named threads)
     - DRY - extract at 3+ repetitions
     - 500-line hard cap per file
     - Pythonic conventions (comprehensions, pathlib, StrEnum, dataclasses)
@@ -111,8 +115,13 @@ CODING_STANDARDS: dict[str, str | int | bool | list[str]] = {
     "three_tier_architecture": True,
     "solid_principles": True,
     "composition_over_inheritance": True,
+    "factory_patterns": True,
     "structured_error_handling": True,
     "context_managers_for_resources": True,
+    "atomic_writes": True,
+    "centralized_logging": True,
+    "thread_safe_operations": True,
+    "thread_identified_logging": True,
     "slots_on_dataclasses": True,
     "uv_exclusive": True,
     # Black-owned PEP 8 rules that ruff must ignore to avoid conflicts

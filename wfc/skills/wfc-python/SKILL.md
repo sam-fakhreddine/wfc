@@ -493,6 +493,72 @@ class OrderProcessor:
 - Use dataclass composition to assemble behavior from parts
 - Mixins only when composition is genuinely awkward (rare)
 
+### Factory Patterns
+
+Use factories when object construction is non-trivial, conditional, or involves
+registries. Factories centralize creation logic so callers don't need to know
+concrete types.
+
+```python
+from typing import Protocol
+from dataclasses import dataclass
+
+# Protocol for the product
+class Notifier(Protocol):
+    def send(self, message: str, recipient: str) -> None: ...
+
+# Concrete implementations
+@dataclass(slots=True)
+class EmailNotifier:
+    smtp_host: str
+
+    def send(self, message: str, recipient: str) -> None:
+        ...  # send via SMTP
+
+@dataclass(slots=True)
+class SlackNotifier:
+    webhook_url: str
+
+    def send(self, message: str, recipient: str) -> None:
+        ...  # post to Slack webhook
+
+# Factory function - simplest form, use when creation logic is a single branch
+def create_notifier(channel: str, **kwargs: str) -> Notifier:
+    match channel:
+        case "email":
+            return EmailNotifier(smtp_host=kwargs["smtp_host"])
+        case "slack":
+            return SlackNotifier(webhook_url=kwargs["webhook_url"])
+        case _:
+            raise ValueError(f"Unknown notification channel: {channel}")
+
+# Registry-based factory - use when third parties register implementations
+_REGISTRY: dict[str, type[Notifier]] = {}
+
+def register_notifier(name: str, cls: type[Notifier]) -> None:
+    _REGISTRY[name] = cls
+
+def get_notifier(name: str, **kwargs: str) -> Notifier:
+    if name not in _REGISTRY:
+        raise KeyError(f"No notifier registered for {name!r}")
+    return _REGISTRY[name](**kwargs)
+
+# Usage - callers never import concrete classes
+notifier = create_notifier("email", smtp_host="mail.example.com")
+notifier.send("Hello", "user@example.com")
+```
+
+**When to use factories**:
+- Object creation depends on runtime config or environment (e.g. "email" vs "slack")
+- Multiple implementations behind a Protocol - callers shouldn't pick the concrete class
+- Construction requires validation, defaults, or multi-step setup
+- Plugin/registry systems where implementations are registered dynamically
+
+**When NOT to use factories**:
+- Single implementation - just instantiate directly
+- Dataclass with straightforward fields - no factory needed
+- Only 1-2 callers - a factory adds indirection for no benefit
+
 ### Context Managers & Dunder Methods
 
 Implement proper resource management and Pythonic interfaces.
@@ -535,8 +601,50 @@ class Money:
         return self.amount != 0
 ```
 
+**Atomic Writes** - never leave files in a half-written state:
+```python
+import os
+import tempfile
+from pathlib import Path
+
+def atomic_write(path: Path, content: str | bytes, encoding: str = "utf-8") -> None:
+    """Write to a file atomically via temp file + rename.
+
+    If the process crashes mid-write, the original file remains intact.
+    Works on the same filesystem (os.replace is atomic on POSIX).
+    """
+    mode = "wb" if isinstance(content, bytes) else "w"
+    # Write to temp file in the same directory (same filesystem = atomic rename)
+    fd, tmp_path = tempfile.mkstemp(
+        dir=path.parent,
+        prefix=f".{path.name}.",
+        suffix=".tmp",
+    )
+    try:
+        with open(fd, mode, encoding=encoding if mode == "w" else None) as f:
+            f.write(content)
+            f.flush()
+            os.fsync(f.fileno())  # ensure data hits disk
+        os.replace(tmp_path, path)  # atomic on POSIX
+    except BaseException:
+        # Clean up temp file on any failure
+        with contextlib.suppress(OSError):
+            os.unlink(tmp_path)
+        raise
+```
+
+**When to use atomic writes**:
+- Config files, state files, lockfiles - anything where corruption = broken system
+- Any file that other processes may read concurrently
+- Files written from background threads or async tasks
+
+**When NOT needed**:
+- Temporary/scratch files that are disposable
+- Append-only logs (use `open(path, "a")` with line buffering instead)
+
 **Rules**:
 - Always use context managers for resources (files, connections, locks, transactions)
+- **Atomic writes**: Use write-to-temp + `os.replace` for any file that must not be left half-written
 - Prefer `contextlib.contextmanager` over writing `__enter__`/`__exit__` manually
 - Implement `__repr__` on all domain objects (dataclass gives this free)
 - Implement `__str__` when human-readable output matters
@@ -776,27 +884,81 @@ logger.info("request_received")
 logger.info("request_completed", status=200)
 ```
 
-**Configuration**:
+**Centralized Configuration** - configure once at application startup, never per-module:
 ```python
+# app/logging.py - single source of truth for all logging config
+import logging
+import threading
+
 import structlog
 
-structlog.configure(
-    processors=[
+
+def setup_logging(*, json_output: bool = False, level: str = "INFO") -> None:
+    """Call exactly once at application startup (main, FastAPI lifespan, etc.)."""
+
+    shared_processors: list[structlog.types.Processor] = [
         structlog.contextvars.merge_contextvars,
         structlog.processors.add_log_level,
         structlog.processors.TimeStamper(fmt="iso"),
-        structlog.dev.ConsoleRenderer(),  # Dev: colored output
-        # Production: use structlog.processors.JSONRenderer()
-    ],
-)
+        _add_thread_info,  # always identify which thread is logging
+    ]
+
+    if json_output:
+        renderer = structlog.processors.JSONRenderer()
+    else:
+        renderer = structlog.dev.ConsoleRenderer()  # type: ignore[assignment]
+
+    structlog.configure(
+        processors=[*shared_processors, renderer],
+        wrapper_class=structlog.make_filtering_bound_logger(
+            logging.getLevelNamesMapping()[level],
+        ),
+        logger_factory=structlog.PrintLoggerFactory(),
+        cache_logger_on_first_use=True,
+    )
+
+
+def _add_thread_info(
+    logger: structlog.types.WrappedLogger,
+    method_name: str,
+    event_dict: structlog.types.EventDict,
+) -> structlog.types.EventDict:
+    """Inject thread name and ID into every log line."""
+    t = threading.current_thread()
+    event_dict["thread_name"] = t.name
+    event_dict["thread_id"] = t.ident
+    return event_dict
+```
+
+**Usage in any module** - import structlog, never configure it:
+```python
+# services/order.py
+import structlog
+
+log = structlog.get_logger()
+
+def process_order(order_id: str) -> None:
+    log.info("processing_order", order_id=order_id)
+    # Output includes thread_name="MainThread" thread_id=140234... automatically
+```
+
+**Thread-aware logging output** - every log line identifies its thread:
+```
+2025-01-15T09:30:01Z [info] processing_order  order_id=abc-123  thread_name=Worker-3  thread_id=140234567890
+2025-01-15T09:30:01Z [info] db_query_complete  table=orders  ms=12  thread_name=Worker-3  thread_id=140234567890
+2025-01-15T09:30:02Z [info] processing_order  order_id=def-456  thread_name=Worker-7  thread_id=140234567891
 ```
 
 **Rules**:
+- **Centralized config**: Call `setup_logging()` exactly once at app entry point - never in library code, never per-module
 - Use `structlog` over stdlib `logging` or `print()` statements
 - Always log key-value pairs, not formatted strings: `log.info("event", key=value)` not `log.info(f"event: {value}")`
 - Use `bind()` to carry context (request_id, user_id) through call chains
+- **Thread identification**: Always include the `_add_thread_info` processor - when multithreaded, you must know which thread produced each log line
+- Use `contextvars` (not thread-locals) to propagate context across async tasks and threads
 - Use `ConsoleRenderer` in development, `JSONRenderer` in production
 - Never log secrets or PII
+- Never call `structlog.configure()` from library/module code - only from the app entry point
 
 ### 7. tenacity - Retry Logic
 
@@ -1118,6 +1280,77 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
 app = FastAPI(lifespan=lifespan)
 ```
 
+### Thread Safety
+
+When using threads (joblib, `threading`, `concurrent.futures`), protect shared state
+and always identify which thread is doing what.
+
+```python
+import threading
+from collections.abc import Iterator
+from contextlib import contextmanager
+
+import structlog
+
+log = structlog.get_logger()
+
+# Use threading.Lock for shared mutable state
+class SafeCounter:
+    """Thread-safe counter. Lock protects _value from data races."""
+
+    __slots__ = ("_value", "_lock")
+
+    def __init__(self) -> None:
+        self._value = 0
+        self._lock = threading.Lock()
+
+    def increment(self) -> int:
+        with self._lock:
+            self._value += 1
+            return self._value
+
+    @property
+    def value(self) -> int:
+        with self._lock:
+            return self._value
+
+
+# Thread-safe file writing - combine atomic writes + lock
+_write_lock = threading.Lock()
+
+def threadsafe_write(path: Path, content: str) -> None:
+    """Atomic write guarded by a lock so concurrent threads don't clobber."""
+    with _write_lock:
+        atomic_write(path, content)
+    log.info("file_written", path=str(path))
+    # Log automatically includes thread_name + thread_id from centralized config
+
+
+# Name your threads - makes logs and debuggers useful
+def run_workers(tasks: list[Callable[[], None]]) -> None:
+    threads: list[threading.Thread] = []
+    for i, task in enumerate(tasks):
+        t = threading.Thread(
+            target=task,
+            name=f"Worker-{i}",  # shows up in logs via _add_thread_info
+            daemon=True,
+        )
+        threads.append(t)
+        t.start()
+
+    for t in threads:
+        t.join()
+```
+
+**Thread safety rules**:
+- **Name all threads**: Use `name=` in `threading.Thread()` so logs identify the source
+- **Protect shared state**: Use `threading.Lock()` around any mutable shared data
+- **Prefer immutable data**: Frozen dataclasses, tuples, and `frozenset` don't need locks
+- **Atomic writes under lock**: When multiple threads write the same file, combine `atomic_write` with a lock
+- **Use `contextvars`** (not `threading.local`) for per-task context - works across both threads and async
+- **Log thread identity**: The centralized `_add_thread_info` processor ensures every log line shows which thread produced it - never disable this in multithreaded code
+- **Prefer `concurrent.futures.ThreadPoolExecutor`** over raw `threading.Thread` for pools
+
 **Rules**:
 - Use `asyncio.TaskGroup` (3.11+) over `asyncio.gather` - better error handling
 - Use `except*` to handle errors from concurrent tasks by type
@@ -1126,6 +1359,8 @@ app = FastAPI(lifespan=lifespan)
 - Use FastAPI `lifespan` context manager, not deprecated `@app.on_event`
 - Never mix `asyncio.run()` inside an already-running event loop
 - CPU-bound work goes to `joblib.Parallel`, not async (GIL)
+- **Thread identification**: Every thread must have a descriptive `name=` - no anonymous threads
+- **Thread-safe I/O**: All file writes from threads must use `atomic_write` + lock
 
 ## Testing Standards
 
