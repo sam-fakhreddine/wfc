@@ -29,6 +29,43 @@ A feature is not complete until ALL applicable items are satisfied:
 
 This checklist applies to new features and significant modifications. Pure refactors that don't change behavior are exempt from items they don't touch.
 
+## Agent Pre-Completion Checklist
+
+Before you declare your task done, walk through these 10 checks. If any answer is "no", you're not done.
+
+```
+ 1. TESTS PASS       — Did you run the full suite? Do YOUR new tests pass?
+                       Not just "no errors" — the tests you wrote actually assert something.
+
+ 2. UNHAPPY PATHS    — Did you test what happens when things go wrong?
+                       Bad input, timeouts, retries exhausted, duplicate calls, partial failure.
+
+ 3. BOUNDARIES       — Is every external input validated before it touches logic?
+                       API params, file contents, env vars, config — validated at the gate, not deep inside.
+
+ 4. TIMEOUTS         — Does every external call have an explicit timeout?
+                       HTTP, subprocess, database, sockets. No unbounded waits. Ever.
+
+ 5. ERRORS TALK      — Do your errors say what went wrong, why, and how to trace it?
+                       Structured (code + message + correlationId). No bare "except: pass". No silent swallows.
+
+ 6. NO SECRETS LEAK  — Are logs, error messages, and URLs free of secrets and PII?
+                       grep your diff for API keys, passwords, tokens. If in doubt, it leaks.
+
+ 7. STATE IS GUARDED — If you changed state transitions, are they explicit and validated?
+                       Enum states. Transition map. Invalid moves raise, not silently no-op.
+
+ 8. IDEMPOTENT       — Can your operation run twice without breaking anything?
+                       Upserts not blind inserts. Dedup before side effects. Retries are safe.
+
+ 9. SIMPLE           — Did you write the simplest thing that works?
+                       No abstractions for one-time ops. No feature flags nobody asked for.
+                       Three similar lines > premature helper function.
+
+10. CLEAN DIFF       — Is your diff ONLY what was asked for?
+                       No drive-by refactors. No unrelated "improvements". No dev artifacts committed.
+```
+
 ## Architecture
 
 ### Three-Tier Architecture
