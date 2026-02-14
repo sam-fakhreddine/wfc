@@ -4,25 +4,24 @@ Worktree operations API
 Isolated workspaces for parallel agent work.
 """
 
-import re
 import subprocess
 from pathlib import Path
 from typing import Dict, List, Optional
 
-_FLAG_PATTERN = re.compile(r"^-")
+from .validators import has_path_traversal, is_flag_injection
 
 
 def validate_worktree_input(task_id: str, base_ref: str = "main") -> Optional[str]:
     """Validate worktree inputs. Returns error message or None if valid."""
     if not task_id:
         return "task_id is required"
-    if ".." in task_id or "/" in task_id or "\\" in task_id:
+    if has_path_traversal(task_id) or "/" in task_id:
         return f"Invalid task_id: {task_id} (path traversal)"
-    if _FLAG_PATTERN.match(task_id):
+    if is_flag_injection(task_id):
         return f"Invalid task_id: {task_id} (flag injection)"
-    if _FLAG_PATTERN.match(base_ref):
+    if is_flag_injection(base_ref):
         return f"Invalid base_ref: {base_ref} (flag injection)"
-    if ".." in base_ref:
+    if has_path_traversal(base_ref):
         return f"Invalid base_ref: {base_ref} (path traversal)"
     return None
 
@@ -35,7 +34,6 @@ class WorktreeOperations:
 
     def create(self, task_id: str, base_ref: str = "main") -> Dict:
         """Create worktree for task"""
-        # Validate inputs
         validation_error = validate_worktree_input(task_id, base_ref)
         if validation_error:
             return {
@@ -47,10 +45,8 @@ class WorktreeOperations:
         branch_name = f"wfc/{task_id}"
 
         try:
-            # Ensure worktree directory exists
             Path(self.worktree_dir).mkdir(parents=True, exist_ok=True)
 
-            # Create worktree
             subprocess.run(
                 ["git", "worktree", "add", worktree_path, "-b", branch_name, base_ref],
                 check=True,
@@ -71,7 +67,6 @@ class WorktreeOperations:
 
     def delete(self, task_id: str, force: bool = False) -> Dict:
         """Delete worktree"""
-        # Validate task_id
         validation_error = validate_worktree_input(task_id)
         if validation_error:
             return {
@@ -148,11 +143,9 @@ class WorktreeOperations:
 
     def conflicts(self, task_id: str, other_worktrees: Optional[List[str]] = None) -> Dict:
         """Detect file conflicts with other worktrees"""
-        # Simplified - would check git status and compare files
         return {"has_conflicts": False, "conflicting_files": []}
 
 
-# Singleton
 _instance = WorktreeOperations()
 
 

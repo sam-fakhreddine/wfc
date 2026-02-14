@@ -9,34 +9,8 @@ import subprocess
 from dataclasses import dataclass
 from typing import Dict, List, Optional
 
-_VALID_REF_PATTERN = re.compile(r"^[a-zA-Z0-9][a-zA-Z0-9._/\-]*$")
-_FLAG_PATTERN = re.compile(r"^-")
-
-
-def validate_branch_name(name: str) -> bool:
-    """Validate branch name against git ref naming rules."""
-    if not name or len(name) > 255:
-        return False
-    if ".." in name or name.endswith(".lock") or name.endswith("."):
-        return False
-    if "~" in name or "^" in name or ":" in name or "\\" in name:
-        return False
-    if " " in name or "\t" in name:
-        return False
-    if _FLAG_PATTERN.match(name):
-        return False
-    return bool(_VALID_REF_PATTERN.match(name))
-
-
-def validate_task_id(task_id: str) -> bool:
-    """Validate task ID - no path traversal."""
-    if not task_id:
-        return False
-    if ".." in task_id or "/" in task_id or "\\" in task_id:
-        return False
-    if _FLAG_PATTERN.match(task_id):
-        return False
-    return bool(re.match(r"^[A-Z]+-\d+$", task_id))
+from .validators import validate_ref_name as validate_branch_name
+from .validators import validate_task_id
 
 
 @dataclass

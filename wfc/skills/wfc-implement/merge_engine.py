@@ -548,6 +548,7 @@ class MergeEngine:
         start_time = time.time()
 
         try:
+            # SECURITY: shell=False; test_command validated by validate_test_command() above.
             cmd_list = shlex.split(test_command)
             result = subprocess.run(
                 cmd_list,
