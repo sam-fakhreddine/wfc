@@ -381,6 +381,146 @@ class Status(StrEnum):
     ARCHIVED = "archived"
 ```
 
+### Error Handling
+
+Structured, intentional error handling. No silent failures, no bare excepts.
+
+```python
+# Custom exception hierarchy per domain
+class AppError(Exception):
+    """Base for all application errors."""
+
+class ValidationError(AppError):
+    """Input validation failed."""
+    def __init__(self, field: str, message: str) -> None:
+        self.field = field
+        self.message = message
+        super().__init__(f"{field}: {message}")
+
+class NotFoundError(AppError):
+    """Resource not found."""
+    def __init__(self, resource: str, identifier: str) -> None:
+        self.resource = resource
+        self.identifier = identifier
+        super().__init__(f"{resource} not found: {identifier}")
+
+class ExternalServiceError(AppError):
+    """External dependency failed."""
+```
+
+**Rules**:
+- Never bare `except:` or `except Exception:` without re-raise or structured logging
+- Define a project-level exception hierarchy rooted in one base class
+- Exceptions carry structured context (fields, not just strings)
+- Log errors with structlog context, then raise or handle - never silently swallow
+- Use `ExceptionGroup` + `except*` for concurrent error handling (3.11+)
+
+```python
+# BAD: swallowing errors
+try:
+    result = api_call()
+except Exception:
+    pass  # NO - silent failure
+
+# BAD: bare except
+try:
+    result = api_call()
+except:  # NO - catches SystemExit, KeyboardInterrupt
+    pass
+
+# GOOD: specific, logged, structured
+try:
+    result = api_call()
+except httpx.TimeoutException as exc:
+    log.error("api_timeout", url=url, timeout=timeout)
+    raise ExternalServiceError("API timed out") from exc
+```
+
+### Composition Over Inheritance
+
+Prefer composition and Protocol over deep inheritance trees.
+
+```python
+# BAD: inheritance for code reuse
+class BaseProcessor:
+    def validate(self): ...
+    def transform(self): ...
+    def save(self): ...
+
+class OrderProcessor(BaseProcessor):
+    def process(self):
+        self.validate()
+        self.transform()
+        self.save()
+
+# GOOD: composition with injected collaborators
+@dataclass(slots=True)
+class OrderProcessor:
+    validator: Validator
+    transformer: Transformer
+    repo: Repository
+
+    def process(self, order: Order) -> Order:
+        self.validator.validate(order)
+        transformed = self.transformer.transform(order)
+        return self.repo.save(transformed)
+```
+
+**Rules**:
+- Max 1 level of inheritance (concrete class extends at most one base)
+- Use Protocol for polymorphism, not ABC (unless you need `__init_subclass__`)
+- Use dataclass composition to assemble behavior from parts
+- Mixins only when composition is genuinely awkward (rare)
+
+### Context Managers & Dunder Methods
+
+Implement proper resource management and Pythonic interfaces.
+
+```python
+from contextlib import contextmanager, asynccontextmanager
+
+# Context manager for resource lifecycle
+@contextmanager
+def db_transaction(conn: Connection) -> Iterator[Transaction]:
+    tx = conn.begin()
+    try:
+        yield tx
+        tx.commit()
+    except Exception:
+        tx.rollback()
+        raise
+
+# Async context manager
+@asynccontextmanager
+async def http_session() -> AsyncIterator[httpx.AsyncClient]:
+    async with httpx.AsyncClient(timeout=30) as client:
+        yield client
+
+# Meaningful dunder methods on domain objects
+@dataclass(frozen=True, slots=True)
+class Money:
+    amount: int  # cents
+    currency: str = "USD"
+
+    def __add__(self, other: Money) -> Money:
+        if self.currency != other.currency:
+            raise ValueError(f"Cannot add {self.currency} and {other.currency}")
+        return Money(self.amount + other.amount, self.currency)
+
+    def __str__(self) -> str:
+        return f"${self.amount / 100:.2f} {self.currency}"
+
+    def __bool__(self) -> bool:
+        return self.amount != 0
+```
+
+**Rules**:
+- Always use context managers for resources (files, connections, locks, transactions)
+- Prefer `contextlib.contextmanager` over writing `__enter__`/`__exit__` manually
+- Implement `__repr__` on all domain objects (dataclass gives this free)
+- Implement `__str__` when human-readable output matters
+- Implement `__eq__` and `__hash__` via `frozen=True` dataclass, not manually
+
 ### Elegance Rules
 
 - Simplest solution that works. No cleverness for its own sake.
@@ -747,20 +887,254 @@ def run_pipeline(items):
     return results
 ```
 
-## pyproject.toml Dependencies
+## Preferred Frameworks
 
-When scaffolding a new Python project, include these in `pyproject.toml`:
+Beyond the 7 core libraries, these are the standard frameworks for specific domains.
+
+### Pydantic - Data Validation & Settings
+
+**The** validation library. Use for API schemas, config, and any external data boundary.
+
+```python
+from pydantic import BaseModel, Field, field_validator
+from pydantic_settings import BaseSettings
+
+# API request/response schemas
+class CreateUserRequest(BaseModel):
+    name: str = Field(min_length=1, max_length=100)
+    email: str = Field(pattern=r"^[\w.-]+@[\w.-]+\.\w+$")
+    age: int = Field(ge=0, le=150)
+
+    @field_validator("name")
+    @classmethod
+    def name_must_not_be_empty(cls, v: str) -> str:
+        if not v.strip():
+            raise ValueError("Name cannot be blank")
+        return v.strip()
+
+# Settings from environment (replaces python-dotenv for typed config)
+class Settings(BaseSettings):
+    database_url: str
+    api_key: str
+    debug: bool = False
+    workers: int = 4
+
+    model_config = {"env_file": ".env"}
+
+settings = Settings()  # Reads from env + .env file, fully typed
+```
+
+**Rules**:
+- Use Pydantic models at **system boundaries** (API input, config, external data)
+- Use `pydantic-settings` for typed config (upgrades python-dotenv pattern)
+- Use plain dataclasses for internal domain objects (lighter weight)
+- Never pass raw dicts across module boundaries - validate into Pydantic models first
+
+### httpx - HTTP Client
+
+**The** HTTP client. Async-first, sync-compatible, replaces `requests`.
+
+```python
+import httpx
+import orjson
+
+# Sync
+response = httpx.get("https://api.example.com/data", timeout=10)
+data = orjson.loads(response.content)
+
+# Async
+async with httpx.AsyncClient(timeout=30) as client:
+    response = await client.get("https://api.example.com/data")
+    data = orjson.loads(response.content)
+
+# With tenacity retry
+@retry(stop=stop_after_attempt(3), wait=wait_exponential(min=2, max=30))
+async def fetch(client: httpx.AsyncClient, url: str) -> dict:
+    resp = await client.get(url)
+    resp.raise_for_status()
+    return orjson.loads(resp.content)
+```
+
+**Rules**:
+- Use `httpx` over `requests` (async support, HTTP/2, modern API)
+- Always set explicit `timeout` - never use default infinite timeout
+- Use `AsyncClient` as context manager for connection pooling
+- Parse responses with `orjson.loads(resp.content)` not `resp.json()`
+
+### FastAPI - Web APIs
+
+**The** API framework when building web services.
+
+```python
+from fastapi import FastAPI, Depends, HTTPException, status
+from pydantic import BaseModel
+
+app = FastAPI()
+
+# Dependency injection (aligns with SOLID DI principle)
+async def get_db() -> AsyncIterator[Database]:
+    async with Database() as db:
+        yield db
+
+class UserResponse(BaseModel):
+    id: str
+    name: str
+    email: str
+
+@app.get("/users/{user_id}", response_model=UserResponse)
+async def get_user(
+    user_id: str,
+    db: Database = Depends(get_db),
+) -> UserResponse:
+    user = await db.get_user(user_id)
+    if not user:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
+    return UserResponse.model_validate(user)
+```
+
+**Rules**:
+- Use FastAPI for any HTTP API project (not Flask, not Django REST)
+- Use Pydantic models for request/response schemas
+- Use `Depends()` for dependency injection (maps to SOLID DI)
+- Keep route handlers thin - delegate to service layer (three-tier)
+- Use async handlers with `httpx.AsyncClient` for downstream calls
+
+## Testing Standards
+
+### pytest Conventions
+
+```python
+import pytest
+from faker import Faker
+
+Faker.seed(42)
+fake = Faker()
+
+# Test naming: test_<what>_<condition>_<expected>
+def test_create_user_with_valid_data_returns_user() -> None:
+    user = create_user(name=fake.name(), email=fake.email())
+    assert user.id is not None
+    assert user.name == user.name
+
+def test_create_user_with_empty_name_raises_validation_error() -> None:
+    with pytest.raises(ValidationError, match="name"):
+        create_user(name="", email=fake.email())
+
+# Fixtures for shared setup
+@pytest.fixture
+def sample_user() -> User:
+    return User(name=fake.name(), email=fake.email())
+
+@pytest.fixture
+async def async_client() -> AsyncIterator[httpx.AsyncClient]:
+    async with httpx.AsyncClient(app=app, base_url="http://test") as client:
+        yield client
+
+# Parametrize for multiple cases
+@pytest.mark.parametrize(
+    ("input_value", "expected"),
+    [
+        ("hello", "HELLO"),
+        ("world", "WORLD"),
+        ("", ""),
+    ],
+)
+def test_uppercase(input_value: str, expected: str) -> None:
+    assert uppercase(input_value) == expected
+```
+
+**Rules**:
+- Test file naming: `test_<module>.py`
+- Test function naming: `test_<what>_<condition>_<expected>`
+- Use `Faker.seed(42)` at module level for reproducibility
+- Use `pytest.fixture` for shared setup, not `setUp()`/`tearDown()`
+- Use `pytest.raises` for expected exceptions
+- Use `@pytest.mark.parametrize` for data-driven tests
+- Use `conftest.py` for shared fixtures across test files
+- Coverage target: 80%+ on business logic (services tier)
+
+### Test Organization
+
+```
+tests/
+├── conftest.py          # Shared fixtures (faker, db, client)
+├── unit/                # Fast, isolated, no I/O
+│   ├── test_models.py
+│   └── test_services.py
+├── integration/         # Real dependencies (db, APIs)
+│   ├── test_repositories.py
+│   └── test_api.py
+└── e2e/                 # Full system tests
+    └── test_workflows.py
+```
+
+## UV Toolchain (Exclusive)
+
+**UV is the only Python toolchain.** No pip, no pipx, no conda, no poetry.
+
+### Commands
+
+```bash
+# Project setup
+uv init myproject                # Create new project
+uv add structlog orjson tenacity # Add dependencies
+uv add --dev pytest faker        # Add dev dependencies
+uv sync                          # Install/sync all dependencies
+uv lock                          # Generate/update lockfile
+
+# Running code
+uv run python script.py          # Run a script
+uv run pytest                    # Run tests
+uv run pytest -v --cov           # Tests with coverage
+uv run black .                   # Format
+uv run ruff check .              # Lint
+
+# Package management
+uv add httpx                     # Add a package
+uv remove httpx                  # Remove a package
+uv add --upgrade structlog       # Upgrade a package
+uv tree                          # Show dependency tree
+
+# Tools (replaces pipx)
+uv tool install ruff             # Install CLI tool globally
+uv tool run black .              # Run tool without installing
+```
+
+### What NEVER to Use
+
+| Never | Always |
+|-------|--------|
+| `pip install` | `uv add` or `uv pip install` |
+| `pip freeze` | `uv lock` / `uv.lock` file |
+| `python script.py` | `uv run python script.py` |
+| `python -m pytest` | `uv run pytest` |
+| `pipx install tool` | `uv tool install tool` |
+| `conda install` | `uv add` |
+| `poetry add` | `uv add` |
+| `pip install -e .` | `uv pip install -e .` |
+| `virtualenv .venv` | `uv venv` (or automatic) |
+
+### pyproject.toml (UV-native)
 
 ```toml
 [project]
+name = "myproject"
+version = "0.1.0"
+requires-python = ">=3.12"
 dependencies = [
     "python-dotenv>=1.0",
     "orjson>=3.9",
     "structlog>=24.1",
     "tenacity>=8.2",
+    "pydantic>=2.6",
+    "httpx>=0.27",
 ]
 
 [project.optional-dependencies]
+api = [
+    "fastapi>=0.110",
+    "uvicorn>=0.27",
+]
 cli = [
     "fire>=0.5",
 ]
@@ -768,48 +1142,76 @@ dev = [
     "faker>=22.0",
     "pytest>=8.0",
     "pytest-cov>=4.1",
+    "pytest-asyncio>=0.23",
 ]
-all = [
-    "fire>=0.5",
-    "faker>=22.0",
-    "pytest>=8.0",
-    "pytest-cov>=4.1",
-]
+
+[tool.black]
+line-length = 88
+target-version = ["py312"]
+
+[tool.ruff]
+target-version = "py312"
+line-length = 88
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "N", "UP", "B", "SIM", "TCH"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+asyncio_mode = "auto"
 ```
 
 **Grouping rationale**:
-- **Core** (always installed): dotenv, orjson, structlog, tenacity
-- **cli** (optional): fire - only needed if project has CLI entry points
-- **dev** (optional): faker, pytest - only needed during development/testing
+- **Core** (always installed): dotenv, orjson, structlog, tenacity, pydantic, httpx
+- **api** (optional): FastAPI + uvicorn - only for web service projects
+- **cli** (optional): fire - only for CLI tools
+- **dev** (optional): faker, pytest - development and testing only
 
 ## Integration with WFC Skills
 
 ### wfc-build / wfc-implement
 
 When building Python features:
-1. Scaffold with these libraries in the dependency list
-2. Use `structlog` for all logging (not print/logging)
-3. Use `orjson` for JSON operations (not stdlib json)
-4. Use `tenacity` for any network/external calls
-5. Use `python-dotenv` for configuration
-6. Use `fire` for CLI entry points
-7. Use `faker` for test data generation
+1. Use `uv add` to add dependencies, `uv run` to execute everything
+2. Scaffold with preferred libraries + frameworks in pyproject.toml
+3. Use `structlog` for all logging (not print/logging)
+4. Use `orjson` for JSON operations (not stdlib json)
+5. Use `tenacity` for any network/external calls
+6. Use `httpx` for HTTP clients (not requests)
+7. Use `pydantic` at system boundaries (API schemas, config, external data)
+8. Use `FastAPI` for web APIs
+9. Use `python-dotenv` or `pydantic-settings` for configuration
+10. Use `fire` for CLI entry points
+11. Use `faker` for test data generation
+12. Follow three-tier: routes (presentation) -> services (logic) -> repositories (data)
 
 ### wfc-test
 
 When generating tests for Python code:
 1. Use `faker` with `Faker.seed(42)` for reproducible test data
-2. Use `joblib.Parallel` for parallel test execution when appropriate
+2. Name tests: `test_<what>_<condition>_<expected>`
+3. Use `conftest.py` for shared fixtures
+4. Use `@pytest.mark.parametrize` for data-driven tests
+5. Coverage target: 80%+ on services tier
+6. Organize: `tests/unit/`, `tests/integration/`, `tests/e2e/`
 
 ### wfc-review
 
 When reviewing Python code, flag:
 
+**Toolchain violations**:
+- `pip install` instead of `uv add`
+- `python script.py` instead of `uv run python script.py`
+- `python -m pytest` instead of `uv run pytest`
+- Any use of pip, pipx, conda, poetry instead of uv
+
 **Library violations**:
 - `print()` statements that should use `structlog`
 - `import json` that should use `orjson`
+- `import requests` that should use `httpx`
 - Hand-rolled retry loops that should use `tenacity`
-- Hardcoded config that should use `python-dotenv`
+- Hardcoded config that should use `python-dotenv` / `pydantic-settings`
+- Raw dicts at API boundaries that should use `pydantic` models
 - `argparse` boilerplate that could be replaced with `fire`
 - Hand-written test fixtures that could use `faker`
 - Sequential loops that could use `joblib.Parallel`
@@ -822,6 +1224,8 @@ When reviewing Python code, flag:
 - `TypeAlias` instead of `type` statement (3.12+)
 - Tier violations (presentation importing data access directly)
 - Classes with multiple responsibilities (SRP violation)
+- Deep inheritance (>1 level) instead of composition
+- Bare `except:` or silently swallowed exceptions
 - Deep nesting (>3 levels) instead of early returns
 - `os.path` instead of `pathlib.Path`
 - Magic strings instead of `StrEnum`
@@ -833,19 +1237,46 @@ When reviewing Python code, flag:
 
 These rules apply to all WFC Python projects:
 
-- **Always** use `uv` for Python operations (`uv run`, `uv pip install`)
-- **Never** use bare `python`, `pip`, or `python -m`
-- **Always** use `pytest` as the test framework
+**UV Toolchain (Exclusive)**:
+- **Always** use `uv run` to execute Python code
+- **Always** use `uv add` to add dependencies
+- **Always** use `uv sync` to install/sync dependencies
+- **Always** use `uv lock` to manage lockfiles
+- **Always** use `uv tool install` for global CLI tools
+- **Never** use `pip`, `pip install`, `pip freeze`
+- **Never** use `python` or `python -m` directly
+- **Never** use `pipx`, `conda`, or `poetry`
+
+**Code Standards**:
+- **Always** target Python 3.12+ (`requires-python = ">=3.12"`)
 - **Always** use `black` for formatting (line-length 88, target py312)
 - **Always** use `ruff` for linting
-- **Always** target Python 3.12+ (`requires-python = ">=3.12"`)
 - **Always** use full type annotations on all signatures
 - **Always** use PEP 562 (`__getattr__` / `__dir__`) in `__init__.py`
 - **Always** follow three-tier architecture (presentation / logic / data)
 - **Always** apply SOLID principles (especially SRP and DI via Protocol)
+- **Always** use composition over inheritance (Protocol, not deep class trees)
+- **Always** use context managers for resource lifecycle
+- **Always** define structured exception hierarchies per project
 - **Never** exceed 500 lines per file
 - **Never** use `Optional`, `List`, `Dict`, `Tuple` from `typing` (use builtins)
 - **Never** skip type annotations on public functions
+- **Never** bare `except:` or silently swallow exceptions
+
+**Testing**:
+- **Always** use `pytest` (via `uv run pytest`)
+- **Always** use `faker` with `Faker.seed(42)` for test data
+- **Always** organize tests: `unit/`, `integration/`, `e2e/`
+- **Always** target 80%+ coverage on business logic
+
+**Preferred Stack**:
+- **Always** `httpx` over `requests`
+- **Always** `orjson` over `json`
+- **Always** `structlog` over `logging` / `print`
+- **Always** `pydantic` at system boundaries
+- **Always** `FastAPI` for web APIs
+- **Always** `fire` for CLI tools
+- **Always** `tenacity` for retries
 
 ---
 
