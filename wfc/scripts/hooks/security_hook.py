@@ -10,13 +10,18 @@ Pattern matching uses compiled regexes cached via @lru_cache for performance.
 from __future__ import annotations
 
 import json
+import logging
 import re
+import signal
+import time
 from dataclasses import dataclass, field
 from functools import lru_cache
 from pathlib import Path
 from typing import Optional
 
 from wfc.scripts.hooks.hook_state import HookState
+
+logger = logging.getLogger("wfc.hooks.security")
 
 # Directory containing pattern JSON files
 PATTERNS_DIR = Path(__file__).parent / "patterns"
@@ -67,12 +72,29 @@ class CheckResult:
         return {"decision": self.decision, "reason": self.reason}
 
 
+class RegexTimeout(Exception):
+    """Raised when regex compilation or matching times out."""
+
+    pass
+
+
+def _regex_timeout_handler(signum, frame):
+    raise RegexTimeout("Regex operation timed out")
+
+
 @lru_cache(maxsize=256)
-def _compile_pattern(pattern: str) -> Optional[re.Pattern]:
-    """Compile a regex pattern with caching. Returns None on invalid patterns."""
+def _compile_pattern(pattern: str, timeout_seconds: int = 1) -> Optional[re.Pattern]:
+    """Compile a regex pattern with caching. Returns None on invalid or complex patterns."""
     try:
-        return re.compile(pattern)
-    except re.error:
+        old_handler = signal.signal(signal.SIGALRM, _regex_timeout_handler)
+        signal.alarm(timeout_seconds)
+        try:
+            compiled = re.compile(pattern)
+        finally:
+            signal.alarm(0)
+            signal.signal(signal.SIGALRM, old_handler)
+        return compiled
+    except (re.error, RegexTimeout):
         return None
 
 
@@ -139,6 +161,9 @@ def _extract_content(tool_name: str, tool_input: dict) -> tuple[str, str, str]:
     return "", "", ""
 
 
+_bypass_count = 0
+
+
 def check(input_data: dict, state: Optional[HookState] = None) -> dict:
     """
     Check tool input against security patterns.
@@ -152,9 +177,17 @@ def check(input_data: dict, state: Optional[HookState] = None) -> dict:
         {"decision": "block", "reason": "..."} if a blocking pattern matched.
         {"decision": "warn", "reason": "..."} if a warning pattern matched.
     """
+    global _bypass_count
     try:
         return _check_impl(input_data, state)
-    except Exception:
+    except Exception as e:
+        _bypass_count += 1
+        logger.warning(
+            "Hook bypass: security_hook exception=%s time=%s bypass_count=%d",
+            type(e).__name__,
+            time.strftime("%Y-%m-%dT%H:%M:%S"),
+            _bypass_count,
+        )
         # CRITICAL: Never block due to hook bugs
         return {}
 
@@ -211,7 +244,19 @@ def _check_impl(input_data: dict, state: Optional[HookState] = None) -> dict:
         if compiled is None:
             continue
 
-        match = compiled.search(content)
+        # Match regex with timeout protection against ReDoS
+        try:
+            old_handler = signal.signal(signal.SIGALRM, _regex_timeout_handler)
+            signal.alarm(1)
+            try:
+                match = compiled.search(content)
+            finally:
+                signal.alarm(0)
+                signal.signal(signal.SIGALRM, old_handler)
+        except RegexTimeout:
+            logger.warning("Regex match timed out for pattern: %s", regex_str[:50])
+            continue
+
         if not match:
             continue
 

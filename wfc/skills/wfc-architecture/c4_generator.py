@@ -5,8 +5,8 @@ Enhanced C4 Diagram Generator for wfc-architecture
 Generates Context, Container, Component, and Code diagrams in Mermaid format.
 """
 
-from dataclasses import dataclass
-from typing import List, Dict, Any
+from dataclasses import dataclass, field
+from typing import List, Dict, Any, Optional
 from pathlib import Path
 
 
@@ -19,7 +19,7 @@ class C4Element:
     type: str  # person, system, container, component
     technology: str = ""
     description: str = ""
-    tags: List[str] = None
+    tags: Optional[List[str]] = field(default=None)
 
 
 @dataclass

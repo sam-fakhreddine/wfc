@@ -17,13 +17,26 @@ import sys
 import subprocess
 import argparse
 from pathlib import Path
-from typing import Optional
+from typing import Optional, List
 
 
-def run_command(cmd: str, cwd: Optional[Path] = None, check: bool = True) -> int:
-    """Run a shell command and return exit code."""
+def run_command(cmd: List[str], cwd: Optional[Path] = None, check: bool = True) -> int:
+    """
+    Run a command and return exit code.
+
+    Security: Uses shell=False with list arguments to prevent shell injection.
+    Accepts List[str] instead of str to enforce safe usage.
+
+    Args:
+        cmd: Command as list of arguments (e.g., ["echo", "hello"])
+        cwd: Optional working directory
+        check: If True, exit on non-zero return code
+
+    Returns:
+        Process exit code
+    """
     result = subprocess.run(
-        cmd, shell=True, cwd=cwd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True
+        args=cmd, shell=False, cwd=cwd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True
     )
 
     if result.stdout:
@@ -60,8 +73,9 @@ def cmd_validate(all_skills: bool = False, xml: bool = False):
         skill_name = skill.name
 
         # Validate structure
-        cmd = f"cd {skills_ref_dir} && source .venv/bin/activate && skills-ref validate {skill}"
-        result = run_command(cmd, check=False)
+        # Using list args for security - no shell=True
+        cmd = ["skills-ref", "validate", str(skill)]
+        result = run_command(cmd, check=False, cwd=skills_ref_dir)
 
         if result != 0:
             failed.append(skill_name)
@@ -71,8 +85,14 @@ def cmd_validate(all_skills: bool = False, xml: bool = False):
 
         # Validate XML if requested
         if xml and result == 0:
-            cmd = f"cd {skills_ref_dir} && source .venv/bin/activate && skills-ref to-prompt {skill} | grep -q '<skill>'"
-            xml_result = run_command(cmd, check=False)
+            # Using list args - grep as separate process
+            cmd = ["skills-ref", "to-prompt", str(skill)]
+            # Pipe to grep - use subprocess directly for pipe
+            import subprocess as sp
+
+            proc = sp.run(cmd, cwd=skills_ref_dir, stdout=sp.PIPE, text=True)
+            grep_proc = sp.run(["grep", "-q", "<skill>"], input=proc.stdout, shell=False)
+            xml_result = grep_proc.returncode
 
             if xml_result != 0:
                 failed.append(f"{skill_name} (XML)")
@@ -91,11 +111,11 @@ def cmd_test(coverage: bool = False):
     """Run tests."""
     if coverage:
         print("🧪 Running tests with coverage...")
-        run_command("pytest --cov=wfc --cov-report=html --cov-report=term")
+        run_command(["uv", "run", "pytest", "--cov=wfc", "--cov-report=html", "--cov-report=term"])
         print("📊 Coverage report: htmlcov/index.html")
     else:
         print("🧪 Running tests...")
-        run_command("pytest -v")
+        run_command(["uv", "run", "pytest", "-v"])
 
     print("✅ Tests passed")
 
@@ -104,9 +124,9 @@ def cmd_benchmark(compare: bool = False):
     """Run token usage benchmarks."""
     print("📊 Running token usage benchmark...")
 
-    cmd = "python scripts/benchmark_tokens.py"
+    cmd = ["uv", "run", "python", "scripts/benchmark_tokens.py"]
     if compare:
-        cmd += " --compare"
+        cmd.append("--compare")
 
     run_command(cmd)
 
@@ -115,20 +135,20 @@ def cmd_lint(fix: bool = False):
     """Run linters."""
     if fix:
         print("🔍 Running linters with auto-fix...")
-        run_command("ruff check --fix wfc/")
-        run_command("black wfc/")
+        run_command(["uv", "run", "ruff", "check", "--fix", "wfc/"])
+        run_command(["uv", "run", "black", "wfc/"])
         print("✅ Code fixed and formatted")
     else:
         print("🔍 Running linters...")
-        run_command("ruff check wfc/")
+        run_command(["uv", "run", "ruff", "check", "wfc/"])
         print("✅ Lint passed")
 
 
 def cmd_format():
     """Format code."""
     print("🎨 Formatting code...")
-    run_command("black wfc/")
-    run_command("ruff check --fix wfc/")
+    run_command(["uv", "run", "black", "wfc/"])
+    run_command(["uv", "run", "ruff", "check", "--fix", "wfc/"])
     print("✅ Code formatted")
 
 
@@ -136,18 +156,24 @@ def cmd_install(dev: bool = False):
     """Install WFC."""
     if dev:
         print("🔧 Installing WFC for development...")
-        run_command("uv pip install -e '.[dev,tokens]'")
+        run_command(["uv", "pip", "install", "-e", ".[dev,tokens]"])
         print("✅ Development environment ready")
     else:
         print("🚀 Installing WFC with all features...")
-        run_command("uv pip install -e '.[all]'")
+        run_command(["uv", "pip", "install", "-e", ".[all]"])
         print("✅ WFC installed")
 
 
 def cmd_version():
     """Show version."""
+    try:
+        from importlib.metadata import version
+
+        ver = version("wfc")
+    except Exception:
+        ver = "dev"
     print("WFC - World Fucking Class")
-    print("Version: 0.1.0")
+    print(f"Version: {ver}")
     print("Agent Skills Compliant ✅")
 
 
@@ -187,9 +213,10 @@ def cmd_implement(
 
     print(f"📋 Tasks file: {tasks_file}")
 
-    # Import orchestrator
+    # Import orchestrator (using PEP 562 import bridge for hyphenated directories)
     try:
-        from wfc.skills.implement.orchestrator import WFCOrchestrator
+        from wfc.skills import wfc_implement
+        from wfc_implement.orchestrator import WFCOrchestrator
         from wfc.shared.config import WFCConfig
     except ImportError as e:
         print(f"❌ Failed to import wfc-implement: {e}")
@@ -234,9 +261,10 @@ def cmd_implement(
         print("=" * 60)
         print()
 
-        # Parse tasks file
+        # Parse tasks file (using PEP 562 import bridge)
         try:
-            from wfc.skills.implement.parser import parse_tasks
+            from wfc.skills import wfc_implement
+            from wfc_implement.parser import parse_tasks
 
             task_graph = parse_tasks(tasks_path)
 

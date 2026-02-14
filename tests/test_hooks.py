@@ -322,7 +322,7 @@ class TestPrePushHook:
         assert exit_code == 0
         output = captured_output.getvalue()
         # Should not warn about feature branches
-        assert "WARNING" not in output or "WARNING" in output  # May or may not warn
+        assert "WARNING" not in output, "Feature branches should not produce warnings"
 
 
 class TestHookInstaller:

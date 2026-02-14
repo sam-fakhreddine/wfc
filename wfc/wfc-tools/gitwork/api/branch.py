@@ -9,6 +9,37 @@ import re
 from typing import Dict, List, Optional
 from dataclasses import dataclass
 
+# Valid git ref name pattern (simplified from git-check-ref-format rules)
+_VALID_REF_PATTERN = re.compile(r"^[a-zA-Z0-9][a-zA-Z0-9._/\-]*$")
+# Dangerous flag patterns
+_FLAG_PATTERN = re.compile(r"^-")
+
+
+def validate_branch_name(name: str) -> bool:
+    """Validate branch name against git ref naming rules."""
+    if not name or len(name) > 255:
+        return False
+    if ".." in name or name.endswith(".lock") or name.endswith("."):
+        return False
+    if "~" in name or "^" in name or ":" in name or "\\" in name:
+        return False
+    if " " in name or "\t" in name:
+        return False
+    if _FLAG_PATTERN.match(name):
+        return False
+    return bool(_VALID_REF_PATTERN.match(name))
+
+
+def validate_task_id(task_id: str) -> bool:
+    """Validate task ID - no path traversal."""
+    if not task_id:
+        return False
+    if ".." in task_id or "/" in task_id or "\\" in task_id:
+        return False
+    if _FLAG_PATTERN.match(task_id):
+        return False
+    return bool(re.match(r"^[A-Z]+-\d+$", task_id))
+
 
 @dataclass
 class BranchResult:
@@ -40,6 +71,25 @@ class BranchOperations:
         - test: test additions
         - security: security fixes
         """
+        # Validate inputs
+        if not validate_task_id(task_id):
+            return BranchResult(
+                branch_name="",
+                created_from=base_ref,
+                type_classified="",
+                success=False,
+                message=f"Invalid task_id: {task_id}",
+            )
+
+        if not validate_branch_name(base_ref):
+            return BranchResult(
+                branch_name="",
+                created_from=base_ref,
+                type_classified="",
+                success=False,
+                message=f"Invalid base_ref: {base_ref}",
+            )
+
         # Classify type (conservative)
         if type_override:
             branch_type = type_override
@@ -51,6 +101,16 @@ class BranchOperations:
 
         # Format branch name
         branch_name = f"{branch_type}/{task_id}-{slug}"
+
+        # Validate the constructed branch name
+        if not validate_branch_name(branch_name):
+            return BranchResult(
+                branch_name=branch_name,
+                created_from=base_ref,
+                type_classified=branch_type,
+                success=False,
+                message=f"Invalid branch name: {branch_name}",
+            )
 
         try:
             # Create branch
@@ -76,6 +136,10 @@ class BranchOperations:
 
     def delete(self, branch_name: str, force: bool = False) -> Dict:
         """Delete branch with safety checks"""
+        # Validate branch name
+        if not validate_branch_name(branch_name):
+            return {"success": False, "message": f"Invalid branch name: {branch_name}"}
+
         # Never delete protected branches
         if branch_name in self.PROTECTED_BRANCHES:
             return {"success": False, "message": f"Cannot delete protected branch: {branch_name}"}

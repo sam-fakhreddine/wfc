@@ -1,6 +1,16 @@
 """
 WFC Telemetry System - ELEGANT & SIMPLE
 
+DEPRECATED: Use wfc.shared.telemetry_auto.AutoTelemetry instead.
+
+This module will be removed in a future version. AutoTelemetry is the
+canonical telemetry system with richer metrics (extended thinking, quality,
+review scores).
+
+Migration: Replace WFCTelemetry.record() with AutoTelemetry.log_task_*() methods.
+
+---
+
 Writes telemetry records to JSONL files in ~/.claude/metrics/YYYY/wfc-*.WNN.jsonl
 Week-numbered files for easy aggregation and analysis.
 
@@ -9,6 +19,15 @@ Design principles:
 - DRY: One writer for all WFC skills
 - Simple: JSONL format, atomic writes, no database
 """
+
+import warnings
+
+warnings.warn(
+    "wfc.shared.telemetry.wfc_telemetry is deprecated. "
+    "Use wfc.shared.telemetry_auto.AutoTelemetry instead.",
+    DeprecationWarning,
+    stacklevel=2,
+)
 
 import json
 import os

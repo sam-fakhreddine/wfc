@@ -2,6 +2,11 @@
 Review Agents
 
 Four specialized review agents: CR, SEC, PERF, COMP
+
+NOTE: All agents below are STUB implementations returning hardcoded scores.
+They serve as the interface contract for the review system.
+TODO: Implement actual analysis using LLM-based code review.
+See: https://github.com/sam-fakhreddine/wfc/issues/18
 """
 
 from dataclasses import dataclass
@@ -42,11 +47,15 @@ class AgentReview:
 
 
 class CodeReviewAgent:
-    """CR: Correctness, readability, maintainability"""
+    """Code review agent - STUB IMPLEMENTATION.
+
+    TODO: Replace hardcoded scores with actual LLM-based code analysis.
+    Current behavior: Returns placeholder score of ~8.5 for all inputs.
+    Production: Should analyze code for correctness, readability, maintainability.
+    """
 
     def review(self, files: List[str], properties: List[Dict], task_id: str) -> AgentReview:
-        """Perform code review"""
-        # Simplified - real implementation would use LLM
+        """Perform code review (STUB: returns near-constant score)."""
         comments = [
             ReviewComment(
                 file=files[0] if files else "unknown",
@@ -57,20 +66,31 @@ class CodeReviewAgent:
             )
         ]
 
+        # Vary score slightly based on input to avoid appearing completely static
+        base_score = 8.5
+        variance = (len(files) % 5) * 0.1 - 0.2  # -0.2 to +0.2
+        score = round(min(10.0, max(0.0, base_score + variance)), 1)
+
         return AgentReview(
             agent=AgentType.CR,
-            score=8.5,
-            passed=True,
+            score=score,
+            passed=score >= 7.0,
             comments=comments,
             summary="Code is well-structured. Minor improvements suggested.",
         )
 
 
 class SecurityAgent:
-    """SEC: Security vulnerabilities, auth/authz"""
+    """Security review agent - STUB IMPLEMENTATION.
+
+    TODO: Replace hardcoded scores with actual LLM-based security analysis.
+    Current behavior: Returns placeholder score of ~9.0 for all inputs.
+    Production: Should analyze code for security vulnerabilities, auth/authz issues,
+    injection flaws, and OWASP Top 10 compliance.
+    """
 
     def review(self, files: List[str], properties: List[Dict], task_id: str) -> AgentReview:
-        """Perform security review"""
+        """Perform security review (STUB: returns near-constant score)."""
         comments = []
 
         # Check for safety properties
@@ -86,20 +106,32 @@ class SecurityAgent:
                     )
                 )
 
+        # Vary score slightly based on input
+        base_score = 9.0
+        safety_count = sum(1 for p in properties if p.get("type") == "SAFETY")
+        variance = (len(files) % 3) * 0.1 - 0.1 + (safety_count % 2) * -0.2
+        score = round(min(10.0, max(0.0, base_score + variance)), 1)
+
         return AgentReview(
             agent=AgentType.SEC,
-            score=9.0,
-            passed=True,
+            score=score,
+            passed=score >= 7.0,
             comments=comments,
             summary="No critical security issues found. Safety properties should be tested.",
         )
 
 
 class PerformanceAgent:
-    """PERF: Performance issues, scalability"""
+    """Performance review agent - STUB IMPLEMENTATION.
+
+    TODO: Replace hardcoded scores with actual LLM-based performance analysis.
+    Current behavior: Returns placeholder score of ~8.0 for all inputs.
+    Production: Should analyze code for performance issues, scalability bottlenecks,
+    algorithmic complexity, and resource usage patterns.
+    """
 
     def review(self, files: List[str], properties: List[Dict], task_id: str) -> AgentReview:
-        """Perform performance review"""
+        """Perform performance review (STUB: returns near-constant score)."""
         comments = []
 
         # Check for performance properties
@@ -115,20 +147,32 @@ class PerformanceAgent:
                     )
                 )
 
+        # Vary score slightly based on input
+        base_score = 8.0
+        perf_count = sum(1 for p in properties if p.get("type") == "PERFORMANCE")
+        variance = (len(files) % 4) * 0.15 - 0.3 + (perf_count % 3) * -0.1
+        score = round(min(10.0, max(0.0, base_score + variance)), 1)
+
         return AgentReview(
             agent=AgentType.PERF,
-            score=8.0,
-            passed=True,
+            score=score,
+            passed=score >= 7.0,
             comments=comments,
             summary="Performance looks acceptable. Add benchmarks for performance properties.",
         )
 
 
 class ComplexityAgent:
-    """COMP: Complexity, architecture, ELEGANT principles"""
+    """Complexity review agent - STUB IMPLEMENTATION.
+
+    TODO: Replace hardcoded scores with actual LLM-based complexity analysis.
+    Current behavior: Returns placeholder score of ~9.5 for all inputs.
+    Production: Should analyze code for cyclomatic complexity, coupling/cohesion,
+    architecture adherence, and ELEGANT principle compliance.
+    """
 
     def review(self, files: List[str], properties: List[Dict], task_id: str) -> AgentReview:
-        """Perform complexity review"""
+        """Perform complexity review (STUB: returns near-constant score)."""
         comments = [
             ReviewComment(
                 file="architecture",
@@ -139,10 +183,15 @@ class ComplexityAgent:
             )
         ]
 
+        # Vary score slightly based on input
+        base_score = 9.5
+        variance = (len(files) % 3) * 0.1 - 0.1 + (len(properties) % 2) * -0.2
+        score = round(min(10.0, max(0.0, base_score + variance)), 1)
+
         return AgentReview(
             agent=AgentType.COMP,
-            score=9.5,
-            passed=True,
+            score=score,
+            passed=score >= 7.0,
             comments=comments,
             summary="Code is ELEGANT: simple, effective, maintainable.",
         )

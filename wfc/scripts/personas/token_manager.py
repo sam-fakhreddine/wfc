@@ -4,7 +4,7 @@ World Fucking Class Token Management for Persona Reviews
 ARCHITECTURE:
 - Accurate token counting (not estimation)
 - Adaptive file summarization based on token budget
-- Progressive disclosure: summary → full content
+- Progressive disclosure: summary -> full content
 - Per-persona token budget allocation
 - Smart truncation strategies per file type
 
@@ -19,6 +19,10 @@ from dataclasses import dataclass
 from typing import List, Dict, Any, Optional, Tuple
 from pathlib import Path
 import logging
+
+from wfc.scripts.personas.ultra_minimal_prompts import (
+    build_ultra_minimal_prompt as _build_ultra_minimal_prompt,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -296,44 +300,25 @@ class PersonaPromptCompressor:
 
         94% more token-efficient than verbose version.
         LLMs don't need lengthy backstories to act as experts.
+
+        Delegates to the canonical implementation in
+        wfc.scripts.personas.ultra_minimal_prompts.build_ultra_minimal_prompt.
         """
         # Top 3 skills only
         top_skills = skills[:3]
-        skills_text = " | ".join([f"{s['name']} ({s['level']})" for s in top_skills])
+        skills_text = [f"{s['name']} ({s['level']})" for s in top_skills]
 
         # One-line focus (truncate if too long)
         focus = lens.get("focus", "Code quality")
         if len(focus) > 80:
             focus = focus[:77] + "..."
 
-        # Build ultra-minimal prompt
-        prompt = f"""You are {persona_name}, expert code reviewer.
-
-EXPERTISE: {skills_text}
-FOCUS: {focus}
-TARGET: {properties_focus}
-
-OUTPUT (JSON only):
-{{
-  "score": 0-10,
-  "passed": true/false,
-  "summary": "1-2 sentences",
-  "reasoning": "your assessment",
-  "comments": [
-    {{"file": "path", "line": 0, "severity": "critical|high|medium|low|info", "message": "issue", "suggestion": "fix"}}
-  ]
-}}
-
-SEVERITY:
-• critical: bugs, security, data loss
-• high: design flaws, performance issues
-• medium: quality, maintainability
-• low: style, minor improvements
-• info: observations, suggestions
-
-Review code. Be specific. Reference files/lines. Suggest fixes."""
-
-        return prompt
+        return _build_ultra_minimal_prompt(
+            persona_name=persona_name,
+            top_skills=skills_text,
+            focus=focus,
+            properties_focus=properties_focus,
+        )
 
 
 class TokenBudgetManager:

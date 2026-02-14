@@ -4,9 +4,27 @@ Worktree operations API
 Isolated workspaces for parallel agent work.
 """
 
+import re
 import subprocess
 from pathlib import Path
 from typing import Dict, List, Optional
+
+_FLAG_PATTERN = re.compile(r"^-")
+
+
+def validate_worktree_input(task_id: str, base_ref: str = "main") -> Optional[str]:
+    """Validate worktree inputs. Returns error message or None if valid."""
+    if not task_id:
+        return "task_id is required"
+    if ".." in task_id or "/" in task_id or "\\" in task_id:
+        return f"Invalid task_id: {task_id} (path traversal)"
+    if _FLAG_PATTERN.match(task_id):
+        return f"Invalid task_id: {task_id} (flag injection)"
+    if _FLAG_PATTERN.match(base_ref):
+        return f"Invalid base_ref: {base_ref} (flag injection)"
+    if ".." in base_ref:
+        return f"Invalid base_ref: {base_ref} (path traversal)"
+    return None
 
 
 class WorktreeOperations:
@@ -17,6 +35,14 @@ class WorktreeOperations:
 
     def create(self, task_id: str, base_ref: str = "main") -> Dict:
         """Create worktree for task"""
+        # Validate inputs
+        validation_error = validate_worktree_input(task_id, base_ref)
+        if validation_error:
+            return {
+                "success": False,
+                "message": f"Validation failed: {validation_error}",
+            }
+
         worktree_path = f"{self.worktree_dir}/wfc-{task_id}"
         branch_name = f"wfc/{task_id}"
 
@@ -45,6 +71,14 @@ class WorktreeOperations:
 
     def delete(self, task_id: str, force: bool = False) -> Dict:
         """Delete worktree"""
+        # Validate task_id
+        validation_error = validate_worktree_input(task_id)
+        if validation_error:
+            return {
+                "success": False,
+                "message": f"Validation failed: {validation_error}",
+            }
+
         worktree_path = f"{self.worktree_dir}/wfc-{task_id}"
 
         try:

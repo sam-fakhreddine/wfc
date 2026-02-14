@@ -5,11 +5,54 @@ Install and manage git hooks without replacing existing ones.
 """
 
 from pathlib import Path
-from typing import Dict, List
+from typing import Dict, List, Set
 
 
+# All valid git hook types - prevents path traversal and malicious hook types
+VALID_HOOKS: Set[str] = {
+    "pre-commit", "prepare-commit-msg", "commit-msg",
+    "post-commit", "pre-rebase", "post-rebase",
+    "pre-push", "post-push", "pre-merge", "post-merge",
+    "pre-checkout", "post-checkout", "pre-auto-gc", "post-auto-gc"
+}
+
+
+def is_hook_type_valid(hook_type: str) -> bool:
+    """Check if hook type is in the whitelist."""
+    return hook_type in VALID_HOOKS
+
+
+def has_path_traversal(hook_type: str) -> bool:
+    """Check for path traversal sequences in hook type."""
+    return ".." in hook_type or "/" in hook_type
+
+
+# 2025-02-13: Add validation for security
 def install(hook_type: str, script: str) -> Dict:
-    """Install git hook"""
+    """
+    Install git hook with validation.
+
+    Args:
+        hook_type: Type of hook to install
+        script: Content to write to hook file
+
+    Returns:
+        Dict with success status and message
+    """
+    # Validate hook type against whitelist
+    if not is_hook_type_valid(hook_type):
+        return {
+            "success": False,
+            "message": f"Invalid hook type: {hook_type}. Valid hooks: {', '.join(sorted(VALID_HOOKS))}"
+        }
+
+    # Check for path traversal attempts (contains ..)
+    if has_path_traversal(hook_type):
+        return {
+            "success": False,
+            "message": f"Invalid hook type: {hook_type}. Path traversal not allowed."
+        }
+
     hook_path = Path(".git/hooks") / hook_type
 
     try:
@@ -18,9 +61,15 @@ def install(hook_type: str, script: str) -> Dict:
         hook_path.write_text(script)
         hook_path.chmod(0o755)
 
-        return {"success": True, "message": f"Installed {hook_type} hook"}
+        return {
+            "success": True,
+            "message": f"Installed {hook_type} hook"
+        }
     except Exception as e:
-        return {"success": False, "message": f"Failed to install: {str(e)}"}
+        return {
+            "success": False,
+            "message": f"Failed to install: {str(e)}"
+        }
 
 
 def manage() -> List[Dict]:

@@ -1,5 +1,16 @@
 """
-WFC Automatic Telemetry - Local Metrics Collection
+AutoTelemetry - Canonical telemetry system for WFC.
+
+This is the primary telemetry system. Replaces the older WFCTelemetry
+(wfc.shared.telemetry.wfc_telemetry), which is now deprecated.
+
+Features beyond the legacy system:
+- Extended thinking metrics (budget, truncation, mode)
+- Quality metrics (tests, coverage)
+- Review metrics (score, pass/fail)
+- Retry and debugging tracking
+- Aggregate metrics with session-level granularity
+- Generic event logging for hooks, PRs, and workflow compliance
 
 Automatically captures and stores metrics for every WFC task execution.
 Local storage only - no external services.
@@ -11,7 +22,7 @@ import json
 from pathlib import Path
 from datetime import datetime
 from typing import Dict, Any, Optional, List
-from dataclasses import dataclass, asdict
+from dataclasses import dataclass, asdict, field
 
 
 @dataclass
@@ -55,8 +66,8 @@ class TaskMetrics:
     review_passed: Optional[bool] = None
 
     # Properties satisfied
-    properties: List[str] = None
-    properties_satisfied: Dict[str, bool] = None
+    properties: Optional[List[str]] = field(default=None)
+    properties_satisfied: Optional[Dict[str, bool]] = field(default=None)
 
     def __post_init__(self):
         if self.properties is None:
