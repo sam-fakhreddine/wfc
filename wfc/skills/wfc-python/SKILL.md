@@ -71,7 +71,9 @@ match event:
 
 ### Black Formatting (Non-Negotiable)
 
-Black is the **only** formatter. No exceptions, no overrides.
+Black is the **only** formatter. No exceptions, no overrides. PEP 8 is enforced via
+ruff, but **black wins** on any style conflict. Ruff must ignore the rules that black
+owns (line length, indentation, whitespace in expressions).
 
 ```toml
 # pyproject.toml
@@ -80,12 +82,31 @@ line-length = 88
 target-version = ["py312"]
 ```
 
+**Black / PEP 8 sync** - ruff must ignore rules that black controls:
+
+```toml
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "N", "UP", "B", "SIM", "TCH"]
+# Rules that conflict with black - black is authoritative on these:
+#   E111 - indentation (black owns this)
+#   E114 - indentation of comment (black owns this)
+#   E117 - over-indented (black owns this)
+#   E501 - line too long (black wraps at 88, ruff must not second-guess)
+#   W191 - indentation contains tabs (black uses spaces, but owns decision)
+#   E203 - whitespace before ':' (black intentionally does `x[1 : 2]`)
+ignore = ["E111", "E114", "E117", "E501", "W191", "E203"]
+```
+
+**Run order**: `black` first (formats), then `ruff check` (lints the result). Never
+run ruff's formatter (`ruff format`) - we use black exclusively.
+
 **Rules**:
-- Line length: 88 (black default)
+- Line length: 88 (black default) - ruff defers to black via E501 ignore
 - No `# fmt: off` / `# fmt: on` unless absolutely unavoidable
 - No single-line compound statements: `if x: return` goes on two lines
 - Trailing commas on multi-line collections (black enforces this)
 - Double quotes for strings (black default)
+- PEP 8 compliance via ruff's `E` + `W` rules, minus the black-owned subset above
 
 ### Full Type Annotations (Mandatory)
 
@@ -1261,7 +1282,9 @@ target-version = "py312"
 line-length = 88
 
 [tool.ruff.lint]
-select = ["E", "F", "I", "N", "UP", "B", "SIM", "TCH"]
+select = ["E", "F", "W", "I", "N", "UP", "B", "SIM", "TCH"]
+# Black-owned rules - black is authoritative, ruff must not conflict
+ignore = ["E111", "E114", "E117", "E501", "W191", "E203"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
