@@ -1,6 +1,6 @@
 ---
 name: wfc-code-standards
-description: Language-agnostic coding standards for all WFC projects. Enforces architecture (three-tier, SOLID, composition over inheritance), code quality (500-line limit, DRY, early returns, structured errors, idempotent operations), observability (structured logging, no print/console.log), testing philosophy (unit/integration/e2e, fixtures, parametrization), async safety (never block the event loop), dependency management (lock files, CVE scanning, version pinning), and documentation (public API docstrings). Referenced by all language-specific skills. Not a user-invocable skill.
+description: Language-agnostic coding standards for all WFC projects. Enforces architecture (three-tier, functional core/imperative shell, SOLID, composition over inheritance, immutability by default, least privilege API surface), code quality (500-line limit, DRY, early returns, structured errors, idempotent operations, fail fast at boundaries), observability (structured logging, no print/console.log), testing philosophy (unit/integration/e2e, fixtures, parametrization), async safety (never block the event loop), dependency management (lock files, CVE scanning, version pinning), and documentation (public API docstrings). Referenced by all language-specific skills. Not a user-invocable skill.
 license: MIT
 ---
 
@@ -29,6 +29,29 @@ All backend/service code follows three tiers. No exceptions.
 - Logic tier has **zero** knowledge of HTTP, CLI, or UI frameworks
 - Data tier has **zero** business logic - it fetches, stores, and returns
 - Each tier is independently testable (mock the tier below)
+
+### Functional Core / Imperative Shell
+
+The three-tier architecture tells you *what* to separate. This tells you *how* to think about it.
+
+```
+┌────────────────────────────────────────────┐
+│  IMPERATIVE SHELL (I/O, side effects)      │  Reads files, calls APIs, writes DB.
+│  ┌──────────────────────────────────────┐  │  Thin. Orchestrates. No decisions.
+│  │  FUNCTIONAL CORE (pure logic)        │  │
+│  │  No I/O. No side effects.            │  │  All business rules. Takes data in,
+│  │  Same input → same output. Always.   │  │  returns data out. Trivially testable.
+│  └──────────────────────────────────────┘  │
+└────────────────────────────────────────────┘
+```
+
+**Rules**:
+- **Business logic is pure**: Functions in the logic tier take data in and return data out. No database calls, no file reads, no network requests, no randomness, no current time. These are injected as arguments or returned as "commands" for the shell to execute.
+- **I/O lives at the edges**: The presentation and data tiers handle all side effects. The shell reads from the world, passes data to the core, gets results back, and writes to the world.
+- **Testing the core needs zero mocks**: If you need mocks to test your business logic, the boundary is in the wrong place. Pure functions are tested with input/output pairs.
+- **Side effects are explicit**: When a function must trigger a side effect, it returns a description of what should happen (a command, an event, a result object) rather than performing it directly.
+
+**Why this matters**: Pure functions are trivially testable, trivially composable, trivially parallelizable, and trivially debuggable. When a test fails, you look at input and output — no mocking infrastructure, no setup/teardown ceremony, no "did the mock get called with the right args" fragility.
 
 ### SOLID Principles
 
@@ -62,6 +85,47 @@ GuideDog has: Animal (data), PetBehavior, GuidingCapability, TrainingRecord
 - Behavior varies independently
 - Multiple capabilities needed
 - Testing requires swapping implementations
+
+### Immutability by Default
+
+Data should be immutable unless there's a specific reason to mutate it. Mutable shared state is the root cause of entire bug categories.
+
+**Rules**:
+- **Default to immutable data structures**: Frozen dataclasses, readonly records, const declarations, `val` not `var`. Opt into mutability only when the algorithm requires it.
+- **Never mutate function arguments**: If a function needs a modified version, return a new copy. Callers should never be surprised that their data changed.
+- **Collections are immutable by default**: Return frozen/unmodifiable collections from APIs. If the caller needs to modify, they copy.
+- **Configuration is immutable after load**: Parse config once at startup, freeze it, inject it everywhere. No runtime config mutation.
+
+**When mutability is OK**:
+- Builder patterns during construction (freeze after `.build()`)
+- Performance-critical inner loops (local mutation, not shared)
+- Accumulator patterns (local to a single function scope)
+
+**Why this matters**: Immutable data can be shared freely between threads, cached without worry, and reasoned about without tracing every code path that might modify it. When you see `user.name`, you know it's the same value everywhere — nobody changed it behind your back.
+
+```
+# BAD: mutable shared state
+def process_users(users):
+    users.sort(key=lambda u: u.name)  # Surprise! Caller's list is now sorted
+    return users[:10]
+
+# GOOD: immutable by default
+def process_users(users):
+    return sorted(users, key=lambda u: u.name)[:10]  # New list, original untouched
+```
+
+### Least Privilege / Minimal API Surface
+
+Expose the minimum possible interface. Everything is private by default, public only when needed.
+
+**Rules**:
+- **Private by default**: Functions, classes, methods, and fields start as private/internal. Promote to public only when an external consumer needs it.
+- **Narrow function signatures**: Accept the minimum data needed. A function that needs a user's email takes `email: str`, not `user: User`.
+- **Return the minimum data needed**: Don't return an entire object when the caller only needs a status code.
+- **Module exports are curated**: Use `__all__`, package-private, `internal` packages, or equivalent. Don't expose implementation details.
+- **Permissions follow the same principle**: Database users get only the permissions they need. API tokens scope to the operations required. File permissions are restrictive by default.
+
+**Why**: A smaller API surface means fewer things that can break, fewer things to test, fewer things to document, and fewer things that consumers can depend on (and that you can never change). Every public API is a promise.
 
 ### Factory Patterns
 
@@ -113,6 +177,50 @@ Extract when you see 3+ repetitions. Not 2 - that's premature abstraction. At 3,
 - Use error groups/multi-errors when multiple operations can fail independently
 
 **Philosophy**: Errors are data. They carry context. They have types. They are part of the API contract.
+
+### Fail Fast
+
+Detect bad state at the boundary. Reject it immediately with a clear error. Never let invalid data propagate into the system where it becomes a mystery bug three layers deep.
+
+**Rules**:
+- **Validate at system boundaries**: HTTP handlers, CLI parsers, queue consumers, config loaders. This is where external data enters - validate it once, completely, before it touches business logic.
+- **Reject, don't correct**: If input is invalid, return an error. Don't silently coerce or guess what the caller meant. `"5"` is not `5` unless your contract explicitly says so.
+- **Fail loudly**: An assertion failure, a clear exception, a non-zero exit code. Never return a default value when the real answer is "this shouldn't happen."
+- **Preconditions at function entry**: Public functions that require non-null, non-empty, or bounded inputs should assert it in the first lines, not discover it mid-computation.
+
+```
+# BAD: silent propagation
+def process_order(order):
+    # order.items could be None... we'll find out 3 functions later
+    total = calculate_total(order.items)
+
+# GOOD: fail fast
+def process_order(order):
+    if not order.items:
+        raise InvalidOrderError("Order must have at least one item", order_id=order.id)
+    total = calculate_total(order.items)
+```
+
+**The tradeoff**: Fail fast at boundaries, trust internally. Once data passes validation at the entry point, internal functions can trust their inputs. Don't re-validate the same data at every layer - that's defensive programming, not fail-fast.
+
+### Defensive at Boundaries, Trust Internally
+
+Related to fail fast: put all your armor at the gates, not inside the castle.
+
+**Validate here** (system boundaries):
+- User input (HTTP requests, CLI args, form data)
+- External API responses (they can change without warning)
+- Configuration files and environment variables
+- Queue messages and event payloads
+- File contents read from disk
+
+**Trust here** (internal code):
+- Function-to-function calls within the same module
+- Service-to-service calls within the same trust boundary
+- Data that already passed boundary validation
+- Return values from your own functions
+
+**Why**: Defensive programming everywhere creates noise - null checks on every line, redundant validation at every layer, try/catch around internal calls "just in case." It makes code harder to read, slower to run, and gives false confidence. Validate once at the boundary, and let the type system + tests handle the rest.
 
 ### Resource Lifecycle
 
@@ -324,6 +432,8 @@ When reviewing code in any language, flag:
 - Database queries or API calls in the logic tier
 - God classes (>1 responsibility)
 - Deep inheritance (>1 level) where composition would work
+- I/O or side effects in pure logic functions (functional core violation)
+- Public API surface larger than necessary (internal details exposed)
 
 **Code quality violations**:
 - Files exceeding 500 lines
@@ -334,6 +444,11 @@ When reviewing code in any language, flag:
 - Magic strings/numbers instead of named constants
 - Dead code (commented out blocks, unused imports)
 - Resource handles not using structured lifecycle (with/defer/using)
+- Invalid data propagating past system boundaries (fail fast violation)
+- Redundant validation deep inside internal code (defensive at wrong layer)
+- Mutable data structures where immutable would suffice
+- Functions mutating their arguments instead of returning new values
+- Shared mutable state between threads/tasks without synchronization
 
 **Observability violations**:
 - print/console.log for logging

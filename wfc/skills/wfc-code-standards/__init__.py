@@ -6,8 +6,11 @@ skills (wfc-python, etc.) inherit these and add tooling-specific rules.
 
 Architecture:
     - Three-tier (presentation / logic / data)
+    - Functional core / imperative shell (pure logic, I/O at edges)
     - SOLID principles (SRP, OCP, LSP, ISP, DIP)
     - Composition over inheritance (max 1 level)
+    - Immutability by default (opt into mutability)
+    - Least privilege / minimal API surface (private by default)
     - Factory patterns for conditional/registry-based creation
 
 Code Quality:
@@ -17,6 +20,7 @@ Code Quality:
     - Resource lifecycle via language mechanisms (with/defer/using)
     - Atomic writes for state files
     - Idempotent operations (safe to retry, no duplicates)
+    - Fail fast at boundaries, trust internally
     - Early returns, flat structure, explicit naming
 
 Observability:
@@ -62,9 +66,12 @@ __version__ = "0.1.0"
 STANDARDS: dict[str, str | int | bool] = {
     # Architecture
     "three_tier_architecture": True,
+    "functional_core_imperative_shell": True,
     "solid_principles": True,
     "composition_over_inheritance": True,
     "max_inheritance_depth": 1,
+    "immutability_by_default": True,
+    "least_privilege_api_surface": True,
     "factory_patterns": True,
 
     # Code quality
@@ -76,6 +83,8 @@ STANDARDS: dict[str, str | int | bool] = {
     "resource_lifecycle_enforced": True,
     "atomic_writes": True,
     "idempotent_operations": True,
+    "fail_fast_at_boundaries": True,
+    "defensive_at_boundaries_only": True,
     "no_dead_code": True,
 
     # Observability
@@ -118,6 +127,8 @@ REVIEW_CHECKLIST: dict[str, list[str]] = {
         "Database queries or API calls in the logic tier",
         "God classes (>1 responsibility)",
         "Deep inheritance (>1 level) where composition would work",
+        "I/O or side effects in pure logic functions",
+        "Public API surface larger than necessary",
     ],
     "code_quality": [
         "Files exceeding 500 lines",
@@ -128,6 +139,11 @@ REVIEW_CHECKLIST: dict[str, list[str]] = {
         "Magic strings/numbers instead of named constants",
         "Dead code (commented out blocks, unused imports)",
         "Resource handles not using structured lifecycle",
+        "Invalid data propagating past system boundaries (fail fast)",
+        "Redundant validation deep inside internal code",
+        "Mutable data structures where immutable would suffice",
+        "Functions mutating their arguments",
+        "Shared mutable state without synchronization",
     ],
     "observability": [
         "print/console.log for logging",
