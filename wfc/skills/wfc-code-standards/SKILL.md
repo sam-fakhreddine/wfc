@@ -31,7 +31,7 @@ This checklist applies to new features and significant modifications. Pure refac
 
 ## Agent Pre-Completion Checklist
 
-Before you declare your task done, walk through these 10 checks. If any answer is "no", you're not done.
+Before you declare your task done, walk through these 11 checks. If any answer is "no", you're not done.
 
 ```
  1. TESTS PASS       — Did you run the full suite? Do YOUR new tests pass?
@@ -64,6 +64,11 @@ Before you declare your task done, walk through these 10 checks. If any answer i
 
 10. CLEAN DIFF       — Is your diff ONLY what was asked for?
                        No drive-by refactors. No unrelated "improvements". No dev artifacts committed.
+
+11. DEBTS DOCUMENTED — Did you leave any hacks, workarounds, or shortcuts?
+                       Every TODO/FIXME/HACK has: what, why, and what the real fix looks like.
+                       If you tried something simple because the proper solution was out of scope,
+                       say so explicitly. Future agents need the trail. No silent tech debt.
 ```
 
 ## Architecture
