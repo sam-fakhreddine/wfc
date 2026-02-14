@@ -67,6 +67,10 @@ jobs:
           uv pip install --system pytest pytest-cov
           uv pip install --system -e .
 
+      - name: Ensure bash 4+ on macOS
+        if: runner.os == 'macOS'
+        run: echo "/opt/homebrew/bin" >> $GITHUB_PATH
+
       - name: Install WFC skills
         run: |
           chmod +x install.sh
@@ -194,13 +198,17 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Ensure bash 4+ on macOS
+        if: runner.os == 'macOS'
+        run: echo "/opt/homebrew/bin" >> $GITHUB_PATH
+
       - name: Create mock Claude directory
         run: mkdir -p ~/.claude/skills
 
       - name: Test install script
         run: |
           chmod +x install.sh
-          ./install.sh <<< 'y'
+          printf '2\n1\n' | ./install.sh
 
       - name: Verify installation
         run: |
