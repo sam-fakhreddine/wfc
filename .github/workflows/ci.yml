@@ -178,10 +178,10 @@ jobs:
           uv pip install --system build twine
 
       - name: Build package
-        run: uv run python -m build
+        run: python -m build
 
       - name: Check package
-        run: uv run twine check dist/*
+        run: python -m twine check dist/*
 
       - name: Test installation
         run: |
