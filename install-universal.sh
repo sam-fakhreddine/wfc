@@ -817,6 +817,7 @@ echo "  • ${CYAN}/wfc-pr-comments${RESET} - PR comment triage & fix"
 echo "  • ${CYAN}/wfc-newskill${RESET}     - Create new WFC skills"
 echo "  • ${CYAN}/wfc-init${RESET}        - Project initialization tool"
 echo "  • ${CYAN}/wfc-vibe${RESET}         - Natural brainstorming mode"
+echo "  • ${CYAN}/wfc-agentic${RESET}     - GitHub Agentic Workflows (gh-aw)"
 
 echo ""
 echo -e "${BOLD}🚀 Next Steps${RESET}"
