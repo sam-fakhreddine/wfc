@@ -960,6 +960,60 @@ def process_order(order_id: str) -> None:
 - Never log secrets or PII
 - Never call `structlog.configure()` from library/module code - only from the app entry point
 
+**Async context propagation** - bind once in middleware, available everywhere:
+```python
+import structlog
+from contextvars import ContextVar
+from starlette.middleware.base import BaseHTTPMiddleware
+from starlette.requests import Request
+from starlette.responses import Response
+
+_request_id: ContextVar[str] = ContextVar("request_id", default="")
+
+class RequestContextMiddleware(BaseHTTPMiddleware):
+    async def dispatch(self, request: Request, call_next) -> Response:
+        request_id = request.headers.get("X-Request-ID", str(uuid4()))
+        structlog.contextvars.bind_contextvars(request_id=request_id)
+        try:
+            return await call_next(request)
+        finally:
+            structlog.contextvars.unbind_contextvars("request_id")
+```
+
+**Error logging** - always include the exception chain:
+```python
+log = structlog.get_logger()
+
+try:
+    result = await process_order(order_id)
+except PaymentError as exc:
+    # Log the error with structured context + exception info
+    log.error(
+        "order_payment_failed",
+        order_id=order_id,
+        error_type=type(exc).__name__,
+        error_msg=str(exc),
+        exc_info=True,  # includes full traceback in output
+    )
+    raise
+```
+
+**Banned patterns** (CI must fail):
+```python
+# FORBIDDEN - print() for any purpose other than CLI user output
+print(f"Processing order {order_id}")  # BAD
+
+# FORBIDDEN - f-strings in log calls break aggregation
+log.info(f"Order {order_id} completed")  # BAD
+
+# FORBIDDEN - stdlib logging
+import logging  # BAD (in application code)
+logging.info("something happened")  # BAD
+
+# CORRECT - structured key-value pairs
+log.info("order_completed", order_id=order_id)  # GOOD
+```
+
 ### 7. tenacity - Retry Logic
 
 **What**: General-purpose retry library with flexible backoff strategies.
@@ -1280,6 +1334,97 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
 app = FastAPI(lifespan=lifespan)
 ```
 
+### Async Safety (Blocking I/O Footguns)
+
+The event loop must never be blocked. A single blocking call stalls every concurrent task.
+
+**Forbidden in `async def`**:
+```python
+# BAD: blocks the entire event loop
+async def bad_fetch():
+    import requests                          # FORBIDDEN in async
+    return requests.get("https://api.com")   # blocks everything
+
+async def bad_sleep():
+    import time
+    time.sleep(5)                            # FORBIDDEN - use asyncio.sleep
+
+async def bad_file_read():
+    with open("big.csv") as f:               # FORBIDDEN for large files
+        return f.read()
+```
+
+**Correct patterns**:
+```python
+import asyncio
+import httpx
+import aiofiles
+import structlog
+
+log = structlog.get_logger()
+
+# Non-blocking HTTP
+async def fetch_data(url: str) -> dict:
+    async with httpx.AsyncClient(timeout=30) as client:
+        resp = await client.get(url)
+        return resp.json()
+
+# Non-blocking sleep
+async def poll_until_ready(check: Callable[[], bool]) -> None:
+    while not check():
+        await asyncio.sleep(1)  # yields to event loop
+
+# Non-blocking file I/O (large files)
+async def read_large_file(path: Path) -> str:
+    async with aiofiles.open(path) as f:
+        return await f.read()
+
+# Wrapping blocking/CPU-bound code with asyncio.to_thread
+async def hash_password(password: str) -> str:
+    """CPU-bound bcrypt must not block the event loop."""
+    return await asyncio.to_thread(bcrypt.hashpw, password.encode(), bcrypt.gensalt())
+
+async def call_legacy_sdk(params: dict) -> dict:
+    """Legacy SDK is sync-only - run in thread pool."""
+    return await asyncio.to_thread(legacy_sdk.execute, params)
+```
+
+**Timeout handling**:
+```python
+# Use asyncio.timeout (3.11+) for deadline enforcement
+async def fetch_with_deadline(url: str) -> dict:
+    async with asyncio.timeout(10):  # 10 second hard deadline
+        async with httpx.AsyncClient() as client:
+            resp = await client.get(url)
+            return resp.json()
+
+# Catch timeout at the caller
+try:
+    data = await fetch_with_deadline("https://slow-api.com")
+except TimeoutError:
+    log.warning("fetch_timed_out", url="https://slow-api.com")
+```
+
+**Cancellation safety**:
+```python
+# NEVER swallow CancelledError - always re-raise
+async def managed_task() -> None:
+    try:
+        await do_work()
+    except asyncio.CancelledError:
+        await cleanup()  # release resources
+        raise            # MUST re-raise - swallowing breaks TaskGroup
+```
+
+**Async safety rules**:
+- **Never use `requests`** in async code - use `httpx.AsyncClient`
+- **Never use `time.sleep()`** in async - use `asyncio.sleep()`
+- **Never use `open()` for large files** in async - use `aiofiles`
+- **Use `asyncio.to_thread()`** for blocking/CPU-bound calls in async context
+- **Use `asyncio.timeout()`** (3.11+) for deadlines, not `asyncio.wait_for`
+- **Never catch `CancelledError`** without re-raising - it breaks structured concurrency
+- **Small files** (< 1MB): `open()` is fine in async - the overhead of aiofiles isn't worth it
+
 ### Thread Safety
 
 When using threads (joblib, `threading`, `concurrent.futures`), protect shared state
@@ -1362,7 +1507,93 @@ def run_workers(tasks: list[Callable[[], None]]) -> None:
 - **Thread identification**: Every thread must have a descriptive `name=` - no anonymous threads
 - **Thread-safe I/O**: All file writes from threads must use `atomic_write` + lock
 
+## Docstrings (Google Style)
+
+Every public module, class, and function must have a docstring. We use **Google Style** formatting for automated docs generation (MkDocs/Sphinx).
+
+### Format
+
+```python
+def calculate_velocity(distance: float, time: float) -> float:
+    """Calculate velocity from distance and time.
+
+    Computes simple linear velocity. For acceleration-aware
+    calculations, use ``calculate_kinematics`` instead.
+
+    Args:
+        distance: The distance traveled in meters.
+        time: The time elapsed in seconds.
+
+    Returns:
+        The velocity in meters per second.
+
+    Raises:
+        ValueError: If time is zero or negative.
+    """
+    if time <= 0:
+        raise ValueError("Time must be positive")
+    return distance / time
+
+
+class OrderService:
+    """Handles order lifecycle from creation through fulfillment.
+
+    Coordinates validation, payment, and notification services
+    following the three-tier architecture pattern.
+
+    Attributes:
+        repo: Repository for order persistence.
+        notifier: Notification channel for order events.
+    """
+
+    def __init__(self, repo: OrderRepository, notifier: Notifier) -> None:
+        self.repo = repo
+        self.notifier = notifier
+
+    async def create(self, items: list[LineItem]) -> Order:
+        """Create a new order from line items.
+
+        Validates items, calculates totals, persists the order,
+        and sends a confirmation notification.
+
+        Args:
+            items: Non-empty list of line items for the order.
+
+        Returns:
+            The persisted order with a generated ID.
+
+        Raises:
+            ValidationError: If items is empty or contains invalid data.
+            PaymentError: If payment authorization fails.
+        """
+        ...
+```
+
+### Module docstrings
+
+```python
+"""Order processing service.
+
+Implements the order lifecycle: validation, payment, fulfillment.
+Uses three-tier architecture with dependency injection via Protocol.
+"""
+
+from __future__ import annotations
+```
+
+**Rules**:
+- **Triple double quotes** (`"""`) always - never single quotes, never backticks
+- **Summary line**: Imperative mood, one line, ends with period. "Calculate velocity." not "Calculates velocity." or "This function calculates..."
+- **Args/Returns/Raises**: Required on all public functions. Omit sections that don't apply (no empty `Args:` block)
+- **Do NOT repeat type hints in docstrings** - types are already in the signature
+- **Private functions** (`_helper`): Docstring optional, only add if logic is non-obvious
+- **Module docstrings**: Required on all modules - brief summary of purpose and architectural role
+- **Class docstrings**: Required on all public classes - describe purpose and list key `Attributes:`
+- **One-liner docstrings**: OK for trivially obvious functions: `"""Return the user's full name."""`
+
 ## Testing Standards
+
+**We use `pytest`. The `unittest` module is strictly forbidden.**
 
 ### pytest Conventions
 
@@ -1383,17 +1614,25 @@ def test_create_user_with_empty_name_raises_validation_error() -> None:
     with pytest.raises(ValidationError, match="name"):
         create_user(name="", email=fake.email())
 
-# Fixtures for shared setup
+# Fixtures for shared setup (with explicit scope)
 @pytest.fixture
 def sample_user() -> User:
+    """Function-scoped (default) - created fresh per test."""
     return User(name=fake.name(), email=fake.email())
+
+@pytest.fixture(scope="module")
+def db_connection() -> Iterator[Connection]:
+    """Module-scoped - shared across tests in the same file."""
+    conn = create_connection()
+    yield conn
+    conn.close()
 
 @pytest.fixture
 async def async_client() -> AsyncIterator[httpx.AsyncClient]:
     async with httpx.AsyncClient(app=app, base_url="http://test") as client:
         yield client
 
-# Parametrize for multiple cases
+# Parametrize for multiple cases - NEVER use loops inside tests
 @pytest.mark.parametrize(
     ("input_value", "expected"),
     [
@@ -1406,25 +1645,96 @@ def test_uppercase(input_value: str, expected: str) -> None:
     assert uppercase(input_value) == expected
 ```
 
+### Async Testing (pytest-asyncio)
+
+```python
+import pytest
+
+# pyproject.toml sets asyncio_mode = "auto", so no decorator needed
+async def test_fetch_user_returns_data(async_client: httpx.AsyncClient) -> None:
+    resp = await async_client.get("/users/123")
+    assert resp.status_code == 200
+    data = resp.json()
+    assert data["id"] == "123"
+
+# Parametrize works with async too
+@pytest.mark.parametrize("status", ["active", "banned", "pending"])
+async def test_user_status_filtering(
+    async_client: httpx.AsyncClient,
+    user_factory: UserFactory,
+    status: str,
+) -> None:
+    await user_factory.create(status=status)
+    resp = await async_client.get(f"/users?status={status}")
+    assert resp.status_code == 200
+    assert all(u["status"] == status for u in resp.json())
+```
+
+### Mocking (pytest-mock)
+
+```python
+# Use pytest-mock's mocker fixture - not unittest.mock.patch as decorator
+def test_send_notification_calls_smtp(mocker: MockerFixture) -> None:
+    mock_send = mocker.patch("app.services.smtp_client.send")
+    notify_user(user_id="123", message="Hello")
+    mock_send.assert_called_once_with(
+        to="user@example.com",
+        body="Hello",
+    )
+
+# Context manager form for scoped mocking
+def test_service_retries_on_timeout(mocker: MockerFixture) -> None:
+    mock_fetch = mocker.patch("app.services.http_client.get")
+    mock_fetch.side_effect = [httpx.TimeoutException("timeout"), mock_response(200)]
+    result = fetch_with_retry("/api/data")
+    assert mock_fetch.call_count == 2
+    assert result.status_code == 200
+```
+
+### Test Markers
+
+```python
+# Mark slow tests - run separately in CI
+@pytest.mark.slow
+def test_full_data_migration() -> None: ...
+
+# Mark integration tests - need real dependencies
+@pytest.mark.integration
+async def test_database_roundtrip() -> None: ...
+
+# pyproject.toml marker registration
+# [tool.pytest.ini_options]
+# markers = [
+#     "slow: marks tests as slow (deselect with '-m \"not slow\"')",
+#     "integration: marks tests requiring real services",
+# ]
+```
+
 **Rules**:
+- **pytest only**: `unittest` is forbidden - no `TestCase`, no `setUp`/`tearDown`, no `self.assert*`
 - Test file naming: `test_<module>.py`
 - Test function naming: `test_<what>_<condition>_<expected>`
 - Use `Faker.seed(42)` at module level for reproducibility
-- Use `pytest.fixture` for shared setup, not `setUp()`/`tearDown()`
+- Use `pytest.fixture` for shared setup with explicit `scope=` when non-default
+- **Fixture scopes**: `function` (default, safest), `module` (shared I/O like DB), `session` (expensive global setup only)
 - Use `pytest.raises` for expected exceptions
-- Use `@pytest.mark.parametrize` for data-driven tests
+- Use `@pytest.mark.parametrize` for data-driven tests - **never** loop inside a test
 - Use `conftest.py` for shared fixtures across test files
+- **Async tests**: Use `pytest-asyncio` with `asyncio_mode = "auto"` in pyproject.toml
+- **Mocking**: Use `pytest-mock` (`mocker` fixture) - avoid `unittest.mock.patch` as decorator
+- **Markers**: Register custom markers in pyproject.toml, use `@pytest.mark.slow` / `@pytest.mark.integration`
 - Coverage target: 80%+ on business logic (services tier)
 
 ### Test Organization
 
 ```
 tests/
-├── conftest.py          # Shared fixtures (faker, db, client)
+├── conftest.py          # Shared fixtures (faker, db, client, factories)
 ├── unit/                # Fast, isolated, no I/O
 │   ├── test_models.py
 │   └── test_services.py
 ├── integration/         # Real dependencies (db, APIs)
+│   ├── conftest.py      # DB fixtures, test containers
 │   ├── test_repositories.py
 │   └── test_api.py
 └── e2e/                 # Full system tests
@@ -1531,6 +1841,74 @@ asyncio_mode = "auto"
 - **api** (optional): FastAPI + uvicorn - only for web service projects
 - **cli** (optional): fire - only for CLI tools
 - **dev** (optional): faker, pytest - development and testing only
+
+### Version Pinning Strategy
+
+```toml
+# Use >= for minimum version (allows compatible upgrades via lockfile)
+dependencies = [
+    "httpx>=0.27",       # >=minor: "at least this version"
+    "pydantic>=2.6",     # >=minor: major version is our compat boundary
+]
+
+# NEVER do this:
+# "httpx==0.27.0"       # BAD: too strict, blocks security patches
+# "httpx"               # BAD: no lower bound, anything could resolve
+# "httpx>=0.27,<1.0"    # UNNECESSARY: lockfile handles upper bounds
+```
+
+**Rules**:
+- **`>=X.Y`** for all deps - set a minimum, let the lockfile pin the exact version
+- **Never use `==`** - it blocks security patches and creates lockfile conflicts
+- **Never omit a lower bound** - reproducibility requires knowing the minimum
+- The **lockfile** (`uv.lock`) is the source of truth for exact versions in CI/prod
+
+### Lock Files
+
+```bash
+# Generate/update lockfile after changing pyproject.toml
+uv lock
+
+# Verify lockfile matches pyproject.toml (CI check)
+uv lock --check
+
+# Install exactly what's locked (CI, Docker, prod)
+uv sync --frozen
+
+# Update a specific package to latest compatible version
+uv add --upgrade httpx
+uv lock  # regenerate lockfile
+```
+
+**Rules**:
+- **Always commit `uv.lock`** to version control - it ensures deterministic builds
+- **`uv sync --frozen`** in CI and Docker - never regenerate lockfile during builds
+- **`uv lock --check`** in CI - fails if lockfile is out of sync with pyproject.toml
+- **Never use `--upgrade` in CI** - upgrades happen locally, get committed, then CI uses `--frozen`
+- **Review lockfile diffs** in PRs - transitive dependency changes can introduce vulnerabilities
+
+### Security Auditing (CVE Scanning)
+
+```bash
+# Scan dependencies for known vulnerabilities
+uv run pip-audit
+
+# In CI (fail the build on any vulnerability)
+uv run pip-audit --strict --desc
+```
+
+```yaml
+# .github/workflows/ci.yml (add to quality job)
+- name: Security audit
+  run: uv run pip-audit --strict --desc
+```
+
+**Rules**:
+- **`pip-audit`** is mandatory in CI - builds fail on known CVEs
+- Add `pip-audit` to dev dependencies: `uv add --dev pip-audit`
+- **Review advisories** before suppressing: `uv run pip-audit --ignore-vuln PYSEC-...` with comment explaining why
+- **Transitive deps matter** - a vuln in a dep-of-a-dep is still your problem
+- **Update promptly** - when `pip-audit` flags a vuln, `uv add --upgrade <package>` and regenerate lockfile
 
 ## Dockerfile (UV-Native)
 
@@ -1669,6 +2047,8 @@ When reviewing Python code, flag:
 
 **Library violations**:
 - `print()` statements that should use `structlog`
+- f-strings inside log calls (`log.info(f"...")`) - use key-value pairs
+- `import logging` (stdlib) that should use `structlog`
 - `import json` that should use `orjson`
 - `import requests` that should use `httpx`
 - Hand-rolled retry loops that should use `tenacity`
@@ -1677,6 +2057,32 @@ When reviewing Python code, flag:
 - `argparse` boilerplate that could be replaced with `fire`
 - Hand-written test fixtures that could use `faker`
 - Sequential loops that could use `joblib.Parallel`
+
+**Testing violations**:
+- `import unittest` or `TestCase` subclasses (use pytest exclusively)
+- `setUp()`/`tearDown()` methods instead of `@pytest.fixture`
+- `self.assertEqual()` / `self.assertTrue()` instead of bare `assert`
+- Loops inside tests instead of `@pytest.mark.parametrize`
+- `unittest.mock.patch` as decorator instead of `pytest-mock` `mocker` fixture
+
+**Async safety violations**:
+- `requests.get()` / `requests.post()` inside `async def` (blocks event loop)
+- `time.sleep()` inside `async def` (use `asyncio.sleep()`)
+- `open()` for large files inside `async def` (use `aiofiles`)
+- Catching `CancelledError` without re-raising
+- Missing timeout on async network calls
+
+**Documentation violations**:
+- Public function/class without a docstring
+- Non-Google-style docstrings (wrong section names, wrong formatting)
+- Type hints repeated in docstring Args section
+- Missing module-level docstring
+
+**Dependency management violations**:
+- `uv.lock` not committed to version control
+- `==` pinned versions in pyproject.toml (use `>=`)
+- No `pip-audit` in dev dependencies or CI
+- `uv sync` without `--frozen` in CI/Docker
 
 **Coding standard violations**:
 - Missing type annotations on any function/method
@@ -1690,11 +2096,16 @@ When reviewing Python code, flag:
 - Tier violations (presentation importing data access directly)
 - Classes with multiple responsibilities (SRP violation)
 - Deep inheritance (>1 level) instead of composition
+- Non-atomic file writes (raw `open()` + `write()` for config/state files)
+- Missing factory pattern where object creation is conditional/registry-based
 - Bare `except:` or silently swallowed exceptions
 - Deep nesting (>3 levels) instead of early returns
 - `os.path` instead of `pathlib.Path`
 - Magic strings instead of `StrEnum`
 - Missing `slots=True` on dataclasses
+- Anonymous threads (no `name=` parameter)
+- Shared mutable state without `threading.Lock`
+- `structlog.configure()` called in library/module code instead of app entry point
 - `# fmt: off` without justification
 - Non-black-formatted code
 - Dockerfile not using multi-stage build with UV
@@ -1723,21 +2134,59 @@ These rules apply to all WFC Python projects:
 - **Always** use PEP 562 (`__getattr__` / `__dir__`) in `__init__.py`
 - **Always** follow three-tier architecture (presentation / logic / data)
 - **Always** apply SOLID principles (especially SRP and DI via Protocol)
+- **Always** use factory patterns for conditional/registry-based object creation
 - **Always** use composition over inheritance (Protocol, not deep class trees)
 - **Always** use context managers for resource lifecycle
+- **Always** use atomic writes for config/state files (temp + `os.replace`)
 - **Always** define structured exception hierarchies per project
 - **Always** use `asyncio.TaskGroup` for concurrent I/O (not `asyncio.gather`)
 - **Always** use multi-stage Dockerfiles with UV for containerized projects
+- **Always** use Google-style docstrings on all public APIs
 - **Never** exceed 500 lines per file
 - **Never** use `Optional`, `List`, `Dict`, `Tuple` from `typing` (use builtins)
 - **Never** skip type annotations on public functions
 - **Never** bare `except:` or silently swallow exceptions
 
+**Logging & Observability**:
+- **Always** configure structlog exactly once at app entry point (`setup_logging()`)
+- **Always** include thread-identification processor in structlog config
+- **Always** use `bind()` for request/session context propagation
+- **Always** log key-value pairs: `log.info("event", key=value)`
+- **Never** use `print()` for logging (structlog only)
+- **Never** use f-strings in log calls (breaks aggregation)
+- **Never** use stdlib `logging` (structlog only)
+
+**Thread Safety**:
+- **Always** name threads with `name=` parameter
+- **Always** protect shared mutable state with `threading.Lock`
+- **Always** use `atomic_write` + lock for concurrent file writes
+- **Always** use `contextvars` (not `threading.local`) for per-task context
+- **Never** leave threads anonymous - every thread must be identifiable in logs
+
+**Async Safety**:
+- **Always** use `httpx.AsyncClient` in async code (never `requests`)
+- **Always** use `asyncio.sleep()` in async (never `time.sleep()`)
+- **Always** use `asyncio.to_thread()` for blocking/CPU-bound calls in async context
+- **Always** use `asyncio.timeout()` for deadline enforcement
+- **Never** catch `CancelledError` without re-raising
+
 **Testing**:
-- **Always** use `pytest` (via `uv run pytest`)
+- **Always** use `pytest` (via `uv run pytest`) - unittest is **forbidden**
+- **Always** use `pytest-asyncio` for async tests (`asyncio_mode = "auto"`)
+- **Always** use `pytest-mock` (`mocker` fixture) for mocking
 - **Always** use `faker` with `Faker.seed(42)` for test data
+- **Always** use `@pytest.mark.parametrize` - never loop inside tests
 - **Always** organize tests: `unit/`, `integration/`, `e2e/`
 - **Always** target 80%+ coverage on business logic
+- **Never** use `unittest.TestCase`, `setUp()`, `tearDown()`, or `self.assert*()`
+
+**Dependency Management**:
+- **Always** commit `uv.lock` to version control
+- **Always** use `uv sync --frozen` in CI and Docker
+- **Always** use `>=X.Y` version constraints (never `==`)
+- **Always** run `pip-audit` in CI (`uv run pip-audit --strict`)
+- **Always** use `uv lock --check` in CI to verify lockfile sync
+- **Never** use `--upgrade` in CI - only locally
 
 **Preferred Stack**:
 - **Always** `httpx` over `requests`

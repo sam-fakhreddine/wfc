@@ -22,6 +22,10 @@ Standards:
     - Context managers for all resource lifecycle
     - Atomic writes (temp file + os.replace, never half-written files)
     - Thread-safe operations (locks for shared state, named threads)
+    - Google-style docstrings on all public APIs
+    - pytest exclusive (unittest forbidden), pytest-asyncio, pytest-mock
+    - Async safety (no blocking I/O in async, asyncio.to_thread for CPU work)
+    - Lock files committed, version pinning (>=X.Y), CVE scanning (pip-audit)
     - DRY - extract at 3+ repetitions
     - 500-line hard cap per file
     - Pythonic conventions (comprehensions, pathlib, StrEnum, dataclasses)
@@ -122,6 +126,11 @@ CODING_STANDARDS: dict[str, str | int | bool | list[str]] = {
     "centralized_logging": True,
     "thread_safe_operations": True,
     "thread_identified_logging": True,
+    "docstrings_google_style": True,
+    "pytest_exclusive": True,
+    "async_safety": True,
+    "lockfile_committed": True,
+    "cve_scanning": True,
     "slots_on_dataclasses": True,
     "uv_exclusive": True,
     # Black-owned PEP 8 rules that ruff must ignore to avoid conflicts
@@ -210,6 +219,62 @@ BANNED_PATTERNS: list[dict[str, str | re.Pattern[str]]] = [
         "pattern": re.compile(r"^\s*except\s*:", re.MULTILINE),
         "description": "Bare except: catches everything including SystemExit/KeyboardInterrupt",
         "fix": "except Exception: (or a more specific exception type)",
+    },
+    {
+        "id": "unittest-import",
+        "pattern": re.compile(
+            r"^\s*(?:from\s+unittest\s+import|import\s+unittest)\b", re.MULTILINE
+        ),
+        "description": "unittest is forbidden (use pytest exclusively)",
+        "fix": "import pytest (with fixtures, parametrize, and pytest.raises)",
+    },
+    {
+        "id": "unittest-testcase",
+        "pattern": re.compile(r"\bclass\s+\w+\(.*\bTestCase\b.*\)"),
+        "description": "unittest.TestCase subclass (use plain pytest functions)",
+        "fix": "def test_<what>_<condition>_<expected>() -> None: ...",
+    },
+    {
+        "id": "print-statement",
+        "pattern": re.compile(
+            r"^\s*print\s*\((?!.*#\s*noqa)", re.MULTILINE
+        ),
+        "description": "print() statement (use structlog for all logging)",
+        "fix": "log = structlog.get_logger(); log.info('event', key=value)",
+    },
+    {
+        "id": "fstring-in-log",
+        "pattern": re.compile(
+            r"""\blog\.\w+\(\s*f['"]""",
+        ),
+        "description": "f-string in log call (breaks log aggregation)",
+        "fix": 'log.info("event", key=value) - use key-value pairs',
+    },
+    {
+        "id": "stdlib-logging",
+        "pattern": re.compile(
+            r"^\s*import\s+logging\b(?!.*#\s*noqa)", re.MULTILINE
+        ),
+        "description": "stdlib logging (use structlog exclusively)",
+        "fix": "import structlog; log = structlog.get_logger()",
+    },
+    {
+        "id": "requests-in-async",
+        "pattern": re.compile(
+            r"async\s+def\s+\w+.*\n(?:.*\n)*?.*\brequests\.\w+",
+            re.MULTILINE,
+        ),
+        "description": "requests library used in async function (blocks event loop)",
+        "fix": "async with httpx.AsyncClient() as client: resp = await client.get(url)",
+    },
+    {
+        "id": "time-sleep-in-async",
+        "pattern": re.compile(
+            r"async\s+def\s+\w+.*\n(?:.*\n)*?.*\btime\.sleep\b",
+            re.MULTILINE,
+        ),
+        "description": "time.sleep() in async function (blocks event loop)",
+        "fix": "await asyncio.sleep(seconds)",
     },
 ]
 
