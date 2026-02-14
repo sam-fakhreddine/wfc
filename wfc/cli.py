@@ -88,7 +88,7 @@ def cmd_validate(all_skills: bool = False, xml: bool = False):
 
             # SECURITY: shell=False, list args; cmd built from Path objects, not user input.
             proc = sp.run(cmd, cwd=skills_ref_dir, stdout=sp.PIPE, text=True)
-            grep_proc = sp.run(["grep", "-q", "<skill>"], input=proc.stdout, shell=False)
+            grep_proc = sp.run(["grep", "-q", "<skill>"], input=proc.stdout, text=True, shell=False)
             xml_result = grep_proc.returncode
 
             if xml_result != 0:

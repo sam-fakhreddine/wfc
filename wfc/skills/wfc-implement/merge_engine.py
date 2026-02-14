@@ -137,24 +137,28 @@ _SHELL_METACHAR_PATTERN = re.compile(r"[;&|`$(){}]")
 
 
 def validate_test_command(command: str) -> Optional[str]:
-    """Validate integration test command. Returns error message or None if valid."""
+    """Validate integration test command. Returns error message or None if valid.
+
+    Uses full prefix matching: the first N tokens of the command must exactly
+    match one of ALLOWED_TEST_COMMANDS. This prevents "uv run rm -rf /" from
+    passing just because "uv" is an allowed base.
+    """
     if not command:
         return "Empty test command"
-    parts = command.split()
-    base_cmd = parts[0] if parts else ""
-    base_two = " ".join(parts[:2]) if len(parts) >= 2 else base_cmd
-    base_three = " ".join(parts[:3]) if len(parts) >= 3 else base_two
-
-    allowed_bases = {cmd.split()[0] for cmd in ALLOWED_TEST_COMMANDS}
-    if (
-        base_cmd not in allowed_bases
-        and base_two not in ALLOWED_TEST_COMMANDS
-        and base_three not in ALLOWED_TEST_COMMANDS
-    ):
-        return f"Command not in allowlist: {command}"
     if _SHELL_METACHAR_PATTERN.search(command):
         return f"Shell metacharacters in command: {command}"
-    return None
+
+    parts = shlex.split(command)
+    if not parts:
+        return "Empty test command after parsing"
+
+    for allowed in ALLOWED_TEST_COMMANDS:
+        allowed_parts = allowed.split()
+        n = len(allowed_parts)
+        if parts[:n] == allowed_parts:
+            return None
+
+    return f"Command not in allowlist: {command}"
 
 
 class MergeEngine:

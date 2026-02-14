@@ -807,20 +807,21 @@ import httpx
 def call_api(url: str) -> dict:
     response = httpx.get(url, timeout=10)
     response.raise_for_status()
-    return response.json()
+    return orjson.loads(response.content)
 ```
 
 **With logging**:
 ```python
-from tenacity import retry, before_sleep_log, stop_after_attempt, wait_exponential
-import structlog
+import logging
 
-log = structlog.get_logger()
+from tenacity import retry, before_sleep_log, stop_after_attempt, wait_exponential
+
+log = logging.getLogger(__name__)
 
 @retry(
     stop=stop_after_attempt(5),
     wait=wait_exponential(multiplier=1, min=2, max=60),
-    before_sleep=before_sleep_log(log, structlog.stdlib.INFO),
+    before_sleep=before_sleep_log(log, logging.INFO),
 )
 def resilient_operation():
     ...
@@ -1553,7 +1554,7 @@ uv tool run black .              # Run tool without installing
 
 | Never | Always |
 |-------|--------|
-| `pip install` | `uv add` or `uv pip install` |
+| `pip install` | `uv add` (or `uv pip install` for one-offs inside a venv) |
 | `pip freeze` | `uv lock` / `uv.lock` file |
 | `python script.py` | `uv run python script.py` |
 | `python -m pytest` | `uv run pytest` |
@@ -1576,7 +1577,9 @@ dependencies = [
     "structlog>=24.1",
     "tenacity>=8.2",
     "pydantic>=2.6",
+    "pydantic-settings>=2.2",
     "httpx>=0.27",
+    "joblib>=1.3",
 ]
 
 [project.optional-dependencies]
@@ -1588,10 +1591,14 @@ cli = [
     "fire>=0.5",
 ]
 dev = [
+    "black>=24.0",
+    "ruff>=0.3",
+    "mypy>=1.8",
     "faker>=22.0",
     "pytest>=8.0",
     "pytest-cov>=4.1",
     "pytest-asyncio>=0.23",
+    "pytest-mock>=3.12",
 ]
 
 [tool.black]

@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Tests for Git Hook Whitelist Constants - VALID_HOOKS completeness.
 
 Focused on verifying the VALID_HOOKS set covers all standard git hooks.
@@ -11,7 +10,6 @@ import pytest
 import importlib.util
 from pathlib import Path
 
-# Load hooks module from hyphenated directory via importlib
 _hooks_path = Path(__file__).parent.parent / "wfc" / "wfc-tools" / "gitwork" / "api" / "hooks.py"
 _spec = importlib.util.spec_from_file_location("hooks", _hooks_path)
 hooks = importlib.util.module_from_spec(_spec)
@@ -59,9 +57,9 @@ class TestHookWhitelistCompleteness:
             assert " " not in hook, f"Space in whitelist entry: {hook}"
 
     def test_whitelist_is_frozen(self):
-        """VALID_HOOKS should be a set (immutable at runtime)."""
-        assert isinstance(hooks.VALID_HOOKS, set)
-        assert len(hooks.VALID_HOOKS) == 14  # Exact count to catch accidental additions
+        """VALID_HOOKS should be a frozenset (immutable at runtime)."""
+        assert isinstance(hooks.VALID_HOOKS, frozenset)
+        assert len(hooks.VALID_HOOKS) == 14
 
 
 if __name__ == "__main__":
