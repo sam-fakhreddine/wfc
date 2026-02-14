@@ -999,6 +999,113 @@ async def get_user(
 - Keep route handlers thin - delegate to service layer (three-tier)
 - Use async handlers with `httpx.AsyncClient` for downstream calls
 
+## Async & Concurrency
+
+Use `asyncio` with `TaskGroup` for concurrent I/O. Use `joblib` for CPU-bound parallelism.
+
+### When to Use Async
+
+| Workload | Use | Why |
+|----------|-----|-----|
+| HTTP calls to external APIs | `async` + `httpx.AsyncClient` | I/O-bound, concurrent requests |
+| Database queries | `async` + async driver | I/O-bound, connection pooling |
+| File I/O (many files) | `async` + `aiofiles` | I/O-bound, parallel reads |
+| CPU-heavy computation | `joblib.Parallel` (sync) | CPU-bound, multiprocess |
+| Simple scripts | sync | Not worth async overhead |
+
+### TaskGroup Pattern (3.11+)
+
+```python
+import asyncio
+import httpx
+import structlog
+
+log = structlog.get_logger()
+
+async def fetch_all(urls: list[str]) -> list[dict]:
+    """Fetch multiple URLs concurrently with structured error handling."""
+    results: list[dict] = []
+
+    async with httpx.AsyncClient(timeout=30) as client:
+        async with asyncio.TaskGroup() as tg:
+            tasks = [tg.create_task(client.get(url)) for url in urls]
+
+    for task in tasks:
+        resp = task.result()
+        results.append(orjson.loads(resp.content))
+
+    return results
+
+# With error handling via except*
+async def fetch_resilient(urls: list[str]) -> list[dict | None]:
+    results: dict[str, dict | None] = {url: None for url in urls}
+
+    try:
+        async with httpx.AsyncClient(timeout=30) as client:
+            async with asyncio.TaskGroup() as tg:
+                for url in urls:
+                    tg.create_task(_fetch_one(client, url, results))
+    except* httpx.HTTPStatusError as eg:
+        for exc in eg.exceptions:
+            log.warning("fetch_failed", url=str(exc.request.url), status=exc.response.status_code)
+    except* httpx.ConnectError as eg:
+        log.error("connection_failures", count=len(eg.exceptions))
+
+    return list(results.values())
+
+async def _fetch_one(
+    client: httpx.AsyncClient,
+    url: str,
+    results: dict[str, dict | None],
+) -> None:
+    resp = await client.get(url)
+    resp.raise_for_status()
+    results[url] = orjson.loads(resp.content)
+```
+
+### Async Context Managers
+
+```python
+from contextlib import asynccontextmanager
+from collections.abc import AsyncIterator
+
+@asynccontextmanager
+async def managed_client(
+    base_url: str,
+    timeout: int = 30,
+) -> AsyncIterator[httpx.AsyncClient]:
+    """Reusable async HTTP client with structured logging."""
+    log.info("client_open", base_url=base_url)
+    async with httpx.AsyncClient(base_url=base_url, timeout=timeout) as client:
+        yield client
+    log.info("client_closed", base_url=base_url)
+
+# FastAPI lifespan (replaces @app.on_event)
+from fastapi import FastAPI
+from contextlib import asynccontextmanager
+
+@asynccontextmanager
+async def lifespan(app: FastAPI) -> AsyncIterator[None]:
+    # Startup
+    log.info("app_starting")
+    app.state.http_client = httpx.AsyncClient(timeout=30)
+    yield
+    # Shutdown
+    await app.state.http_client.aclose()
+    log.info("app_stopped")
+
+app = FastAPI(lifespan=lifespan)
+```
+
+**Rules**:
+- Use `asyncio.TaskGroup` (3.11+) over `asyncio.gather` - better error handling
+- Use `except*` to handle errors from concurrent tasks by type
+- Always use `async with` for async clients and connections
+- Use `asynccontextmanager` for reusable async resource patterns
+- Use FastAPI `lifespan` context manager, not deprecated `@app.on_event`
+- Never mix `asyncio.run()` inside an already-running event loop
+- CPU-bound work goes to `joblib.Parallel`, not async (GIL)
+
 ## Testing Standards
 
 ### pytest Conventions
@@ -1167,6 +1274,103 @@ asyncio_mode = "auto"
 - **cli** (optional): fire - only for CLI tools
 - **dev** (optional): faker, pytest - development and testing only
 
+## Dockerfile (UV-Native)
+
+Multi-stage build optimized for UV. Use this as the standard template.
+
+```dockerfile
+# ---- Build stage ----
+FROM python:3.12-slim AS builder
+
+COPY --from=ghcr.io/astral-sh/uv:latest /uv /uvx /bin/
+
+WORKDIR /app
+
+# Install dependencies first (cached layer)
+COPY pyproject.toml uv.lock ./
+RUN uv sync --frozen --no-dev --no-install-project
+
+# Then copy source and install project
+COPY . .
+RUN uv sync --frozen --no-dev
+
+# ---- Runtime stage ----
+FROM python:3.12-slim AS runtime
+
+WORKDIR /app
+
+# Copy only the virtual environment and source from builder
+COPY --from=builder /app/.venv /app/.venv
+COPY --from=builder /app /app
+
+# Use the venv Python directly (no uv needed at runtime)
+ENV PATH="/app/.venv/bin:$PATH"
+
+EXPOSE 8000
+
+CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
+```
+
+**Rules**:
+- Always multi-stage: build with UV, run without UV
+- Copy `pyproject.toml` + `uv.lock` before source for layer caching
+- Use `--frozen` to ensure lockfile is respected
+- Use `--no-dev` in production builds
+- Use `python:3.12-slim` not `python:3.12` (smaller image)
+- Never install UV in the runtime stage
+
+## CI/CD (GitHub Actions)
+
+Standard workflow that enforces all WFC Python standards.
+
+```yaml
+# .github/workflows/ci.yml
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  quality:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v4
+
+      - name: Set up Python
+        run: uv python install 3.12
+
+      - name: Install dependencies
+        run: uv sync --frozen
+
+      - name: Format check (black)
+        run: uv run black --check .
+
+      - name: Lint (ruff)
+        run: uv run ruff check .
+
+      - name: Type check (mypy)
+        run: uv run mypy . --strict
+
+      - name: Tests with coverage
+        run: uv run pytest --cov --cov-report=term-missing --cov-fail-under=80
+
+      - name: Check lockfile
+        run: uv lock --check
+```
+
+**Rules**:
+- All CI commands use `uv run` - no pip, no bare python
+- Format, lint, type check, and test in that order
+- `--cov-fail-under=80` enforces coverage threshold
+- `uv lock --check` ensures lockfile is in sync with pyproject.toml
+- Use `uv sync --frozen` to install exactly what's locked
+
 ## Integration with WFC Skills
 
 ### wfc-build / wfc-implement
@@ -1218,10 +1422,13 @@ When reviewing Python code, flag:
 
 **Coding standard violations**:
 - Missing type annotations on any function/method
+- Code that fails `mypy --strict`
 - Files exceeding 500 lines
 - `Optional[X]` instead of `X | None`
 - `typing.List`, `typing.Dict` instead of `list`, `dict`
 - `TypeAlias` instead of `type` statement (3.12+)
+- `asyncio.gather` instead of `asyncio.TaskGroup` (3.11+)
+- `@app.on_event` instead of FastAPI `lifespan` context manager
 - Tier violations (presentation importing data access directly)
 - Classes with multiple responsibilities (SRP violation)
 - Deep inheritance (>1 level) instead of composition
@@ -1232,6 +1439,8 @@ When reviewing Python code, flag:
 - Missing `slots=True` on dataclasses
 - `# fmt: off` without justification
 - Non-black-formatted code
+- Dockerfile not using multi-stage build with UV
+- CI using pip/python instead of uv commands
 
 ## Python Runtime Rules
 
@@ -1251,6 +1460,7 @@ These rules apply to all WFC Python projects:
 - **Always** target Python 3.12+ (`requires-python = ">=3.12"`)
 - **Always** use `black` for formatting (line-length 88, target py312)
 - **Always** use `ruff` for linting
+- **Always** use `mypy --strict` for type checking
 - **Always** use full type annotations on all signatures
 - **Always** use PEP 562 (`__getattr__` / `__dir__`) in `__init__.py`
 - **Always** follow three-tier architecture (presentation / logic / data)
@@ -1258,6 +1468,8 @@ These rules apply to all WFC Python projects:
 - **Always** use composition over inheritance (Protocol, not deep class trees)
 - **Always** use context managers for resource lifecycle
 - **Always** define structured exception hierarchies per project
+- **Always** use `asyncio.TaskGroup` for concurrent I/O (not `asyncio.gather`)
+- **Always** use multi-stage Dockerfiles with UV for containerized projects
 - **Never** exceed 500 lines per file
 - **Never** use `Optional`, `List`, `Dict`, `Tuple` from `typing` (use builtins)
 - **Never** skip type annotations on public functions
