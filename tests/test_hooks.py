@@ -5,11 +5,9 @@ Tests pre-commit, commit-msg, and pre-push hooks with various scenarios.
 """
 
 import pytest
-import subprocess
 import tempfile
 from pathlib import Path
 from unittest.mock import patch, MagicMock, mock_open
-import sys
 import io
 
 # Import hook modules
@@ -322,7 +320,7 @@ class TestPrePushHook:
         assert exit_code == 0
         output = captured_output.getvalue()
         # Should not warn about feature branches
-        assert "WARNING" not in output or "WARNING" in output  # May or may not warn
+        assert "WARNING" not in output, "Feature branches should not produce warnings"
 
 
 class TestHookInstaller:

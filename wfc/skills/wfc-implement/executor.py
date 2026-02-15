@@ -10,16 +10,16 @@ The orchestrator and executor NEVER do implementation work.
 They ONLY coordinate. All actual work is done by subagents via Task tool.
 """
 
+import time
 from pathlib import Path
 from typing import Dict, Optional
-import time
 
-from wfc.shared.schemas import Task, TaskStatus
 from wfc.shared.extended_thinking import ExtendedThinkingDecider
+from wfc.shared.schemas import Task, TaskStatus
 
-from .orchestrator import WFCOrchestrator
 from .agent import AgentReport
 from .merge_engine import MergeEngine
+from .orchestrator import WFCOrchestrator
 
 
 class ExecutionEngine:
@@ -42,7 +42,6 @@ class ExecutionEngine:
 
         self.merge_engine = MergeEngine(self.project_root, self.config)
 
-        # Active subagent tasks (task_id -> agent_task_id mapping)
         self.active_subagents: Dict[str, str] = {}
         self.agent_prompts: Dict[str, str] = {}
         self.agent_counter = 0
@@ -60,35 +59,27 @@ class ExecutionEngine:
         print("   Orchestrator will NEVER do work, only coordinate\n")
 
         while True:
-            # Check if done
             if self._is_complete():
                 break
 
-            # Check if we can start more subagents
             if len(self.active_subagents) < max_agents:
                 task = self.orchestrator.get_next_task()
                 if task:
                     self._spawn_subagent(task)
 
-            # Check completed subagents
             # NOTE: In production, this would use TaskOutput tool to poll
-            # For now, we'll process sequentially
             if self.active_subagents:
                 task_id = list(self.active_subagents.keys())[0]
                 agent_task_id = self.active_subagents[task_id]
 
-                # Wait for subagent completion (via TaskOutput in real impl)
                 report = self._wait_for_subagent(task_id, agent_task_id)
 
-                # Process report
                 task = self.orchestrator.in_progress.get(task_id)
                 if task:
                     self._process_report(report, task)
 
-                # Remove from active
                 del self.active_subagents[task_id]
 
-            # Small delay (in event-driven system, would use callbacks)
             time.sleep(0.1)
 
     def _spawn_subagent(self, task: Task) -> None:
@@ -101,14 +92,10 @@ class ExecutionEngine:
         self.agent_counter += 1
         agent_id = f"agent-{self.agent_counter}"
 
-        # Build prompt for subagent
         prompt = self._build_agent_prompt(task, agent_id)
 
-        # Spawn subagent via Task tool (would be actual tool call in production)
-        # For now, we'll use a placeholder that simulates the delegation
         print(f"🚀 Spawning subagent {agent_id} for {task.id}")
 
-        # Track active subagent
         self.active_subagents[task.id] = agent_id
         self.agent_prompts[task.id] = prompt
         self.orchestrator.in_progress[task.id] = task
@@ -129,25 +116,22 @@ class ExecutionEngine:
         - Critical properties (SAFETY, LIVENESS, SECURITY)
         - Retry count (failed before, think harder)
         """
-        # Get retry count from tags
         retry_count = task.tags.count("retry") if hasattr(task, "tags") else 0
 
-        # Decide if extended thinking should be used
+        # NOTE: task.properties_satisfied contains PROP-### IDs, but the decider
         thinking_config = ExtendedThinkingDecider.should_use_extended_thinking(
             complexity=task.complexity.value,
-            properties=task.properties,
+            properties=[],
             retry_count=retry_count,
             has_dependencies=len(task.dependencies) > 0 if hasattr(task, "dependencies") else False,
         )
 
-        # Log decision
         if thinking_config.mode.value != "normal":
             print(f"   ⚡ Extended thinking enabled for {task.id}")
             print(f"      Reason: {thinking_config.reason}")
             if thinking_config.budget_tokens:
                 print(f"      Budget: {thinking_config.budget_tokens} tokens")
 
-        # Build prompt
         prompt_parts = [
             f"You are {agent_id}, a WFC implementation agent.",
             f"Task ID: {task.id}",
@@ -155,12 +139,10 @@ class ExecutionEngine:
             f"Task Description: {task.description}",
         ]
 
-        # Add extended thinking section if enabled
         thinking_section = thinking_config.to_prompt_section()
         if thinking_section:
             prompt_parts.append(thinking_section)
 
-        # Add TDD workflow with systematic debugging
         prompt_parts.extend(
             [
                 "",
@@ -198,7 +180,7 @@ class ExecutionEngine:
                 "CRITICAL: For all bug fixes, include root cause analysis (WHAT, WHY, WHERE, FIX).",
                 "See wfc/skills/implement/DEBUGGING.md for complete methodology.",
                 "",
-                f"Properties to satisfy: {', '.join(task.properties)}",
+                f"Properties to satisfy: {', '.join(task.properties_satisfied)}",
                 f"Acceptance criteria: {', '.join(task.acceptance_criteria)}",
             ]
         )
@@ -214,8 +196,6 @@ class ExecutionEngine:
         """
         print(f"⏳ Waiting for subagent {agent_id} to complete {task_id}")
 
-        # In production: Use TaskOutput tool to poll subagent progress
-        # For now, return mock report
         from .agent import AgentReport
 
         return AgentReport(
@@ -226,8 +206,7 @@ class ExecutionEngine:
             worktree_path=f".worktrees/{task_id}",
             commits=[{"sha": "mock123", "message": f"Implement {task_id}", "files_changed": []}],
             properties_satisfied={},
-            tests_passed=True,
-            test_results={},
+            tests={},
         )
 
     def _process_report(self, report: AgentReport, task: Task) -> None:
@@ -236,20 +215,15 @@ class ExecutionEngine:
             self.orchestrator.mark_task_failed(task.id)
             return
 
-        # Route through review (using mock for now)
         review_passed, review_report = self._review(report)
 
         if not review_passed:
-            # Phase 1: Mark as failed
-            # Phase 2: Implement retry logic with agent feedback loop
             self.orchestrator.mark_task_failed(task.id)
             return
 
-        # Route to PR workflow or direct merge based on config
-        merge_strategy = self.config.get("merge.strategy", "pr")  # Default to PR workflow
+        merge_strategy = self.config.get("merge.strategy", "pr")
 
         if merge_strategy == "pr":
-            # NEW: PR workflow (push branch + create GitHub PR)
             merge_result = self.merge_engine.create_pr(
                 task=task,
                 branch=report.branch,
@@ -257,7 +231,6 @@ class ExecutionEngine:
                 review_report=review_report,
             )
 
-            # Track PR creation
             if merge_result.pr_created:
                 self.orchestrator.mark_task_complete(
                     task.id,
@@ -271,12 +244,10 @@ class ExecutionEngine:
                 self.orchestrator.mark_task_failed(task.id)
 
         else:
-            # LEGACY: Direct merge to local main
             merge_result = self.merge_engine.merge(
                 task=task, branch=report.branch, worktree_path=Path(report.worktree_path)
             )
 
-            # Track rollbacks
             from .merge_engine import MergeStatus
 
             if merge_result.status == MergeStatus.ROLLED_BACK:
@@ -294,13 +265,13 @@ class ExecutionEngine:
         Returns:
             Tuple of (passed: bool, review_report: Optional[Dict])
         """
-        from wfc.skills.review.mock import mock_review
+        from wfc_review.mock import mock_review
 
         result = mock_review(
             files=report.commits[0]["files_changed"] if report.commits else [],
             properties=list(report.properties_satisfied.keys()),
             task_id=report.task_id,
-            mode="pass",  # For now, always pass
+            mode="pass",
         )
 
         return result["passed"], result

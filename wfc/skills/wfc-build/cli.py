@@ -13,7 +13,7 @@ from pathlib import Path
 wfc_root = Path(__file__).parent.parent.parent
 sys.path.insert(0, str(wfc_root))
 
-from wfc.skills.build.orchestrator import BuildOrchestrator  # noqa: E402
+from .orchestrator import BuildOrchestrator  # noqa: E402
 
 
 def main():

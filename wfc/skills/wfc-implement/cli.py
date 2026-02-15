@@ -15,7 +15,7 @@ from pathlib import Path
 from typing import Optional
 
 from wfc.shared.config import get_config
-from wfc.skills.implement.orchestrator import run_implementation
+from .orchestrator import run_implementation
 
 
 def cli_implement(args: Optional[list] = None) -> int:

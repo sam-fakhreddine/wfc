@@ -22,14 +22,27 @@ Protocol:
 from __future__ import annotations
 
 import json
+import logging
 import sys
+import time
+
+logger = logging.getLogger("wfc.hooks.pretooluse")
+_bypass_count = 0
 
 
 def main() -> None:
     """Main entry point for the PreToolUse hook."""
+    global _bypass_count
     try:
         _run()
-    except Exception:
+    except Exception as e:
+        _bypass_count += 1
+        logger.warning(
+            "Hook bypass: pretooluse_hook exception=%s time=%s bypass_count=%d",
+            type(e).__name__,
+            time.strftime("%Y-%m-%dT%H:%M:%S"),
+            _bypass_count,
+        )
         # CRITICAL: Never block due to hook bugs
         sys.exit(0)
 

@@ -10,24 +10,24 @@ Pattern matching uses compiled regexes cached via @lru_cache for performance.
 from __future__ import annotations
 
 import json
-import re
+import logging
+import time
 from dataclasses import dataclass, field
 from functools import lru_cache
 from pathlib import Path
 from typing import Optional
 
+from wfc.scripts.hooks._util import compile_regex, regex_timeout
 from wfc.scripts.hooks.hook_state import HookState
 
-# Directory containing pattern JSON files
+logger = logging.getLogger("wfc.hooks.security")
+
 PATTERNS_DIR = Path(__file__).parent / "patterns"
 
-# Tools that write file content
 FILE_WRITE_TOOLS = {"Write", "Edit", "NotebookEdit"}
 
-# Tools that run shell commands
 BASH_TOOLS = {"Bash"}
 
-# Map file extensions to language identifiers
 EXTENSION_TO_LANGUAGE: dict[str, str] = {
     ".py": "python",
     ".js": "javascript",
@@ -48,7 +48,7 @@ class PatternMatch:
 
     pattern_id: str
     description: str
-    action: str  # "block" or "warn"
+    action: str
     matched_text: str
 
 
@@ -56,7 +56,7 @@ class PatternMatch:
 class CheckResult:
     """Result of a security check."""
 
-    decision: str = ""  # "block", "warn", or "" (pass)
+    decision: str = ""
     reason: str = ""
     matches: list[PatternMatch] = field(default_factory=list)
 
@@ -65,15 +65,6 @@ class CheckResult:
         if not self.decision:
             return {}
         return {"decision": self.decision, "reason": self.reason}
-
-
-@lru_cache(maxsize=256)
-def _compile_pattern(pattern: str) -> Optional[re.Pattern]:
-    """Compile a regex pattern with caching. Returns None on invalid patterns."""
-    try:
-        return re.compile(pattern)
-    except re.error:
-        return None
 
 
 @lru_cache(maxsize=1)
@@ -92,7 +83,7 @@ def _load_patterns(patterns_dir: str = str(PATTERNS_DIR)) -> list[dict]:
                 p["_source"] = pattern_file.stem
             patterns.extend(file_patterns)
         except (json.JSONDecodeError, OSError, KeyError):
-            continue  # Skip malformed pattern files
+            continue
 
     return patterns
 
@@ -124,8 +115,6 @@ def _extract_content(tool_name: str, tool_input: dict) -> tuple[str, str, str]:
     """
     if tool_name in FILE_WRITE_TOOLS:
         file_path = tool_input.get("file_path", "") or tool_input.get("notebook_path", "")
-        # Write tool: content field
-        # Edit tool: new_string field
         # NotebookEdit: new_source field
         content = (
             tool_input.get("content", "")
@@ -137,6 +126,9 @@ def _extract_content(tool_name: str, tool_input: dict) -> tuple[str, str, str]:
         command = tool_input.get("command", "")
         return command, "", "bash"
     return "", "", ""
+
+
+_bypass_count = 0
 
 
 def check(input_data: dict, state: Optional[HookState] = None) -> dict:
@@ -152,10 +144,17 @@ def check(input_data: dict, state: Optional[HookState] = None) -> dict:
         {"decision": "block", "reason": "..."} if a blocking pattern matched.
         {"decision": "warn", "reason": "..."} if a warning pattern matched.
     """
+    global _bypass_count
     try:
         return _check_impl(input_data, state)
-    except Exception:
-        # CRITICAL: Never block due to hook bugs
+    except Exception as e:
+        _bypass_count += 1
+        logger.warning(
+            "Hook bypass: security_hook exception=%s time=%s bypass_count=%d",
+            type(e).__name__,
+            time.strftime("%Y-%m-%dT%H:%M:%S"),
+            _bypass_count,
+        )
         return {}
 
 
@@ -183,11 +182,9 @@ def _check_impl(input_data: dict, state: Optional[HookState] = None) -> dict:
     for pattern_def in all_patterns:
         pattern_event = pattern_def.get("event", "")
 
-        # Skip patterns that don't match the event type
         if pattern_event and pattern_event != event_type:
             continue
 
-        # For file patterns, check language or file_patterns match
         if event_type == "file":
             languages = pattern_def.get("languages")
             file_patterns = pattern_def.get("file_patterns")
@@ -195,23 +192,27 @@ def _check_impl(input_data: dict, state: Optional[HookState] = None) -> dict:
             if languages and file_language and file_language not in languages:
                 continue
             if languages and not file_language and not file_patterns:
-                # Unknown language and pattern requires specific languages - skip
                 continue
             if file_patterns and file_path and not _matches_file_pattern(file_path, file_patterns):
                 continue
             if file_patterns and not file_path:
                 continue
 
-        # Compile and match the regex
         regex_str = pattern_def.get("pattern", "")
         if not regex_str:
             continue
 
-        compiled = _compile_pattern(regex_str)
+        compiled = compile_regex(regex_str)
         if compiled is None:
             continue
 
-        match = compiled.search(content)
+        try:
+            with regex_timeout(1):
+                match = compiled.search(content)
+        except Exception:
+            logger.warning("Regex match timed out for pattern: %s", regex_str[:50])
+            continue
+
         if not match:
             continue
 
@@ -222,14 +223,12 @@ def _check_impl(input_data: dict, state: Optional[HookState] = None) -> dict:
         if action == "block":
             block_reasons.append(f"[{pattern_id}] {description}")
         elif action == "warn":
-            # Check if we already warned about this
             check_key = file_path or "__bash__"
             if state.has_warned(check_key, pattern_id):
                 continue
             state.mark_warned(check_key, pattern_id)
             warn_reasons.append(f"[{pattern_id}] {description}")
 
-    # Blocks take priority over warnings
     if block_reasons:
         return {
             "decision": "block",

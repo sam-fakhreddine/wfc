@@ -4,8 +4,7 @@ Tests for WFC Build Complexity Assessor
 Verifies PROP-006: Deterministic complexity assessment
 """
 
-import pytest
-from wfc.scripts.skills.build.complexity_assessor import ComplexityAssessor, ComplexityRating
+from wfc.scripts.skills.build.complexity_assessor import ComplexityAssessor
 from wfc.scripts.skills.build.interview import InterviewResult
 
 

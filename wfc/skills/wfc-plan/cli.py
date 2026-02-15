@@ -12,7 +12,7 @@ from .orchestrator import PlanOrchestrator
 
 # Import from shared (two levels up from skills/plan)
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
-from shared.telemetry import get_telemetry
+from shared.telemetry_auto import log_event
 from shared.config import get_config
 
 
@@ -25,7 +25,6 @@ class PlanCLI:
 
     def __init__(self):
         self.config = get_config()
-        self.telemetry = get_telemetry()
 
     def run(self, output_dir: Optional[str] = None) -> int:
         """
@@ -52,8 +51,8 @@ class PlanCLI:
             self._print_results(result)
 
             # Record telemetry
-            self.telemetry.record(
-                "plan",
+            log_event(
+                "plan_complete",
                 {
                     "status": "success",
                     "output_dir": str(result.output_dir),
@@ -67,7 +66,7 @@ class PlanCLI:
 
         except Exception as e:
             self._print_error(f"Planning failed: {e}")
-            self.telemetry.record("plan", {"status": "error", "error": str(e)})
+            log_event("plan_error", {"status": "error", "error": str(e)})
             return 1
 
     def _print_header(self) -> None:

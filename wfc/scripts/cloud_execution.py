@@ -9,8 +9,8 @@ DESIGN DOCUMENT (Not Yet Implemented)
 This document outlines the architecture for distributed WFC execution.
 """
 
-from dataclasses import dataclass
-from typing import List, Dict, Any
+from dataclasses import dataclass, field
+from typing import List, Dict, Any, Optional
 from enum import Enum
 
 
@@ -33,12 +33,12 @@ class CloudAgentSpec:
     model: str  # opus, sonnet, haiku
     memory_mb: int = 2048
     timeout_seconds: int = 600
-    environment: Dict[str, str] = None
+    environment: Optional[Dict[str, str]] = field(default=None)
 
     # Cloud-specific
     provider: CloudProvider = CloudProvider.MODAL
     region: str = "us-west-2"
-    retry_policy: Dict[str, Any] = None
+    retry_policy: Optional[Dict[str, Any]] = field(default=None)
 
 
 class CloudExecutionArchitecture:

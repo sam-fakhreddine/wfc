@@ -22,6 +22,9 @@ import sys
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
+# Activate PEP 562 import bridge for hyphenated skill directory (wfc-implement → wfc_implement)
+from wfc.skills import wfc_implement  # noqa: F401
+
 from wfc.scripts.confidence_checker import (
     ConfidenceChecker,
     ConfidenceLevel,
@@ -34,7 +37,6 @@ from wfc.scripts.memory_manager import (
 from wfc.scripts.token_manager import (
     TokenManager,
     TaskComplexity,
-    TokenBudget,
 )
 from wfc.scripts.universal_quality_checker import (
     UniversalQualityChecker,
@@ -404,7 +406,7 @@ class TestFailureSeverity:
 
     def test_severity_classification(self):
         """Test that warnings don't block but errors do."""
-        from wfc.skills.implement.merge_engine import FailureSeverity
+        from wfc_implement.merge_engine import FailureSeverity
 
         # WARNING severity should not block
         assert FailureSeverity.WARNING.value == "warning"
