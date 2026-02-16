@@ -54,6 +54,7 @@ class BudgetResult:
     passed: bool
     report: str
     severity: str = "warning"  # Always warning, never blocking
+    unknown_complexity: bool = False  # True when input was coerced to XL
 
     def to_dict(self) -> Dict:
         """Convert to dictionary for serialization."""
@@ -69,6 +70,7 @@ class BudgetResult:
             "passed": self.passed,
             "report": self.report,
             "severity": self.severity,
+            "unknown_complexity": self.unknown_complexity,
         }
 
 
@@ -94,11 +96,14 @@ def check_complexity_budget(
         >>> assert result.passed is False
     """
     # Normalize complexity rating
+    original_complexity = complexity
     complexity = complexity.upper()
 
     # Get budget for this complexity tier
+    unknown_complexity = False
     if complexity not in COMPLEXITY_BUDGETS:
         # Unknown complexity - treat as XL budget
+        unknown_complexity = True
         budget = COMPLEXITY_BUDGETS["XL"]
     else:
         budget = COMPLEXITY_BUDGETS[complexity]
@@ -130,6 +135,9 @@ def check_complexity_budget(
             files_exceeded,
         )
 
+    if unknown_complexity:
+        report += f"\n\nNote: Unknown complexity rating '{original_complexity}', defaulted to 'XL'."
+
     return BudgetResult(
         task_id=task_id,
         complexity=complexity,
@@ -142,6 +150,7 @@ def check_complexity_budget(
         passed=passed,
         report=report,
         severity="warning",
+        unknown_complexity=unknown_complexity,
     )
 
 

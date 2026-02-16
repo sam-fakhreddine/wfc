@@ -36,16 +36,24 @@ def compute_say_do_ratio(tasks: List[Dict]) -> float:
         return 0.0
 
     on_estimate = 0
+    valid_tasks = 0
     for task in tasks:
         est = task.get("estimated_complexity")
         act = task.get("actual_complexity")
+        # Skip tasks missing complexity fields — None == None is True
+        # but semantically a task with no complexity data is not "on-estimate"
+        if est is None or act is None:
+            continue
+        valid_tasks += 1
         qg_passed = task.get("quality_gate_passed", True)
         re_est = task.get("re_estimated", False)
 
         if est == act and qg_passed and not re_est:
             on_estimate += 1
 
-    return on_estimate / len(tasks)
+    if valid_tasks == 0:
+        return 0.0
+    return on_estimate / valid_tasks
 
 
 def aggregate_values_alignment(entries: List[ReflexionEntry]) -> Dict[str, Dict[str, int]]:

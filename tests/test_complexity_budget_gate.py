@@ -225,12 +225,16 @@ class TestComplexityBudgetGate:
         assert result_upper.complexity == "S"
 
     def test_unknown_complexity_defaults_to_xl(self):
-        """TEST-019: Unknown complexity defaults to XL budget"""
+        """TEST-019: Unknown complexity defaults to XL budget with warning"""
         result = check_complexity_budget("TASK-020", "UNKNOWN", 800, 15)
 
         assert result.passed is True
         assert result.lines_budget == 1000  # XL budget
         assert result.files_budget == 20  # XL budget
+        assert result.unknown_complexity is True
+        assert "Unknown complexity rating" in result.report
+        assert "'UNKNOWN'" in result.report
+        assert "defaulted to 'XL'" in result.report
 
     def test_severity_always_warning(self):
         """TEST-020: Budget exceedance is always warning, never blocking"""
@@ -258,6 +262,7 @@ class TestComplexityBudgetGate:
         assert data["files_exceeded"] == 1
         assert data["passed"] is False
         assert data["severity"] == "warning"
+        assert data["unknown_complexity"] is False
         assert isinstance(data["report"], str)
 
     def test_percentage_calculation_in_report(self):

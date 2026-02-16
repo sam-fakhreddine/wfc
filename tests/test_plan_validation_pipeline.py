@@ -11,8 +11,7 @@ import hashlib
 import json
 from pathlib import Path
 
-
-SKILL_MD_PATH = Path.home() / ".claude" / "skills" / "wfc-plan" / "SKILL.md"
+SKILL_MD_PATH = Path(__file__).resolve().parent.parent / "wfc" / "skills" / "wfc-plan" / "SKILL.md"
 
 
 # ---------------------------------------------------------------------------
