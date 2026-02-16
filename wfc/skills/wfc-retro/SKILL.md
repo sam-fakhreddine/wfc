@@ -14,6 +14,7 @@ Analyzes WFC telemetry to identify improvements and optimize workflows.
 2. **Trend Analyzer** - Identifies patterns over time
 3. **Bottleneck Detector** - Finds slow/failing tasks
 4. **Recommendation Generator** - Actionable improvements
+5. **Values Alignment Tracker** - TEAMCHARTER values adherence via Say:Do ratio
 
 ## Usage
 
@@ -37,13 +38,63 @@ Analyzes WFC telemetry to identify improvements and optimize workflows.
 - **Quality** - Review failures, test failures, rollbacks
 - **Efficiency** - Agent utilization, parallel vs sequential
 - **Patterns** - Common failure modes, success patterns
+- **Values Alignment** - TEAMCHARTER values adherence across sprint
+
+## TEAMCHARTER Values Alignment
+
+Every retro report MUST include a **"## TEAMCHARTER Values Alignment"** section with the following subsections:
+
+### Say:Do Ratio
+
+Compute and display the Say:Do ratio using `wfc.scripts.memory.saydo.compute_say_do_ratio`.
+The ratio measures how accurately the team estimates and delivers:
+
+```
+Say:Do Ratio = tasks_completed_at_estimated_complexity / total_tasks
+```
+
+A task is "on-estimate" when:
+- Estimated complexity matches actual complexity (S stayed S, M stayed M)
+- No re-estimation was needed
+- No quality gate failures
+
+Display format:
+```
+**Say:Do Ratio: 0.75** (6 of 8 tasks on-estimate)
+```
+
+### Values Adherence Chart
+
+Generate a Mermaid bar chart showing upheld vs violated counts per value using
+`wfc.scripts.memory.saydo.generate_values_mermaid_chart`. Data is aggregated from
+`ReflexionEntry.team_values_impact` fields via `aggregate_values_alignment`.
+
+### Recommendations
+
+Generate actionable recommendations tied to specific values using
+`wfc.scripts.memory.saydo.generate_values_recommendations`. Each recommendation
+MUST reference the specific value and include concrete data (e.g., "Simplicity score
+dropped -- 3 tasks exceeded complexity budget").
+
+### Implementation Reference
+
+```python
+from wfc.scripts.memory.saydo import (
+    compute_say_do_ratio,
+    aggregate_values_alignment,
+    generate_values_mermaid_chart,
+    generate_values_recommendations,
+)
+```
 
 ## Outputs
 
 - .development/summaries/RETRO-REPORT.md
 - Trend charts (Mermaid)
+- Values adherence chart (Mermaid xychart-beta)
+- Say:Do ratio
 - Top bottlenecks
-- Prioritized recommendations
+- Prioritized recommendations (including values-specific)
 
 ## Philosophy
 
