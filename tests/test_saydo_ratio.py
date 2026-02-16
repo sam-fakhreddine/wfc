@@ -142,6 +142,34 @@ class TestComputeSayDoRatio:
         # So complexity matches + defaults => on-estimate
         assert compute_say_do_ratio(tasks) == 1.0
 
+    def test_say_do_ratio_none_complexity_skipped(self):
+        """Tasks with None complexity fields are skipped, not counted as on-estimate."""
+        tasks = [
+            {
+                "task_id": "TASK-001",
+                # Both complexity fields missing → None == None is True
+                # but should NOT count as on-estimate
+            },
+            {
+                "task_id": "TASK-002",
+                "estimated_complexity": "S",
+                "actual_complexity": None,
+            },
+            {
+                "task_id": "TASK-003",
+                "estimated_complexity": None,
+                "actual_complexity": "M",
+            },
+            {
+                "task_id": "TASK-004",
+                "estimated_complexity": "S",
+                "actual_complexity": "S",
+            },
+        ]
+        # Only TASK-004 has valid complexity data and matches → 1/1
+        # TASK-001/002/003 are skipped (None fields)
+        assert compute_say_do_ratio(tasks) == 1.0
+
 
 # ---------------------------------------------------------------------------
 # aggregate_values_alignment
