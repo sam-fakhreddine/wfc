@@ -93,8 +93,8 @@ class TestTEAMCHARTERQuestions:
         interviewer = AdaptiveInterviewer()
         questions = {q.id: q for q in interviewer.questions}
 
-        # Simulate selecting customer_focus
-        interviewer.answers["teamcharter_values"] = "customer_focus"
+        # Simulate selecting customer_focus in a multi_choice answer (list)
+        interviewer.answers["teamcharter_values"] = ["innovation", "customer_focus"]
 
         customer_success_q = questions["customer_success"]
         assert interviewer.should_ask(customer_success_q) is True
@@ -104,11 +104,45 @@ class TestTEAMCHARTERQuestions:
         interviewer = AdaptiveInterviewer()
         questions = {q.id: q for q in interviewer.questions}
 
-        # Simulate NOT selecting customer_focus
-        interviewer.answers["teamcharter_values"] = "innovation"
+        # Simulate NOT selecting customer_focus (list without customer_focus)
+        interviewer.answers["teamcharter_values"] = ["innovation", "accountability"]
 
         customer_success_q = questions["customer_success"]
         assert interviewer.should_ask(customer_success_q) is False
+
+    def test_should_ask_with_multi_choice_list_answer(self):
+        """Test should_ask handles list answers (multi_choice) correctly"""
+        interviewer = AdaptiveInterviewer()
+        questions = {q.id: q for q in interviewer.questions}
+
+        # Test with customer_focus in list
+        interviewer.answers["teamcharter_values"] = ["innovation", "customer_focus", "trust"]
+        customer_success_q = questions["customer_success"]
+        assert interviewer.should_ask(customer_success_q) is True
+
+        # Test with customer_focus not in list
+        interviewer.answers["teamcharter_values"] = ["innovation", "trust"]
+        assert interviewer.should_ask(customer_success_q) is False
+
+        # Test with customer_focus as only item
+        interviewer.answers["teamcharter_values"] = ["customer_focus"]
+        assert interviewer.should_ask(customer_success_q) is True
+
+    def test_should_ask_with_scalar_answer(self):
+        """Test should_ask still handles scalar answers correctly (existing_code dependency)"""
+        interviewer = AdaptiveInterviewer()
+        questions = {q.id: q for q in interviewer.questions}
+
+        # Test existing scalar dependency (existing_code -> codebase_path)
+        codebase_path_q = questions["codebase_path"]
+
+        # Scalar match
+        interviewer.answers["existing_code"] = "existing_codebase"
+        assert interviewer.should_ask(codebase_path_q) is True
+
+        # Scalar no match
+        interviewer.answers["existing_code"] = "new_project"
+        assert interviewer.should_ask(codebase_path_q) is False
 
     def test_unconditional_teamcharter_questions(self):
         """Test that 3 TEAMCHARTER questions are unconditional (always asked)"""

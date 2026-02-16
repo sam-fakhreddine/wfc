@@ -371,9 +371,9 @@ Invoke `/wfc-review` on the revised plan using architecture and quality personas
 
 ### Step 5: Audit Trail
 
-After the review gate passes (or validation is skipped), write a `plan-audit.json` file in the plan directory. The filename includes a timestamp for immutability (e.g., `plan-audit_20260215_103000.json`).
+After the review gate passes (or validation is skipped), write a `plan-audit.json` file (timestamped) in the plan directory. The filename includes a timestamp for immutability (e.g., `plan-audit_20260215_103000.json`).
 
-**Required schema for plan-audit.json:**
+**Required schema for plan-audit_YYYYMMDD_HHMMSS.json:**
 
 ```json
 {
@@ -410,7 +410,7 @@ If `--skip-validation` is passed as an argument:
 
 1. Skip Steps 2-4 entirely (no IsThisSmart Gate, no Review Gate, no revision)
 2. Still compute SHA-256 hashes (original_hash = final_hash since no changes were made)
-3. Write `plan-audit.json` with `"skipped": true` and `"validated": false`
+3. Write `plan-audit_YYYYMMDD_HHMMSS.json` with `"skipped": true` and `"validated": false`
 4. Do not generate `revision-log.md` (no revisions occurred)
 5. Record `- **Validated:** skipped` in HISTORY.md
 
@@ -422,7 +422,7 @@ If `--skip-validation` is passed as an argument:
 | 2 | `/wfc-isthissmart` with `<plan-content>` XML tags (PROP-009) | ISTHISSMART.md |
 | 3 | Apply Must-Do + low-effort Should-Do revisions | revision-log.md, updated plan files |
 | 4 | `/wfc-review` with `<plan-content>` XML tags (PROP-009), loop until >= 8.5 | Review consensus |
-| 5 | Write plan-audit.json with all fields | plan-audit.json |
+| 5 | Write plan-audit_YYYYMMDD_HHMMSS.json with all fields | plan-audit_YYYYMMDD_HHMMSS.json |
 | 6 | Update HISTORY.md with validation status | HISTORY.md entry |
 
 ## Example Flow
@@ -454,7 +454,7 @@ IsThisSmart Gate: 7.8/10
 Review Gate round 1: 8.1/10 - applying 2 findings
 Review Gate round 2: 8.7/10 - PASSED
 Wrote revision-log.md
-Wrote plan-audit.json
+Wrote plan-audit_YYYYMMDD_HHMMSS.json
 
 [OUTPUT]
 plans/plan_rest_api_20260215_103000/

@@ -193,7 +193,12 @@ class AdaptiveInterviewer:
             return False
 
         if question.condition:
-            return self.answers[question.depends_on] == question.condition
+            answer = self.answers[question.depends_on]
+            # Handle both list (multi_choice) and scalar answers
+            if isinstance(answer, list):
+                return question.condition in answer
+            else:
+                return answer == question.condition
 
         return True
 

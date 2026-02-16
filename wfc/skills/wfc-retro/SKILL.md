@@ -50,7 +50,7 @@ Compute and display the Say:Do ratio using `wfc.scripts.memory.saydo.compute_say
 The ratio measures how accurately the team estimates and delivers:
 
 ```
-Say:Do Ratio = tasks_completed_at_estimated_complexity / total_tasks
+Say:Do Ratio = tasks_completed_at_estimated_complexity / tasks_with_valid_complexity
 ```
 
 A task is "on-estimate" when:
@@ -73,7 +73,7 @@ Generate a Mermaid bar chart showing upheld vs violated counts per value using
 
 Generate actionable recommendations tied to specific values using
 `wfc.scripts.memory.saydo.generate_values_recommendations`. Each recommendation
-MUST reference the specific value and include concrete data (e.g., "Simplicity score
+MUST reference the specific TEAMCHARTER value and SHOULD include concrete examples when supporting telemetry is available (e.g., "Simplicity score
 dropped -- 3 tasks exceeded complexity budget").
 
 ### Implementation Reference
