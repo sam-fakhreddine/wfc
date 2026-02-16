@@ -5,7 +5,7 @@ Gathers requirements through intelligent questioning.
 Adapts questions based on previous answers.
 """
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import List, Dict, Any, Optional
 from pathlib import Path
 import json
@@ -34,6 +34,7 @@ class InterviewResult:
     technologies: List[str]
     properties: List[Dict[str, Any]]
     raw_answers: Dict[str, Any]
+    team_values_context: Dict[str, Any] = field(default_factory=dict)
 
     def to_dict(self) -> Dict[str, Any]:
         return {
@@ -44,6 +45,7 @@ class InterviewResult:
             "technologies": self.technologies,
             "properties": self.properties,
             "raw_answers": self.raw_answers,
+            "team_values_context": self.team_values_context,
         }
 
     def save(self, path: Path) -> None:
@@ -148,6 +150,38 @@ class AdaptiveInterviewer:
                 text="What test coverage target? (e.g., 80%, critical paths only)",
                 type="text",
             ),
+            # TEAMCHARTER Alignment
+            Question(
+                id="teamcharter_values",
+                text="Which TEAMCHARTER values are most relevant to this feature? (innovation, accountability, teamwork, learning, customer_focus, trust)",
+                type="multi_choice",
+                options=[
+                    "innovation",
+                    "accountability",
+                    "teamwork",
+                    "learning",
+                    "customer_focus",
+                    "trust",
+                ],
+            ),
+            Question(
+                id="customer_stakeholder",
+                text="Who is the primary customer/stakeholder for this work?",
+                type="text",
+            ),
+            Question(
+                id="customer_success",
+                text="What does success look like from the customer's perspective?",
+                type="text",
+                depends_on="teamcharter_values",
+                condition="customer_focus",
+            ),
+            Question(
+                id="speed_quality_tradeoff",
+                text="What trade-offs between speed and quality are acceptable?",
+                type="choice",
+                options=["speed_first", "balanced", "quality_first"],
+            ),
         ]
 
     def should_ask(self, question: Question) -> bool:
@@ -224,6 +258,19 @@ class AdaptiveInterviewer:
         if liveness := self.answers.get("liveness_required"):
             properties.append({"type": "LIVENESS", "statement": liveness, "priority": "high"})
 
+        # Extract TEAMCHARTER values context
+        team_values_context = {}
+        if tc_values := self.answers.get("teamcharter_values"):
+            team_values_context["primary_values"] = (
+                tc_values if isinstance(tc_values, list) else [tc_values]
+            )
+        if customer := self.answers.get("customer_stakeholder"):
+            team_values_context["customer"] = customer
+        if success := self.answers.get("customer_success"):
+            team_values_context["success_metric"] = success
+        if tradeoff := self.answers.get("speed_quality_tradeoff"):
+            team_values_context["speed_quality_tradeoff"] = tradeoff
+
         return InterviewResult(
             goal=goal,
             context=context,
@@ -232,6 +279,7 @@ class AdaptiveInterviewer:
             technologies=technologies,
             properties=properties,
             raw_answers=self.answers,
+            team_values_context=team_values_context,
         )
 
 

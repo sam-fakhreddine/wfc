@@ -75,6 +75,47 @@ wfc validate                     # Validate skills (after install)
 - Complex dependencies
 - Need formal properties (SAFETY, LIVENESS, etc.)
 
+#### TEAMCHARTER-Validated Planning
+
+**All plans go through TEAMCHARTER validation** to ensure alignment with core values (Innovation, Accountability, Teamwork, Learning, Customer Focus, Trust).
+
+**Validated Plan Flow:**
+
+```
+1. Generate Plan (wfc-plan)
+   ↓
+2. IsThisSmart Review (7-dimension critique)
+   ↓
+3. Revise Plan (based on feedback)
+   ↓
+4. Code Review Loop (5 expert personas)
+   ↓ (iterate until score >= 8.5)
+5. Final Plan (ready for implementation)
+```
+
+**What happens:**
+- Plan generator creates initial TASKS.md with values alignment
+- IsThisSmart skill performs 7-dimension critique (complexity, risk, customer value, etc.)
+- Plan is revised based on feedback
+- Multi-agent code review validates quality (loops until 8.5+ weighted score)
+- Final plan includes immutable audit trail showing validation was performed
+
+**Governance Documents:**
+- `wfc/references/TEAMCHARTER.md` - Values governance (human-readable)
+- `wfc/references/teamcharter_values.json` - Machine-readable values schema
+
+**Bypass (not recommended):**
+```bash
+# Skip validation (creates audit trail entry)
+wfc plan --skip-validation
+```
+
+**Why TEAMCHARTER validation:**
+- Prevents over-engineering through complexity budgets
+- Ensures customer focus through dedicated interview questions
+- Tracks Say:Do ratio (estimated vs. actual complexity)
+- Enables retrospective learning through values alignment tracking
+
 ### Git Workflow Policy (v3.0 - Autonomous Branching)
 
 **Versioning:** Use autosemver for automatic semantic versioning (BREAKING CHANGES, feat:, fix:)

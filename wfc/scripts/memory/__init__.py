@@ -13,6 +13,12 @@ SOLID Architecture:
 from .schemas import ReflexionEntry, WorkflowMetric, OperationalPattern
 from .reflexion import ReflexionLogger
 from .metrics import MetricsLogger
+from .saydo import (
+    compute_say_do_ratio,
+    aggregate_values_alignment,
+    generate_values_mermaid_chart,
+    generate_values_recommendations,
+)
 from .pattern_detector import PatternDetector
 from .ops_tasks import OpsTasksGenerator
 from .manager import MemoryManager
@@ -26,4 +32,8 @@ __all__ = [
     "PatternDetector",
     "OpsTasksGenerator",
     "MemoryManager",
+    "compute_say_do_ratio",
+    "aggregate_values_alignment",
+    "generate_values_mermaid_chart",
+    "generate_values_recommendations",
 ]

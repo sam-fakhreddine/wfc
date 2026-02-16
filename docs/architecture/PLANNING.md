@@ -123,6 +123,41 @@ Planned enhancements:
 - Advanced pattern learning
 - Distributed execution (cloud agents)
 
+### TEAMCHARTER Governance (v0.1.1+)
+
+**Values-Driven Workflow**: All plans are validated against 6 core values
+
+**6 Core Values**:
+1. **Innovation & Experimentation** - Embrace failure as learning, validate through critique
+2. **Accountability & Simplicity** - Complexity budgets, Say:Do ratio tracking
+3. **Teamwork & Collaboration** - Multi-agent consensus, customer advocate persona
+4. **Continuous Learning & Curiosity** - ReflexionMemory, retrospective analysis
+5. **Customer Focus & Service Excellence** - Customer-centric interview questions
+6. **Trust & Autonomy** - Confidence thresholds, informed decision-making
+
+**Enforcement Mechanisms**:
+- **Complexity Budgets**: Pre-gate flags when tasks exceed S/M/L/XL limits
+- **Interview Questions**: "Who is the customer?", "What does success look like?"
+- **Review Personas**: Customer Advocate ensures stakeholder voice in reviews
+- **Memory Tracking**: Values alignment field in reflexion entries
+- **Audit Trails**: Immutable proof that validation was performed
+
+**Validated Plan Flow**:
+
+```
+Plan Generation → IsThisSmart (7D critique) → Revise → Code Review (loop to 8.5+) → Final
+```
+
+**Governance Documents**:
+- `wfc/references/TEAMCHARTER.md` - Human-readable values and enforcement
+- `wfc/references/teamcharter_values.json` - Machine-readable schema for agents
+
+**Why This Matters**:
+- Prevents over-engineering through evidence-based complexity assessment
+- Ensures customer value is central to every task
+- Builds institutional memory through values-aligned retrospectives
+- Provides accountability through Say:Do ratio tracking
+
 ---
 
 ## ⚙️ Design Principles
