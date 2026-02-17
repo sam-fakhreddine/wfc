@@ -176,6 +176,7 @@ WFC autonomous loop:
 | Fix PR comments | `/wfc-pr-comments` | Triage & fix review feedback |
 | Sync rules | `/wfc-sync` | Discover patterns & sync rules |
 | Agentic workflows | `/wfc-agentic` | Generate gh-aw workflows |
+| Business analysis | `/wfc-ba` | Requirements gathering & BA docs |
 
 **Note:** wfc-vibe is the default conversational mode. Just chat naturally - when you're ready to implement, say "let's plan this" or "let's build this".
 
@@ -315,8 +316,8 @@ WFC - World Fucking Class
 │   ├── wfc-playground/           # Interactive HTML playground generator
 │   ├── wfc-sync/                # Rule/pattern discovery & sync
 │   ├── wfc-agentic/             # GitHub Agentic Workflows (gh-aw) generator
-│   └── ... (19 total)
-│   └── ... (20 total)
+│   ├── wfc-ba/                  # Business analysis & requirements gathering
+│   └── ... (21 total)
 │
 ├── docs/                         # Documentation (organized by topic)
 │   ├── architecture/             # System design, planning
@@ -598,8 +599,8 @@ All 19 WFC skills are Agent Skills compliant:
 - Review system: ~200 tests (engine, fingerprint, CS, CLI, E2E, benchmark)
 
 **Agent Skills Compliance**:
-- Valid skills: 20/20 (100%)
-- XML generation: 20/20 (100%)
+- Valid skills: 21/21 (100%)
+- XML generation: 21/21 (100%)
 
 ## 🔍 Quick Reference
 

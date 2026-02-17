@@ -975,6 +975,7 @@ echo "  • ${CYAN}/wfc-init${RESET}        - Project initialization tool"
 echo "  • ${CYAN}/wfc-vibe${RESET}         - Natural brainstorming mode"
 echo "  • ${CYAN}/wfc-sync${RESET}        - Sync rules & discover patterns"
 echo "  • ${CYAN}/wfc-agentic${RESET}     - GitHub Agentic Workflows (gh-aw)"
+echo "  • ${CYAN}/wfc-ba${RESET}          - Business analysis & requirements"
 
 echo ""
 echo -e "${BOLD}🚀 Next Steps${RESET}"
