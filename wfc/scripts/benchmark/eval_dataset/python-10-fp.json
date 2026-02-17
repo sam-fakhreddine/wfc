@@ -1,0 +1,8 @@
+{
+  "id": "python-10-fp",
+  "language": "python",
+  "example_type": "false_positive_trap",
+  "source_code": "# Public API surface for this package\n__all__ = ['connect', 'disconnect', 'send']\n\nfrom ._impl import connect, disconnect, send  # noqa: F401\n",
+  "findings": [],
+  "notes": "__all__ restricting the public surface and importing with F401 suppression looks like unused imports, but is correct package API design."
+}

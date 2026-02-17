@@ -1,0 +1,8 @@
+{
+  "id": "go-10-fp",
+  "language": "go",
+  "example_type": "false_positive_trap",
+  "source_code": "// startWorkers launches workers with explicit job copy (Go < 1.22 safe)\nfunc startWorkers(jobs []string) {\n\tfor _, job := range jobs {\n\t\tjob := job // shadow to capture by value\n\t\tgo func() {\n\t\t\tprocess(job)\n\t\t}()\n\t}\n}\n\nfunc process(job string) {}\n",
+  "findings": [],
+  "notes": "The 'job := job' shadow pattern looks redundant but is the canonical pre-Go-1.22 fix for loop variable capture. The inner job is a new variable per iteration, not the shared loop variable."
+}

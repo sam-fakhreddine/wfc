@@ -1,0 +1,16 @@
+{
+  "id": "typescript-02-tp",
+  "language": "typescript",
+  "example_type": "true_positive",
+  "source_code": "function getLength(value: string | null): number {\n  return value.length;\n}\n",
+  "findings": [
+    {
+      "line_start": 2,
+      "line_end": 2,
+      "category": "null-dereference",
+      "severity": 8.0,
+      "description": "value can be null but is accessed without a null check; will throw TypeError at runtime"
+    }
+  ],
+  "notes": "Missing null guard on a nullable type. Should check 'if (value === null) return 0'."
+}

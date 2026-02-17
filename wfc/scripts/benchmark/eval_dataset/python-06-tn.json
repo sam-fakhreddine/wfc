@@ -1,0 +1,8 @@
+{
+  "id": "python-06-tn",
+  "language": "python",
+  "example_type": "true_negative",
+  "source_code": "from pathlib import Path\n\ndef read_config(path: Path) -> str:\n    with open(path, 'r', encoding='utf-8') as fh:\n        return fh.read()\n",
+  "findings": [],
+  "notes": "Context manager guarantees file closure; typed, encoding explicit. No issues."
+}

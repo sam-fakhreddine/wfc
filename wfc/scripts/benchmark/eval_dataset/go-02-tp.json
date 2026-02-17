@@ -1,0 +1,16 @@
+{
+  "id": "go-02-tp",
+  "language": "go",
+  "example_type": "true_positive",
+  "source_code": "func startWorkers(jobs []string) {\n\tfor _, job := range jobs {\n\t\tgo func() {\n\t\t\tprocess(job)\n\t\t}()\n\t}\n}\n\nfunc process(job string) {}\n",
+  "findings": [
+    {
+      "line_start": 3,
+      "line_end": 5,
+      "category": "goroutine-closure-capture",
+      "severity": 7.0,
+      "description": "Goroutine captures loop variable 'job' by reference (pre-Go 1.22 semantics); all goroutines may see the last value of job"
+    }
+  ],
+  "notes": "Classic goroutine loop variable capture bug. Fixed in Go 1.22+ loop variable semantics, but still a bug in earlier versions."
+}

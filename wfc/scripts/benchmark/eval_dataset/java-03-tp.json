@@ -1,0 +1,16 @@
+{
+  "id": "java-03-tp",
+  "language": "java",
+  "example_type": "true_positive",
+  "source_code": "public String readFile(String path) throws IOException {\n    FileReader reader = new FileReader(path);\n    BufferedReader br = new BufferedReader(reader);\n    return br.lines().collect(Collectors.joining(\"\\n\"));\n}\n",
+  "findings": [
+    {
+      "line_start": 2,
+      "line_end": 4,
+      "category": "resource-leak",
+      "severity": 7.0,
+      "description": "FileReader and BufferedReader are never closed; an exception during reading or if the caller discards the result will leak file descriptors"
+    }
+  ],
+  "notes": "Should use try-with-resources: 'try (BufferedReader br = new BufferedReader(new FileReader(path)))'."
+}

@@ -23,7 +23,6 @@ from wfc.scripts.skills.review.agents import ReviewComment
 from wfc.scripts.skills.review.consensus import ConsensusAlgorithm
 from wfc.scripts.skills.review.agents import AgentReview, AgentType
 
-# Import architecture_designer from hyphenated directory via importlib
 _arch_designer_path = (
     Path(__file__).parent.parent / "wfc" / "skills" / "wfc-plan" / "architecture_designer.py"
 )
@@ -34,9 +33,6 @@ ArchitectureDesigner = _arch_mod.ArchitectureDesigner
 ArchitectureApproach = _arch_mod.ArchitectureApproach
 
 
-# ============================================================================
-# Hook Infrastructure Tests
-# ============================================================================
 
 
 class TestHookState:
@@ -398,9 +394,6 @@ class TestPreToolUseDispatcher:
         assert result.returncode == 0
 
 
-# ============================================================================
-# Review Enhancement Tests
-# ============================================================================
 
 
 class TestConfidenceFiltering:
@@ -482,7 +475,6 @@ class TestConfidenceFiltering:
         algo = ConsensusAlgorithm()
         result = algo.calculate(reviews, confidence_threshold=80)
 
-        # The low-confidence comment (30) should be filtered out
         assert len(result.all_comments) == 1
         assert result.all_comments[0].message == "Definite issue"
 
@@ -531,7 +523,6 @@ class TestConfidenceFiltering:
         algo = ConsensusAlgorithm()
         result = algo.calculate(reviews, confidence_threshold=80)
 
-        # Critical should be included even though confidence is 10
         assert len(result.all_comments) == 1
         assert result.all_comments[0].severity == "critical"
 
@@ -598,7 +589,6 @@ class TestConfidenceFiltering:
         algo = ConsensusAlgorithm()
         result = algo.calculate(reviews, confidence_threshold=80)
 
-        # 2 comments below threshold (confidence 10 and 20), 1 above (90)
         assert result.filtered_count == 2
         assert len(result.all_comments) == 1
 
@@ -644,105 +634,33 @@ class TestConfidenceFiltering:
 
 
 class TestReviewRequestFields:
-    """Test new ReviewRequest fields."""
+    """Test ReviewRequest fields after v2.0 rewrite."""
 
-    def test_confidence_threshold_default(self):
-        """Default confidence_threshold is 80."""
+    def test_review_request_defaults(self):
+        """ReviewRequest has sensible defaults for optional fields."""
         from wfc.scripts.skills.review.orchestrator import ReviewRequest
 
         req = ReviewRequest(
             task_id="TASK-001",
             files=["test.py"],
-            properties=[],
-            test_results={},
         )
-        assert req.confidence_threshold == 80
+        assert req.diff_content == ""
+        assert req.properties == []
 
-    def test_simplify_default(self):
-        """Default simplify is False."""
+    def test_review_request_with_all_fields(self):
+        """ReviewRequest accepts all fields."""
         from wfc.scripts.skills.review.orchestrator import ReviewRequest
 
         req = ReviewRequest(
             task_id="TASK-001",
             files=["test.py"],
-            properties=[],
-            test_results={},
+            diff_content="diff --git a/test.py",
+            properties=[{"name": "SAFETY"}],
         )
-        assert req.simplify is False
+        assert req.task_id == "TASK-001"
+        assert req.diff_content == "diff --git a/test.py"
 
 
-# ============================================================================
-# Persona Tests
-# ============================================================================
-
-
-class TestNewPersonas:
-    """Test new persona JSON files load correctly."""
-
-    PERSONAS_BASE = Path(__file__).parent.parent / "wfc" / "references" / "personas" / "panels"
-
-    def test_silent_failure_hunter_loads(self):
-        """Load JSON, verify id, panel, skills."""
-        path = self.PERSONAS_BASE / "quality" / "SILENT_FAILURE_HUNTER.json"
-        data = json.loads(path.read_text(encoding="utf-8"))
-
-        assert data["id"] == "SILENT_FAILURE_HUNTER"
-        assert data["panel"] == "quality"
-        assert len(data["skills"]) >= 1
-
-    def test_code_simplifier_loads(self):
-        """Load JSON, verify id, panel, skills."""
-        path = self.PERSONAS_BASE / "quality" / "CODE_SIMPLIFIER.json"
-        data = json.loads(path.read_text(encoding="utf-8"))
-
-        assert data["id"] == "CODE_SIMPLIFIER"
-        assert data["panel"] == "quality"
-        assert len(data["skills"]) >= 1
-
-    def test_silent_failure_hunter_has_required_fields(self):
-        """All required fields present."""
-        path = self.PERSONAS_BASE / "quality" / "SILENT_FAILURE_HUNTER.json"
-        data = json.loads(path.read_text(encoding="utf-8"))
-
-        required_fields = [
-            "id",
-            "name",
-            "panel",
-            "skills",
-            "lens",
-            "domain_knowledge",
-            "selection_criteria",
-            "tags",
-            "version",
-            "enabled",
-        ]
-        for field in required_fields:
-            assert field in data, f"Missing required field: {field}"
-
-    def test_code_simplifier_has_required_fields(self):
-        """All required fields present."""
-        path = self.PERSONAS_BASE / "quality" / "CODE_SIMPLIFIER.json"
-        data = json.loads(path.read_text(encoding="utf-8"))
-
-        required_fields = [
-            "id",
-            "name",
-            "panel",
-            "skills",
-            "lens",
-            "domain_knowledge",
-            "selection_criteria",
-            "tags",
-            "version",
-            "enabled",
-        ]
-        for field in required_fields:
-            assert field in data, f"Missing required field: {field}"
-
-
-# ============================================================================
-# Architecture Designer Tests
-# ============================================================================
 
 
 class TestArchitectureDesigner:

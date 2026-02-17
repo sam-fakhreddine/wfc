@@ -1,0 +1,8 @@
+{
+  "id": "typescript-07-tn",
+  "language": "typescript",
+  "example_type": "true_negative",
+  "source_code": "async function saveAll(items: string[]): Promise<void> {\n  await Promise.all(items.map((item) => saveToDb(item)));\n  console.log('All saved');\n}\n\ndeclare function saveToDb(item: string): Promise<void>;\n",
+  "findings": [],
+  "notes": "Promise.all with map correctly awaits all async operations before logging. No issues."
+}

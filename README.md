@@ -108,7 +108,7 @@ WFC mitigates **9/9** applicable OWASP LLM Top 10 risks:
 | `wfc-security` | STRIDE threat modeling | Security audits, compliance |
 | `wfc-test` | Property-based test generation | Comprehensive test coverage |
 | `wfc-architecture` | C4 diagrams + ADRs | Document system design |
-| `wfc-isthissmart` | Critical thinking advisor | Validate approach before coding |
+| `wfc-validate` | Critical thinking advisor | Validate approach before coding |
 
 [See all 19 skills →](QUICKSTART.md#available-skills)
 
@@ -306,7 +306,7 @@ WFC automatically:
 - **`wfc-safeguard`** — Real-time security hooks (PreToolUse enforcement)
 - **`wfc-rules`** — Custom code standards enforcement
 - **`wfc-safeclaude`** — Reduce approval prompts with safe command allowlist
-- **`wfc-isthissmart`** — Critical thinking advisor (7-dimension analysis)
+- **`wfc-validate`** — Critical thinking advisor (7-dimension analysis)
 
 ### Workflow & Productivity
 - **`wfc-vibe`** — Natural brainstorming mode with smooth transitions
@@ -363,7 +363,7 @@ WFC will interview you (3-5 questions), spawn agents, implement with TDD, review
 
 ```bash
 # Step 1: Validate approach
-/wfc-isthissmart "Add OAuth2 with JWT tokens and refresh flow"
+/wfc-validate "Add OAuth2 with JWT tokens and refresh flow"
 
 # Step 2: Create structured plan
 /wfc-plan

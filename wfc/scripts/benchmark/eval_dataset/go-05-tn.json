@@ -1,0 +1,8 @@
+{
+  "id": "go-05-tn",
+  "language": "go",
+  "example_type": "true_negative",
+  "source_code": "func writeConfig(path string, data []byte) error {\n\tf, err := os.Create(path)\n\tif err != nil {\n\t\treturn fmt.Errorf(\"create %s: %w\", path, err)\n\t}\n\tdefer f.Close()\n\tif _, err := f.Write(data); err != nil {\n\t\treturn fmt.Errorf(\"write %s: %w\", path, err)\n\t}\n\treturn nil\n}\n",
+  "findings": [],
+  "notes": "All errors checked and wrapped with context. Defer used correctly (not in a loop). No issues."
+}

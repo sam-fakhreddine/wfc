@@ -1,0 +1,8 @@
+{
+  "id": "typescript-08-fp",
+  "language": "typescript",
+  "example_type": "false_positive_trap",
+  "source_code": "// Test double: replace a real service with a fake one\nfunction createFakeStorage(): Storage {\n  const store = new Map<string, string>();\n  return {\n    getItem: (key) => store.get(key) ?? null,\n    setItem: (key, val) => { store.set(key, val); },\n    removeItem: (key) => { store.delete(key); },\n    clear: () => { store.clear(); },\n    key: (_idx) => null,\n    get length() { return store.size; },\n  } as unknown as Storage;\n}\n",
+  "findings": [],
+  "notes": "The 'as unknown as Storage' double-cast looks like an unsafe type escape but is the standard TypeScript pattern for creating test doubles that satisfy an interface partially. Not a bug."
+}

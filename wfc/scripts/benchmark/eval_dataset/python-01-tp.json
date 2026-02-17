@@ -1,0 +1,16 @@
+{
+  "id": "python-01-tp",
+  "language": "python",
+  "example_type": "true_positive",
+  "source_code": "def get_user(db, user_id):\n    query = f'SELECT * FROM users WHERE id = {user_id}'\n    return db.execute(query)\n",
+  "findings": [
+    {
+      "line_start": 2,
+      "line_end": 2,
+      "category": "sql-injection",
+      "severity": 9.5,
+      "description": "SQL injection vulnerability via f-string interpolation of user_id into raw SQL query"
+    }
+  ],
+  "notes": "Classic SQL injection via f-string. Parameterized queries should be used instead."
+}

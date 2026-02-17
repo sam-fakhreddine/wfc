@@ -1,0 +1,8 @@
+{
+  "id": "typescript-09-fp",
+  "language": "typescript",
+  "example_type": "false_positive_trap",
+  "source_code": "class Router {\n  private routes: Map<string, () => void>;\n\n  constructor() {\n    this.routes = new Map();\n  }\n\n  // Non-null assertion is safe: we guard with has() immediately before\n  navigate(path: string): void {\n    if (this.routes.has(path)) {\n      this.routes.get(path)!();\n    }\n  }\n}\n",
+  "findings": [],
+  "notes": "The ! non-null assertion on routes.get(path) looks risky, but is safe because it is immediately guarded by routes.has(path). This is a legitimate use of the non-null assertion operator."
+}

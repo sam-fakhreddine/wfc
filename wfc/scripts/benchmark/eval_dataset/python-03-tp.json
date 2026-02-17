@@ -1,0 +1,16 @@
+{
+  "id": "python-03-tp",
+  "language": "python",
+  "example_type": "true_positive",
+  "source_code": "def append_item(item, collection=[]):\n    collection.append(item)\n    return collection\n",
+  "findings": [
+    {
+      "line_start": 1,
+      "line_end": 1,
+      "category": "mutable-default-argument",
+      "severity": 7.0,
+      "description": "Mutable list used as default argument; the same list object is shared across all calls without explicit argument"
+    }
+  ],
+  "notes": "Classic Python gotcha. Default should be None with 'if collection is None: collection = []'."
+}
