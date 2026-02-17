@@ -5,10 +5,13 @@ Implements knowledge lifecycle: extract, append, prune, and promote.
 
 from __future__ import annotations
 
+import logging
 import re
 from dataclasses import dataclass
 from datetime import date
 from pathlib import Path
+
+_log = logging.getLogger(__name__)
 
 _DATE_RE = re.compile(r"\[(\d{4}-\d{2}-\d{2})\]")
 
@@ -105,24 +108,55 @@ class KnowledgeWriter:
         for reviewer_id, reviewer_entries in grouped.items():
             count = 0
             kp = self.reviewers_dir / reviewer_id / "KNOWLEDGE.md"
+            if not kp.exists():
+                self._create_empty_knowledge(kp, reviewer_id)
+            current_content: str = kp.read_text(encoding="utf-8")
             for entry in reviewer_entries:
-                if self._append_to_file(kp, entry):
+                updated_content = self._append_to_file(kp, entry, existing_content=current_content)
+                if updated_content is not None:
+                    current_content = updated_content
                     count += 1
+            kp.write_text(current_content, encoding="utf-8")
             result[reviewer_id] = count
         return result
 
-    def _append_to_file(self, knowledge_path: Path, entry: LearningEntry) -> bool:
-        if not knowledge_path.exists():
-            self._create_empty_knowledge(knowledge_path, entry.reviewer_id)
-        content = knowledge_path.read_text(encoding="utf-8")
-        if self._is_duplicate(content, entry.text):
-            return False
+    def _append_to_file(
+        self,
+        knowledge_path: Path,
+        entry: LearningEntry,
+        existing_content: str | None = None,
+    ) -> str | None:
+        """Append *entry* to *knowledge_path*.
+
+        When *existing_content* is supplied the file is NOT read from disk (the
+        caller is responsible for passing up-to-date content and for writing the
+        returned string back to disk).  When called without *existing_content*
+        the legacy behaviour is preserved: read from disk, mutate, write to disk,
+        and return ``True``/``False`` — except the return type is now ``str | None``
+        where ``None`` means "not appended" and a non-None string means "new content".
+
+        For backward compatibility with direct callers (e.g., ``promote_to_global``)
+        the method still writes to disk when *existing_content* is not provided.
+        """
+        standalone = existing_content is None
+        if standalone:
+            if not knowledge_path.exists():
+                self._create_empty_knowledge(knowledge_path, entry.reviewer_id)
+            existing_content = knowledge_path.read_text(encoding="utf-8")
+
+        content = existing_content
+        assert content is not None
+
+        entry_text, entry_source = self._sanitize_entry_fields(entry.text, entry.source)
+
+        if self._is_duplicate(content, entry_text):
+            return None
 
         header = SECTION_HEADERS.get(entry.section)
         if header is None:
-            return False
+            return None
 
-        formatted = self._format_entry(entry)
+        formatted = self._format_entry_sanitized(entry, entry_text, entry_source)
         lines = content.splitlines(keepends=True)
 
         header_idx: int | None = None
@@ -132,7 +166,7 @@ class KnowledgeWriter:
                 break
 
         if header_idx is None:
-            return False
+            return None
 
         insert_idx = header_idx + 1
         for i in range(header_idx + 1, len(lines)):
@@ -149,17 +183,51 @@ class KnowledgeWriter:
 
         new_line = formatted + "\n"
         lines.insert(insert_idx, new_line)
-        knowledge_path.write_text("".join(lines), encoding="utf-8")
-        return True
+        new_content = "".join(lines)
+
+        if standalone:
+            knowledge_path.write_text(new_content, encoding="utf-8")
+
+        return new_content
 
     def _is_duplicate(self, existing_content: str, entry_text: str) -> bool:
         return entry_text.casefold() in existing_content.casefold()
 
+    _MAX_FIELD_LEN = 500
+
+    def _sanitize_entry_fields(self, text: str, source: str) -> tuple[str, str]:
+        """Return sanitized (text, source) safe to embed in KNOWLEDGE.md.
+
+        Rules applied to each field:
+        1. Strip CR/LF characters (newline injection prevention).
+        2. Truncate to _MAX_FIELD_LEN characters.
+        3. Escape leading markdown tokens that would be mis-parsed as section
+           headers (``## ``) or list items (``- [``).
+        """
+
+        def _sanitize(value: str) -> str:
+            value = value.replace("\n", " ").replace("\r", " ")
+            value = value[: self._MAX_FIELD_LEN]
+            if value.startswith("## ") or value.startswith("- ["):
+                value = "\\" + value
+            return value
+
+        return _sanitize(text), _sanitize(source)
+
     def _format_entry(self, entry: LearningEntry) -> str:
-        return f"- [{entry.date}] {entry.text} (Source: {entry.source})"
+        entry_text, entry_source = self._sanitize_entry_fields(entry.text, entry.source)
+        return f"- [{entry.date}] {entry_text} (Source: {entry_source})"
+
+    def _format_entry_sanitized(
+        self, entry: LearningEntry, entry_text: str, entry_source: str
+    ) -> str:
+        """Format an entry using already-sanitized text and source fields."""
+        return f"- [{entry.date}] {entry_text} (Source: {entry_source})"
 
     def prune_old_entries(self, reviewer_id: str, max_age_days: int = 180) -> int:
         kp = self.reviewers_dir / reviewer_id / "KNOWLEDGE.md"
+        if not kp.is_file():
+            return 0
         content = kp.read_text(encoding="utf-8")
         lines = content.splitlines(keepends=True)
         cutoff = date.today()
@@ -172,7 +240,14 @@ class KnowledgeWriter:
             if stripped.startswith("- "):
                 m = _DATE_RE.search(stripped)
                 if m:
-                    entry_date = date.fromisoformat(m.group(1))
+                    try:
+                        entry_date = date.fromisoformat(m.group(1))
+                    except ValueError:
+                        _log.debug(
+                            "Unparseable date %r in KNOWLEDGE.md — preserving line", m.group(1)
+                        )
+                        keep.append(line)
+                        continue
                     age = (cutoff - entry_date).days
                     if age > max_age_days:
                         archived.append(line)
@@ -208,7 +283,7 @@ class KnowledgeWriter:
         if not gk.exists():
             self._create_empty_knowledge(gk, entry.reviewer_id)
 
-        return self._append_to_file(gk, promoted_entry)
+        return self._append_to_file(gk, promoted_entry) is not None
 
     def check_promotion_eligibility(
         self, entry_text: str, reviewer_id: str, min_projects: int = 2

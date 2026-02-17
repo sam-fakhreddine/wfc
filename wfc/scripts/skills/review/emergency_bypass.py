@@ -7,6 +7,7 @@ Allows developers to override a failing review with a mandatory reason,
 from __future__ import annotations
 
 import json
+import logging
 import tempfile
 import uuid
 from dataclasses import asdict, dataclass
@@ -14,6 +15,8 @@ from datetime import UTC, datetime, timedelta
 from pathlib import Path
 
 from wfc.scripts.skills.review.consensus_score import ConsensusScoreResult
+
+logger = logging.getLogger(__name__)
 
 
 @dataclass
@@ -76,6 +79,7 @@ class EmergencyBypass:
 
         trail = self._load_raw()
         trail.append(self._record_to_dict(record))
+        self._audit_dir.mkdir(parents=True, exist_ok=True)
         fd, tmp = tempfile.mkstemp(dir=self._audit_dir, suffix=".tmp")
         try:
             with open(fd, "w") as f:
@@ -89,7 +93,7 @@ class EmergencyBypass:
 
     def load_audit_trail(self) -> list[BypassRecord]:
         """Load all bypass records from the audit file."""
-        return [self._dict_to_record(d) for d in self._load_raw()]
+        return [r for r in (self._dict_to_record(d) for d in self._load_raw()) if r is not None]
 
     def is_bypassed(self, task_id: str) -> bool:
         """Check if a task has an active (non-expired) bypass."""
@@ -109,7 +113,17 @@ class EmergencyBypass:
         text = self._audit_path.read_text().strip()
         if not text:
             return []
-        return json.loads(text)
+        try:
+            return json.loads(text)
+        except json.JSONDecodeError:
+            corrupt_path = self._audit_path.with_suffix(".corrupt")
+            logger.critical(
+                "Audit file is corrupt; renaming to %s for recovery. Path: %s",
+                corrupt_path,
+                self._audit_path,
+            )
+            self._audit_path.rename(corrupt_path)
+            return []
 
     @staticmethod
     def _record_to_dict(record: BypassRecord) -> dict:
@@ -119,14 +133,18 @@ class EmergencyBypass:
         return d
 
     @staticmethod
-    def _dict_to_record(d: dict) -> BypassRecord:
-        return BypassRecord(
-            bypass_id=d["bypass_id"],
-            task_id=d["task_id"],
-            reason=d["reason"],
-            bypassed_by=d["bypassed_by"],
-            created_at=datetime.fromisoformat(d["created_at"]),
-            expires_at=datetime.fromisoformat(d["expires_at"]),
-            cs_at_bypass=d["cs_at_bypass"],
-            tier_at_bypass=d["tier_at_bypass"],
-        )
+    def _dict_to_record(d: dict) -> BypassRecord | None:
+        try:
+            return BypassRecord(
+                bypass_id=d["bypass_id"],
+                task_id=d["task_id"],
+                reason=d["reason"],
+                bypassed_by=d["bypassed_by"],
+                created_at=datetime.fromisoformat(d["created_at"]),
+                expires_at=datetime.fromisoformat(d["expires_at"]),
+                cs_at_bypass=d["cs_at_bypass"],
+                tier_at_bypass=d["tier_at_bypass"],
+            )
+        except (KeyError, ValueError, TypeError):
+            logger.warning("Skipping malformed bypass record: %r", d)
+            return None

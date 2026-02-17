@@ -201,6 +201,20 @@ class ReviewerEngine:
 
         Combines: PROMPT.md content + knowledge context + file list + diff + properties.
         """
+        _MAX_DIFF_LEN = 50_000
+
+        def _sanitize_embedded_content(text: str, max_len: int = _MAX_DIFF_LEN) -> str:
+            """Sanitize content embedded in LLM prompts to prevent prompt injection.
+
+            Replaces triple backticks (which could escape the surrounding code
+            fence and inject arbitrary instructions) with a visually similar but
+            inert representation, and truncates to a safe maximum length.
+            """
+            text = text.replace("```", "` ` `")
+            if len(text) > max_len:
+                text = text[:max_len] + "\n[... truncated ...]"
+            return text
+
         parts: list[str] = []
 
         parts.append(config.prompt)
@@ -211,12 +225,14 @@ class ReviewerEngine:
                 rag_results, token_budget=self.retriever.config.token_budget
             )
             if knowledge_section:
+                sanitized_knowledge = _sanitize_embedded_content(knowledge_section)
                 parts.append("\n---\n")
-                parts.append(knowledge_section)
+                parts.append(sanitized_knowledge)
         elif config.knowledge:
+            sanitized_knowledge = _sanitize_embedded_content(config.knowledge)
             parts.append("\n---\n")
             parts.append("# Repository Knowledge\n")
-            parts.append(config.knowledge)
+            parts.append(sanitized_knowledge)
 
         parts.append("\n---\n")
         parts.append("# Files to Review\n")
@@ -227,9 +243,10 @@ class ReviewerEngine:
             parts.append("No files specified.")
 
         if diff_content:
+            sanitized_diff = _sanitize_embedded_content(diff_content)
             parts.append("\n# Diff\n")
             parts.append("```diff")
-            parts.append(diff_content)
+            parts.append(sanitized_diff)
             parts.append("```")
 
         if properties:
@@ -267,16 +284,25 @@ class ReviewerEngine:
         if len(response) > MAX_RESPONSE_LEN:
             response = response[:MAX_RESPONSE_LEN]
 
-        array_match = re.search(r"\[[\s\S]*?\]", response)
-        if array_match:
+        first_bracket = response.find("[")
+        if first_bracket != -1:
             try:
-                parsed = json.loads(array_match.group())
+                parsed, _ = json.JSONDecoder().raw_decode(response, first_bracket)
                 if isinstance(parsed, list):
                     findings.extend(item for item in parsed if isinstance(item, dict))
                     if findings:
                         return findings
             except json.JSONDecodeError:
-                pass
+                array_match = re.search(r"\[[\s\S]*\]", response)
+                if array_match:
+                    try:
+                        parsed = json.loads(array_match.group())
+                        if isinstance(parsed, list):
+                            findings.extend(item for item in parsed if isinstance(item, dict))
+                            if findings:
+                                return findings
+                    except json.JSONDecodeError:
+                        pass
 
         json_blocks = re.findall(r"```(?:json)?\s*(\{[\s\S]*?\})\s*```", response)
         if not json_blocks:

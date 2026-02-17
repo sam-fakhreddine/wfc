@@ -395,9 +395,6 @@ class TestAllExamplesValid:
         assert missing == [], f"Examples missing 'notes': {missing}"
 
 
-# ---------------------------------------------------------------------------
-# TASK-011: Dual-Judge Evaluation Engine Tests
-# ---------------------------------------------------------------------------
 
 from wfc.scripts.benchmark.eval_judge import (
     JudgeScore,
@@ -409,9 +406,6 @@ from wfc.scripts.benchmark.eval_judge import (
 class TestEvalJudge:
     """Tests for the Dual-Judge Evaluation Engine (TASK-011)."""
 
-    # ------------------------------------------------------------------
-    # Fixtures and helpers
-    # ------------------------------------------------------------------
 
     @pytest.fixture
     def judge(self) -> EvalJudge:
@@ -439,9 +433,6 @@ class TestEvalJudge:
             }
         ]
 
-    # ------------------------------------------------------------------
-    # JudgeScore dataclass
-    # ------------------------------------------------------------------
 
     def test_judge_score_fields(self):
         """JudgeScore must have precision, recall, severity_accuracy, f1, notes."""
@@ -458,9 +449,6 @@ class TestEvalJudge:
         assert score.f1 == pytest.approx(0.686)
         assert score.notes == "test"
 
-    # ------------------------------------------------------------------
-    # DualJudgeResult dataclass
-    # ------------------------------------------------------------------
 
     def test_dual_judge_result_fields(self):
         """DualJudgeResult must expose both judges, agreement and consensus metrics."""
@@ -480,9 +468,6 @@ class TestEvalJudge:
         assert result.consensus_precision == 0.75
         assert result.consensus_recall == 0.65
 
-    # ------------------------------------------------------------------
-    # EvalJudge.evaluate -- returns DualJudgeResult
-    # ------------------------------------------------------------------
 
     def test_evaluate_returns_dual_judge_result(self, judge, sample_finding, sample_ground_truth):
         """evaluate() must return a DualJudgeResult instance."""
@@ -512,9 +497,6 @@ class TestEvalJudge:
         result = judge.evaluate([sample_finding], sample_ground_truth)
         assert -1.0 <= result.agreement <= 1.0
 
-    # ------------------------------------------------------------------
-    # Edge case: empty review_output (zero reported findings)
-    # ------------------------------------------------------------------
 
     def test_evaluate_empty_review_output_precision_zero(self, judge, sample_ground_truth):
         """When no findings are reported, precision must be 0.0."""
@@ -528,9 +510,6 @@ class TestEvalJudge:
         assert result.judge_1.recall == 0.0
         assert result.judge_2.recall == 0.0
 
-    # ------------------------------------------------------------------
-    # Edge case: empty ground truth (true negative scenario)
-    # ------------------------------------------------------------------
 
     def test_evaluate_empty_ground_truth_recall_is_one(self, judge, sample_finding):
         """When ground truth is empty (true negative), recall must be 1.0."""
@@ -539,14 +518,12 @@ class TestEvalJudge:
         assert result.judge_2.recall == 1.0
 
     def test_evaluate_both_empty_perfect_tn(self, judge):
-        """When both review_output and ground_truth are empty, recall=1.0, precision=0.0."""
+        """When both review_output and ground_truth are empty, it's a perfect true-negative: precision=1.0, recall=1.0."""
         result = judge.evaluate([], [])
         assert result.judge_1.recall == 1.0
-        assert result.judge_1.precision == 0.0
+        assert result.judge_1.precision == 1.0
+        assert result.judge_1.f1 == 1.0
 
-    # ------------------------------------------------------------------
-    # Matching logic: same category + line within +-5
-    # ------------------------------------------------------------------
 
     def test_finding_matches_within_5_lines(self, judge):
         """A finding within +-5 lines of the same category should match."""
@@ -576,9 +553,6 @@ class TestEvalJudge:
         assert result.judge_1.recall == pytest.approx(1.0)
         assert result.judge_1.precision == pytest.approx(1.0)
 
-    # ------------------------------------------------------------------
-    # F1 computation
-    # ------------------------------------------------------------------
 
     def test_f1_computed_from_precision_recall(self, judge):
         """F1 must equal 2*P*R/(P+R) when both > 0."""
@@ -600,9 +574,6 @@ class TestEvalJudge:
         result = judge.evaluate(review_output, sample_ground_truth)
         assert result.judge_1.f1 == pytest.approx(0.0)
 
-    # ------------------------------------------------------------------
-    # Severity accuracy
-    # ------------------------------------------------------------------
 
     def test_severity_accuracy_perfect_match(self, judge):
         """When reported severity exactly matches expected, severity_accuracy=1.0."""
@@ -613,7 +584,6 @@ class TestEvalJudge:
 
     def test_severity_accuracy_partial_mismatch(self, judge):
         """severity_accuracy = 1 - |rep_sev - exp_sev| / 10 for matched findings."""
-        # reported sev=8, expected sev=4 -> accuracy = 1 - 4/10 = 0.6
         findings = [{"line_start": 10, "category": "xss", "severity": 8.0, "description": "d"}]
         ground_truth = [{"line_start": 10, "category": "xss", "severity": 4.0, "description": "d"}]
         result = judge.evaluate(findings, ground_truth)
@@ -625,9 +595,6 @@ class TestEvalJudge:
         result = judge.evaluate(review_output, sample_ground_truth)
         assert result.judge_1.severity_accuracy == pytest.approx(0.0)
 
-    # ------------------------------------------------------------------
-    # build_judge_task
-    # ------------------------------------------------------------------
 
     def test_build_judge_task_returns_dict_with_model_and_prompt(self, judge, sample_finding, sample_ground_truth):
         """build_judge_task() must return a dict with 'model' and 'prompt' keys."""
@@ -655,9 +622,6 @@ class TestEvalJudge:
         t2 = judge.build_judge_task([sample_finding], sample_ground_truth, judge_id=2)
         assert t1["prompt"] != t2["prompt"]
 
-    # ------------------------------------------------------------------
-    # parse_judge_response
-    # ------------------------------------------------------------------
 
     def test_parse_judge_response_valid_json(self, judge):
         """parse_judge_response parses valid JSON into JudgeScore."""
@@ -699,9 +663,6 @@ class TestEvalJudge:
         assert score.recall == 0.0
         assert score.f1 == 0.0
 
-    # ------------------------------------------------------------------
-    # Cohen's Kappa
-    # ------------------------------------------------------------------
 
     def test_cohen_kappa_perfect_agreement(self):
         """Cohen's Kappa must be 1.0 for identical binary lists."""
@@ -712,8 +673,8 @@ class TestEvalJudge:
 
     def test_cohen_kappa_complete_disagreement(self):
         """Cohen's Kappa must be <= 0 for complete disagreement."""
-        scores_1 = [0.8, 0.8, 0.8, 0.8]  # all above threshold -> all 1s
-        scores_2 = [0.2, 0.2, 0.2, 0.2]  # all below threshold -> all 0s
+        scores_1 = [0.8, 0.8, 0.8, 0.8]
+        scores_2 = [0.2, 0.2, 0.2, 0.2]
         kappa = EvalJudge.cohen_kappa(scores_1, scores_2)
         assert kappa <= 0.0
 
@@ -728,7 +689,6 @@ class TestEvalJudge:
         """Cohen's Kappa must respect a custom threshold."""
         scores_1 = [0.6, 0.6, 0.4, 0.4]
         scores_2 = [0.6, 0.6, 0.4, 0.4]
-        # With threshold=0.5: 1,1,0,0 vs 1,1,0,0 -> perfect agreement
         kappa = EvalJudge.cohen_kappa(scores_1, scores_2, threshold=0.5)
         assert kappa == pytest.approx(1.0)
 

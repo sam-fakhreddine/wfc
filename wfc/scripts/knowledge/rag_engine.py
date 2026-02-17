@@ -10,9 +10,10 @@ from __future__ import annotations
 import hashlib
 import json
 import logging
-import math
 from dataclasses import asdict, dataclass
 from pathlib import Path
+
+import numpy as np
 
 from wfc.scripts.knowledge.chunker import KnowledgeChunk, KnowledgeChunker
 from wfc.scripts.knowledge.embeddings import EmbeddingProvider, get_embedding_provider
@@ -38,7 +39,11 @@ class _JsonVectorStore:
         self._path = store_path
         self._data: dict[str, dict] = {}
         if self._path.exists():
-            self._data = json.loads(self._path.read_text(encoding="utf-8"))
+            try:
+                self._data = json.loads(self._path.read_text(encoding="utf-8"))
+            except (json.JSONDecodeError, OSError) as exc:
+                logger.warning("Corrupt vectors.json at %s, starting fresh: %s", self._path, exc)
+                self._data = {}
 
     def upsert(
         self,
@@ -84,18 +89,19 @@ class _JsonVectorStore:
 
     def _save(self) -> None:
         self._path.parent.mkdir(parents=True, exist_ok=True)
-        self._path.write_text(json.dumps(self._data), encoding="utf-8")
+        tmp = self._path.with_suffix(".tmp")
+        tmp.write_text(json.dumps(self._data), encoding="utf-8")
+        tmp.replace(self._path)
 
     @staticmethod
     def _cosine_similarity(a: list[float], b: list[float]) -> float:
         if len(a) != len(b):
             return 0.0
-        dot = sum(x * y for x, y in zip(a, b))
-        norm_a = math.sqrt(sum(x * x for x in a))
-        norm_b = math.sqrt(sum(x * x for x in b))
-        if norm_a == 0.0 or norm_b == 0.0:
-            return 0.0
-        return dot / (norm_a * norm_b)
+        a_arr = np.array(a)
+        b_arr = np.array(b)
+        norm_a = np.linalg.norm(a_arr)
+        norm_b = np.linalg.norm(b_arr)
+        return float(np.dot(a_arr, b_arr) / (norm_a * norm_b)) if norm_a > 0 and norm_b > 0 else 0.0
 
 
 class _ChromaVectorStore:
@@ -292,7 +298,11 @@ class RAGEngine:
 
     def _load_hashes(self) -> None:
         if self._hash_file.exists():
-            self._hashes = json.loads(self._hash_file.read_text(encoding="utf-8"))
+            try:
+                self._hashes = json.loads(self._hash_file.read_text(encoding="utf-8"))
+            except (json.JSONDecodeError, OSError) as exc:
+                logger.warning("Corrupt hash file at %s, starting fresh: %s", self._hash_file, exc)
+                self._hashes = {}
 
     def _save_hashes(self) -> None:
         self._hash_file.write_text(json.dumps(self._hashes, indent=2), encoding="utf-8")

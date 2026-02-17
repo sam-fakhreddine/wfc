@@ -259,7 +259,7 @@ class ASTAnalyzer:
                 count += 1
             elif isinstance(child, ast.ExceptHandler):
                 count += 1
-            elif isinstance(child, ast.withitem):
+            elif isinstance(child, ast.With):
                 count += 1
             elif isinstance(child, ast.BoolOp):
                 count += len(child.values) - 1
@@ -294,6 +294,9 @@ class ASTAnalyzer:
                 for alias in node.names:
                     local = alias.asname if alias.asname else alias.name
                     imported[local] = local
+                    root = local.split(".")[0]
+                    if root != local:
+                        imported[root] = local
             elif isinstance(node, ast.ImportFrom):
                 for alias in node.names:
                     local = alias.asname if alias.asname else alias.name
@@ -430,24 +433,22 @@ class ASTAnalyzer:
         findings: list[dict] = []
         file_path = analysis.file_path
 
-        # --- Unused imports ---
         for name in analysis.unused_imports:
-            findings.append({
-                "file": file_path,
-                "line_start": 1,
-                "line_end": 1,
-                "category": "unused-import",
-                "severity": 3.0,
-                "confidence": 8.0,
-                "description": f"Unused import: '{name}' is imported but never referenced.",
-                "validation_status": "VERIFIED",
-                "reviewer_id": "ast-analyzer",
-            })
+            findings.append(
+                {
+                    "file": file_path,
+                    "line_start": 1,
+                    "line_end": 1,
+                    "category": "unused-import",
+                    "severity": 3.0,
+                    "confidence": 8.0,
+                    "description": f"Unused import: '{name}' is imported but never referenced.",
+                    "validation_status": "VERIFIED",
+                    "reviewer_id": "ast-analyzer",
+                }
+            )
 
-        # --- Unreachable code ---
         if analysis.unreachable_code:
-            # Group consecutive lines into contiguous ranges so each range
-            # becomes a single finding rather than one finding per line.
             lines = sorted(analysis.unreachable_code)
             ranges: list[tuple[int, int]] = []
             start = end = lines[0]
@@ -460,56 +461,60 @@ class ASTAnalyzer:
             ranges.append((start, end))
 
             for rng_start, rng_end in ranges:
-                findings.append({
-                    "file": file_path,
-                    "line_start": rng_start,
-                    "line_end": rng_end,
-                    "category": "unreachable-code",
-                    "severity": 8.0,
-                    "confidence": 8.0,
-                    "description": (
-                        f"Unreachable code detected at line {rng_start}"
-                        + (f"-{rng_end}" if rng_end != rng_start else "")
-                        + " (follows a terminal statement)."
-                    ),
-                    "validation_status": "VERIFIED",
-                    "reviewer_id": "ast-analyzer",
-                })
+                findings.append(
+                    {
+                        "file": file_path,
+                        "line_start": rng_start,
+                        "line_end": rng_end,
+                        "category": "unreachable-code",
+                        "severity": 8.0,
+                        "confidence": 8.0,
+                        "description": (
+                            f"Unreachable code detected at line {rng_start}"
+                            + (f"-{rng_end}" if rng_end != rng_start else "")
+                            + " (follows a terminal statement)."
+                        ),
+                        "validation_status": "VERIFIED",
+                        "reviewer_id": "ast-analyzer",
+                    }
+                )
 
-        # --- High cyclomatic complexity ---
         for func in analysis.functions:
             if func.cyclomatic_complexity > self.COMPLEXITY_THRESHOLD:
-                findings.append({
+                findings.append(
+                    {
+                        "file": file_path,
+                        "line_start": func.line_start,
+                        "line_end": func.line_end,
+                        "category": "high-complexity",
+                        "severity": 5.0,
+                        "confidence": 8.0,
+                        "description": (
+                            f"Function '{func.name}' has cyclomatic complexity "
+                            f"{func.cyclomatic_complexity} (threshold: {self.COMPLEXITY_THRESHOLD})."
+                        ),
+                        "validation_status": "VERIFIED",
+                        "reviewer_id": "ast-analyzer",
+                    }
+                )
+
+        for line_no in analysis.deep_nesting_locations:
+            findings.append(
+                {
                     "file": file_path,
-                    "line_start": func.line_start,
-                    "line_end": func.line_end,
-                    "category": "high-complexity",
+                    "line_start": line_no,
+                    "line_end": line_no,
+                    "category": "deep-nesting",
                     "severity": 5.0,
                     "confidence": 8.0,
                     "description": (
-                        f"Function '{func.name}' has cyclomatic complexity "
-                        f"{func.cyclomatic_complexity} (threshold: {self.COMPLEXITY_THRESHOLD})."
+                        f"Nesting depth exceeds threshold of {self.NESTING_THRESHOLD} "
+                        f"at line {line_no}."
                     ),
                     "validation_status": "VERIFIED",
                     "reviewer_id": "ast-analyzer",
-                })
-
-        # --- Deep nesting ---
-        for line_no in analysis.deep_nesting_locations:
-            findings.append({
-                "file": file_path,
-                "line_start": line_no,
-                "line_end": line_no,
-                "category": "deep-nesting",
-                "severity": 5.0,
-                "confidence": 8.0,
-                "description": (
-                    f"Nesting depth exceeds threshold of {self.NESTING_THRESHOLD} "
-                    f"at line {line_no}."
-                ),
-                "validation_status": "VERIFIED",
-                "reviewer_id": "ast-analyzer",
-            })
+                }
+            )
 
         return findings
 

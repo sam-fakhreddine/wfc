@@ -15,11 +15,11 @@ from dataclasses import dataclass
 class JudgeScore:
     """Scores produced by a single judge evaluating a WFC review."""
 
-    precision: float  # 0.0 - 1.0 (what fraction of reported findings are real)
-    recall: float  # 0.0 - 1.0 (what fraction of real bugs were found)
-    severity_accuracy: float  # 0.0 - 1.0 (severity match)
-    f1: float  # computed from precision + recall
-    notes: str  # judge's reasoning
+    precision: float
+    recall: float
+    severity_accuracy: float
+    f1: float
+    notes: str
 
 
 @dataclass
@@ -28,8 +28,8 @@ class DualJudgeResult:
 
     judge_1: JudgeScore
     judge_2: JudgeScore
-    agreement: float  # Cohen's Kappa between judge_1 and judge_2
-    consensus_precision: float  # mean of both judges
+    agreement: float
+    consensus_precision: float
     consensus_recall: float
     consensus_f1: float
 
@@ -55,9 +55,7 @@ def _finding_matches(reported: dict, expected: dict) -> bool:
     - Same category (substring match, case-insensitive)
     - line_start within +-5 lines
     """
-    if not _categories_match(
-        reported.get("category", ""), expected.get("category", "")
-    ):
+    if not _categories_match(reported.get("category", ""), expected.get("category", "")):
         return False
     reported_line = reported.get("line_start", 0)
     expected_line = expected.get("line_start", 0)
@@ -76,17 +74,24 @@ def _score_review(
     Severity accuracy = mean(1 - |rep_sev - exp_sev| / 10) for matched findings
     F1        = 2*P*R / (P+R) if both > 0, else 0
     """
-    # True negative: no bugs expected
     if not ground_truth:
-        return JudgeScore(
-            precision=0.0,
-            recall=1.0,
-            severity_accuracy=0.0,
-            f1=0.0,
-            notes=notes or "True negative: empty ground truth",
-        )
+        if not review_output:
+            return JudgeScore(
+                precision=1.0,
+                recall=1.0,
+                severity_accuracy=1.0,
+                f1=1.0,
+                notes=notes or "True negative: empty ground truth, no findings reported",
+            )
+        else:
+            return JudgeScore(
+                precision=0.0,
+                recall=1.0,
+                severity_accuracy=0.0,
+                f1=0.0,
+                notes=notes or "True negative: empty ground truth, but findings were reported",
+            )
 
-    # No findings reported
     if not review_output:
         return JudgeScore(
             precision=0.0,
@@ -115,9 +120,7 @@ def _score_review(
     n_matched = len(matched_expected)
     precision = n_matched / len(review_output)
     recall = n_matched / len(ground_truth)
-    severity_accuracy = (
-        sum(severity_scores) / len(severity_scores) if severity_scores else 0.0
-    )
+    severity_accuracy = sum(severity_scores) / len(severity_scores) if severity_scores else 0.0
     f1 = _compute_f1(precision, recall)
 
     return JudgeScore(
@@ -170,7 +173,9 @@ class EvalJudge:
         computed deterministically from the matching algorithm.
         """
         score_1 = _score_review(review_output, ground_truth, notes="Judge 1")
-        score_2 = _score_review(review_output, ground_truth, notes="Judge 2")
+        score_2 = _score_review(
+            review_output, ground_truth, notes="Judge 2 (deterministic fallback)"
+        )
 
         all_scores_1 = [score_1.precision, score_1.recall, score_1.f1]
         all_scores_2 = [score_2.precision, score_2.recall, score_2.f1]
@@ -283,7 +288,6 @@ class EvalJudge:
         p_e = p1_pos * p2_pos + p1_neg * p2_neg
 
         if p_e == 1.0:
-            # All predictions are the same class -> kappa undefined; safe default
-            return 0.0
+            return 1.0 if bin_1 == bin_2 else 0.0
 
         return (p_o - p_e) / (1.0 - p_e)

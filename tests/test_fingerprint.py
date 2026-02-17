@@ -219,6 +219,41 @@ class TestEdgeCases:
     def test_reviewer_id_map_empty(self):
         assert self.fp.deduplicate([], reviewer_id_map={}) == []
 
+    def test_malformed_finding_missing_all_required_keys_skipped(self):
+        """A finding missing 'file', 'line_start', and 'category' is skipped."""
+        malformed = {"description": "no required keys", "severity": 8.0, "reviewer_id": "security"}
+        result = self.fp.deduplicate([malformed])
+        assert result == []
+
+    def test_malformed_finding_missing_one_key_skipped(self):
+        """A finding missing 'category' alone is skipped and does not abort dedup."""
+        malformed = {"file": "app.py", "line_start": 10, "description": "no category", "reviewer_id": "security"}
+        good = _finding(file="b.py", category="injection", reviewer_id="reliability")
+        result = self.fp.deduplicate([malformed, good])
+        assert len(result) == 1
+        assert result[0].file == "b.py"
+
+    def test_malformed_finding_does_not_abort_valid_findings(self):
+        """Mix of malformed and valid findings: valid ones are returned, malformed skipped."""
+        findings = [
+            _finding(file="a.py", category="injection", reviewer_id="security"),
+            {"description": "malformed - missing file/line_start/category", "severity": 9.0, "reviewer_id": "reliability"},
+            _finding(file="b.py", category="resource_leak", reviewer_id="correctness"),
+        ]
+        result = self.fp.deduplicate(findings)
+        assert len(result) == 2
+        files = {r.file for r in result}
+        assert files == {"a.py", "b.py"}
+
+    def test_all_malformed_findings_returns_empty(self):
+        """When every finding is malformed, the result is an empty list."""
+        findings = [
+            {"description": "bad1", "reviewer_id": "security"},
+            {"file": "x.py", "reviewer_id": "reliability"},
+        ]
+        result = self.fp.deduplicate(findings)
+        assert result == []
+
 
 
 class TestSorting:

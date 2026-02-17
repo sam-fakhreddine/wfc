@@ -129,12 +129,13 @@ class FindingValidator:
                 finding.line_start,
             )
 
+        self._last_cross_check_spec: dict | None = None
         if not skip_cross_check:
             try:
                 code_snippet = _extract_snippet(file_content, finding.line_start, finding.line_end)
-                spec = self.build_cross_check_task(vf, code_snippet)
-                # NOTE: The caller is responsible for actually running the
-                _ = spec
+                cross_check_spec = self.build_cross_check_task(vf, code_snippet)
+                self._last_cross_check_spec = cross_check_spec
+                logger.debug("Layer 2 cross-check task spec prepared (caller must invoke)")
             except Exception:
                 logger.exception(
                     "Layer 2 (cross-check task build) failed for %s:%s – skipping",

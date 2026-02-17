@@ -9,7 +9,10 @@ are preserved, and the reviewer count (k) is tracked for the consensus score.
 from __future__ import annotations
 
 import hashlib
+import logging
 from dataclasses import dataclass
+
+logger = logging.getLogger(__name__)
 
 
 @dataclass
@@ -71,9 +74,30 @@ class Fingerprinter:
         if not flat:
             return []
 
+        required_keys = {"file", "line_start", "category"}
+        valid: list[dict] = []
+        for f in flat:
+            if not required_keys.issubset(f.keys()):
+                missing = required_keys - f.keys()
+                logger.warning(
+                    "Skipping malformed finding (missing keys: %s): %r",
+                    sorted(missing),
+                    f,
+                )
+                continue
+            valid.append(f)
+        flat = valid
+
+        if not flat:
+            return []
+
         buckets: dict[str, list[dict]] = {}
         for f in flat:
-            fp = self.compute_fingerprint(f["file"], f["line_start"], f["category"])
+            fp = self.compute_fingerprint(
+                f.get("file", ""),
+                f.get("line_start", 0),
+                f.get("category", "unknown"),
+            )
             buckets.setdefault(fp, []).append(f)
 
         results: list[DeduplicatedFinding] = []
@@ -108,14 +132,14 @@ class Fingerprinter:
         max_severity = max(f.get("severity", 0) for f in group)
         max_confidence = max(f.get("confidence", 0) for f in group)
 
-        line_end = primary.get("line_end", primary["line_start"])
+        line_end = primary.get("line_end", primary.get("line_start", 0))
 
         return DeduplicatedFinding(
             fingerprint=fingerprint,
-            file=primary["file"],
-            line_start=primary["line_start"],
+            file=primary.get("file", ""),
+            line_start=primary.get("line_start", 0),
             line_end=line_end,
-            category=primary["category"],
+            category=primary.get("category", "unknown"),
             severity=max_severity,
             confidence=max_confidence,
             description=primary.get("description", ""),
