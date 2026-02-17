@@ -54,7 +54,11 @@ class ConsensusScore:
     N_REVIEWERS: int = 5
     PROTECTION_DOMAINS: set[str] = {"security", "reliability"}
 
-    def calculate(self, findings: list[DeduplicatedFinding]) -> ConsensusScoreResult:
+    def calculate(
+        self,
+        findings: list[DeduplicatedFinding],
+        weights: dict[str, float] | None = None,
+    ) -> ConsensusScoreResult:
         """Calculate the Consensus Score from deduplicated findings."""
         if not findings:
             return ConsensusScoreResult(
@@ -70,15 +74,37 @@ class ConsensusScore:
                 summary=self._generate_summary(0.0, "informational", [], False),
             )
 
+        # Apply validation weights: weight=0.0 means skip finding entirely
+        effective_weights: dict[str, float] = weights or {}
+        active_findings = [
+            f for f in findings
+            if effective_weights.get(f.fingerprint, 1.0) > 0.0
+        ]
+
+        if not active_findings:
+            return ConsensusScoreResult(
+                cs=0.0,
+                tier="informational",
+                findings=[],
+                R_bar=0.0,
+                R_max=0.0,
+                k_total=0,
+                n=self.N_REVIEWERS,
+                passed=True,
+                minority_protection_applied=False,
+                summary=self._generate_summary(0.0, "informational", [], False),
+            )
+
         scored = []
-        for f in findings:
-            r_i = self._compute_R_i(f)
+        for f in active_findings:
+            weight = effective_weights.get(f.fingerprint, 1.0)
+            r_i = self._compute_R_i(f) * weight
             scored.append(ScoredFinding(finding=f, R_i=r_i, tier=self._classify_finding_tier(r_i)))
 
         r_values = [sf.R_i for sf in scored]
         r_bar = sum(r_values) / len(r_values)
         r_max = max(r_values)
-        k_total = sum(f.k for f in findings)
+        k_total = sum(f.k for f in active_findings)
 
         cs = (0.5 * r_bar) + (0.3 * r_bar * (k_total / self.N_REVIEWERS)) + (0.2 * r_max)
         cs, mpr_applied = self._apply_minority_protection(cs, scored)

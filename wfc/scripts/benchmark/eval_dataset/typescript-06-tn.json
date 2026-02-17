@@ -1,0 +1,8 @@
+{
+  "id": "typescript-06-tn",
+  "language": "typescript",
+  "example_type": "true_negative",
+  "source_code": "function getLength(value: string | null): number {\n  if (value === null) {\n    return 0;\n  }\n  return value.length;\n}\n",
+  "findings": [],
+  "notes": "Explicit null check before property access. Correct and safe."
+}

@@ -13,12 +13,15 @@ from pathlib import Path
 from typing import TYPE_CHECKING
 
 from .consensus_score import ConsensusScore, ConsensusScoreResult
+from .doc_auditor import DocAuditor, DocAuditReport
+from .finding_validator import FindingValidator, ValidationStatus
 from .fingerprint import Fingerprinter
 from .reviewer_engine import ReviewerEngine
 
 if TYPE_CHECKING:
     from wfc.scripts.knowledge.retriever import KnowledgeRetriever
 
+    from .model_router import ModelRouter
     from .reviewer_engine import ReviewerResult
 
 logger = logging.getLogger(__name__)
@@ -42,6 +45,7 @@ class ReviewResult:
     consensus: ConsensusScoreResult
     report_path: Path
     passed: bool
+    doc_audit: DocAuditReport | None = None
 
 
 class ReviewOrchestrator:
@@ -57,10 +61,13 @@ class ReviewOrchestrator:
         self,
         reviewer_engine: ReviewerEngine | None = None,
         retriever: KnowledgeRetriever | None = None,
+        model_router: ModelRouter | None = None,
     ):
         self.engine = reviewer_engine or ReviewerEngine(retriever=retriever)
         self.fingerprinter = Fingerprinter()
         self.scorer = ConsensusScore()
+        self.validator = FindingValidator()
+        self.model_router = model_router
 
     @staticmethod
     def _validate_output_path(path: Path) -> None:
@@ -105,6 +112,7 @@ class ReviewOrchestrator:
             files=request.files,
             diff_content=request.diff_content,
             properties=request.properties if request.properties else None,
+            model_router=self.model_router,
         )
 
     def finalize_review(
@@ -112,6 +120,7 @@ class ReviewOrchestrator:
         request: ReviewRequest,
         task_responses: list[dict],
         output_dir: Path,
+        skip_validation: bool = False,
     ) -> ReviewResult:
         """Phase 2: Parse responses, deduplicate, score, report.
 
@@ -139,16 +148,69 @@ class ReviewOrchestrator:
 
         deduped = self.fingerprinter.deduplicate(all_findings)
 
-        cs_result = self.scorer.calculate(deduped)
+        validation_summary = {
+            "before": len(deduped),
+            "after": len(deduped),
+            "verified": 0,
+            "unverified": 0,
+            "disputed": 0,
+            "rejected": 0,
+            "skipped": skip_validation,
+        }
+        weights: dict[str, float] = {}
+
+        if not skip_validation:
+            for df in deduped:
+                try:
+                    vf = self.validator.validate(df, skip_cross_check=True)
+                    weights[df.fingerprint] = vf.weight
+                    status = vf.validation_status
+                    if status == ValidationStatus.HISTORICALLY_REJECTED:
+                        validation_summary["rejected"] += 1
+                    elif status == ValidationStatus.VERIFIED:
+                        validation_summary["verified"] += 1
+                    elif status == ValidationStatus.DISPUTED:
+                        validation_summary["disputed"] += 1
+                    else:
+                        validation_summary["unverified"] += 1
+                except Exception:
+                    logger.exception(
+                        "Validator failed for %s:%s -- keeping finding at weight 1.0 (fail-open)",
+                        df.file,
+                        df.line_start,
+                    )
+                    weights[df.fingerprint] = 1.0
+                    validation_summary["unverified"] += 1
+
+            rejected_fps = {fp for fp, w in weights.items() if w == 0.0}
+            deduped = [df for df in deduped if df.fingerprint not in rejected_fps]
+            validation_summary["after"] = len(deduped)
+
+        cs_result = self.scorer.calculate(deduped, weights=weights if weights else None)
 
         report_path = output_dir / f"REVIEW-{request.task_id}.md"
-        self._generate_report(request, cs_result, reviewer_results, report_path)
+        self._generate_report(
+            request, cs_result, reviewer_results, report_path, self.model_router, validation_summary
+        )
+
+        doc_audit: DocAuditReport | None = None
+        try:
+            doc_audit = DocAuditor().analyze(
+                task_id=request.task_id,
+                files=request.files,
+                diff_content=request.diff_content or "",
+                output_dir=output_dir,
+            )
+            self._append_doc_audit_section(report_path, doc_audit)
+        except Exception:
+            logger.exception("Doc audit failed for %s -- skipped (fail-open)", request.task_id)
 
         return ReviewResult(
             task_id=request.task_id,
             consensus=cs_result,
             report_path=report_path,
             passed=cs_result.passed,
+            doc_audit=doc_audit,
         )
 
     def _generate_report(
@@ -157,6 +219,8 @@ class ReviewOrchestrator:
         cs_result: ConsensusScoreResult,
         reviewer_results: list[ReviewerResult],
         path: Path,
+        model_router=None,
+        validation_summary: dict | None = None,
     ) -> None:
         """Generate markdown review report."""
         status = "PASSED" if cs_result.passed else "FAILED"
@@ -173,6 +237,31 @@ class ReviewOrchestrator:
         if cs_result.minority_protection_applied:
             lines.append("**Minority Protection Rule**: Applied")
             lines.append("")
+
+        if validation_summary is not None:
+            before = validation_summary.get("before", 0)
+            after = validation_summary.get("after", 0)
+            rejected = validation_summary.get("rejected", 0)
+            verified = validation_summary.get("verified", 0)
+            disputed = validation_summary.get("disputed", 0)
+            unverified = validation_summary.get("unverified", 0)
+            skipped = validation_summary.get("skipped", False)
+            false_positive_rate = (rejected / before * 100) if before > 0 else 0.0
+            lines.extend(
+                [
+                    "## Validation Summary",
+                    "",
+                    f"**Validation**: {'skipped' if skipped else 'performed'}",
+                    f"**Findings before validation**: {before}",
+                    f"**Findings after validation**: {after}",
+                    f"**Verified**: {verified}",
+                    f"**Unverified**: {unverified}",
+                    f"**Disputed**: {disputed}",
+                    f"**Rejected (excluded)**: {rejected}",
+                    f"**False Positive Rate**: {false_positive_rate:.1f}%",
+                    "",
+                ]
+            )
 
         lines.extend(["---", "", "## Reviewer Summaries", ""])
 
@@ -219,8 +308,51 @@ class ReviewOrchestrator:
                         lines.append(f"- {rem}")
                     lines.append("")
 
+        if model_router is not None:
+            lines.extend(["---", "", "## Cost Estimate", ""])
+            total_cost = 0.0
+            for task_result in reviewer_results:
+                reviewer_id = task_result.reviewer_id
+                prompt_tokens = task_result.token_count
+                completion_tokens = max(200, len(task_result.summary) // 4)
+                cost = model_router.estimate_cost(
+                    reviewer_id,
+                    prompt_tokens=prompt_tokens,
+                    completion_tokens=completion_tokens,
+                )
+                model = model_router.get_model(reviewer_id)
+                lines.append(
+                    f"- **{task_result.reviewer_name}**: model=`{model}`, "
+                    f"~{prompt_tokens} prompt tokens, cost≈${cost:.4f}"
+                )
+                total_cost += cost
+            lines.extend(["", f"**Total estimated cost**: ${total_cost:.4f}", ""])
+
         lines.extend(["---", "", "## Summary", "", cs_result.summary, ""])
 
         self._validate_output_path(path)
         with open(path, "w") as fh:
             fh.write("\n".join(lines))
+
+    def _append_doc_audit_section(self, report_path: Path, doc_audit: DocAuditReport) -> None:
+        """Append a Documentation Audit section to an existing review report."""
+        n_gaps = len(doc_audit.gaps)
+        n_ds = len(doc_audit.missing_docstrings)
+        audit_file = doc_audit.report_path.name
+
+        section_lines = [
+            "",
+            "---",
+            "",
+            "## Documentation Audit",
+            "",
+            f"**Doc files that may need updating**: {n_gaps}",
+            f"**Missing docstrings in changed code**: {n_ds}",
+            f"**Full audit report**: `{audit_file}`",
+            "",
+            doc_audit.summary,
+            "",
+        ]
+
+        with open(report_path, "a") as fh:
+            fh.write("\n".join(section_lines))

@@ -1,0 +1,23 @@
+{
+  "id": "typescript-01-tp",
+  "language": "typescript",
+  "example_type": "true_positive",
+  "source_code": "async function fetchUser(id: number): Promise<any> {\n  const res = await fetch(`/api/users/${id}`);\n  const data = res.json();\n  return data.name;\n}\n",
+  "findings": [
+    {
+      "line_start": 3,
+      "line_end": 3,
+      "category": "missing-await",
+      "severity": 7.5,
+      "description": "res.json() returns a Promise; missing await means data is a Promise object, not the parsed response"
+    },
+    {
+      "line_start": 1,
+      "line_end": 1,
+      "category": "any-type-escape",
+      "severity": 5.0,
+      "description": "Return type annotated as Promise<any> bypasses type safety for the response shape"
+    }
+  ],
+  "notes": "Two bugs: unawaited promise and any-typed return. The any type masks the real problem."
+}

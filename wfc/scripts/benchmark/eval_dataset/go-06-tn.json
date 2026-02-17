@@ -1,0 +1,8 @@
+{
+  "id": "go-06-tn",
+  "language": "go",
+  "example_type": "true_negative",
+  "source_code": "type Counter struct {\n\tmu    sync.Mutex\n\tcount int\n}\n\nfunc (c *Counter) Increment() {\n\tc.mu.Lock()\n\tdefer c.mu.Unlock()\n\tc.count++\n}\n\nfunc (c *Counter) Value() int {\n\tc.mu.Lock()\n\tdefer c.mu.Unlock()\n\treturn c.count\n}\n",
+  "findings": [],
+  "notes": "Mutex protects shared state consistently in both read and write paths. No data race."
+}

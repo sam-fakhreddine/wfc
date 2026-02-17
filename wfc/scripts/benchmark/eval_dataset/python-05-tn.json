@@ -1,0 +1,8 @@
+{
+  "id": "python-05-tn",
+  "language": "python",
+  "example_type": "true_negative",
+  "source_code": "def get_user(db, user_id: int) -> dict | None:\n    row = db.execute('SELECT * FROM users WHERE id = ?', (user_id,)).fetchone()\n    return dict(row) if row else None\n",
+  "findings": [],
+  "notes": "Parameterized query, typed signature, None-safe return. No issues."
+}

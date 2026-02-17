@@ -1,0 +1,8 @@
+{
+  "id": "go-07-tn",
+  "language": "go",
+  "example_type": "true_negative",
+  "source_code": "func processFiles(paths []string) error {\n\tfor _, p := range paths {\n\t\tif err := processOne(p); err != nil {\n\t\t\treturn fmt.Errorf(\"processing %s: %w\", p, err)\n\t\t}\n\t}\n\treturn nil\n}\n\nfunc processOne(path string) error {\n\tf, err := os.Open(path)\n\tif err != nil {\n\t\treturn err\n\t}\n\tdefer f.Close()\n\treturn nil\n}\n",
+  "findings": [],
+  "notes": "Defer is now inside processOne (not in the loop function), so it executes after each file. Errors are wrapped. No issues."
+}

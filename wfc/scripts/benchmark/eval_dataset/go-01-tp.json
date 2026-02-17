@@ -1,0 +1,23 @@
+{
+  "id": "go-01-tp",
+  "language": "go",
+  "example_type": "true_positive",
+  "source_code": "func writeConfig(path string, data []byte) error {\n\tf, _ := os.Create(path)\n\tf.Write(data)\n\tf.Close()\n\treturn nil\n}\n",
+  "findings": [
+    {
+      "line_start": 2,
+      "line_end": 2,
+      "category": "unchecked-error",
+      "severity": 7.5,
+      "description": "os.Create error return is discarded with '_'; if file creation fails, subsequent f.Write and f.Close will panic on nil pointer"
+    },
+    {
+      "line_start": 3,
+      "line_end": 3,
+      "category": "unchecked-error",
+      "severity": 5.0,
+      "description": "f.Write error return is also discarded; partial writes go undetected"
+    }
+  ],
+  "notes": "Both error returns discarded. os.Create failure leads to nil pointer dereference on line 3."
+}

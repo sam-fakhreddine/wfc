@@ -1,0 +1,16 @@
+{
+  "id": "typescript-03-tp",
+  "language": "typescript",
+  "example_type": "true_positive",
+  "source_code": "function merge(target: Record<string, any>, source: Record<string, any>) {\n  for (const key in source) {\n    target[key] = source[key];\n  }\n  return target;\n}\n",
+  "findings": [
+    {
+      "line_start": 2,
+      "line_end": 4,
+      "category": "prototype-pollution",
+      "severity": 8.5,
+      "description": "for...in iterates inherited prototype properties; setting target['__proto__'] or 'constructor' from attacker-controlled source pollutes Object.prototype"
+    }
+  ],
+  "notes": "Classic prototype pollution via for...in without hasOwnProperty guard."
+}

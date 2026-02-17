@@ -72,6 +72,8 @@ class ReviewerEngine:
         files: list[str],
         diff_content: str = "",
         properties: list[dict] | None = None,
+        model_router: object | None = None,
+        single_model: str | None = None,
     ) -> list[dict]:
         """
         Phase 1: Prepare task specifications for Claude Code's Task tool.
@@ -85,6 +87,11 @@ class ReviewerEngine:
             diff_content: Git diff content (optional but recommended).
             properties: List of property dicts to verify (optional).
 
+        Args:
+            model_router: Optional ModelRouter instance. When provided, each spec
+                gets a "model" key set by router.get_model(reviewer_id, diff_lines).
+            single_model: When set, forces this model for ALL reviewers (overrides router).
+
         Returns:
             List of 5 task spec dicts, each with:
             - reviewer_id: str
@@ -93,6 +100,7 @@ class ReviewerEngine:
             - temperature: float
             - relevant: bool
             - token_count: int (approximate token count of prompt)
+            - model: str (only present when model_router or single_model is provided)
         """
         diff_files = files if files else []
         configs = self.loader.load_all(diff_files=diff_files)
@@ -110,6 +118,11 @@ class ReviewerEngine:
                 "relevant": config.relevant,
                 "token_count": token_count,
             }
+            if single_model:
+                task_spec["model"] = single_model
+            elif model_router is not None:
+                diff_lines = len(diff_content.splitlines()) if diff_content else 0
+                task_spec["model"] = model_router.get_model(config.id, diff_lines)
             tasks.append(task_spec)
 
         total_tokens = sum(t["token_count"] for t in tasks)

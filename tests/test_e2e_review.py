@@ -136,7 +136,7 @@ class TestPipelineE2E:
             _clean_response("reliability"),
         ]
 
-        result = orchestrator.finalize_review(request, responses, tmp_path)
+        result = orchestrator.finalize_review(request, responses, tmp_path, skip_validation=True)
 
         assert result.passed is True
         assert result.consensus.tier == "informational"
@@ -206,7 +206,7 @@ class TestPipelineE2E:
             _clean_response("reliability"),
         ]
 
-        result = orchestrator.finalize_review(request, responses, tmp_path)
+        result = orchestrator.finalize_review(request, responses, tmp_path, skip_validation=True)
 
         assert result.passed is False
         assert result.consensus.tier in ("important", "critical")
@@ -231,7 +231,7 @@ class TestPipelineE2E:
             _clean_response("reliability"),
         ]
 
-        result = orchestrator.finalize_review(request, responses, tmp_path)
+        result = orchestrator.finalize_review(request, responses, tmp_path, skip_validation=True)
 
         assert result.consensus.minority_protection_applied is True
         assert result.passed is False
@@ -449,7 +449,7 @@ class TestCLIE2E:
             _clean_response("maintainability"),
             _clean_response("reliability"),
         ]
-        result = mock_orchestrator.finalize_review(request, responses, tmp_path)
+        result = mock_orchestrator.finalize_review(request, responses, tmp_path, skip_validation=True)
         assert result.passed is False
 
         with patch("wfc.scripts.skills.review.cli.ReviewOrchestrator") as MockOrch:
@@ -529,7 +529,7 @@ class TestEmergencyBypassE2E:
             _clean_response("maintainability"),
             _clean_response("reliability"),
         ]
-        result = orchestrator.finalize_review(request, responses, tmp_path)
+        result = orchestrator.finalize_review(request, responses, tmp_path, skip_validation=True)
         assert result.passed is False
 
         original_cs = result.consensus.cs

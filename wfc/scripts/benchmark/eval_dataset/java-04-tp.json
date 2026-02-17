@@ -1,0 +1,16 @@
+{
+  "id": "java-04-tp",
+  "language": "java",
+  "example_type": "true_positive",
+  "source_code": "public class Registry {\n    private static Registry instance;\n    private final Map<String, Object> store = new HashMap<>();\n\n    public static Registry getInstance() {\n        if (instance == null) {\n            instance = new Registry();\n        }\n        return instance;\n    }\n}\n",
+  "findings": [
+    {
+      "line_start": 5,
+      "line_end": 9,
+      "category": "race-condition",
+      "severity": 8.0,
+      "description": "Singleton getInstance() is not thread-safe; two threads can both see instance==null and create duplicate instances, leading to inconsistent state"
+    }
+  ],
+  "notes": "Classic broken double-check omission. Needs synchronized block or volatile with double-check, or enum-based singleton."
+}

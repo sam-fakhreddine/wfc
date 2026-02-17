@@ -1,0 +1,8 @@
+{
+  "id": "typescript-05-tn",
+  "language": "typescript",
+  "example_type": "true_negative",
+  "source_code": "interface User {\n  id: number;\n  name: string;\n}\n\nasync function fetchUser(id: number): Promise<User | null> {\n  const res = await fetch(`/api/users/${id}`);\n  if (!res.ok) return null;\n  return res.json() as Promise<User>;\n}\n",
+  "findings": [],
+  "notes": "Properly typed, awaited, null-safe response handling. No issues."
+}

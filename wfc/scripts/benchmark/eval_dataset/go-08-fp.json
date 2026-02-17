@@ -1,0 +1,8 @@
+{
+  "id": "go-08-fp",
+  "language": "go",
+  "example_type": "false_positive_trap",
+  "source_code": "func drainChannel(ch <-chan struct{}, done <-chan struct{}) {\n\t// Intentionally long-lived goroutine: runs for the process lifetime\n\tgo func() {\n\t\tfor {\n\t\t\tselect {\n\t\t\tcase <-ch:\n\t\t\t\t// discard\n\t\t\tcase <-done:\n\t\t\t\treturn\n\t\t\t}\n\t\t}\n\t}()\n}\n",
+  "findings": [],
+  "notes": "The goroutine appears to leak (infinite loop, no WaitGroup), but it is intentionally long-lived and terminates cleanly via the done channel. The lifetime is bounded by the caller's done signal."
+}

@@ -1,0 +1,8 @@
+{
+  "id": "python-07-tn",
+  "language": "python",
+  "example_type": "true_negative",
+  "source_code": "from typing import Optional\n\ndef find_first(items: list[int], predicate) -> Optional[int]:\n    for item in items:\n        if predicate(item):\n            return item\n    return None\n",
+  "findings": [],
+  "notes": "Clean iteration with explicit None return. No mutation, no resource leaks."
+}

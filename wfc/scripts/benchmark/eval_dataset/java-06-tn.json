@@ -1,0 +1,8 @@
+{
+  "id": "java-06-tn",
+  "language": "java",
+  "example_type": "true_negative",
+  "source_code": "public String readFile(String path) throws IOException {\n    try (BufferedReader br = new BufferedReader(new FileReader(path))) {\n        return br.lines().collect(Collectors.joining(\"\\n\"));\n    }\n}\n",
+  "findings": [],
+  "notes": "try-with-resources guarantees BufferedReader (and underlying FileReader) are closed. No resource leak."
+}
