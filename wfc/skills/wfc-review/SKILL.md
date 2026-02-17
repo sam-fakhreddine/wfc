@@ -1,22 +1,21 @@
 ---
-name: wfc-review
-description: Multi-agent consensus code review using specialized expert personas. Automatically selects 5 relevant experts from 54 reviewers (security, architecture, performance, quality, domain specialists) to analyze code and reach consensus. Use when user requests code review, PR analysis, security assessment, or quality checks. Triggers on "review this code", "check for security issues", "analyze this PR", "is this code good", or explicit /wfc-review. Ideal for feature implementations, refactoring, API changes, and security-sensitive code. Not for simple typo fixes, documentation-only changes, or trivial updates.
+name: wfc-consensus-review
+description: Five-agent consensus code review using fixed expert reviewers (Security, Correctness, Performance, Maintainability, Reliability). Analyzes code via two-phase workflow (prepare tasks, finalize results), deduplicates findings with SHA-256 fingerprinting, and calculates a Consensus Score (CS) with Minority Protection Rule. Use when user requests code review, PR analysis, security assessment, or quality checks. Triggers on "review this code", "check for security issues", "analyze this PR", "is this code good", or explicit /wfc-consensus-review. Ideal for feature implementations, refactoring, API changes, and security-sensitive code. Not for simple typo fixes, documentation-only changes, or trivial updates.
 license: MIT
 ---
 
-# WFC:CONSENSUS-REVIEW - Multi-Agent Consensus Code Review
+# WFC:CONSENSUS-REVIEW - Five-Agent Consensus Code Review
 
-Four specialized agents review code and reach consensus decision.
+Five fixed reviewers analyze code and a Consensus Score determines the decision.
 
 ## What It Does
 
-1. **Code Review Agent (CR)** - Correctness, readability, maintainability
-2. **Security Agent (SEC)** - Security vulnerabilities, auth/authz
-3. **Performance Agent (PERF)** - Performance issues, scalability
-4. **Complexity Agent (COMP)** - Complexity, architecture, ELEGANT principles
-5. **Consensus Algorithm** - Weighted voting with veto power
-
-**Enhanced with Systematic Checklist**: Each reviewer follows the 6-step review methodology from CHECKLIST.md (Understand Context → Functionality → Quality → Security → Performance → Tests) to ensure comprehensive, consistent reviews.
+1. **Security Reviewer** - Injection, auth/authz, OWASP Top 10
+2. **Correctness Reviewer** - Logic bugs, edge cases, type safety
+3. **Performance Reviewer** - Algorithmic efficiency, N+1 queries, memory
+4. **Maintainability Reviewer** - Readability, naming, SOLID/DRY, complexity
+5. **Reliability Reviewer** - Error handling, fault tolerance, graceful degradation
+6. **Consensus Score (CS)** - Weighted formula with Minority Protection Rule
 
 ## Usage
 
@@ -27,114 +26,114 @@ Four specialized agents review code and reach consensus decision.
 # Review files directly
 /wfc-consensus-review path/to/code
 
-# With options
+# With properties
 /wfc-consensus-review TASK-001 --properties PROP-001,PROP-002
 ```
 
-## Agent Weighting
+## Two-Phase Workflow
 
-- **Security (SEC)**: 35% - Highest priority
-- **Code Review (CR)**: 30% - Correctness
-- **Performance (PERF)**: 20% - Scalability
-- **Complexity (COMP)**: 15% - Maintainability
+### Phase 1: Prepare Review
+```
+orchestrator.prepare_review(request) -> 5 task specs
+```
+Builds prompts for each reviewer with file list, diff, properties, and knowledge context. Irrelevant reviewers (based on file extensions) are marked for skipping.
 
-## Consensus Rules
+### Phase 2: Finalize Review
+```
+orchestrator.finalize_review(request, responses, output_dir) -> ReviewResult
+```
+1. Parse subagent responses into findings
+2. Deduplicate findings across reviewers (SHA-256 fingerprinting with +/-3 line tolerance)
+3. Calculate Consensus Score
+4. Generate markdown report
 
-1. **All agents must pass** (score >= 7/10)
-2. **Overall score** = weighted average
-3. **Any critical severity** = automatic fail
-4. **Overall score >= 7.0** required to pass
+## Consensus Score (CS) Formula
 
-## Review Methodology
+```
+CS = (0.5 * R_bar) + (0.3 * R_bar * (k/n)) + (0.2 * R_max)
+```
 
-Each reviewer follows the systematic 6-step checklist (see `CHECKLIST.md`):
+Where:
+- **R_i** = (severity * confidence) / 10 for each deduplicated finding
+- **R_bar** = mean of all R_i values
+- **k** = total reviewer agreements (sum of per-finding reviewer counts)
+- **n** = 5 (total reviewers)
+- **R_max** = max(R_i) across all findings
 
-### 1. UNDERSTAND CONTEXT
-- Read task description, acceptance criteria, properties
-- Understand the "why" behind changes
-- Review test strategy
+## Decision Tiers
 
-### 2. REVIEW FUNCTIONALITY
-- Verify acceptance criteria met
-- Check edge case handling
-- Validate error handling and input validation
+| Tier | CS Range | Action |
+|------|----------|--------|
+| Informational | CS < 4.0 | Log only, review passes |
+| Moderate | 4.0 <= CS < 7.0 | Inline comment, review passes |
+| Important | 7.0 <= CS < 9.0 | Block merge, review fails |
+| Critical | CS >= 9.0 | Block + escalate, review fails |
 
-### 3. REVIEW CODE QUALITY
-- Readability and naming conventions
-- ELEGANT principles compliance
-- SOLID/DRY principles
-- Function size and complexity
+## Minority Protection Rule (MPR)
 
-### 4. REVIEW SECURITY
-- Input validation, SQL injection, XSS prevention
-- Authentication/authorization checks
-- No hardcoded secrets
-- Sensitive data protection
+Prevents a single critical finding from being diluted by many clean reviews:
 
-### 5. REVIEW PERFORMANCE
-- N+1 query prevention
-- Algorithm efficiency
-- Memory management
-- Appropriate caching
+```
+IF R_max >= 8.5 AND k >= 1 AND finding is from security/reliability:
+    CS_final = max(CS, 0.7 * R_max + 2.0)
+```
 
-### 6. REVIEW TESTS
-- Coverage of happy path and edge cases
-- Property verification (SAFETY, LIVENESS, etc.)
-- Test quality and independence
+## Finding Deduplication
 
-**Reviewer-Specific Focus**:
-- **CR**: Steps 2 (Functionality), 3 (Quality), 6 (Tests)
-- **SEC**: Steps 2 (Input validation), 4 (Security)
-- **PERF**: Steps 5 (Performance), 6 (Performance tests)
-- **COMP**: Step 3 (Complexity, ELEGANT principles)
+Findings from different reviewers pointing to the same issue are merged:
+- **Fingerprint**: SHA-256 of `file:normalized_line:category` (line tolerance +/-3)
+- **Merge**: highest severity wins, all descriptions and remediations preserved
+- **k tracking**: number of reviewers who flagged the same issue (increases CS)
 
 ## Output
 
 ### Review Report (REVIEW-TASK-XXX.md)
 
 ```markdown
-# Code Review Report: TASK-001
+# Review Report: TASK-001
 
-**Status**: ✅ APPROVED
-**Overall Score**: 8.5/10
+**Status**: PASSED
+**Consensus Score**: CS=3.50 (informational)
+**Reviewers**: 5
+**Findings**: 2
 
 ---
 
-## Agent Reviews
+## Reviewer Summaries
 
-### ✅ CR: Code Review
+### PASS: Security Reviewer
+**Score**: 10.0/10
+**Summary**: No security issues found.
+**Findings**: 0
+
+### PASS: Correctness Reviewer
 **Score**: 8.5/10
-**Summary**: Code is well-structured
-**Comments**: 2
+**Summary**: Minor edge case.
+**Findings**: 1
 
-### ✅ SEC: Security
-**Score**: 9.0/10
-**Summary**: No critical security issues
-**Comments**: 1
-
-### ✅ PERF: Performance
-**Score**: 8.0/10
-**Summary**: Performance looks acceptable
-**Comments**: 1
-
-### ✅ COMP: Complexity
-**Score**: 9.5/10
-**Summary**: Code is ELEGANT
-**Comments**: 1
+...
 
 ---
 
-## Detailed Comments
+## Findings
 
-### MEDIUM: src/auth.py:45
-**Message**: Consider extracting to separate function
-**Suggestion**: Split large function
+### [MODERATE] src/auth.py:45
+**Category**: validation
+**Severity**: 5.0
+**Confidence**: 7.0
+**Reviewers**: correctness, reliability (k=2)
+**R_i**: 3.50
+
+**Description**: Missing input validation on user_id
+
+**Remediation**:
+- Add type check and bounds validation
 
 ---
 
-## Consensus
+## Summary
 
-✅ APPROVED: Good quality with minor suggestions
+CS=3.50 (informational): 2 finding(s), review passed.
 ```
 
 ## Integration with WFC
@@ -145,55 +144,28 @@ Each reviewer follows the systematic 6-step checklist (see `CHECKLIST.md`):
 ### Consumes
 - Task files (from git worktree)
 - PROPERTIES.md (formal properties to verify)
-- Test results (from TDD workflow)
+- Git diff content
 
 ### Produces
 - Review report (REVIEW-{task_id}.md)
-- Consensus decision (pass/fail)
-- Detailed comments per file/line
+- Consensus Score decision (pass/fail with tier)
+- Deduplicated findings with reviewer agreement counts
 
-## Configuration
+## Relevance Gate
 
-```json
-{
-  "review": {
-    "min_overall_score": 7.0,
-    "require_all_agents_pass": true,
-    "fail_on_critical": true,
-    "agent_weights": {
-      "CR": 0.3,
-      "SEC": 0.35,
-      "PERF": 0.2,
-      "COMP": 0.15
-    }
-  }
-}
-```
+Each reviewer has domain-specific file extensions. Only relevant reviewers execute:
 
-## Confidence Filtering
-
-Review comments include confidence scores (0-100). Low-confidence findings are automatically filtered:
-
-- **Default threshold**: 80 (configurable)
-- **Critical severity**: Always shown regardless of confidence
-- **Report shows**: "12 reported (8 filtered as low-confidence)"
-
-## Post-Review Simplification
-
-Use `--simplify` to run an optional Code Simplifier pass after review approval:
-
-```bash
-/wfc-review TASK-001 --simplify
-```
-
-When enabled, the Code Simplifier persona analyzes approved code for:
-- Unnecessary complexity
-- Redundant abstractions
-- Deep nesting
-- Over-engineering
+| Reviewer | Relevant Extensions |
+|----------|-------------------|
+| Security | .py, .js, .ts, .go, .java, .rb, .php, .rs |
+| Correctness | .py, .js, .ts, .go, .java, .rb, .rs, .c, .cpp |
+| Performance | .py, .js, .ts, .go, .java, .rs, .sql |
+| Maintainability | * (always relevant) |
+| Reliability | .py, .js, .ts, .go, .java, .rs |
 
 ## Philosophy
 
-**ELEGANT**: Simple agent logic, clear consensus rules
-**MULTI-TIER**: Agents (logic) separated from CLI (presentation)
-**PARALLEL**: Agents can run concurrently (future optimization)
+**ELEGANT**: Simple two-phase workflow, deterministic reviewer set
+**MULTI-TIER**: Engine (logic) separated from CLI (presentation)
+**PARALLEL**: 5 reviewers can run concurrently via Task tool
+**TOKEN-AWARE**: Relevance gate skips irrelevant reviewers

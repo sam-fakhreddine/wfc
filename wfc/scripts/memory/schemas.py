@@ -5,7 +5,8 @@ SOLID: Single Responsibility - Just data structures, no logic
 """
 
 from dataclasses import dataclass, field
-from typing import Dict, Any
+from typing import Dict, Any, Optional
+import dataclasses
 
 
 @dataclass
@@ -23,6 +24,7 @@ class ReflexionEntry:
     fix: str  # How we fixed it
     rule: str  # Rule to prevent recurrence
     severity: str = "medium"  # low, medium, high, critical
+    team_values_impact: Optional[Dict[str, str]] = None  # e.g., {"accountability": "violated"}
 
     def to_dict(self) -> Dict[str, Any]:
         """Convert to dictionary."""
@@ -34,12 +36,16 @@ class ReflexionEntry:
             "fix": self.fix,
             "rule": self.rule,
             "severity": self.severity,
+            "team_values_impact": self.team_values_impact,
         }
 
     @classmethod
     def from_dict(cls, data: Dict[str, Any]) -> "ReflexionEntry":
         """Create from dictionary."""
-        return cls(**data)
+        # Backward compatible: handle missing new fields
+        known = {f.name for f in dataclasses.fields(cls)}
+        filtered = {k: v for k, v in data.items() if k in known}
+        return cls(**filtered)
 
 
 @dataclass
@@ -61,6 +67,7 @@ class OperationalPattern:
     impact: str  # Why it matters
     status: str = "READY_FOR_PLAN"  # READY_FOR_PLAN, PLANNED, FIXED, IGNORED
     severity: str = "medium"  # low, medium, high, critical
+    values_alignment: Optional[str] = None  # e.g., "customer_focus"
 
     def to_dict(self) -> Dict[str, Any]:
         """Convert to dictionary."""
@@ -75,12 +82,16 @@ class OperationalPattern:
             "impact": self.impact,
             "status": self.status,
             "severity": self.severity,
+            "values_alignment": self.values_alignment,
         }
 
     @classmethod
     def from_dict(cls, data: Dict[str, Any]) -> "OperationalPattern":
         """Create from dictionary."""
-        return cls(**data)
+        # Backward compatible: handle missing new fields
+        known = {f.name for f in dataclasses.fields(cls)}
+        filtered = {k: v for k, v in data.items() if k in known}
+        return cls(**filtered)
 
 
 @dataclass

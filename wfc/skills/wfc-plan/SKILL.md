@@ -30,6 +30,9 @@ Converts requirements into structured implementation plans through adaptive inte
 # With options (future)
 /wfc-plan --interactive  # Step through interview
 /wfc-plan --from-file requirements.md  # Import requirements
+
+# Skip validation (not recommended)
+/wfc-plan --skip-validation
 ```
 
 ## Plan History
@@ -46,17 +49,23 @@ plans/
 │   ├── TASKS.md
 │   ├── PROPERTIES.md
 │   ├── TEST-PLAN.md
-│   └── interview-results.json
+│   ├── interview-results.json
+│   ├── revision-log.md
+│   └── plan-audit_20260211_143022.json
 ├── plan_caching_layer_20260211_150135/
 │   ├── TASKS.md
 │   ├── PROPERTIES.md
 │   ├── TEST-PLAN.md
-│   └── interview-results.json
+│   ├── interview-results.json
+│   ├── revision-log.md
+│   └── plan-audit_20260211_150135.json
 └── plan_user_dashboard_20260212_091523/
     ├── TASKS.md
     ├── PROPERTIES.md
     ├── TEST-PLAN.md
-    └── interview-results.json
+    ├── interview-results.json
+    ├── revision-log.md
+    └── plan-audit_20260212_091523.json
 ```
 
 ### History File
@@ -78,6 +87,7 @@ plans/
 - **Tasks:** 7
 - **Properties:** 4
 - **Tests:** 15
+- **Validated:** yes (score: 8.7)
 
 ## plan_caching_layer_20260211_150135
 - **Created:** 2026-02-11T15:01:35
@@ -87,6 +97,7 @@ plans/
 - **Tasks:** 3
 - **Properties:** 2
 - **Tests:** 8
+- **Validated:** skipped
 ```
 
 ### Benefits
@@ -253,12 +264,166 @@ Example:
 
 ## What to Do
 
-1. **If `$ARGUMENTS` is provided**, use it as output directory
-2. **If no arguments**, use `./plan` as default output directory
-3. **Run adaptive interview** using `AdaptiveInterviewer`
-4. **Generate all files** using orchestrator
-5. **Display results** showing file paths and summary
-6. **Record telemetry** for all operations
+1. **If `$ARGUMENTS` contains `--skip-validation`**, set `skip_validation = true` and remove the flag from arguments
+2. **If `$ARGUMENTS` is provided** (after flag removal), use it as output directory
+3. **If no arguments**, use `./plan` as default output directory
+4. **Run adaptive interview** using `AdaptiveInterviewer`
+5. **Generate all files** using orchestrator (TASKS.md, PROPERTIES.md, TEST-PLAN.md)
+6. **Run Plan Validation Pipeline** (unless `--skip-validation` was set)
+7. **Display results** showing file paths and summary
+8. **Record telemetry** for all operations
+
+## Plan Validation Pipeline
+
+After generating the draft plan (TASKS.md, PROPERTIES.md, TEST-PLAN.md), run a mandatory validation pipeline to ensure plan quality. This pipeline can only be bypassed with the `--skip-validation` flag.
+
+### Pipeline Overview
+
+```
+Draft Plan → SHA-256 Hash → IsThisSmart Gate → Revise → Review Gate (loop until 8.5+) → Final Plan
+```
+
+### Step 1: Record Original Hash
+
+Compute a SHA-256 hash of the draft plan content (concatenation of TASKS.md + PROPERTIES.md + TEST-PLAN.md in that order). This is the `original_hash` used for the audit trail.
+
+```python
+import hashlib
+content = tasks_md + properties_md + test_plan_md
+original_hash = hashlib.sha256(content.encode()).hexdigest()
+```
+
+### Step 2: IsThisSmart Gate
+
+Invoke `/wfc-isthissmart` on the generated draft plan. All plan content **must** be delimited with XML tags per PROP-009 prompt injection defense:
+
+```
+/wfc-isthissmart
+<plan-content>
+[Full content of TASKS.md, PROPERTIES.md, TEST-PLAN.md concatenated]
+</plan-content>
+```
+
+This produces an `ISTHISSMART.md` output with scored recommendations categorized as Must-Do, Should-Do, or informational.
+
+### Step 3: Revision Mechanism
+
+After IsThisSmart produces its analysis, read the ISTHISSMART.md output and apply revisions:
+
+1. **Must-Do** recommendations: Apply every Must-Do change to the draft TASKS.md and/or PROPERTIES.md. These are non-negotiable improvements identified by the analysis.
+2. **Should-Do** recommendations: Apply if low-effort (can be done in under 5 minutes). Otherwise, note as deferred with a reason.
+3. **Deferred** items: Record in revision log for future consideration.
+
+Write a `revision-log.md` in the plan directory documenting what changed and why:
+
+```markdown
+# Revision Log
+
+## Original Plan Hash
+`<original_hash>` (SHA-256)
+
+## IsThisSmart Score
+<score>/10
+
+## Revisions Applied
+
+### Must-Do
+
+1. **<change title>** - <description of change>
+   - Source: IsThisSmart recommendation #N
+   - File changed: TASKS.md | PROPERTIES.md | TEST-PLAN.md
+
+### Should-Do
+
+1. **<change title>** - <description>
+   - Source: IsThisSmart recommendation #N
+   - Status: Applied (low effort) | Deferred (high effort)
+
+### Deferred
+
+1. **<item>** - <reason for deferral>
+   - Source: IsThisSmart recommendation #N
+   - Reason: <explanation>
+
+## Review Gate Results
+
+| Round | Score | Action |
+|-------|-------|--------|
+| 1     | X.X   | Applied N findings |
+| 2     | X.X   | Passed threshold |
+
+## Final Plan Hash
+`<final_hash>` (SHA-256)
+```
+
+### Step 4: Review Gate
+
+Invoke `/wfc-review` on the revised plan using architecture and quality personas. Plan content **must** be delimited with XML tags per PROP-009 prompt injection defense:
+
+```
+/wfc-review
+<plan-content>
+[Full content of revised TASKS.md, PROPERTIES.md, TEST-PLAN.md]
+</plan-content>
+```
+
+**Review Loop**: If the weighted consensus score is below 8.5/10, apply the review findings to the plan and re-invoke `/wfc-review`. Repeat until the score reaches 8.5 or higher. This threshold is the standard -- it is not optional.
+
+### Step 5: Audit Trail
+
+After the review gate passes (or validation is skipped), write a `plan-audit.json` file (timestamped) in the plan directory. The filename includes a timestamp for immutability (e.g., `plan-audit_20260215_103000.json`).
+
+**Required schema for plan-audit_YYYYMMDD_HHMMSS.json:**
+
+```json
+{
+  "hash_algorithm": "sha256",
+  "original_hash": "<64-char hex SHA-256 of draft plan>",
+  "isthissmart_score": 7.8,
+  "revision_count": 2,
+  "review_score": 8.7,
+  "final_hash": "<64-char hex SHA-256 of final plan>",
+  "timestamp": "2026-02-15T10:30:00Z",
+  "validated": true,
+  "skipped": false
+}
+```
+
+Field definitions:
+- `hash_algorithm`: Always `"sha256"`
+- `original_hash`: SHA-256 hash of the draft plan before any revisions
+- `isthissmart_score`: Numeric score from the IsThisSmart analysis
+- `revision_count`: Total number of revision rounds applied (IsThisSmart revisions + review loop rounds)
+- `review_score`: Final weighted consensus score from wfc-review (numeric, e.g. 8.7)
+- `final_hash`: SHA-256 hash of the plan after all revisions are complete
+- `timestamp`: ISO 8601 timestamp of when validation completed
+- `validated`: `true` if the final review_score >= 8.5, `false` otherwise
+- `skipped`: `true` if `--skip-validation` was used, `false` otherwise
+
+### Step 6: History Update
+
+Update HISTORY.md to record whether the plan was validated or skipped. Add a `- **Validated:** yes (score: X.X)` or `- **Validated:** skipped` entry to the plan's history record.
+
+### Skip Validation Flag
+
+If `--skip-validation` is passed as an argument:
+
+1. Skip Steps 2-4 entirely (no IsThisSmart Gate, no Review Gate, no revision)
+2. Still compute SHA-256 hashes (original_hash = final_hash since no changes were made)
+3. Write `plan-audit_YYYYMMDD_HHMMSS.json` with `"skipped": true` and `"validated": false`
+4. Do not generate `revision-log.md` (no revisions occurred)
+5. Record `- **Validated:** skipped` in HISTORY.md
+
+### Validation Pipeline Summary
+
+| Step | Action | Output |
+|------|--------|--------|
+| 1 | SHA-256 hash of draft plan | `original_hash` |
+| 2 | `/wfc-isthissmart` with `<plan-content>` XML tags (PROP-009) | ISTHISSMART.md |
+| 3 | Apply Must-Do + low-effort Should-Do revisions | revision-log.md, updated plan files |
+| 4 | `/wfc-review` with `<plan-content>` XML tags (PROP-009), loop until >= 8.5 | Review consensus |
+| 5 | Write plan-audit_YYYYMMDD_HHMMSS.json with all fields | plan-audit_YYYYMMDD_HHMMSS.json |
+| 6 | Update HISTORY.md with validation status | HISTORY.md entry |
 
 ## Example Flow
 
@@ -276,18 +441,31 @@ Q: Security requirements?
 A: JWT tokens, role-based authorization
 
 [GENERATION]
-✅ Created TASKS.md (5 tasks)
-✅ Created PROPERTIES.md (3 properties: 1 SAFETY, 2 INVARIANT)
-✅ Created TEST-PLAN.md (12 test cases)
+Created TASKS.md (5 tasks)
+Created PROPERTIES.md (3 properties: 1 SAFETY, 2 INVARIANT)
+Created TEST-PLAN.md (12 test cases)
+
+[PLAN VALIDATION PIPELINE]
+SHA-256 hash recorded: a1b2c3...
+IsThisSmart Gate: 7.8/10
+  - Applied 2 Must-Do revisions
+  - Applied 1 Should-Do revision (low effort)
+  - Deferred 1 suggestion
+Review Gate round 1: 8.1/10 - applying 2 findings
+Review Gate round 2: 8.7/10 - PASSED
+Wrote revision-log.md
+Wrote plan-audit_YYYYMMDD_HHMMSS.json
 
 [OUTPUT]
-📁 ./plan/
+plans/plan_rest_api_20260215_103000/
   - TASKS.md
   - PROPERTIES.md
   - TEST-PLAN.md
   - interview-results.json
+  - revision-log.md
+  - plan-audit_20260215_103000.json
 
-Next: Run `/wfc-implement ./plan/TASKS.md`
+Next: Run `/wfc-implement plans/plan_rest_api_20260215_103000/TASKS.md`
 ```
 
 ## Philosophy

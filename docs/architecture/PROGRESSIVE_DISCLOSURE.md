@@ -2,6 +2,8 @@
 
 **Philosophy**: Load only what's needed when needed
 
+> **Note**: The "Reorganization Plan" section below describes a proposed future structure for improved progressive disclosure. The current documentation structure is functional and follows the patterns described in "Documentation Hierarchy".
+
 ## Documentation Hierarchy
 
 ### Level 1: Quick Start (5 minutes)

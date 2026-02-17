@@ -1,0 +1,42 @@
+{
+  "$schema": "teamcharter_values_schema",
+  "version": "1.0.0",
+  "values": [
+    {
+      "id": "innovation",
+      "name": "Innovation & Experimentation",
+      "description": "Embrace creative thinking, new methodologies, and bold experimentation. Use failure as a stepping stone for growth.",
+      "keywords": ["experimentation", "prototyping", "learning_from_failure", "creative_thinking", "new_methodologies"]
+    },
+    {
+      "id": "accountability",
+      "name": "Accountability & Simplicity",
+      "description": "Take ownership of actions, maintain a high Say:Do ratio, deliver impactful results with simplicity and clarity.",
+      "keywords": ["say_do_ratio", "simplicity", "ownership", "complexity_budget", "clarity", "impact"]
+    },
+    {
+      "id": "teamwork",
+      "name": "Teamwork & Collaboration",
+      "description": "Foster collaboration, knowledge sharing, and mutual support. Recognize the strength of collective effort and openness to feedback.",
+      "keywords": ["collaboration", "knowledge_sharing", "feedback", "collective_effort", "mutual_support"]
+    },
+    {
+      "id": "learning",
+      "name": "Continuous Learning & Curiosity",
+      "description": "Stay curious, proactively develop skills, and remain leaders in IT innovations through learning and growth.",
+      "keywords": ["curiosity", "skill_development", "growth", "continuous_improvement", "innovation_leadership"]
+    },
+    {
+      "id": "customer_focus",
+      "name": "Customer Focus & Service Excellence",
+      "description": "Listen actively to customers, align solutions to their needs, deliver exceptional service with adaptability and thought leadership.",
+      "keywords": ["customer_needs", "service_excellence", "adaptability", "thought_leadership", "stakeholder_alignment"]
+    },
+    {
+      "id": "trust",
+      "name": "Trust & Autonomy",
+      "description": "Cultivate trust, flexibility, and empowerment. Enable each team member to lead, execute, and drive change confidently.",
+      "keywords": ["trust", "autonomy", "empowerment", "flexibility", "confidence", "leadership"]
+    }
+  ]
+}

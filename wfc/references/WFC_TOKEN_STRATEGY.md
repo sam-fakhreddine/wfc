@@ -395,7 +395,7 @@ This is how you build **World Fucking Class** LLM orchestration systems.
 ---
 
 **See Also**:
-- [Full Documentation](wfc/personas/TOKEN_MANAGEMENT.md)
+- [Full Documentation](TOKEN_MANAGEMENT.md)
 - [Demo Script](examples/token_management_demo.py)
 - [Persona Executor](wfc/personas/persona_executor.py)
 - [Token Manager](wfc/personas/token_manager.py)

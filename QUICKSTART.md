@@ -218,7 +218,7 @@ Now Claude will automatically use WFC for reviews!
 
 ## Available Skills
 
-WFC includes 17 skills:
+WFC includes 19 skills:
 
 | Skill | What It Does | Trigger |
 |-------|--------------|---------|

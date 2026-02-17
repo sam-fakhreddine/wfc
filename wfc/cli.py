@@ -355,6 +355,11 @@ def main():
 
     subparsers.add_parser("version", help="Show version")
 
+    metrics_parser = subparsers.add_parser("metrics", help="Show observability metrics")
+    metrics_parser.add_argument(
+        "--format", choices=["json", "table"], default="json", help="Output format"
+    )
+
     implement_parser = subparsers.add_parser("implement", help="Execute implementation tasks")
     implement_parser.add_argument(
         "--tasks", type=str, help="Path to TASKS.md (default: plan/TASKS.md)"
@@ -392,6 +397,10 @@ def main():
         cmd_install(dev=args.dev)
     elif args.command == "version":
         cmd_version()
+    elif args.command == "metrics":
+        from wfc.observability.cli import cmd_metrics
+
+        cmd_metrics(format=args.format)
     elif args.command == "implement":
         cmd_implement(
             tasks_file=args.tasks,
