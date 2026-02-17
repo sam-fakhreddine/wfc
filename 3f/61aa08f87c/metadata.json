@@ -1,0 +1,36 @@
+{
+  "cli_version": "0.4.3",
+  "checkpoint_id": "3f61aa08f87c",
+  "strategy": "manual-commit",
+  "branch": "feat/teamcharter-integration",
+  "checkpoints_count": 5,
+  "files_touched": [
+    ".development/plans/TEAMCHARTER-ANALYSIS.md",
+    ".development/plans/plan_teamcharter_integration_20260215/ARCHITECTURE-OPTIONS.md",
+    ".development/plans/plan_teamcharter_integration_20260215/ISTHISSMART.md",
+    ".development/plans/plan_teamcharter_integration_20260215/PROPERTIES.md",
+    ".development/plans/plan_teamcharter_integration_20260215/TASKS.md",
+    ".development/plans/plan_teamcharter_integration_20260215/TEST-PLAN.md",
+    ".development/plans/plan_teamcharter_integration_20260215/plan-audit.json",
+    ".development/plans/plan_teamcharter_integration_20260215/revision-log.md",
+    "tests/test_teamcharter_values.py",
+    "wfc/references/TEAMCHARTER.md",
+    "wfc/references/teamcharter_values.json"
+  ],
+  "sessions": [
+    {
+      "metadata": "/3f/61aa08f87c/0/metadata.json",
+      "transcript": "/3f/61aa08f87c/0/full.jsonl",
+      "context": "/3f/61aa08f87c/0/context.md",
+      "content_hash": "/3f/61aa08f87c/0/content_hash.txt",
+      "prompt": "/3f/61aa08f87c/0/prompt.txt"
+    }
+  ],
+  "token_usage": {
+    "input_tokens": 126,
+    "cache_creation_tokens": 617467,
+    "cache_read_tokens": 8354868,
+    "output_tokens": 52686,
+    "api_call_count": 91
+  }
+}

@@ -1,0 +1,42 @@
+{
+  "cli_version": "0.4.3",
+  "checkpoint_id": "0d521e13b1e6",
+  "strategy": "manual-commit",
+  "branch": "feat/teamcharter-integration",
+  "checkpoints_count": 1,
+  "files_touched": [
+    ".development/plans/TEAMCHARTER-ANALYSIS.md",
+    ".development/plans/plan_teamcharter_integration_20260215/ARCHITECTURE-OPTIONS.md",
+    ".development/plans/plan_teamcharter_integration_20260215/ISTHISSMART.md",
+    ".development/plans/plan_teamcharter_integration_20260215/PROPERTIES.md",
+    ".development/plans/plan_teamcharter_integration_20260215/TASKS.md",
+    ".development/plans/plan_teamcharter_integration_20260215/TEST-PLAN.md",
+    ".development/plans/plan_teamcharter_integration_20260215/plan-audit.json",
+    ".development/plans/plan_teamcharter_integration_20260215/revision-log.md",
+    "CLAUDE.md",
+    "tests/test_complexity_budget_gate.py",
+    "tests/test_plan_validation_pipeline.py",
+    "tests/test_saydo_ratio.py",
+    "tests/test_teamcharter_values.py",
+    "wfc/references/TEAMCHARTER.md",
+    "wfc/references/teamcharter_values.json",
+    "wfc/scripts/complexity_budget_gate.py",
+    "wfc/scripts/memory/saydo.py"
+  ],
+  "sessions": [
+    {
+      "metadata": "/0d/521e13b1e6/0/metadata.json",
+      "transcript": "/0d/521e13b1e6/0/full.jsonl",
+      "context": "/0d/521e13b1e6/0/context.md",
+      "content_hash": "/0d/521e13b1e6/0/content_hash.txt",
+      "prompt": "/0d/521e13b1e6/0/prompt.txt"
+    }
+  ],
+  "token_usage": {
+    "input_tokens": 50,
+    "cache_creation_tokens": 28128,
+    "cache_read_tokens": 4667441,
+    "output_tokens": 7236,
+    "api_call_count": 41
+  }
+}

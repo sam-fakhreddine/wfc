@@ -1,0 +1,30 @@
+{
+  "cli_version": "0.4.3",
+  "checkpoint_id": "409f3bc6ad4a",
+  "strategy": "manual-commit",
+  "branch": "feat/teamcharter-integration",
+  "checkpoints_count": 1,
+  "files_touched": [
+    "tests/test_complexity_budget_gate.py",
+    "tests/test_plan_validation_pipeline.py",
+    "tests/test_saydo_ratio.py",
+    "wfc/scripts/complexity_budget_gate.py",
+    "wfc/scripts/memory/saydo.py"
+  ],
+  "sessions": [
+    {
+      "metadata": "/40/9f3bc6ad4a/0/metadata.json",
+      "transcript": "/40/9f3bc6ad4a/0/full.jsonl",
+      "context": "/40/9f3bc6ad4a/0/context.md",
+      "content_hash": "/40/9f3bc6ad4a/0/content_hash.txt",
+      "prompt": "/40/9f3bc6ad4a/0/prompt.txt"
+    }
+  ],
+  "token_usage": {
+    "input_tokens": 47,
+    "cache_creation_tokens": 34976,
+    "cache_read_tokens": 2450923,
+    "output_tokens": 5083,
+    "api_call_count": 29
+  }
+}
