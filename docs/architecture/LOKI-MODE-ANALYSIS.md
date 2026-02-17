@@ -294,15 +294,18 @@ The v2.0 architecture reinforces this: the security reviewer's KNOWLEDGE.md (`wf
 
 ---
 
-### 4. Enterprise Feature Sprawl (Dashboard/OIDC/RBAC/SIEM/Prometheus)
+### 4. Enterprise Feature Sprawl (Dashboard/OIDC/RBAC/SIEM/Prometheus) -- PARTIALLY REVISITED
 
 **What Loki does:** Includes TLS/HTTPS encryption, OIDC/SSO integration, 4-tier RBAC, Prometheus metrics export, syslog forwarding for SIEM, SHA-256 audit trail integrity chains, and OpenClaw multi-agent coordination protocol.
 
-**Why WFC should reject this:** WFC v2.0 took the opposite approach: the emergency bypass audit trail (`BYPASS-AUDIT.json`) is a simple append-only JSON file. The fingerprint deduplication uses SHA-256 but only for finding identity, not chain integrity. These are appropriately scoped -- they solve the actual problem (audit trail, dedup) without building infrastructure for hypothetical enterprise requirements.
+**Original rejection:** Adding Prometheus, OIDC, and SIEM to a code review tool dilutes WFC's focus. Each core module does one thing well; enterprise features don't belong in the core.
 
-The v2.0 design philosophy is clear: each module does one thing well. `consensus_score.py` scores. `fingerprint.py` deduplicates. `emergency_bypass.py` audits. Adding Prometheus, OIDC, and SIEM to a code review tool dilutes this focus.
+**Revised position:** The rejection of enterprise features *in core* stands. However, Dashboard + Observability are being planned as **plugins** via a plugin system that keeps core untouched. The key principle: WFC **exposes** metrics and structured data; existing infrastructure (Prometheus, Grafana, SIEM) **consumes** them. OIDC/RBAC remain rejected until WFC becomes a multi-user service.
 
-**Risk of adopting:** Feature bloat. Maintenance burden. Distraction from the CS algorithm, knowledge system, and reviewer pipeline that are WFC's actual value.
+See: [ROADMAP-DASHBOARD-OBSERVABILITY.md](ROADMAP-DASHBOARD-OBSERVABILITY.md) for the full plugin-based roadmap.
+
+**Risk of the original approach (rejected):** Feature bloat. Maintenance burden. Distraction from core value.
+**Risk of the plugin approach (accepted):** Plugin system is new infrastructure; must ensure core never depends on plugins.
 
 ---
 
