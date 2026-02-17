@@ -1,0 +1,354 @@
+[
+  {
+    "id": "TC-001",
+    "name": "SQL injection in user input",
+    "description": "Unsanitized user input passed directly to SQL query via f-string interpolation",
+    "code_snippet": "query = f\"SELECT * FROM users WHERE id = {user_id}\"",
+    "file": "app/db.py",
+    "line_start": 42,
+    "expected_findings": [
+      {
+        "reviewer_id": "security",
+        "category": "sql-injection",
+        "min_severity": 8,
+        "should_detect": true
+      }
+    ],
+    "tags": ["security", "injection", "owasp-top-10"]
+  },
+  {
+    "id": "TC-002",
+    "name": "XSS via innerHTML",
+    "description": "User-controlled data assigned to innerHTML without sanitization",
+    "code_snippet": "element.innerHTML = userInput;",
+    "file": "frontend/render.js",
+    "line_start": 18,
+    "expected_findings": [
+      {
+        "reviewer_id": "security",
+        "category": "xss",
+        "min_severity": 7,
+        "should_detect": true
+      }
+    ],
+    "tags": ["security", "xss", "owasp-top-10"]
+  },
+  {
+    "id": "TC-003",
+    "name": "Hardcoded API key",
+    "description": "API key hardcoded directly in source code",
+    "code_snippet": "API_KEY = \"sk-live-abc123def456ghi789\"",
+    "file": "config/settings.py",
+    "line_start": 5,
+    "expected_findings": [
+      {
+        "reviewer_id": "security",
+        "category": "hardcoded-secret",
+        "min_severity": 8,
+        "should_detect": true
+      }
+    ],
+    "tags": ["security", "secrets", "credentials"]
+  },
+  {
+    "id": "TC-004",
+    "name": "Parameterized query (true negative)",
+    "description": "Properly parameterized SQL query — should NOT be flagged",
+    "code_snippet": "cursor.execute(\"SELECT * FROM users WHERE id = %s\", (user_id,))",
+    "file": "app/db.py",
+    "line_start": 55,
+    "expected_findings": [
+      {
+        "reviewer_id": "security",
+        "category": "sql-injection",
+        "should_detect": false
+      }
+    ],
+    "tags": ["security", "true-negative"]
+  },
+  {
+    "id": "TC-005",
+    "name": "Command injection via os.system",
+    "description": "User input passed directly to os.system shell command",
+    "code_snippet": "os.system(f\"ping {hostname}\")",
+    "file": "app/network.py",
+    "line_start": 31,
+    "expected_findings": [
+      {
+        "reviewer_id": "security",
+        "category": "command-injection",
+        "min_severity": 9,
+        "should_detect": true
+      }
+    ],
+    "tags": ["security", "injection", "owasp-top-10"]
+  },
+  {
+    "id": "TC-006",
+    "name": "Off-by-one in loop bound",
+    "description": "Loop uses <= instead of < causing index out of bounds",
+    "code_snippet": "for i in range(0, len(items) + 1):\n    print(items[i])",
+    "file": "app/processor.py",
+    "line_start": 67,
+    "expected_findings": [
+      {
+        "reviewer_id": "correctness",
+        "category": "off-by-one",
+        "min_severity": 6,
+        "should_detect": true
+      }
+    ],
+    "tags": ["correctness", "boundary", "logic-error"]
+  },
+  {
+    "id": "TC-007",
+    "name": "Unhandled None return",
+    "description": "Function may return None but caller does not check",
+    "code_snippet": "user = get_user(user_id)\nuser.name  # get_user can return None",
+    "file": "app/views.py",
+    "line_start": 102,
+    "expected_findings": [
+      {
+        "reviewer_id": "correctness",
+        "category": "null-dereference",
+        "min_severity": 7,
+        "should_detect": true
+      }
+    ],
+    "tags": ["correctness", "null-safety"]
+  },
+  {
+    "id": "TC-008",
+    "name": "Correct null check (true negative)",
+    "description": "Proper None check before attribute access — should NOT be flagged",
+    "code_snippet": "user = get_user(user_id)\nif user is not None:\n    print(user.name)",
+    "file": "app/views.py",
+    "line_start": 115,
+    "expected_findings": [
+      {
+        "reviewer_id": "correctness",
+        "category": "null-dereference",
+        "should_detect": false
+      }
+    ],
+    "tags": ["correctness", "true-negative"]
+  },
+  {
+    "id": "TC-009",
+    "name": "Type mismatch in comparison",
+    "description": "Comparing string to integer without conversion",
+    "code_snippet": "if user_id == request.args.get('id'):  # user_id is int, args.get returns str",
+    "file": "app/auth.py",
+    "line_start": 29,
+    "expected_findings": [
+      {
+        "reviewer_id": "correctness",
+        "category": "type-mismatch",
+        "min_severity": 5,
+        "should_detect": true
+      }
+    ],
+    "tags": ["correctness", "type-safety"]
+  },
+  {
+    "id": "TC-010",
+    "name": "N+1 query in loop",
+    "description": "Database query executed inside a loop instead of batch fetch",
+    "code_snippet": "for order in orders:\n    customer = db.query(Customer).get(order.customer_id)",
+    "file": "app/reports.py",
+    "line_start": 45,
+    "expected_findings": [
+      {
+        "reviewer_id": "performance",
+        "category": "n-plus-one",
+        "min_severity": 7,
+        "should_detect": true
+      }
+    ],
+    "tags": ["performance", "database", "query"]
+  },
+  {
+    "id": "TC-011",
+    "name": "Unbounded list growth",
+    "description": "List grows without any size limit in a loop processing unbounded input",
+    "code_snippet": "results = []\nfor item in stream:\n    results.append(process(item))",
+    "file": "app/pipeline.py",
+    "line_start": 78,
+    "expected_findings": [
+      {
+        "reviewer_id": "performance",
+        "category": "unbounded-growth",
+        "min_severity": 6,
+        "should_detect": true
+      }
+    ],
+    "tags": ["performance", "memory", "scalability"]
+  },
+  {
+    "id": "TC-012",
+    "name": "Efficient batch query (true negative)",
+    "description": "Batch query fetching all needed records at once — should NOT be flagged",
+    "code_snippet": "customer_ids = [o.customer_id for o in orders]\ncustomers = db.query(Customer).filter(Customer.id.in_(customer_ids)).all()",
+    "file": "app/reports.py",
+    "line_start": 60,
+    "expected_findings": [
+      {
+        "reviewer_id": "performance",
+        "category": "n-plus-one",
+        "should_detect": false
+      }
+    ],
+    "tags": ["performance", "true-negative"]
+  },
+  {
+    "id": "TC-013",
+    "name": "Missing index hint on large table scan",
+    "description": "Query on large table without WHERE clause or index",
+    "code_snippet": "SELECT * FROM audit_logs ORDER BY created_at",
+    "file": "app/queries.sql",
+    "line_start": 12,
+    "expected_findings": [
+      {
+        "reviewer_id": "performance",
+        "category": "missing-index",
+        "min_severity": 5,
+        "should_detect": true
+      }
+    ],
+    "tags": ["performance", "database", "index"]
+  },
+  {
+    "id": "TC-014",
+    "name": "200-line function",
+    "description": "Single function spanning 200 lines violating single-responsibility",
+    "code_snippet": "def process_everything(data):\n    # ... 200 lines of mixed concerns ...\n    validate(data)\n    transform(data)\n    save(data)\n    notify(data)\n    log(data)",
+    "file": "app/monolith.py",
+    "line_start": 10,
+    "expected_findings": [
+      {
+        "reviewer_id": "maintainability",
+        "category": "long-function",
+        "min_severity": 5,
+        "should_detect": true
+      }
+    ],
+    "tags": ["maintainability", "complexity", "solid"]
+  },
+  {
+    "id": "TC-015",
+    "name": "Deeply nested conditionals",
+    "description": "Five levels of nested if/else blocks",
+    "code_snippet": "if a:\n    if b:\n        if c:\n            if d:\n                if e:\n                    do_something()",
+    "file": "app/logic.py",
+    "line_start": 33,
+    "expected_findings": [
+      {
+        "reviewer_id": "maintainability",
+        "category": "deep-nesting",
+        "min_severity": 5,
+        "should_detect": true
+      }
+    ],
+    "tags": ["maintainability", "complexity", "readability"]
+  },
+  {
+    "id": "TC-016",
+    "name": "Clean small function (true negative)",
+    "description": "Well-structured 10-line function with clear responsibility — should NOT be flagged",
+    "code_snippet": "def calculate_total(items: list[Item]) -> Decimal:\n    \"\"\"Sum item prices with tax.\"\"\"\n    subtotal = sum(item.price for item in items)\n    tax = subtotal * TAX_RATE\n    return subtotal + tax",
+    "file": "app/billing.py",
+    "line_start": 20,
+    "expected_findings": [
+      {
+        "reviewer_id": "maintainability",
+        "category": "long-function",
+        "should_detect": false
+      }
+    ],
+    "tags": ["maintainability", "true-negative"]
+  },
+  {
+    "id": "TC-017",
+    "name": "Magic numbers without constants",
+    "description": "Numeric literals used directly without named constants",
+    "code_snippet": "if retries > 3:\n    time.sleep(60)\n    if errors > 5:\n        sys.exit(1)",
+    "file": "app/worker.py",
+    "line_start": 88,
+    "expected_findings": [
+      {
+        "reviewer_id": "maintainability",
+        "category": "magic-number",
+        "min_severity": 3,
+        "should_detect": true
+      }
+    ],
+    "tags": ["maintainability", "readability", "constants"]
+  },
+  {
+    "id": "TC-018",
+    "name": "Missing retry on network call",
+    "description": "HTTP request with no retry logic for transient failures",
+    "code_snippet": "response = requests.get(f\"https://api.example.com/data/{id}\")",
+    "file": "app/client.py",
+    "line_start": 22,
+    "expected_findings": [
+      {
+        "reviewer_id": "reliability",
+        "category": "missing-retry",
+        "min_severity": 5,
+        "should_detect": true
+      }
+    ],
+    "tags": ["reliability", "resilience", "network"]
+  },
+  {
+    "id": "TC-019",
+    "name": "No timeout on HTTP request",
+    "description": "HTTP request without explicit timeout may hang indefinitely",
+    "code_snippet": "response = requests.post(url, json=payload)",
+    "file": "app/client.py",
+    "line_start": 35,
+    "expected_findings": [
+      {
+        "reviewer_id": "reliability",
+        "category": "missing-timeout",
+        "min_severity": 6,
+        "should_detect": true
+      }
+    ],
+    "tags": ["reliability", "timeout", "network"]
+  },
+  {
+    "id": "TC-020",
+    "name": "Proper error handling with retry (true negative)",
+    "description": "HTTP request with retry decorator and timeout — should NOT be flagged",
+    "code_snippet": "@retry(tries=3, delay=1, backoff=2)\ndef fetch_data(url):\n    return requests.get(url, timeout=30)",
+    "file": "app/client.py",
+    "line_start": 50,
+    "expected_findings": [
+      {
+        "reviewer_id": "reliability",
+        "category": "missing-retry",
+        "should_detect": false
+      }
+    ],
+    "tags": ["reliability", "true-negative"]
+  },
+  {
+    "id": "TC-021",
+    "name": "Race condition in shared state",
+    "description": "Shared mutable state accessed from multiple threads without locking",
+    "code_snippet": "counter = 0\ndef increment():\n    global counter\n    counter += 1  # Not thread-safe",
+    "file": "app/stats.py",
+    "line_start": 14,
+    "expected_findings": [
+      {
+        "reviewer_id": "reliability",
+        "category": "race-condition",
+        "min_severity": 7,
+        "should_detect": true
+      }
+    ],
+    "tags": ["reliability", "concurrency", "thread-safety"]
+  }
+]

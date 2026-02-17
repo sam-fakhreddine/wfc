@@ -5,9 +5,8 @@ Integration Tests for TEAMCHARTER Workflow (TASK-009)
 Tests cross-component flows for TEAMCHARTER integration:
 1. Interview values context → plan generation → task values alignment fields
 2. Complexity-budget gate → flags oversized S task → passes appropriately-sized L task
-3. Customer Advocate persona selected for customer-facing tasks
-4. ReflexionMemory stores and retrieves values tags
-5. Plan audit trail records validation chain
+3. ReflexionMemory stores and retrieves values tags
+4. Plan audit trail records validation chain
 """
 
 import json
@@ -16,10 +15,8 @@ from pathlib import Path
 
 import pytest
 
-# Add wfc-plan to path for interview imports
 sys.path.insert(0, str(Path(__file__).parent.parent / "wfc" / "skills" / "wfc-plan"))
 
-# Import components to test
 from interview import AdaptiveInterviewer, InterviewResult
 
 from wfc.scripts.complexity_budget_gate import check_complexity_budget
@@ -38,7 +35,6 @@ class TestInterviewToPlanFlow:
         """Test that interview captures TEAMCHARTER values into team_values_context."""
         interviewer = AdaptiveInterviewer()
 
-        # Simulate TEAMCHARTER-related answers
         interviewer.answers = {
             "goal": "Build a customer-facing API for user management",
             "context": "Enable self-service user management to reduce support burden",
@@ -55,27 +51,22 @@ class TestInterviewToPlanFlow:
             "liveness_required": "System must respond within 500ms",
             "testing_approach": "unit_integration",
             "coverage_target": "80% coverage for critical paths",
-            # TEAMCHARTER values
             "teamcharter_values": ["customer_focus", "accountability", "trust"],
             "customer_stakeholder": "External API consumers (developers)",
             "customer_success": "Developers can integrate in under 30 minutes with clear errors",
             "speed_quality_tradeoff": "balanced",
         }
 
-        # Parse results
         result = interviewer._parse_results()
 
-        # Verify team_values_context structure
         assert "team_values_context" in result.to_dict()
         tvc = result.team_values_context
 
-        # Verify required fields
         assert "primary_values" in tvc
         assert "customer" in tvc
         assert "success_metric" in tvc
         assert "speed_quality_tradeoff" in tvc
 
-        # Verify values content
         assert "customer_focus" in tvc["primary_values"]
         assert "accountability" in tvc["primary_values"]
         assert "trust" in tvc["primary_values"]
@@ -100,10 +91,8 @@ class TestInterviewToPlanFlow:
             },
         )
 
-        # Serialize to dict
         data = result.to_dict()
 
-        # Verify team_values_context is preserved
         assert "team_values_context" in data
         assert data["team_values_context"]["primary_values"] == ["innovation", "learning"]
         assert data["team_values_context"]["customer"] == "Internal team"
@@ -123,10 +112,9 @@ class TestComplexityBudgetGate:
             task_id="TASK-001", complexity="S", lines_changed=100, files_changed=2
         )
 
-        # Should fail because 100 > 50 line budget
         assert result.passed is False
-        assert result.lines_exceeded == 50  # 100 - 50
-        assert result.files_exceeded == 0  # 2 files is within budget
+        assert result.lines_exceeded == 50
+        assert result.files_exceeded == 0
         assert result.severity == "warning"
         assert "EXCEEDED" in result.report
         assert "splitting this task" in result.report.lower()
@@ -137,7 +125,6 @@ class TestComplexityBudgetGate:
             task_id="TASK-002", complexity="S", lines_changed=45, files_changed=1
         )
 
-        # Should pass
         assert result.passed is True
         assert result.lines_exceeded == 0
         assert result.files_exceeded == 0
@@ -149,7 +136,6 @@ class TestComplexityBudgetGate:
             task_id="TASK-003", complexity="L", lines_changed=400, files_changed=8
         )
 
-        # Should pass (L budget: 500 lines, 10 files)
         assert result.passed is True
         assert result.lines_exceeded == 0
         assert result.files_exceeded == 0
@@ -165,118 +151,15 @@ class TestComplexityBudgetGate:
 
         data = result.to_dict()
 
-        # Verify all fields are present
         assert data["task_id"] == "TASK-004"
         assert data["complexity"] == "M"
         assert data["lines_changed"] == 150
         assert data["files_changed"] == 3
-        assert data["lines_budget"] == 200  # M budget
+        assert data["lines_budget"] == 200
         assert data["files_budget"] == 5
         assert isinstance(data["passed"], bool)
         assert "report" in data
         assert data["severity"] == "warning"
-
-
-class TestCustomerAdvocatePersona:
-    """
-    Test Scenario 3: Customer Advocate persona selected for customer-facing tasks
-
-    Loads CUSTOMER_ADVOCATE.json from wfc/references/personas/panels/product/.
-    Verifies it has TEAM_VALUES_ALIGNMENT in selection_criteria.properties.
-    """
-
-    def test_customer_advocate_persona_exists(self):
-        """Test that CUSTOMER_ADVOCATE.json exists and loads correctly."""
-        persona_path = (
-            Path(__file__).parent.parent
-            / "wfc"
-            / "references"
-            / "personas"
-            / "panels"
-            / "product"
-            / "CUSTOMER_ADVOCATE.json"
-        )
-
-        assert persona_path.exists(), f"CUSTOMER_ADVOCATE.json not found at {persona_path}"
-
-        with open(persona_path) as f:
-            persona = json.load(f)
-
-        # Verify basic structure
-        assert persona["id"] == "CUSTOMER_ADVOCATE"
-        assert persona["name"] == "Customer Advocate"
-        assert persona["panel"] == "product"
-
-    def test_customer_advocate_has_team_values_property(self):
-        """Test that CUSTOMER_ADVOCATE has TEAM_VALUES_ALIGNMENT in selection_criteria.properties."""
-        persona_path = (
-            Path(__file__).parent.parent
-            / "wfc"
-            / "references"
-            / "personas"
-            / "panels"
-            / "product"
-            / "CUSTOMER_ADVOCATE.json"
-        )
-
-        with open(persona_path) as f:
-            persona = json.load(f)
-
-        # Verify selection criteria includes TEAM_VALUES_ALIGNMENT
-        properties = persona.get("selection_criteria", {}).get("properties", [])
-        assert (
-            "TEAM_VALUES_ALIGNMENT" in properties
-        ), "CUSTOMER_ADVOCATE must have TEAM_VALUES_ALIGNMENT in selection_criteria.properties"
-
-    def test_customer_advocate_review_dimensions_sum_to_one(self):
-        """Test that review_dimensions weights sum to 1.0."""
-        persona_path = (
-            Path(__file__).parent.parent
-            / "wfc"
-            / "references"
-            / "personas"
-            / "panels"
-            / "product"
-            / "CUSTOMER_ADVOCATE.json"
-        )
-
-        with open(persona_path) as f:
-            persona = json.load(f)
-
-        # Get review dimensions
-        review_dimensions = persona.get("lens", {}).get("review_dimensions", [])
-        assert len(review_dimensions) > 0, "CUSTOMER_ADVOCATE must have review_dimensions"
-
-        # Sum weights
-        total_weight = sum(dim["weight"] for dim in review_dimensions)
-
-        # Allow small floating point error
-        assert (
-            abs(total_weight - 1.0) < 0.01
-        ), f"review_dimensions weights must sum to 1.0, got {total_weight}"
-
-    def test_customer_advocate_has_team_values_skill(self):
-        """Test that CUSTOMER_ADVOCATE has Team Values Alignment skill."""
-        persona_path = (
-            Path(__file__).parent.parent
-            / "wfc"
-            / "references"
-            / "personas"
-            / "panels"
-            / "product"
-            / "CUSTOMER_ADVOCATE.json"
-        )
-
-        with open(persona_path) as f:
-            persona = json.load(f)
-
-        # Check skills
-        skills = persona.get("skills", [])
-        skill_names = [skill["name"] for skill in skills]
-
-        assert (
-            "Team Values Alignment" in skill_names
-        ), "CUSTOMER_ADVOCATE must have 'Team Values Alignment' skill"
 
 
 class TestReflexionMemoryValuesIntegration:
@@ -304,7 +187,6 @@ class TestReflexionMemoryValuesIntegration:
             },
         )
 
-        # Verify team_values_impact is stored
         assert entry.team_values_impact is not None
         assert "accountability" in entry.team_values_impact
         assert "trust" in entry.team_values_impact
@@ -325,17 +207,13 @@ class TestReflexionMemoryValuesIntegration:
             },
         )
 
-        # Serialize to dict
         data = original.to_dict()
 
-        # Verify team_values_impact is in dict
         assert "team_values_impact" in data
         assert data["team_values_impact"]["customer_focus"] == "violated - built wrong thing"
 
-        # Deserialize back
         restored = ReflexionEntry.from_dict(data)
 
-        # Verify round-trip preservation
         assert restored.team_values_impact is not None
         assert (
             restored.team_values_impact["customer_focus"]
@@ -353,13 +231,10 @@ class TestReflexionMemoryValuesIntegration:
             "fix": "Old fix",
             "rule": "Old rule",
             "severity": "low",
-            # No team_values_impact
         }
 
-        # Should load without error
         entry = ReflexionEntry.from_dict(old_data)
 
-        # team_values_impact should be None (default)
         assert entry.team_values_impact is None
         assert entry.task_id == "TASK-OLD"
 
@@ -374,7 +249,6 @@ class TestPlanAuditTrailSchema:
 
     def test_plan_audit_json_schema_structure(self):
         """Test that plan-audit.json schema has all required fields."""
-        # This is the schema that would be generated by wfc-plan
         audit_data = {
             "hash_algorithm": "sha256",
             "original_hash": "abc123...",
@@ -392,7 +266,6 @@ class TestPlanAuditTrailSchema:
             },
         }
 
-        # Verify required fields from TASK-005b
         required_fields = [
             "hash_algorithm",
             "original_hash",
@@ -427,7 +300,6 @@ class TestPlanAuditTrailSchema:
             },
         }
 
-        # Verify team_values_alignment is present and structured
         assert "team_values_alignment" in audit_data
         tva = audit_data["team_values_alignment"]
 
@@ -457,27 +329,23 @@ class TestPlanAuditTrailSchema:
             },
         }
 
-        # Should serialize without error
         json_str = json.dumps(audit_data, indent=2)
 
-        # Should deserialize back
         restored = json.loads(json_str)
 
-        # Verify round-trip
         assert restored["hash_algorithm"] == "sha256"
         assert restored["team_values_alignment"]["primary_values"] == ["accountability"]
 
 
 class TestEndToEndTeamcharterFlow:
     """
-    Integration test: Full flow from interview → complexity check → persona selection → memory.
+    Integration test: Full flow from interview → complexity check → memory.
 
     This is a smoke test ensuring all components can work together.
     """
 
     def test_full_teamcharter_integration_flow(self):
         """Test complete TEAMCHARTER integration flow across components."""
-        # Step 1: Interview captures TEAMCHARTER values
         interviewer = AdaptiveInterviewer()
         interviewer.answers = {
             "goal": "Add user export feature",
@@ -491,25 +359,11 @@ class TestEndToEndTeamcharterFlow:
         result = interviewer._parse_results()
         assert "customer_focus" in result.team_values_context["primary_values"]
 
-        # Step 2: Complexity budget check
         budget_check = check_complexity_budget(
             task_id="TASK-EXPORT", complexity="M", lines_changed=180, files_changed=4
         )
         assert budget_check.passed is True
 
-        # Step 3: Customer Advocate persona would be selected (verify it exists)
-        persona_path = (
-            Path(__file__).parent.parent
-            / "wfc"
-            / "references"
-            / "personas"
-            / "panels"
-            / "product"
-            / "CUSTOMER_ADVOCATE.json"
-        )
-        assert persona_path.exists()
-
-        # Step 4: ReflexionMemory can store values impact
         memory_entry = ReflexionEntry(
             timestamp="2026-02-15T15:00:00Z",
             task_id="TASK-EXPORT",
@@ -524,11 +378,9 @@ class TestEndToEndTeamcharterFlow:
             },
         )
 
-        # Verify memory preserves values
         memory_data = memory_entry.to_dict()
         assert "customer_focus" in memory_data["team_values_impact"]
 
-        # Step 5: Plan audit would include values alignment
         audit_data = {
             "hash_algorithm": "sha256",
             "original_hash": "export123",
@@ -542,14 +394,11 @@ class TestEndToEndTeamcharterFlow:
             "team_values_alignment": result.team_values_context,
         }
 
-        # Verify audit includes values from interview
         assert audit_data["team_values_alignment"]["customer"] == "EU customers"
         assert "10 seconds" in audit_data["team_values_alignment"]["success_metric"]
 
-        # All components integrated successfully
         assert True, "Full TEAMCHARTER integration flow completed"
 
 
 if __name__ == "__main__":
-    # Run tests with pytest
     pytest.main([__file__, "-v"])

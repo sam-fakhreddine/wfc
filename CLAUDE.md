@@ -256,13 +256,28 @@ git push origin main  # Push when ready
 WFC - World Fucking Class
 │
 ├── wfc/                          # Main package
+│   ├── reviewers/                # 5 fixed specialist reviewers
+│   │   ├── security/             # PROMPT.md + KNOWLEDGE.md
+│   │   ├── correctness/
+│   │   ├── performance/
+│   │   ├── maintainability/
+│   │   └── reliability/
 │   ├── scripts/                  # Executable code
-│   │   ├── personas/             # Persona system
-│   │   │   ├── persona_executor.py       # Prepare subagent tasks
-│   │   │   ├── persona_orchestrator.py   # Select personas
-│   │   │   ├── token_manager.py          # Token optimization (99% reduction)
-│   │   │   ├── ultra_minimal_prompts.py  # 200-token prompts
-│   │   │   └── file_reference_prompts.py # File refs not content
+│   │   ├── skills/               # Skill implementations
+│   │   │   └── review/
+│   │   │       ├── orchestrator.py       # Two-phase review workflow
+│   │   │       ├── reviewer_engine.py    # Prepare tasks + parse results
+│   │   │       ├── reviewer_loader.py    # Load reviewer configs
+│   │   │       ├── consensus_score.py    # CS algorithm + MPR
+│   │   │       ├── fingerprint.py        # SHA-256 finding dedup
+│   │   │       ├── emergency_bypass.py   # 24h bypass with audit trail
+│   │   │       └── cli.py               # CLI interface
+│   │   ├── knowledge/            # RAG-powered knowledge system
+│   │   │   ├── rag_engine.py            # Embedding + retrieval
+│   │   │   ├── retriever.py             # Two-tier knowledge retrieval
+│   │   │   ├── knowledge_writer.py      # Auto-append to KNOWLEDGE.md
+│   │   │   ├── drift_detector.py        # Staleness/bloat/contradiction detection
+│   │   │   └── embedding_provider.py    # Embedding abstraction
 │   │   ├── hooks/                # Hook infrastructure
 │   │   │   ├── pretooluse_hook.py        # PreToolUse hook handler
 │   │   │   ├── security_hook.py          # Security enforcement
@@ -278,13 +293,9 @@ WFC - World Fucking Class
 │   │   │   │   ├── typescript.py        # prettier + eslint + tsc
 │   │   │   │   └── go.py                # gofmt + go vet + golangci-lint
 │   │   │   └── patterns/                 # Security patterns (JSON)
-│   │   └── skills/               # Skill implementations
-│   │       └── review/
-│   │           ├── orchestrator.py       # Review workflow
-│   │           ├── consensus.py          # Consensus algorithm
-│   │           └── agents.py             # Agent logic
+│   │   └── benchmark/            # Review benchmark dataset
+│   │       └── review_benchmark.py      # Precision/recall/F1 metrics
 │   ├── references/               # Progressive disclosure docs
-│   │   ├── personas/             # 56 expert personas (JSON)
 │   │   ├── ARCHITECTURE.md
 │   │   ├── TOKEN_MANAGEMENT.md
 │   │   └── ULTRA_MINIMAL_RESULTS.md
@@ -317,7 +328,6 @@ WFC - World Fucking Class
 │
 ├── tests/                        # Test suite
 ├── scripts/                      # Utility scripts
-│   ├── benchmark_tokens.py       # Token usage benchmarks
 │   └── pre-commit.sh             # Pre-commit validation
 │
 ├── Makefile                      # Development tasks
@@ -446,56 +456,64 @@ make test-coverage
 
 ## 🎯 Core Architecture
 
-### Token Management (99% Reduction)
+### Five-Agent Consensus Review (v2.0)
 
-**TokenBudgetManager** (`wfc/scripts/personas/token_manager.py`):
-- Accurate token counting with tiktoken
-- Smart file condensing when needed
-- Budget: 150k total, 1k system prompt, 138k code files
+**Architecture**: 5 fixed specialist reviewers with mathematical consensus scoring.
 
-**Ultra-Minimal Prompts** (`wfc/scripts/personas/ultra_minimal_prompts.py`):
-- 200 tokens per persona (was 3000)
-- No verbose backstories
-- Trust LLM to be expert
+```
+ReviewOrchestrator (orchestrator.py)
+  ├── prepare_review(request) → 5 task specs
+  │     └── ReviewerEngine.prepare_review_tasks()
+  │           └── ReviewerLoader (loads from wfc/reviewers/{name}/PROMPT.md)
+  │                 └── KnowledgeRetriever (optional, two-tier RAG)
+  │
+  └── finalize_review(request, responses, output_dir) → ReviewResult
+        ├── ReviewerEngine.parse_results() → findings per reviewer
+        ├── Fingerprinter.deduplicate() → DeduplicatedFindings
+        ├── ConsensusScore.calculate() → CS with MPR
+        └── Generate REVIEW-{task_id}.md report
+```
 
-**File Reference Architecture** (`wfc/scripts/personas/file_reference_prompts.py`):
-- Send paths, not content
-- Domain-focused guidance (what to look for)
-- Non-prescriptive (no explicit grep patterns)
+**5 Reviewers** (`wfc/reviewers/{name}/PROMPT.md + KNOWLEDGE.md`):
+- **Security**: OWASP/CWE taxonomy, hostile threat modeling
+- **Correctness**: Edge cases, contract verification, type safety
+- **Performance**: Big-O analysis, N+1 detection, memory profiling
+- **Maintainability**: SOLID, DRY, coupling/cohesion, readability
+- **Reliability**: Concurrency, error handling, chaos scenarios, resource leaks
 
-**Result**: 150k tokens → 1.5k tokens (99% reduction)
+### Consensus Score (CS) Algorithm
 
-### Persona System
+**Formula**: `CS = (0.5 * R_bar) + (0.3 * R_bar * (k/n)) + (0.2 * R_max)`
 
-**PersonaReviewExecutor** (`wfc/scripts/personas/persona_executor.py`):
-1. Builds persona-specific system prompts
-2. Prepares task specifications
-3. Returns them for Claude Code to execute via Task tool
+Where:
+- `R_i = (severity * confidence) / 10` per deduplicated finding
+- `R_bar` = mean of all R_i values
+- `k` = total reviewer agreements (sum of duplicate counts)
+- `n` = 5 (total reviewers)
+- `R_max` = max(R_i) across all findings
 
-**PersonaOrchestrator** (`wfc/scripts/personas/persona_orchestrator.py`):
-- Selects 5 relevant experts from 56 reviewers
-- Uses semantic matching (file types, properties, context)
-- Diversity scoring ensures varied perspectives
+**Decision Tiers**:
+- Informational: CS < 4.0 (log only)
+- Moderate: 4.0 ≤ CS < 7.0 (inline comment)
+- Important: 7.0 ≤ CS < 9.0 (block merge)
+- Critical: CS ≥ 9.0 (block + escalate)
 
-**56 Expert Personas** (`wfc/references/personas/panels/`):
-- Security specialists (AppSec, CloudSec, CryptoSec, etc.)
-- Architecture experts (Distributed, Microservices, etc.)
-- Performance specialists (Backend, Frontend, Database, etc.)
-- Quality experts (Testing, Observability, Documentation, Silent Failure Hunter, Code Simplifier, etc.)
+**Minority Protection Rule (MPR)**: If R_max ≥ 8.5 from a security/reliability reviewer, CS is elevated to `max(CS, 0.7 * R_max + 2.0)`.
 
-### Consensus Algorithm
+**Finding Deduplication**: SHA-256 fingerprint on `{file}:{line_start // 3}:{category}` — merges findings within ±3 lines across reviewers.
 
-**WeightedConsensus** (`wfc/scripts/skills/review/consensus.py`):
-- Security: 35% (highest priority)
-- Code Review: 30% (correctness)
-- Performance: 20% (scalability)
-- Complexity: 15% (maintainability)
+### Knowledge System (RAG-Powered)
 
-**Rules**:
-1. All agents must pass (score ≥ 7/10)
-2. Overall score = weighted average
-3. Any critical severity = automatic fail
-4. Overall score ≥ 7.0 required to pass
+- **KNOWLEDGE.md** per reviewer: Human-readable learning entries
+- **RAG Pipeline**: Two-tier retrieval (embedding + keyword fallback)
+- **Auto-Append**: `knowledge_writer.py` adds new findings after reviews
+- **Drift Detection**: Detects stale (>90d), bloated (>50), contradictory, and orphaned entries
+
+### Emergency Bypass
+
+- 24-hour expiry with mandatory reason
+- Append-only `BYPASS-AUDIT.json` audit trail
+- Records CS at time of bypass for accountability
 
 ### Agent Skills Compliance
 
@@ -517,7 +535,7 @@ All 19 WFC skills are Agent Skills compliant:
 
 ### MULTI-TIER
 - Logic separated from presentation
-- Personas (logic) vs CLI (presentation)
+- Reviewers (logic) vs CLI (presentation)
 - Progressive disclosure (load on demand)
 
 ### PARALLEL
@@ -544,7 +562,7 @@ All 19 WFC skills are Agent Skills compliant:
 ## ⚠️ Absolute Rules
 
 ### Token Management
-- **NEVER** send full file content to personas
+- **NEVER** send full file content to reviewers
 - **ALWAYS** use file reference architecture
 - **ALWAYS** measure token usage with `make benchmark`
 - **NEVER** exceed token budgets without justification
@@ -569,31 +587,33 @@ All 19 WFC skills are Agent Skills compliant:
 
 ## 📊 Key Metrics
 
-**Token Reduction**:
-- Legacy: 150,000 tokens (full code content)
-- WFC: 1,500 tokens (paths + ultra-minimal prompts)
-- Reduction: 99%
+**Review System**:
+- 5 fixed specialist reviewers (replaced 56-persona selection system)
+- CS algorithm with mathematical consensus scoring
+- Minority Protection Rule for security/reliability findings
+- Finding deduplication via SHA-256 fingerprinting
 
-**Persona Prompts**:
-- Legacy: 3,000 tokens per persona
-- WFC: 200 tokens per persona
-- Reduction: 93%
+**Test Coverage**:
+- Full suite: 830+ tests passing
+- Review system: ~200 tests (engine, fingerprint, CS, CLI, E2E, benchmark)
 
 **Agent Skills Compliance**:
-- Valid skills: 17/17 (100%)
-- XML generation: 17/17 (100%)
+- Valid skills: 20/20 (100%)
+- XML generation: 20/20 (100%)
 
 ## 🔍 Quick Reference
 
 ### File Locations
 
-**Token Management**: `wfc/scripts/personas/token_manager.py`
-**Ultra-Minimal Prompts**: `wfc/scripts/personas/ultra_minimal_prompts.py`
-**File References**: `wfc/scripts/personas/file_reference_prompts.py`
-**Persona Executor**: `wfc/scripts/personas/persona_executor.py`
-**Persona Orchestrator**: `wfc/scripts/personas/persona_orchestrator.py`
 **Review Orchestrator**: `wfc/scripts/skills/review/orchestrator.py`
-**Consensus Algorithm**: `wfc/scripts/skills/review/consensus.py`
+**Reviewer Engine**: `wfc/scripts/skills/review/reviewer_engine.py`
+**Consensus Score**: `wfc/scripts/skills/review/consensus_score.py`
+**Fingerprinter**: `wfc/scripts/skills/review/fingerprint.py`
+**Emergency Bypass**: `wfc/scripts/skills/review/emergency_bypass.py`
+**Review CLI**: `wfc/scripts/skills/review/cli.py`
+**Knowledge System**: `wfc/scripts/knowledge/`
+**Drift Detector**: `wfc/scripts/knowledge/drift_detector.py`
+**Reviewer Prompts**: `wfc/reviewers/{security,correctness,performance,maintainability,reliability}/PROMPT.md`
 **Hook Infrastructure**: `wfc/scripts/hooks/pretooluse_hook.py`
 **Security Patterns**: `wfc/scripts/hooks/patterns/security.json`
 **Architecture Designer**: `wfc/skills/wfc-plan/architecture_designer.py`
@@ -627,7 +647,7 @@ Documentation is organized by topic in `docs/` (see `docs/README.md` for full in
 - **docs/security/** - OWASP LLM Top 10, git safety, hooks & telemetry
 - **CONTRIBUTING.md** - How to contribute
 - **docs/workflow/** - PR workflow, install, build, implementation
-- **docs/quality/** - Quality gates, personas (56 experts)
+- **docs/quality/** - Quality gates, review benchmarks
 - **docs/reference/** - Agent Skills compliance, registries, EARS, Claude integration
 - **docs/examples/** - Working demos and examples
 - **wfc/references/TOKEN_MANAGEMENT.md** - Token optimization

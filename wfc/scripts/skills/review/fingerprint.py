@@ -1,0 +1,134 @@
+"""Finding deduplication with exact fingerprinting.
+
+Deduplicates findings across multiple reviewers using SHA-256 fingerprints
+with line-number tolerance bucketing. When duplicates are found, findings
+are merged: highest severity wins, all unique descriptions and remediations
+are preserved, and the reviewer count (k) is tracked for the consensus score.
+"""
+
+from __future__ import annotations
+
+import hashlib
+from dataclasses import dataclass
+
+
+@dataclass
+class DeduplicatedFinding:
+    """A finding after deduplication across reviewers."""
+
+    fingerprint: str
+    file: str
+    line_start: int
+    line_end: int
+    category: str
+    severity: float
+    confidence: float
+    description: str
+    descriptions: list[str]
+    remediation: list[str]
+    reviewer_ids: list[str]
+    k: int
+
+
+class Fingerprinter:
+    """Deduplicate findings across reviewers using SHA-256 fingerprinting."""
+
+    @staticmethod
+    def normalize_line(line_start: int) -> int:
+        """Normalize line number to +/-3 tolerance bucket."""
+        return (line_start // 3) * 3
+
+    def compute_fingerprint(self, file_path: str, line_start: int, category: str) -> str:
+        """Compute the SHA-256 fingerprint hash for a finding."""
+        normalized = self.normalize_line(line_start)
+        raw = f"{file_path}:{normalized}:{category}"
+        return hashlib.sha256(raw.encode("utf-8")).hexdigest()
+
+    def deduplicate(
+        self,
+        findings: list[dict],
+        reviewer_id_map: dict[str, list[dict]] | None = None,
+    ) -> list[DeduplicatedFinding]:
+        """Deduplicate findings across reviewers.
+
+        Args:
+            findings: Flat list of finding dicts (each must have reviewer_id).
+            reviewer_id_map: Alternative input mapping reviewer_id to findings.
+                If provided, *findings* is ignored and reviewer_id is taken
+                from the map keys.
+
+        Returns:
+            List of DeduplicatedFinding sorted by severity descending.
+        """
+        if reviewer_id_map is not None:
+            flat: list[dict] = []
+            for rid, flist in reviewer_id_map.items():
+                for f in flist:
+                    flat.append({**f, "reviewer_id": rid})
+        else:
+            flat = list(findings)
+
+        if not flat:
+            return []
+
+        buckets: dict[str, list[dict]] = {}
+        for f in flat:
+            fp = self.compute_fingerprint(f["file"], f["line_start"], f["category"])
+            buckets.setdefault(fp, []).append(f)
+
+        results: list[DeduplicatedFinding] = []
+        for fp, group in buckets.items():
+            results.append(self._merge(fp, group))
+
+        results.sort(key=lambda r: r.severity, reverse=True)
+        return results
+
+    @staticmethod
+    def _merge(fingerprint: str, group: list[dict]) -> DeduplicatedFinding:
+        """Merge a group of duplicate findings into one."""
+        group_sorted = sorted(group, key=lambda f: f.get("severity", 0), reverse=True)
+        primary = group_sorted[0]
+
+        seen_desc: set[str] = set()
+        descriptions: list[str] = []
+        for f in group_sorted:
+            d = f.get("description", "")
+            if d and d not in seen_desc:
+                seen_desc.add(d)
+                descriptions.append(d)
+
+        seen_rem: set[str] = set()
+        remediations: list[str] = []
+        for f in group_sorted:
+            r = f.get("remediation")
+            if r and r not in seen_rem:
+                seen_rem.add(r)
+                remediations.append(r)
+
+        seen_rid: set[str] = set()
+        reviewer_ids: list[str] = []
+        for f in group_sorted:
+            rid = f.get("reviewer_id", "unknown")
+            if rid not in seen_rid:
+                seen_rid.add(rid)
+                reviewer_ids.append(rid)
+
+        max_severity = max(f.get("severity", 0) for f in group)
+        max_confidence = max(f.get("confidence", 0) for f in group)
+
+        line_end = primary.get("line_end", primary["line_start"])
+
+        return DeduplicatedFinding(
+            fingerprint=fingerprint,
+            file=primary["file"],
+            line_start=primary["line_start"],
+            line_end=line_end,
+            category=primary["category"],
+            severity=max_severity,
+            confidence=max_confidence,
+            description=primary.get("description", ""),
+            descriptions=descriptions,
+            remediation=remediations,
+            reviewer_ids=reviewer_ids,
+            k=len(reviewer_ids),
+        )
