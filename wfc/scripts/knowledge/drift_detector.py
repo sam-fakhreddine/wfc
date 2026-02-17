@@ -57,9 +57,9 @@ class DriftDetector:
         project_root: Path | None = None,
     ) -> None:
         """Initialize with paths to reviewer and global knowledge directories."""
-        self.reviewers_dir = reviewers_dir or Path("wfc/reviewers")
+        self.reviewers_dir = reviewers_dir or Path(__file__).resolve().parents[2] / "reviewers"
         self.global_knowledge_dir = global_knowledge_dir
-        self.project_root = project_root or Path(".")
+        self.project_root = project_root or Path(__file__).resolve().parents[3]
 
     def analyze(self) -> DriftReport:
         """Run full drift analysis across all knowledge files."""
@@ -67,13 +67,14 @@ class DriftDetector:
         knowledge_files = self._find_knowledge_files()
 
         for km_path, reviewer_id in knowledge_files:
-            entries = self._count_entries(km_path)
+            content = km_path.read_text()
+            entries = sum(1 for line in content.splitlines() if _ENTRY_RE.match(line))
             report.total_entries += entries
 
-            stale = self.check_staleness(km_path, reviewer_id)
-            bloat = self.check_bloat(km_path, reviewer_id)
-            contradictions = self.check_contradictions(km_path, reviewer_id)
-            orphaned = self.check_orphaned(km_path, reviewer_id)
+            stale = self.check_staleness(km_path, reviewer_id, content=content)
+            bloat = self.check_bloat(km_path, reviewer_id, content=content)
+            contradictions = self.check_contradictions(km_path, reviewer_id, content=content)
+            orphaned = self.check_orphaned(km_path, reviewer_id, content=content)
 
             all_signals = stale + bloat + contradictions + orphaned
             report.signals.extend(all_signals)
@@ -86,11 +87,14 @@ class DriftDetector:
         report.recommendation = self._compute_recommendation(report)
         return report
 
-    def check_staleness(self, knowledge_path: Path, reviewer_id: str) -> list[DriftSignal]:
+    def check_staleness(
+        self, knowledge_path: Path, reviewer_id: str, *, content: str | None = None
+    ) -> list[DriftSignal]:
         """Check for entries older than STALE_THRESHOLD_DAYS."""
         signals: list[DriftSignal] = []
         cutoff = date.today() - timedelta(days=self.STALE_THRESHOLD_DAYS)
-        content = knowledge_path.read_text()
+        if content is None:
+            content = knowledge_path.read_text()
         lines = content.splitlines()
 
         for i, line in enumerate(lines, start=1):
@@ -117,9 +121,13 @@ class DriftDetector:
                 )
         return signals
 
-    def check_bloat(self, knowledge_path: Path, reviewer_id: str) -> list[DriftSignal]:
+    def check_bloat(
+        self, knowledge_path: Path, reviewer_id: str, *, content: str | None = None
+    ) -> list[DriftSignal]:
         """Check if a knowledge file exceeds BLOAT_THRESHOLD_ENTRIES."""
-        entry_count = self._count_entries(knowledge_path)
+        if content is None:
+            content = knowledge_path.read_text()
+        entry_count = sum(1 for line in content.splitlines() if _ENTRY_RE.match(line))
         if entry_count > self.BLOAT_THRESHOLD_ENTRIES:
             return [
                 DriftSignal(
@@ -135,9 +143,12 @@ class DriftDetector:
             ]
         return []
 
-    def check_contradictions(self, knowledge_path: Path, reviewer_id: str) -> list[DriftSignal]:
+    def check_contradictions(
+        self, knowledge_path: Path, reviewer_id: str, *, content: str | None = None
+    ) -> list[DriftSignal]:
         """Check for entries in both Patterns Found and False Positives with similar file paths."""
-        content = knowledge_path.read_text()
+        if content is None:
+            content = knowledge_path.read_text()
         sections = self._parse_sections(content)
 
         patterns_paths = self._extract_file_paths_from_section(sections.get(_PATTERNS_FOUND, ""))
@@ -163,9 +174,12 @@ class DriftDetector:
             )
         return signals
 
-    def check_orphaned(self, knowledge_path: Path, reviewer_id: str) -> list[DriftSignal]:
+    def check_orphaned(
+        self, knowledge_path: Path, reviewer_id: str, *, content: str | None = None
+    ) -> list[DriftSignal]:
         """Check for entries referencing files that no longer exist in the project."""
-        content = knowledge_path.read_text()
+        if content is None:
+            content = knowledge_path.read_text()
         file_paths = self._extract_file_paths_from_section(content)
         seen: set[str] = set()
         signals: list[DriftSignal] = []

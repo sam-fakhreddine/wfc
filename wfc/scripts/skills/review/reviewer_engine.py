@@ -250,6 +250,10 @@ class ReviewerEngine:
         """
         findings: list[dict] = []
 
+        MAX_RESPONSE_LEN = 500_000
+        if len(response) > MAX_RESPONSE_LEN:
+            response = response[:MAX_RESPONSE_LEN]
+
         array_match = re.search(r"\[[\s\S]*?\]", response)
         if array_match:
             try:

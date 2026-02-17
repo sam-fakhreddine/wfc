@@ -19,6 +19,8 @@ from .reviewer_engine import ReviewerEngine
 if TYPE_CHECKING:
     from wfc.scripts.knowledge.retriever import KnowledgeRetriever
 
+    from .reviewer_engine import ReviewerResult
+
 logger = logging.getLogger(__name__)
 
 
@@ -153,7 +155,7 @@ class ReviewOrchestrator:
         self,
         request: ReviewRequest,
         cs_result: ConsensusScoreResult,
-        reviewer_results: list,
+        reviewer_results: list[ReviewerResult],
         path: Path,
     ) -> None:
         """Generate markdown review report."""

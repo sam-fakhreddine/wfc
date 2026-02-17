@@ -15,12 +15,8 @@ import argparse
 import json
 import sys
 from pathlib import Path
-from typing import TYPE_CHECKING
 
 from wfc.scripts.skills.review.orchestrator import ReviewOrchestrator, ReviewRequest, ReviewResult
-
-if TYPE_CHECKING:
-    pass
 
 
 def build_parser() -> argparse.ArgumentParser:

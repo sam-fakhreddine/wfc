@@ -84,34 +84,26 @@ class Fingerprinter:
         return results
 
     @staticmethod
+    def _unique_values(items: list[dict], key: str, default: str = "") -> list[str]:
+        """Collect unique non-empty values for *key* across items, preserving order."""
+        seen: set[str] = set()
+        result: list[str] = []
+        for item in items:
+            val = item.get(key, default)
+            if val and val not in seen:
+                seen.add(val)
+                result.append(val)
+        return result
+
+    @staticmethod
     def _merge(fingerprint: str, group: list[dict]) -> DeduplicatedFinding:
         """Merge a group of duplicate findings into one."""
         group_sorted = sorted(group, key=lambda f: f.get("severity", 0), reverse=True)
         primary = group_sorted[0]
 
-        seen_desc: set[str] = set()
-        descriptions: list[str] = []
-        for f in group_sorted:
-            d = f.get("description", "")
-            if d and d not in seen_desc:
-                seen_desc.add(d)
-                descriptions.append(d)
-
-        seen_rem: set[str] = set()
-        remediations: list[str] = []
-        for f in group_sorted:
-            r = f.get("remediation")
-            if r and r not in seen_rem:
-                seen_rem.add(r)
-                remediations.append(r)
-
-        seen_rid: set[str] = set()
-        reviewer_ids: list[str] = []
-        for f in group_sorted:
-            rid = f.get("reviewer_id", "unknown")
-            if rid not in seen_rid:
-                seen_rid.add(rid)
-                reviewer_ids.append(rid)
+        descriptions = Fingerprinter._unique_values(group_sorted, "description")
+        remediations = Fingerprinter._unique_values(group_sorted, "remediation")
+        reviewer_ids = Fingerprinter._unique_values(group_sorted, "reviewer_id", default="unknown")
 
         max_severity = max(f.get("severity", 0) for f in group)
         max_confidence = max(f.get("confidence", 0) for f in group)

@@ -7,9 +7,10 @@ Allows developers to override a failing review with a mandatory reason,
 from __future__ import annotations
 
 import json
+import tempfile
 import uuid
 from dataclasses import asdict, dataclass
-from datetime import datetime, timedelta
+from datetime import UTC, datetime, timedelta
 from pathlib import Path
 
 from wfc.scripts.skills.review.consensus_score import ConsensusScoreResult
@@ -31,7 +32,7 @@ class BypassRecord:
     @property
     def is_expired(self) -> bool:
         """Check whether this bypass has expired."""
-        return datetime.utcnow() >= self.expires_at
+        return datetime.now(UTC) >= self.expires_at
 
 
 class EmergencyBypass:
@@ -61,7 +62,7 @@ class EmergencyBypass:
             msg = "Bypass reason must be non-empty."
             raise ValueError(msg)
 
-        now = datetime.utcnow()
+        now = datetime.now(UTC)
         record = BypassRecord(
             bypass_id=str(uuid.uuid4()),
             task_id=task_id,
@@ -75,7 +76,14 @@ class EmergencyBypass:
 
         trail = self._load_raw()
         trail.append(self._record_to_dict(record))
-        self._audit_path.write_text(json.dumps(trail, indent=2))
+        fd, tmp = tempfile.mkstemp(dir=self._audit_dir, suffix=".tmp")
+        try:
+            with open(fd, "w") as f:
+                json.dump(trail, f, indent=2)
+            Path(tmp).replace(self._audit_path)
+        except BaseException:
+            Path(tmp).unlink(missing_ok=True)
+            raise
 
         return record
 

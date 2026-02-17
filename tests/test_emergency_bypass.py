@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import json
 import uuid
-from datetime import datetime, timedelta
+from datetime import UTC, datetime, timedelta
 from pathlib import Path
 
 import pytest
@@ -106,8 +106,8 @@ class TestIsExpired:
             task_id="TASK-005",
             reason="old bypass",
             bypassed_by="eve",
-            created_at=datetime.utcnow() - timedelta(hours=25),
-            expires_at=datetime.utcnow() - timedelta(hours=1),
+            created_at=datetime.now(UTC) - timedelta(hours=25),
+            expires_at=datetime.now(UTC) - timedelta(hours=1),
             cs_at_bypass=6.0,
             tier_at_bypass="Moderate",
         )
@@ -172,8 +172,8 @@ class TestIsBypassed:
             "task_id": "TASK-009",
             "reason": "expired bypass",
             "bypassed_by": "judy",
-            "created_at": (datetime.utcnow() - timedelta(hours=25)).isoformat(),
-            "expires_at": (datetime.utcnow() - timedelta(hours=1)).isoformat(),
+            "created_at": (datetime.now(UTC) - timedelta(hours=25)).isoformat(),
+            "expires_at": (datetime.now(UTC) - timedelta(hours=1)).isoformat(),
             "cs_at_bypass": 5.0,
             "tier_at_bypass": "Moderate",
         }
@@ -201,8 +201,8 @@ class TestGetActiveBypasses:
             "task_id": "TASK-EXPIRED",
             "reason": "expired",
             "bypassed_by": "leo",
-            "created_at": (datetime.utcnow() - timedelta(hours=25)).isoformat(),
-            "expires_at": (datetime.utcnow() - timedelta(hours=1)).isoformat(),
+            "created_at": (datetime.now(UTC) - timedelta(hours=25)).isoformat(),
+            "expires_at": (datetime.now(UTC) - timedelta(hours=1)).isoformat(),
             "cs_at_bypass": 4.0,
             "tier_at_bypass": "Informational",
         }

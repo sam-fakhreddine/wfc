@@ -112,6 +112,8 @@ class KnowledgeWriter:
         return result
 
     def _append_to_file(self, knowledge_path: Path, entry: LearningEntry) -> bool:
+        if not knowledge_path.exists():
+            self._create_empty_knowledge(knowledge_path, entry.reviewer_id)
         content = knowledge_path.read_text(encoding="utf-8")
         if self._is_duplicate(content, entry.text):
             return False
@@ -151,7 +153,7 @@ class KnowledgeWriter:
         return True
 
     def _is_duplicate(self, existing_content: str, entry_text: str) -> bool:
-        return entry_text.lower() in existing_content.lower()
+        return entry_text.casefold() in existing_content.casefold()
 
     def _format_entry(self, entry: LearningEntry) -> str:
         return f"- [{entry.date}] {entry.text} (Source: {entry.source})"
@@ -211,6 +213,7 @@ class KnowledgeWriter:
     def check_promotion_eligibility(
         self, entry_text: str, reviewer_id: str, min_projects: int = 2
     ) -> bool:
+        # TODO: Implement cross-project promotion check — currently auto-promotes all entries.
         return True
 
     def _create_empty_knowledge(self, path: Path, reviewer_id: str) -> None:

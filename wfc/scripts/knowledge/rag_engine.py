@@ -9,12 +9,15 @@ from __future__ import annotations
 
 import hashlib
 import json
+import logging
 import math
 from dataclasses import asdict, dataclass
 from pathlib import Path
 
 from wfc.scripts.knowledge.chunker import KnowledgeChunk, KnowledgeChunker
 from wfc.scripts.knowledge.embeddings import EmbeddingProvider, get_embedding_provider
+
+logger = logging.getLogger(__name__)
 
 
 @dataclass
@@ -47,10 +50,10 @@ class _JsonVectorStore:
         if collection not in self._data:
             self._data[collection] = {"ids": [], "embeddings": [], "metadatas": []}
         coll = self._data[collection]
-        existing_ids = set(coll["ids"])
+        id_to_index = {cid: idx for idx, cid in enumerate(coll["ids"])}
         for i, cid in enumerate(ids):
-            if cid in existing_ids:
-                idx = coll["ids"].index(cid)
+            if cid in id_to_index:
+                idx = id_to_index[cid]
                 coll["embeddings"][idx] = embeddings[i]
                 coll["metadatas"][idx] = metadatas[i]
             else:
@@ -125,6 +128,7 @@ class _ChromaVectorStore:
         try:
             coll = self._client.get_collection(name=collection)
         except Exception:
+            logger.debug("Collection '%s' not found in ChromaDB", collection)
             return []
         results = coll.query(query_embeddings=[query_embedding], n_results=top_k)
         out: list[tuple[str, dict, float]] = []
@@ -141,7 +145,7 @@ class _ChromaVectorStore:
         try:
             self._client.delete_collection(name=collection)
         except Exception:
-            pass
+            logger.debug("Failed to delete collection '%s' from ChromaDB", collection)
 
 
 def _get_vector_store(store_dir: Path) -> _ChromaVectorStore | _JsonVectorStore:
