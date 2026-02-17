@@ -1,0 +1,32 @@
+{
+  "cli_version": "0.4.2",
+  "checkpoint_id": "c604273e5924",
+  "session_id": "6b2be0e6-9a4f-45c5-82c0-fbe952af39a5",
+  "strategy": "manual-commit",
+  "created_at": "2026-02-17T23:13:47.845845Z",
+  "branch": "chore/housekeeping-import-cleanup",
+  "checkpoints_count": 1,
+  "files_touched": [
+    "README.md"
+  ],
+  "agent": "Claude Code",
+  "transcript_identifier_at_start": "ceabfa12-f290-4727-ac3b-67e0d0a24b8c",
+  "checkpoint_transcript_start": 126,
+  "transcript_lines_at_start": 126,
+  "token_usage": {
+    "input_tokens": 26,
+    "cache_creation_tokens": 13470,
+    "cache_read_tokens": 801133,
+    "output_tokens": 4404,
+    "api_call_count": 14
+  },
+  "initial_attribution": {
+    "calculated_at": "2026-02-17T23:13:47.818538Z",
+    "agent_lines": 209,
+    "human_added": 82,
+    "human_modified": 0,
+    "human_removed": 0,
+    "total_committed": 291,
+    "agent_percentage": 71.8213058419244
+  }
+}
