@@ -1,0 +1,32 @@
+{
+  "cli_version": "0.4.2",
+  "checkpoint_id": "17db6fe79ce7",
+  "session_id": "2c4c817a-0eed-4a00-8482-9725e09c3ec9",
+  "strategy": "manual-commit",
+  "created_at": "2026-02-17T19:38:46.219727Z",
+  "branch": "feat/integrate-pr15-pr17",
+  "checkpoints_count": 1,
+  "files_touched": [
+    "tests/test_plan_validation_pipeline.py"
+  ],
+  "agent": "Claude Code",
+  "transcript_identifier_at_start": "e88aae42-b3fb-49ad-849d-ea2d95f7e713",
+  "checkpoint_transcript_start": 124,
+  "transcript_lines_at_start": 124,
+  "token_usage": {
+    "input_tokens": 50,
+    "cache_creation_tokens": 47277,
+    "cache_read_tokens": 3826675,
+    "output_tokens": 2291,
+    "api_call_count": 46
+  },
+  "initial_attribution": {
+    "calculated_at": "2026-02-17T19:38:46.166924Z",
+    "agent_lines": 0,
+    "human_added": 7708,
+    "human_modified": 0,
+    "human_removed": 0,
+    "total_committed": 7708,
+    "agent_percentage": 0
+  }
+}
