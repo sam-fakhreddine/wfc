@@ -10,10 +10,12 @@ Similar to persona registry but for documentation.
 """
 
 import json
-import re
+import logging
 from dataclasses import asdict, dataclass
 from pathlib import Path
-from typing import Dict, List, Optional
+from typing import List
+
+logger = logging.getLogger(__name__)
 
 
 @dataclass
@@ -34,20 +36,22 @@ class DocMetadata:
 def extract_title_from_file(file_path: Path) -> str:
     """Extract title from markdown file (first # heading)"""
     try:
-        with open(file_path) as f:
+        with open(file_path, encoding="utf-8") as f:
             for line in f:
                 line = line.strip()
                 if line.startswith("# "):
                     return line[2:].strip()
-    except Exception:
+    except OSError:
         pass
+    except Exception as exc:
+        logger.warning("Unexpected error reading title from %s: %s", file_path, exc)
     return file_path.stem.replace("_", " ").replace("-", " ").title()
 
 
 def extract_summary_from_file(file_path: Path, max_chars: int = 150) -> str:
     """Extract summary from markdown file (first paragraph after title)"""
     try:
-        with open(file_path) as f:
+        with open(file_path, encoding="utf-8") as f:
             lines = f.readlines()
 
         summary_lines = []
@@ -78,7 +82,10 @@ def extract_summary_from_file(file_path: Path, max_chars: int = 150) -> str:
 
         return summary or "Documentation file"
 
-    except Exception:
+    except OSError:
+        return "Documentation file"
+    except Exception as exc:
+        logger.warning("Unexpected error reading summary from %s: %s", file_path, exc)
         return "Documentation file"
 
 
@@ -111,12 +118,14 @@ def extract_topics_from_file(file_path: Path) -> List[str]:
     ]
 
     try:
-        content = file_path.read_text().lower()
+        content = file_path.read_text(encoding="utf-8").lower()
         for keyword in keywords:
             if keyword in content and keyword not in topics:
                 topics.append(keyword)
-    except Exception:
+    except OSError:
         pass
+    except Exception as exc:
+        logger.warning("Unexpected error extracting topics from %s: %s", file_path, exc)
 
     return sorted(set(topics))[:10]
 
@@ -139,12 +148,14 @@ def extract_skills_from_file(file_path: Path) -> List[str]:
     ]
 
     try:
-        content = file_path.read_text().lower()
+        content = file_path.read_text(encoding="utf-8").lower()
         for skill in skill_patterns:
             if skill in content and skill not in skills:
                 skills.append(skill)
-    except Exception:
+    except OSError:
         pass
+    except Exception as exc:
+        logger.warning("Unexpected error extracting skills from %s: %s", file_path, exc)
 
     return sorted(skills)
 
@@ -174,7 +185,7 @@ def scan_docs_directory(docs_dir: Path) -> List[DocMetadata]:
             continue
 
         try:
-            lines = len(md_file.read_text().splitlines())
+            lines = len(md_file.read_text(encoding="utf-8").splitlines())
         except Exception:
             lines = 0
 
@@ -200,6 +211,14 @@ def scan_docs_directory(docs_dir: Path) -> List[DocMetadata]:
     return docs
 
 
+def _savings_percent(docs: List[DocMetadata]) -> float:
+    """Compute token savings percentage, returning 0.0 if total tokens is zero."""
+    total_tokens = sum(d.size_tokens for d in docs)
+    if total_tokens == 0:
+        return 0.0
+    return round((1 - (len(docs) * 100) / total_tokens) * 100, 1)
+
+
 def generate_registry_json(docs: List[DocMetadata], output_path: Path) -> None:
     """Generate REGISTRY.json"""
     registry = {
@@ -209,13 +228,11 @@ def generate_registry_json(docs: List[DocMetadata], output_path: Path) -> None:
         "total_lines": sum(d.size_lines for d in docs),
         "total_tokens_full": sum(d.size_tokens for d in docs),
         "total_tokens_summaries": len(docs) * 100,
-        "savings_percent": round(
-            (1 - (len(docs) * 100) / sum(d.size_tokens for d in docs)) * 100, 1
-        ),
+        "savings_percent": _savings_percent(docs),
         "docs": [asdict(d) for d in docs],
     }
 
-    with open(output_path, "w") as f:
+    with open(output_path, "w", encoding="utf-8") as f:
         json.dump(registry, f, indent=2)
 
     print(f"✅ Generated {output_path}")
@@ -237,7 +254,7 @@ def generate_registry_markdown(docs: List[DocMetadata], output_path: Path) -> No
         f"**Total Lines:** {sum(d.size_lines for d in docs):,}",
         f"**Total Tokens (Full):** {sum(d.size_tokens for d in docs):,}",
         f"**Total Tokens (Summaries):** {len(docs) * 100:,}",
-        f"**Token Savings:** {round((1 - (len(docs) * 100) / sum(d.size_tokens for d in docs)) * 100, 1)}%",
+        f"**Token Savings:** {_savings_percent(docs)}%",
         "",
         "---",
         "",
@@ -269,7 +286,7 @@ def generate_registry_markdown(docs: List[DocMetadata], output_path: Path) -> No
                 ]
             )
 
-    with open(output_path, "w") as f:
+    with open(output_path, "w", encoding="utf-8") as f:
         f.write("\n".join(lines))
 
     print(f"✅ Generated {output_path}")
@@ -299,10 +316,10 @@ def main():
     generate_registry_markdown(docs, reference_dir / "REGISTRY.md")
 
     print("\n✅ Documentation registry generated successfully!")
-    print(f"\nUsage:")
-    print(f"  from wfc.shared.doc_loader import DocLoader")
-    print(f"  loader = DocLoader()")
-    print(f"  doc = loader.load_doc('orchestrator_delegation_demo')")
+    print("\nUsage:")
+    print("  from wfc.shared.doc_loader import DocLoader")
+    print("  loader = DocLoader()")
+    print("  doc = loader.load_doc('orchestrator_delegation_demo')")
 
     return 0
 
