@@ -1,0 +1,29 @@
+{
+  "cli_version": "0.4.2",
+  "checkpoint_id": "fd75dd2a1def",
+  "strategy": "manual-commit",
+  "branch": "feat/integrate-pr15-pr17",
+  "checkpoints_count": 1,
+  "files_touched": [
+    "tests/test_eval_framework.py",
+    "tests/test_plan_validation_pipeline.py",
+    "wfc/scripts/benchmark/review_benchmark.py",
+    "wfc/scripts/knowledge/chunker.py"
+  ],
+  "sessions": [
+    {
+      "metadata": "/fd/75dd2a1def/0/metadata.json",
+      "transcript": "/fd/75dd2a1def/0/full.jsonl",
+      "context": "/fd/75dd2a1def/0/context.md",
+      "content_hash": "/fd/75dd2a1def/0/content_hash.txt",
+      "prompt": "/fd/75dd2a1def/0/prompt.txt"
+    }
+  ],
+  "token_usage": {
+    "input_tokens": 28,
+    "cache_creation_tokens": 151157,
+    "cache_read_tokens": 2887711,
+    "output_tokens": 807,
+    "api_call_count": 22
+  }
+}
