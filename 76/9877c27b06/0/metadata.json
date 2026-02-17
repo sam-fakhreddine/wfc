@@ -1,0 +1,41 @@
+{
+  "cli_version": "0.4.2",
+  "checkpoint_id": "769877c27b06",
+  "session_id": "2c4c817a-0eed-4a00-8482-9725e09c3ec9",
+  "strategy": "manual-commit",
+  "created_at": "2026-02-17T22:28:16.040526Z",
+  "branch": "feat/integrate-pr15-pr17",
+  "checkpoints_count": 2,
+  "files_touched": [
+    ".claude/settings.json",
+    ".github/workflows/ci.yml",
+    ".github/workflows/validate.yml",
+    "install.sh",
+    "pyproject.toml",
+    "tests/test_persona_deletion.py",
+    "tests/test_teamcharter_integration.py",
+    "wfc/scripts/knowledge/rag_engine.py",
+    "wfc/scripts/skills/review/consensus_score.py",
+    "wfc/scripts/skills/review/orchestrator.py"
+  ],
+  "agent": "Claude Code",
+  "transcript_identifier_at_start": "0b59c3ee-616a-4eb7-9135-999239039b35",
+  "checkpoint_transcript_start": 1020,
+  "transcript_lines_at_start": 1020,
+  "token_usage": {
+    "input_tokens": 88,
+    "cache_creation_tokens": 117073,
+    "cache_read_tokens": 7339592,
+    "output_tokens": 2565,
+    "api_call_count": 72
+  },
+  "initial_attribution": {
+    "calculated_at": "2026-02-17T22:28:15.814687Z",
+    "agent_lines": 65,
+    "human_added": 0,
+    "human_modified": 299,
+    "human_removed": 749,
+    "total_committed": 364,
+    "agent_percentage": 17.857142857142858
+  }
+}

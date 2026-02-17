@@ -1,0 +1,35 @@
+{
+  "cli_version": "0.4.2",
+  "checkpoint_id": "769877c27b06",
+  "strategy": "manual-commit",
+  "branch": "feat/integrate-pr15-pr17",
+  "checkpoints_count": 2,
+  "files_touched": [
+    ".claude/settings.json",
+    ".github/workflows/ci.yml",
+    ".github/workflows/validate.yml",
+    "install.sh",
+    "pyproject.toml",
+    "tests/test_persona_deletion.py",
+    "tests/test_teamcharter_integration.py",
+    "wfc/scripts/knowledge/rag_engine.py",
+    "wfc/scripts/skills/review/consensus_score.py",
+    "wfc/scripts/skills/review/orchestrator.py"
+  ],
+  "sessions": [
+    {
+      "metadata": "/76/9877c27b06/0/metadata.json",
+      "transcript": "/76/9877c27b06/0/full.jsonl",
+      "context": "/76/9877c27b06/0/context.md",
+      "content_hash": "/76/9877c27b06/0/content_hash.txt",
+      "prompt": "/76/9877c27b06/0/prompt.txt"
+    }
+  ],
+  "token_usage": {
+    "input_tokens": 88,
+    "cache_creation_tokens": 117073,
+    "cache_read_tokens": 7339592,
+    "output_tokens": 2565,
+    "api_call_count": 72
+  }
+}
