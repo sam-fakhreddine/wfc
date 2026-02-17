@@ -1,0 +1,27 @@
+{
+  "cli_version": "0.4.2",
+  "checkpoint_id": "d4cae80d7f01",
+  "strategy": "manual-commit",
+  "branch": "feat/teamcharter-integration",
+  "checkpoints_count": 1,
+  "files_touched": [
+    "wfc/scripts/benchmark/review_benchmark.py",
+    "wfc/scripts/knowledge/chunker.py"
+  ],
+  "sessions": [
+    {
+      "metadata": "/d4/cae80d7f01/0/metadata.json",
+      "transcript": "/d4/cae80d7f01/0/full.jsonl",
+      "context": "/d4/cae80d7f01/0/context.md",
+      "content_hash": "/d4/cae80d7f01/0/content_hash.txt",
+      "prompt": "/d4/cae80d7f01/0/prompt.txt"
+    }
+  ],
+  "token_usage": {
+    "input_tokens": 27,
+    "cache_creation_tokens": 42669,
+    "cache_read_tokens": 948274,
+    "output_tokens": 222,
+    "api_call_count": 19
+  }
+}
