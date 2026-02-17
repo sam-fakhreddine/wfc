@@ -13,11 +13,11 @@ PHILOSOPHY (from SuperClaude Framework):
 This is the single highest-ROI feature for token efficiency.
 """
 
+import json
 from dataclasses import dataclass
 from enum import Enum
 from pathlib import Path
-from typing import List, Dict, Any, Optional
-import json
+from typing import Any, Dict, List, Optional
 
 
 class ConfidenceLevel(Enum):

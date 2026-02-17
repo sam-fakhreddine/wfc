@@ -9,11 +9,7 @@ from __future__ import annotations
 import textwrap
 from pathlib import Path
 
-import pytest
-
 from wfc.scripts.skills.review.doc_auditor import DocAuditor, DocAuditReport, DocGap
-
-
 
 
 class TestDocGapDataclass:
@@ -319,9 +315,9 @@ class TestOrchestratorIntegration:
         """Create a ReviewOrchestrator with minimal fixtures."""
         import textwrap
 
-        from wfc.scripts.skills.review.reviewer_loader import REVIEWER_IDS, ReviewerLoader
-        from wfc.scripts.skills.review.reviewer_engine import ReviewerEngine
         from wfc.scripts.skills.review.orchestrator import ReviewOrchestrator
+        from wfc.scripts.skills.review.reviewer_engine import ReviewerEngine
+        from wfc.scripts.skills.review.reviewer_loader import REVIEWER_IDS, ReviewerLoader
 
         reviewers_dir = tmp_path / "reviewers"
         reviewers_dir.mkdir()
@@ -352,6 +348,7 @@ class TestOrchestratorIntegration:
     def _minimal_responses(self):
         """Build minimal passing task responses for all 5 reviewers."""
         import json
+
         from wfc.scripts.skills.review.reviewer_loader import REVIEWER_IDS
 
         responses = []
@@ -405,6 +402,7 @@ class TestOrchestratorIntegration:
     def test_doc_audit_never_blocks_review(self, tmp_path: Path):
         """doc_audit field does not affect the passed/failed decision."""
         import unittest.mock as mock
+
         from wfc.scripts.skills.review.orchestrator import ReviewRequest
 
         orch = self._make_orchestrator(tmp_path)

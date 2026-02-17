@@ -9,12 +9,12 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Optional
 
-from .interview import AdaptiveInterviewer, InterviewResult
-from .tasks_generator import TasksGenerator
-from .properties_generator import PropertiesGenerator
-from .test_plan_generator import TestPlanGenerator
-from .plan_history import PlanHistory, create_plan_metadata
 from .architecture_designer import ArchitectureDesigner
+from .interview import AdaptiveInterviewer, InterviewResult
+from .plan_history import PlanHistory, create_plan_metadata
+from .properties_generator import PropertiesGenerator
+from .tasks_generator import TasksGenerator
+from .test_plan_generator import TestPlanGenerator
 
 
 @dataclass

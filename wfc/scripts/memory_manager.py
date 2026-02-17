@@ -17,14 +17,14 @@ Import from here for compatibility, or directly from memory/ for new code.
 
 # Re-export everything from the new memory module
 from .memory import (
-    ReflexionEntry,
-    WorkflowMetric,
-    OperationalPattern,
-    ReflexionLogger,
-    MetricsLogger,
-    PatternDetector,
-    OpsTasksGenerator,
     MemoryManager,
+    MetricsLogger,
+    OperationalPattern,
+    OpsTasksGenerator,
+    PatternDetector,
+    ReflexionEntry,
+    ReflexionLogger,
+    WorkflowMetric,
 )
 
 __all__ = [

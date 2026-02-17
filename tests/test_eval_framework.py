@@ -397,9 +397,9 @@ class TestAllExamplesValid:
 
 
 from wfc.scripts.benchmark.eval_judge import (
-    JudgeScore,
     DualJudgeResult,
     EvalJudge,
+    JudgeScore,
 )
 
 

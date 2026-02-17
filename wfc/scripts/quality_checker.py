@@ -12,12 +12,12 @@ PHILOSOPHY:
 - Token-efficient: Fix linting locally, not in review comments
 """
 
+import json
 import subprocess
 import sys
 from dataclasses import dataclass
 from pathlib import Path
 from typing import List, Optional
-import json
 
 
 @dataclass

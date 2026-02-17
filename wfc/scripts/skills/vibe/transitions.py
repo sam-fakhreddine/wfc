@@ -4,10 +4,11 @@ WFC Vibe - Transition Handling
 SOLID: Single Responsibility - Detect transition commands and orchestrate workflow
 """
 
-from typing import List, Optional, Tuple
 from dataclasses import dataclass
-from .summarizer import Message, ContextSummarizer, PlanningContext
+from typing import List, Optional, Tuple
+
 from .detector import ScopeDetector
+from .summarizer import ContextSummarizer, Message, PlanningContext
 
 
 @dataclass

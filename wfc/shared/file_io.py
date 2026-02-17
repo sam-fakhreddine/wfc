@@ -7,7 +7,7 @@ Eliminates inline boilerplate for JSON, YAML, and text file operations.
 
 import json
 from pathlib import Path
-from typing import Dict, Any, Optional
+from typing import Any, Dict, Optional
 
 
 class FileIOError(Exception):
@@ -227,8 +227,8 @@ write_text = save_text
 
 # Example usage
 if __name__ == "__main__":
-    import tempfile
     import shutil
+    import tempfile
 
     # Create temp directory for testing
     temp_dir = Path(tempfile.mkdtemp())

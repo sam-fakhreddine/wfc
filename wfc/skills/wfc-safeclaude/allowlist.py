@@ -2,8 +2,9 @@
 Allowlist generator - creates categorized safe command lists
 """
 
-from typing import List
 from dataclasses import dataclass
+from typing import List
+
 from .scanner import ProjectProfile
 
 

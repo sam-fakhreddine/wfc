@@ -5,11 +5,11 @@ Combines reviews from agents into consensus decision.
 Supports both fixed 4-agent mode and variable persona mode.
 """
 
-from typing import List, Dict, Any, Optional
-from dataclasses import dataclass
-from collections import defaultdict
-from pathlib import Path
 import sys
+from collections import defaultdict
+from dataclasses import dataclass
+from pathlib import Path
+from typing import Any, Dict, List, Optional
 
 # Handle both relative imports (when used as package) and standalone execution
 try:

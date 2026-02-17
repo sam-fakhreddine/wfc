@@ -5,10 +5,11 @@ Extracts formal properties from interview results.
 """
 
 from dataclasses import dataclass
-from typing import List
 from pathlib import Path
+from typing import List
+
+from .ears import EARSFormatter, EARSPropertyMapper
 from .interview import InterviewResult
-from .ears import EARSPropertyMapper, EARSFormatter
 
 
 @dataclass

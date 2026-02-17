@@ -4,10 +4,10 @@ Commit-msg hook - Validates commit message format
 Soft enforcement: Warns but NEVER blocks commits.
 """
 
-import sys
 import re
+import sys
 from pathlib import Path
-from typing import Dict, Any, Optional
+from typing import Any, Dict, Optional
 
 
 def validate_commit_message(message: str) -> Dict[str, Any]:

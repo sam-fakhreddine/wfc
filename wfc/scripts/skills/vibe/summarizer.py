@@ -4,8 +4,8 @@ WFC Vibe - Context Summarization
 SOLID: Single Responsibility - Extract relevant planning context from conversations
 """
 
-from typing import List, Any, Optional
 from dataclasses import dataclass
+from typing import Any, List, Optional
 
 
 @dataclass

@@ -10,8 +10,8 @@ This document outlines the architecture for distributed WFC execution.
 """
 
 from dataclasses import dataclass, field
-from typing import List, Dict, Any, Optional
 from enum import Enum
+from typing import Any, Dict, List, Optional
 
 
 class CloudProvider(Enum):

@@ -4,7 +4,6 @@ from __future__ import annotations
 from wfc.scripts.skills.review.fingerprint import DeduplicatedFinding, Fingerprinter
 
 
-
 def _finding(
     file: str = "src/app.py",
     line_start: int = 10,

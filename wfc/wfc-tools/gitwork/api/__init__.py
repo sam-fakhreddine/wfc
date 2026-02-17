@@ -4,14 +4,7 @@ gitwork API operations
 All git operations used by WFC skills.
 """
 
-from . import branch
-from . import commit
-from . import worktree
-from . import merge
-from . import rollback
-from . import history
-from . import hooks
-from . import semver
+from . import branch, commit, history, hooks, merge, rollback, semver, worktree
 
 __all__ = [
     "branch",

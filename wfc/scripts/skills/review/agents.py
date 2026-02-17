@@ -10,8 +10,8 @@ See: https://github.com/sam-fakhreddine/wfc/issues/18
 """
 
 from dataclasses import dataclass
-from typing import List, Dict
 from enum import Enum
+from typing import Dict, List
 
 
 class AgentType(Enum):

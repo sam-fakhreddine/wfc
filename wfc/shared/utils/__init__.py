@@ -1,7 +1,7 @@
 """WFC Utilities - Reusable helpers"""
 
-from .git_helpers import GitHelper, GitError, get_git
-from .model_selector import ModelSelector, ModelTier, ModelConfig, get_selector
+from .git_helpers import GitError, GitHelper, get_git
+from .model_selector import ModelConfig, ModelSelector, ModelTier, get_selector
 
 __all__ = [
     "GitHelper",

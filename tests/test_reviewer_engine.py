@@ -17,17 +17,15 @@ from pathlib import Path
 
 import pytest
 
-from wfc.scripts.skills.review.reviewer_loader import (
-    REVIEWER_IDS,
-    ReviewerLoader,
-)
 from wfc.scripts.skills.review.reviewer_engine import (
     REVIEWER_NAMES,
     ReviewerEngine,
     ReviewerResult,
 )
-
-
+from wfc.scripts.skills.review.reviewer_loader import (
+    REVIEWER_IDS,
+    ReviewerLoader,
+)
 
 
 @pytest.fixture()

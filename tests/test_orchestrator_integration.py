@@ -11,14 +11,14 @@ from pathlib import Path
 
 import pytest
 
-from wfc.scripts.skills.review.reviewer_loader import REVIEWER_IDS, ReviewerLoader
-from wfc.scripts.skills.review.reviewer_engine import ReviewerEngine
+from wfc.scripts.skills.review.consensus_score import ConsensusScoreResult
 from wfc.scripts.skills.review.orchestrator import (
     ReviewOrchestrator,
     ReviewRequest,
     ReviewResult,
 )
-from wfc.scripts.skills.review.consensus_score import ConsensusScoreResult
+from wfc.scripts.skills.review.reviewer_engine import ReviewerEngine
+from wfc.scripts.skills.review.reviewer_loader import REVIEWER_IDS, ReviewerLoader
 
 
 @pytest.fixture()
@@ -472,6 +472,7 @@ class TestValidationWiredIntoPipeline:
     ) -> None:
         """FindingValidator is called after dedup and before CS calculation."""
         from unittest.mock import patch
+
         from wfc.scripts.skills.review.finding_validator import FindingValidator
 
         output_dir = tmp_path / "output"
@@ -508,6 +509,7 @@ class TestValidationWiredIntoPipeline:
     ) -> None:
         """When skip_validation=True, FindingValidator is never called."""
         from unittest.mock import patch
+
         from wfc.scripts.skills.review.finding_validator import FindingValidator
 
         output_dir = tmp_path / "output"
@@ -545,6 +547,7 @@ class TestValidationWiredIntoPipeline:
     ) -> None:
         """HISTORICALLY_REJECTED findings are excluded from CS calculation entirely."""
         from unittest.mock import patch
+
         from wfc.scripts.skills.review.finding_validator import (
             FindingValidator,
             ValidatedFinding,
@@ -610,6 +613,7 @@ class TestValidationWiredIntoPipeline:
     ) -> None:
         """Validator exceptions are caught (PROP-001 fail-open): review still completes."""
         from unittest.mock import patch
+
         from wfc.scripts.skills.review.finding_validator import FindingValidator
 
         output_dir = tmp_path / "output"
@@ -641,6 +645,7 @@ class TestValidationWiredIntoPipeline:
     ) -> None:
         """CS score for VERIFIED findings is higher than DISPUTED findings of same severity."""
         from unittest.mock import patch
+
         from wfc.scripts.skills.review.finding_validator import (
             FindingValidator,
             ValidatedFinding,

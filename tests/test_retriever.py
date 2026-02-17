@@ -24,8 +24,6 @@ from wfc.scripts.knowledge.retriever import (
     TaggedResult,
 )
 
-
-
 SAMPLE_KNOWLEDGE_MD = """\
 # KNOWLEDGE.md -- Test Reviewer
 

@@ -10,9 +10,10 @@ Once Track D (TASK-023) consolidates wfc-tools → wfc_tools, switch to
 normal imports: `from wfc.wfc_tools.gitwork.api.hooks import ...`
 """
 
-import pytest
 import importlib.util
 from pathlib import Path
+
+import pytest
 
 # Load hooks module from hyphenated directory via importlib
 _hooks_path = Path(__file__).parent.parent / "wfc" / "wfc-tools" / "gitwork" / "api" / "hooks.py"

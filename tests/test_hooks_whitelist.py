@@ -6,9 +6,10 @@ For full security tests (install, wrap, manage), see test_hooks_security.py.
 NOTE: Uses importlib to load from hyphenated 'wfc-tools' directory.
 """
 
-import pytest
 import importlib.util
 from pathlib import Path
+
+import pytest
 
 _hooks_path = Path(__file__).parent.parent / "wfc" / "wfc-tools" / "gitwork" / "api" / "hooks.py"
 _spec = importlib.util.spec_from_file_location("hooks", _hooks_path)

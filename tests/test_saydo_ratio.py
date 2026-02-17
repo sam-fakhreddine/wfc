@@ -6,13 +6,13 @@ Covers: compute_say_do_ratio, aggregate_values_alignment,
         generate_values_mermaid_chart, generate_values_recommendations
 """
 
-from wfc.scripts.memory.schemas import ReflexionEntry
 from wfc.scripts.memory.saydo import (
-    compute_say_do_ratio,
     aggregate_values_alignment,
+    compute_say_do_ratio,
     generate_values_mermaid_chart,
     generate_values_recommendations,
 )
+from wfc.scripts.memory.schemas import ReflexionEntry
 
 # ---------------------------------------------------------------------------
 # compute_say_do_ratio

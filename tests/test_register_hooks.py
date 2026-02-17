@@ -4,11 +4,9 @@ import json
 import sys
 from pathlib import Path
 
-import pytest
-
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "wfc" / "scripts" / "hooks"))
 
-from register_hooks import WFC_MARKER, is_wfc_hook_entry, upsert_hooks
+from register_hooks import is_wfc_hook_entry, upsert_hooks
 
 
 class TestIsWfcHookEntry:

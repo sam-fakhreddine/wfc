@@ -9,7 +9,7 @@ Design: Simple dataclasses, no magic, clear validation.
 
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import List, Optional, Dict, Any
+from typing import Any, Dict, List, Optional
 
 
 class PropertyType(Enum):

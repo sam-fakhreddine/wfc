@@ -2,33 +2,27 @@
 
 import json
 import sys
-import tempfile
-from io import StringIO
 from pathlib import Path
-from unittest.mock import MagicMock, patch
-
-import pytest
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "wfc" / "scripts" / "hooks"))
 
-from _util import check_file_length, find_git_root
-from _checkers.python import strip_python_comments
-from _checkers.typescript import strip_typescript_comments, find_project_root
 from _checkers.go import strip_go_comments
+from _checkers.python import strip_python_comments
+from _checkers.typescript import find_project_root, strip_typescript_comments
+from _util import check_file_length
+from context_monitor import (
+    THRESHOLD_CRITICAL,
+    THRESHOLD_STOP,
+    THRESHOLD_WARN,
+)
 from tdd_enforcer import (
-    should_skip,
+    has_go_test_file,
+    has_python_test_file,
+    has_related_failing_test,
+    has_typescript_test_file,
     is_test_file,
     is_trivial_edit,
-    has_python_test_file,
-    has_typescript_test_file,
-    has_go_test_file,
-    has_related_failing_test,
-)
-from context_monitor import (
-    THRESHOLD_WARN,
-    THRESHOLD_STOP,
-    THRESHOLD_CRITICAL,
-    run_context_monitor,
+    should_skip,
 )
 
 

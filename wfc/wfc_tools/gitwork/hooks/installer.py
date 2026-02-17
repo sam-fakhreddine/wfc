@@ -4,9 +4,9 @@ Hook Installer - Install and manage WFC git hooks
 Uses non-destructive wrapping to preserve existing hooks.
 """
 
-from pathlib import Path
-from typing import Dict, List, Optional, Any
 import sys
+from pathlib import Path
+from typing import Any, Dict, List, Optional
 
 
 class HookInstaller:

@@ -4,8 +4,8 @@ Test TEAMCHARTER integration in adaptive interview system.
 Tests the new TEAMCHARTER questions and team_values_context extraction.
 """
 
-from pathlib import Path
 import sys
+from pathlib import Path
 
 # Add wfc/skills/wfc-plan to path for hyphenated directory import
 wfc_plan_path = Path(__file__).parent.parent / "wfc" / "skills" / "wfc-plan"

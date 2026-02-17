@@ -5,6 +5,7 @@ Simple operations use Haiku, complex operations use Sonnet/Opus.
 """
 
 from typing import Dict
+
 from .config import get_config
 
 

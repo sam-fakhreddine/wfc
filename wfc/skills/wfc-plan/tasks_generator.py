@@ -5,10 +5,11 @@ Converts interview results into structured TASKS.md file.
 """
 
 from dataclasses import dataclass
-from typing import List
 from pathlib import Path
-from .interview import InterviewResult
+from typing import List
+
 from .ears import generate_acceptance_criteria_ears
+from .interview import InterviewResult
 
 
 @dataclass

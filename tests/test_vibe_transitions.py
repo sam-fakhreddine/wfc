@@ -4,12 +4,12 @@ Tests for WFC Vibe Transition Handling
 Verifies command detection and workflow orchestration (PROP-004)
 """
 
+from wfc.scripts.skills.vibe.detector import ScopeDetector
+from wfc.scripts.skills.vibe.summarizer import Message
 from wfc.scripts.skills.vibe.transitions import (
     TransitionHandler,
     TransitionOrchestrator,
 )
-from wfc.scripts.skills.vibe.summarizer import Message
-from wfc.scripts.skills.vibe.detector import ScopeDetector
 
 
 class TestTransitionHandler:

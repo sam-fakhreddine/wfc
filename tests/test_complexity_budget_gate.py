@@ -5,9 +5,9 @@ Verifies complexity budget enforcement for TEAMCHARTER "Accountability & Simplic
 """
 
 from wfc.scripts.complexity_budget_gate import (
+    COMPLEXITY_BUDGETS,
     check_complexity_budget,
     format_budget_report,
-    COMPLEXITY_BUDGETS,
 )
 
 

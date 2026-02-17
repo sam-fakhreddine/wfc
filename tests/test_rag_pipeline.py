@@ -14,7 +14,6 @@ from wfc.scripts.knowledge.chunker import KnowledgeChunk, KnowledgeChunker
 from wfc.scripts.knowledge.embeddings import TfidfEmbeddings, get_embedding_provider
 from wfc.scripts.knowledge.rag_engine import RAGEngine
 
-
 REVIEWERS_DIR = Path(__file__).resolve().parents[1] / "wfc" / "reviewers"
 
 SAMPLE_KNOWLEDGE_MD = """\
