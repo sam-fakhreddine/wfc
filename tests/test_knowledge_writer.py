@@ -12,7 +12,6 @@ from wfc.scripts.knowledge.knowledge_writer import (
     LearningEntry,
 )
 
-
 SAMPLE_KNOWLEDGE_MD = """\
 # KNOWLEDGE.md -- security
 

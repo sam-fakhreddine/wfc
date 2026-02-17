@@ -11,20 +11,19 @@ Tests individual components and their integration:
 - Failure severity classification
 """
 
-import pytest
-import tempfile
 import json
-from pathlib import Path
-from datetime import datetime
 
 # Import WFC components
 import sys
+import tempfile
+from datetime import datetime
+from pathlib import Path
+
+import pytest
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
 # Activate PEP 562 import bridge for hyphenated skill directory (wfc-implement → wfc_implement)
-from wfc.skills import wfc_implement  # noqa: F401
-
 from wfc.scripts.confidence_checker import (
     ConfidenceChecker,
     ConfidenceLevel,
@@ -35,13 +34,14 @@ from wfc.scripts.memory_manager import (
     WorkflowMetric,
 )
 from wfc.scripts.token_manager import (
-    TokenManager,
     TaskComplexity,
+    TokenManager,
 )
 from wfc.scripts.universal_quality_checker import (
-    UniversalQualityChecker,
     TrunkCheckResult,
+    UniversalQualityChecker,
 )
+from wfc.skills import wfc_implement  # noqa: F401
 
 
 class TestConfidenceChecker:

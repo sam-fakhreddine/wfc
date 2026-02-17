@@ -6,10 +6,10 @@ Keeps a history of all generated plans for reference.
 """
 
 import json
+from dataclasses import asdict, dataclass
 from datetime import datetime
 from pathlib import Path
-from typing import Optional, List, Dict
-from dataclasses import dataclass, asdict
+from typing import Dict, List, Optional
 
 
 @dataclass

@@ -9,13 +9,13 @@ Tests the complete workflow:
 - Parallel agent execution
 """
 
-import pytest
-import tempfile
 import subprocess
-from pathlib import Path
-from datetime import datetime
-
 import sys
+import tempfile
+from datetime import datetime
+from pathlib import Path
+
+import pytest
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
@@ -137,6 +137,7 @@ class TestConfidenceWorkflow:
     def test_high_confidence_proceeds(self):
         """Test that high confidence tasks proceed to implementation."""
         import tempfile
+
         from wfc.scripts.confidence_checker import ConfidenceChecker
 
         # Create temp directory with example files
@@ -226,7 +227,7 @@ class TestRollbackScenarios:
 
     def test_merge_rollback_on_failure(self):
         """Test that merge rolls back on integration test failure."""
-        from wfc_implement.merge_engine import MergeStatus, FailureSeverity
+        from wfc_implement.merge_engine import FailureSeverity, MergeStatus
 
         # This tests the rollback logic structure
         # In a real scenario, merge_engine would:
@@ -269,7 +270,7 @@ class TestRollbackScenarios:
 
     def test_max_retry_limit(self):
         """Test that retries are limited to max_retries."""
-        from wfc_implement.merge_engine import MergeResult, FailureSeverity
+        from wfc_implement.merge_engine import FailureSeverity, MergeResult
 
         # First failure - should retry
         result1 = MergeResult(

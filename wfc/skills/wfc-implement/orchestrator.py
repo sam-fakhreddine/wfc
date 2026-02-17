@@ -9,15 +9,15 @@ This is the brain of wfc-implement - coordinates everything but doesn't
 do the actual implementation (that's the agents' job).
 """
 
+import time
 from dataclasses import dataclass, field
 from enum import Enum
 from pathlib import Path
-from typing import List, Dict, Optional, Set, Any
-import time
+from typing import Any, Dict, List, Optional, Set
 
 from wfc.shared.config import WFCConfig
+from wfc.shared.schemas import Task, TaskComplexity, TaskGraph, TaskStatus
 from wfc.shared.telemetry_auto import log_event
-from wfc.shared.schemas import Task, TaskGraph, TaskStatus, TaskComplexity
 from wfc.shared.utils import get_git, get_selector
 
 

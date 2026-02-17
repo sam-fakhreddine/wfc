@@ -6,7 +6,7 @@ Soft enforcement: Warns but NEVER blocks pushes.
 
 import subprocess
 import sys
-from typing import Dict, Any, List, Tuple, Optional
+from typing import Any, Dict, List, Optional, Tuple
 
 
 def parse_push_info() -> List[Tuple[str, str]]:

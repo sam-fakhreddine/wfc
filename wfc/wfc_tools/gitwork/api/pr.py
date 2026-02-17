@@ -5,9 +5,9 @@ Handles GitHub PR creation via gh CLI with WFC review integration.
 """
 
 import subprocess
-from typing import Dict, Optional, Any
 from dataclasses import dataclass
 from pathlib import Path
+from typing import Any, Dict, Optional
 
 
 @dataclass

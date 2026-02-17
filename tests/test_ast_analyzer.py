@@ -8,9 +8,7 @@ import textwrap
 
 import pytest
 
-from wfc.scripts.skills.review.ast_analyzer import ASTAnalysis, ASTAnalyzer, FunctionInfo, ClassInfo
-
-
+from wfc.scripts.skills.review.ast_analyzer import ASTAnalysis, ASTAnalyzer, ClassInfo, FunctionInfo
 
 SIMPLE_FIXTURE = """
 import os

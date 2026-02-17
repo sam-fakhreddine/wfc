@@ -4,9 +4,10 @@ WFC OPS_TASKS Generator - SEE SOMETHING SAY SOMETHING
 SOLID: Single Responsibility - Only generates OPS_TASKS.md
 """
 
+from datetime import datetime
 from pathlib import Path
 from typing import List, Optional
-from datetime import datetime
+
 from .schemas import OperationalPattern
 
 

@@ -6,7 +6,7 @@ Soft enforcement: Warns but NEVER blocks commits.
 
 import subprocess
 import sys
-from typing import Dict, Any, List, Optional
+from typing import Any, Dict, List, Optional
 
 
 def get_current_branch() -> Optional[str]:

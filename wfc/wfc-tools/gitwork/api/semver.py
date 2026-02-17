@@ -4,8 +4,8 @@ Semver operations API
 Semantic versioning from conventional commits.
 """
 
-import subprocess
 import re
+import subprocess
 from typing import Dict, Optional
 
 

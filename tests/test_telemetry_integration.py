@@ -4,17 +4,18 @@ Integration tests for WFC Telemetry System
 Tests event logging, workflow metrics, and PR tracking.
 """
 
-import pytest
 import json
 import tempfile
-from pathlib import Path
 from datetime import datetime, timedelta
+from pathlib import Path
 from unittest.mock import patch
+
+import pytest
 
 from wfc.shared.telemetry_auto import (
     AutoTelemetry,
-    log_event,
     get_workflow_metrics,
+    log_event,
     print_workflow_metrics,
 )
 

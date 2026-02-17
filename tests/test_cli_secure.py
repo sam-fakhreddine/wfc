@@ -5,10 +5,11 @@ Tests the security fix for shell injection vulnerability (H-01).
 Following TDD: RED phase - tests should fail before implementation.
 """
 
-import pytest
-from pathlib import Path
-from unittest.mock import patch, MagicMock
 import sys
+from pathlib import Path
+from unittest.mock import MagicMock, patch
+
+import pytest
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
@@ -59,7 +60,6 @@ class TestRunCommandAllCallSites:
     def test_validate_command_uses_list(self):
         """cmd_validate should use list arguments."""
         import inspect
-
         import sys
         from pathlib import Path
 

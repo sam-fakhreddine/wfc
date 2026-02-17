@@ -5,8 +5,8 @@ Serialized merges with pre-flight checks.
 """
 
 import subprocess
-from typing import Dict
 from queue import Queue
+from typing import Dict
 
 
 class MergeOperations:

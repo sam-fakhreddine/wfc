@@ -2,9 +2,10 @@
 Settings generator - creates .claude/settings.local.json
 """
 
+import json
 from pathlib import Path
 from typing import Dict
-import json
+
 from .allowlist import AllowlistCategories
 
 

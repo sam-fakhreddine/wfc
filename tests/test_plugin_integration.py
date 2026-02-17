@@ -15,13 +15,12 @@ import sys
 import tempfile
 from pathlib import Path
 
-from wfc.scripts.hooks.hook_state import HookState
-from wfc.scripts.hooks.security_hook import check as security_check
-from wfc.scripts.hooks.rule_engine import evaluate as rule_evaluate
 from wfc.scripts.hooks.config_loader import load_rules
-from wfc.scripts.skills.review.agents import ReviewComment
+from wfc.scripts.hooks.hook_state import HookState
+from wfc.scripts.hooks.rule_engine import evaluate as rule_evaluate
+from wfc.scripts.hooks.security_hook import check as security_check
+from wfc.scripts.skills.review.agents import AgentReview, AgentType, ReviewComment
 from wfc.scripts.skills.review.consensus import ConsensusAlgorithm
-from wfc.scripts.skills.review.agents import AgentReview, AgentType
 
 _arch_designer_path = (
     Path(__file__).parent.parent / "wfc" / "skills" / "wfc-plan" / "architecture_designer.py"

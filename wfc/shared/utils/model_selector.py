@@ -6,9 +6,9 @@ Auto-selects the appropriate model (sonnet/opus/haiku) based on task complexity.
 Design: Simple mapping, no ML, no over-thinking.
 """
 
+from dataclasses import dataclass
 from enum import Enum
 from typing import Dict, Optional
-from dataclasses import dataclass
 
 
 class ModelTier(Enum):

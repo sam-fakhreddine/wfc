@@ -6,9 +6,9 @@ Similar to persona loader but for documentation.
 """
 
 import json
-from pathlib import Path
-from typing import List, Dict, Optional
 from dataclasses import dataclass
+from pathlib import Path
+from typing import Dict, List, Optional
 
 
 @dataclass

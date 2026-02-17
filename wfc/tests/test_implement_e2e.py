@@ -4,16 +4,16 @@ End-to-end test for wfc-implement
 Tests the full pipeline: TASKS.md → agents → review → merge
 """
 
-import tempfile
-from pathlib import Path
 import subprocess
 import sys
+import tempfile
+from pathlib import Path
 
 # Add wfc to path
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from wfc.skills.plan.mock import generate_mock_plan
 from wfc.skills.implement import run_implementation
+from wfc.skills.plan.mock import generate_mock_plan
 
 
 def test_full_pipeline():

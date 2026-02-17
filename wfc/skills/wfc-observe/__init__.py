@@ -7,7 +7,7 @@ Maps formal properties to observables, generates metrics, alerts, dashboards.
 __version__ = "0.1.0"
 
 from dataclasses import dataclass
-from typing import List, Dict
+from typing import Dict, List
 
 
 @dataclass

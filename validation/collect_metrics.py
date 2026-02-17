@@ -7,9 +7,9 @@ Collects metrics from WFC task execution for validation analysis.
 
 import json
 import sys
-from pathlib import Path
 from datetime import datetime
-from typing import Dict, Any, Optional
+from pathlib import Path
+from typing import Any, Dict, Optional
 
 
 class MetricsCollector:

@@ -19,10 +19,10 @@ Developer can view metrics anytime with: wfc metrics [task_id]
 """
 
 import json
-from pathlib import Path
+from dataclasses import asdict, dataclass, field
 from datetime import datetime
-from typing import Dict, Any, Optional, List
-from dataclasses import dataclass, asdict, field
+from pathlib import Path
+from typing import Any, Dict, List, Optional
 
 
 @dataclass

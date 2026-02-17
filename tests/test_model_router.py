@@ -13,7 +13,6 @@ import pytest
 from wfc.scripts.skills.review.model_router import ModelRouter
 
 
-
 @pytest.fixture()
 def default_router():
     """Router loaded from the real model_routing.json config."""

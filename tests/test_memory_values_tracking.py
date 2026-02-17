@@ -5,7 +5,7 @@ Verifies that ReflexionEntry and OperationalPattern support
 team values impact tracking with backward compatibility.
 """
 
-from wfc.scripts.memory.schemas import ReflexionEntry, OperationalPattern, WorkflowMetric
+from wfc.scripts.memory.schemas import OperationalPattern, ReflexionEntry, WorkflowMetric
 
 
 class TestReflexionEntryValuesTracking:

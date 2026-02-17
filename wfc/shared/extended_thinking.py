@@ -6,8 +6,8 @@ Provides consistent logic across all WFC skills for enabling extended thinking.
 """
 
 from dataclasses import dataclass
-from typing import List, Optional
 from enum import Enum
+from typing import List, Optional
 
 
 class ThinkingMode(Enum):

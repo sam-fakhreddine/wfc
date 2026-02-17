@@ -5,8 +5,9 @@ Verifies context extraction and complexity estimation (PROP-005, PROP-007)
 """
 
 import time
-from wfc.scripts.skills.vibe.summarizer import ContextSummarizer, Message, PlanningContext
+
 from wfc.scripts.skills.vibe.detector import ScopeDetector
+from wfc.scripts.skills.vibe.summarizer import ContextSummarizer, Message, PlanningContext
 
 
 class TestContextSummarizer:

@@ -7,7 +7,7 @@ Analyzes telemetry, identifies trends, detects bottlenecks, generates recommenda
 __version__ = "0.1.0"
 
 from dataclasses import dataclass
-from typing import List, Dict
+from typing import Dict, List
 
 
 @dataclass

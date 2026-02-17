@@ -5,10 +5,11 @@ Generates test plan from interview results and properties.
 """
 
 from dataclasses import dataclass
-from typing import List
 from pathlib import Path
-from .interview import InterviewResult
+from typing import List
+
 from .ears import EARSFormatter, EARSType
+from .interview import InterviewResult
 
 
 @dataclass

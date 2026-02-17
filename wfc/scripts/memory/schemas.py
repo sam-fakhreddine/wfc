@@ -4,9 +4,9 @@ WFC Memory Schemas - Data Definitions
 SOLID: Single Responsibility - Just data structures, no logic
 """
 
-from dataclasses import dataclass, field
-from typing import Dict, Any, Optional
 import dataclasses
+from dataclasses import dataclass, field
+from typing import Any, Dict, Optional
 
 
 @dataclass

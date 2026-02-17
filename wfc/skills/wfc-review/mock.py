@@ -6,7 +6,7 @@ ELEGANT: Minimal mock that simulates real review behavior
 
 import os
 import random
-from typing import Dict, List, Any
+from typing import Any, Dict, List
 
 
 class MockReview:

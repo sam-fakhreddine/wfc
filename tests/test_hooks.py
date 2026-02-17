@@ -4,14 +4,15 @@ Unit tests for WFC Git Hooks
 Tests pre-commit, commit-msg, and pre-push hooks with various scenarios.
 """
 
-import pytest
+import io
 import tempfile
 from pathlib import Path
-from unittest.mock import patch, MagicMock, mock_open
-import io
+from unittest.mock import MagicMock, mock_open, patch
+
+import pytest
 
 # Import hook modules
-from wfc.wfc_tools.gitwork.hooks import pre_commit, commit_msg, pre_push
+from wfc.wfc_tools.gitwork.hooks import commit_msg, pre_commit, pre_push
 from wfc.wfc_tools.gitwork.hooks.installer import HookInstaller
 
 

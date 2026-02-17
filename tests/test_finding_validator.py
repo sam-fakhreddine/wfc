@@ -9,23 +9,17 @@ PROP-001: fail-open - all exceptions are swallowed; finding keeps current state.
 """
 from __future__ import annotations
 
-import ast
-import os
-import textwrap
-from dataclasses import dataclass
 from pathlib import Path
 from unittest.mock import MagicMock
 
 import pytest
 
-from wfc.scripts.skills.review.fingerprint import DeduplicatedFinding
 from wfc.scripts.skills.review.finding_validator import (
     FindingValidator,
     ValidatedFinding,
     ValidationStatus,
 )
-
-
+from wfc.scripts.skills.review.fingerprint import DeduplicatedFinding
 
 
 def _make_finding(

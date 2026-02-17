@@ -15,14 +15,15 @@ import pytest
 from wfc.scripts.skills.review.cli import (
     format_json_output,
     format_text_output,
+)
+from wfc.scripts.skills.review.cli import (
     main as cli_main,
 )
 from wfc.scripts.skills.review.consensus_score import ConsensusScore, ConsensusScoreResult
-from wfc.scripts.skills.review.emergency_bypass import BypassRecord, EmergencyBypass
-from wfc.scripts.skills.review.fingerprint import DeduplicatedFinding, Fingerprinter
-from wfc.scripts.skills.review.orchestrator import ReviewOrchestrator, ReviewRequest, ReviewResult
+from wfc.scripts.skills.review.emergency_bypass import EmergencyBypass
+from wfc.scripts.skills.review.fingerprint import Fingerprinter
+from wfc.scripts.skills.review.orchestrator import ReviewOrchestrator, ReviewRequest
 from wfc.scripts.skills.review.reviewer_engine import ReviewerEngine
-
 
 
 def _clean_response(reviewer_id: str, score: float = 10.0, summary: str = "No issues") -> dict:
