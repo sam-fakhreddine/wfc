@@ -85,7 +85,7 @@ class ConsensusScore:
         tier = self._classify_tier(cs)
         passed = tier in ("informational", "moderate")
 
-        return ConsensusScoreResult(
+        result = ConsensusScoreResult(
             cs=cs,
             tier=tier,
             findings=scored,
@@ -97,6 +97,17 @@ class ConsensusScore:
             minority_protection_applied=mpr_applied,
             summary=self._generate_summary(cs, tier, scored, mpr_applied),
         )
+
+        try:
+            from wfc.observability.instrument import incr, observe
+
+            observe("consensus_score.values", cs)
+            if mpr_applied:
+                incr("consensus_score.mpr_activations")
+        except Exception:
+            pass
+
+        return result
 
     def _apply_minority_protection(
         self,

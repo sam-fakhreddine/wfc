@@ -27,29 +27,35 @@ import sys
 import time
 
 logger = logging.getLogger("wfc.hooks.pretooluse")
-_bypass_count = 0
 
 
 def main() -> None:
     """Main entry point for the PreToolUse hook."""
-    global _bypass_count
     try:
         _run()
     except Exception as e:
-        _bypass_count += 1
+        try:
+            from wfc.observability.instrument import emit_event, incr
+
+            incr("hook.bypass_count", labels={"hook": "pretooluse"})
+            emit_event(
+                "hook.bypass",
+                source="pretooluse_hook",
+                payload={"error_type": type(e).__name__},
+                level="warning",
+            )
+        except Exception:
+            pass
         logger.warning(
-            "Hook bypass: pretooluse_hook exception=%s time=%s bypass_count=%d",
+            "Hook bypass: pretooluse_hook exception=%s time=%s",
             type(e).__name__,
             time.strftime("%Y-%m-%dT%H:%M:%S"),
-            _bypass_count,
         )
-        # CRITICAL: Never block due to hook bugs
         sys.exit(0)
 
 
 def _run() -> None:
     """Internal hook logic."""
-    # Read input from stdin
     raw = sys.stdin.read().strip()
     if not raw:
         sys.exit(0)
@@ -62,14 +68,12 @@ def _run() -> None:
     if not isinstance(input_data, dict):
         sys.exit(0)
 
-    # Import here to avoid import errors blocking the hook
     try:
-        from wfc.scripts.hooks.security_hook import check as security_check
         from wfc.scripts.hooks.rule_engine import evaluate as rule_evaluate
+        from wfc.scripts.hooks.security_hook import check as security_check
     except ImportError:
         sys.exit(0)
 
-    # Phase 1: Security patterns (highest priority)
     security_result = security_check(input_data)
 
     if security_result.get("decision") == "block":
@@ -78,9 +82,7 @@ def _run() -> None:
 
     if security_result.get("decision") == "warn":
         print(security_result["reason"], file=sys.stderr)
-        # Don't exit yet - still check rules
 
-    # Phase 2: Custom rules
     rule_result = rule_evaluate(input_data)
 
     if rule_result.get("decision") == "block":
@@ -90,7 +92,6 @@ def _run() -> None:
     if rule_result.get("decision") == "warn":
         print(rule_result["reason"], file=sys.stderr)
 
-    # All clear (or warnings only)
     sys.exit(0)
 
 

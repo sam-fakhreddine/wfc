@@ -101,6 +101,21 @@ class ReviewOrchestrator:
 
     def prepare_review(self, request: ReviewRequest) -> list[dict]:
         """Phase 1: Build task specs for the 5 reviewers."""
+        try:
+            from wfc.observability.instrument import emit_event
+
+            emit_event(
+                "review.started",
+                source="orchestrator",
+                payload={
+                    "task_id": request.task_id,
+                    "file_count": len(request.files),
+                    "reviewer_count": 5,
+                },
+            )
+        except Exception:
+            pass
+
         return self.engine.prepare_review_tasks(
             files=request.files,
             diff_content=request.diff_content,
@@ -122,6 +137,10 @@ class ReviewOrchestrator:
         5. Generate markdown report
         6. Return ReviewResult
         """
+        import time as _time
+
+        _start = _time.perf_counter()
+
         reviewer_results = self.engine.parse_results(task_responses)
 
         all_findings: list[dict] = []
@@ -143,6 +162,39 @@ class ReviewOrchestrator:
 
         report_path = output_dir / f"REVIEW-{request.task_id}.md"
         self._generate_report(request, cs_result, reviewer_results, report_path)
+
+        try:
+            from wfc.observability.instrument import emit_event, incr, observe
+
+            emit_event(
+                "review.scored",
+                source="orchestrator",
+                payload={
+                    "task_id": request.task_id,
+                    "cs": cs_result.cs,
+                    "tier": cs_result.tier,
+                    "passed": cs_result.passed,
+                    "finding_count": len(cs_result.findings),
+                    "mpr_applied": cs_result.minority_protection_applied,
+                },
+            )
+
+            duration = _time.perf_counter() - _start
+            emit_event(
+                "review.completed",
+                source="orchestrator",
+                payload={
+                    "task_id": request.task_id,
+                    "duration_seconds": round(duration, 3),
+                    "report_path": str(report_path),
+                },
+            )
+
+            incr("review.completed")
+            observe("review.duration", duration)
+            observe("review.consensus_score", cs_result.cs)
+        except Exception:
+            pass
 
         return ReviewResult(
             task_id=request.task_id,

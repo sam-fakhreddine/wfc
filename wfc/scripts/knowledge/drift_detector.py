@@ -85,6 +85,27 @@ class DriftDetector:
                 report.healthy_count += 1
 
         report.recommendation = self._compute_recommendation(report)
+
+        try:
+            from wfc.observability.instrument import emit_event, gauge_set
+
+            for signal in report.signals:
+                emit_event(
+                    "knowledge.drift.detected",
+                    source="drift_detector",
+                    payload={
+                        "reviewer_id": signal.reviewer_id,
+                        "signal_type": signal.signal_type,
+                        "severity": signal.severity,
+                        "description": signal.description,
+                    },
+                )
+            gauge_set("knowledge.total_entries", report.total_entries)
+            gauge_set("knowledge.stale_count", report.stale_count)
+            gauge_set("knowledge.bloated_count", report.bloated_count)
+        except Exception:
+            pass
+
         return report
 
     def check_staleness(

@@ -81,6 +81,17 @@ class Fingerprinter:
             results.append(self._merge(fp, group))
 
         results.sort(key=lambda r: r.severity, reverse=True)
+
+        try:
+            from wfc.observability.instrument import gauge_set, incr
+
+            incr("dedup.pre_count", len(flat))
+            incr("dedup.post_count", len(results))
+            ratio = len(results) / len(flat) if flat else 1.0
+            gauge_set("dedup.ratio", round(ratio, 3))
+        except Exception:
+            pass
+
         return results
 
     @staticmethod

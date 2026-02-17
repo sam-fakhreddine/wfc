@@ -108,6 +108,21 @@ class KnowledgeWriter:
             for entry in reviewer_entries:
                 if self._append_to_file(kp, entry):
                     count += 1
+                    try:
+                        from wfc.observability.instrument import emit_event, incr
+
+                        emit_event(
+                            "knowledge.entry.appended",
+                            source="knowledge_writer",
+                            payload={
+                                "reviewer_id": entry.reviewer_id,
+                                "section": entry.section,
+                                "entry_preview": entry.text[:80],
+                            },
+                        )
+                        incr("knowledge.entries_written", labels={"reviewer": entry.reviewer_id})
+                    except Exception:
+                        pass
             result[reviewer_id] = count
         return result
 

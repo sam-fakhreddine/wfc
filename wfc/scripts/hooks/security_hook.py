@@ -128,9 +128,6 @@ def _extract_content(tool_name: str, tool_input: dict) -> tuple[str, str, str]:
     return "", "", ""
 
 
-_bypass_count = 0
-
-
 def check(input_data: dict, state: Optional[HookState] = None) -> dict:
     """
     Check tool input against security patterns.
@@ -144,16 +141,43 @@ def check(input_data: dict, state: Optional[HookState] = None) -> dict:
         {"decision": "block", "reason": "..."} if a blocking pattern matched.
         {"decision": "warn", "reason": "..."} if a warning pattern matched.
     """
-    global _bypass_count
     try:
-        return _check_impl(input_data, state)
+        result = _check_impl(input_data, state)
+        if result.get("decision"):
+            try:
+                from wfc.observability.instrument import emit_event, incr
+
+                emit_event(
+                    "hook.decision",
+                    source="security_hook",
+                    payload={
+                        "decision": result["decision"],
+                        "reason": result.get("reason", ""),
+                        "tool_name": input_data.get("tool_name", ""),
+                    },
+                    level="warning" if result["decision"] == "block" else "info",
+                )
+                incr("hook.decisions", labels={"hook": "security", "decision": result["decision"]})
+            except Exception:
+                pass
+        return result
     except Exception as e:
-        _bypass_count += 1
+        try:
+            from wfc.observability.instrument import emit_event, incr
+
+            incr("hook.bypass_count", labels={"hook": "security"})
+            emit_event(
+                "hook.bypass",
+                source="security_hook",
+                payload={"error_type": type(e).__name__},
+                level="warning",
+            )
+        except Exception:
+            pass
         logger.warning(
-            "Hook bypass: security_hook exception=%s time=%s bypass_count=%d",
+            "Hook bypass: security_hook exception=%s time=%s",
             type(e).__name__,
             time.strftime("%Y-%m-%dT%H:%M:%S"),
-            _bypass_count,
         )
         return {}
 
