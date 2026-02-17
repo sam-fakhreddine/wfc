@@ -3,7 +3,7 @@
   "checkpoint_id": "1a05af6f2796",
   "strategy": "manual-commit",
   "branch": "feat/teamcharter-integration",
-  "checkpoints_count": 2,
+  "checkpoints_count": 3,
   "files_touched": [
     ".development/housekeeping/keep-list.json",
     ".development/plans/HISTORY.md",
@@ -31,6 +31,7 @@
     "docs/architecture/REVIEW_V2.md",
     "tests/test_complexity_budget_gate.py",
     "tests/test_e2e_review.py",
+    "tests/test_emergency_bypass.py",
     "tests/test_plan_validation_pipeline.py",
     "tests/test_plugin_integration.py",
     "tests/test_saydo_ratio.py",
@@ -44,6 +45,8 @@
     "wfc/scripts/memory/saydo.py",
     "wfc/scripts/skills/review/cli.py",
     "wfc/scripts/skills/review/emergency_bypass.py",
+    "wfc/scripts/skills/review/fingerprint.py",
+    "wfc/scripts/skills/review/orchestrator.py",
     "wfc/scripts/skills/review/reviewer_engine.py",
     "wfc/skills/wfc-housekeeping/SKILL.md",
     "wfc/skills/wfc-housekeeping/__init__.py"
@@ -55,13 +58,20 @@
       "context": "/1a/05af6f2796/0/context.md",
       "content_hash": "/1a/05af6f2796/0/content_hash.txt",
       "prompt": "/1a/05af6f2796/0/prompt.txt"
+    },
+    {
+      "metadata": "/1a/05af6f2796/1/metadata.json",
+      "transcript": "/1a/05af6f2796/1/full.jsonl",
+      "context": "/1a/05af6f2796/1/context.md",
+      "content_hash": "/1a/05af6f2796/1/content_hash.txt",
+      "prompt": "/1a/05af6f2796/1/prompt.txt"
     }
   ],
   "token_usage": {
-    "input_tokens": 64,
-    "cache_creation_tokens": 178840,
-    "cache_read_tokens": 5485649,
-    "output_tokens": 11088,
-    "api_call_count": 38
+    "input_tokens": 90,
+    "cache_creation_tokens": 227224,
+    "cache_read_tokens": 6465093,
+    "output_tokens": 14731,
+    "api_call_count": 58
   }
 }
