@@ -97,7 +97,11 @@ class ReviewOrchestrator:
         ]
 
         for sensitive in sensitive_dirs:
-            if resolved.is_relative_to(sensitive):
+            try:
+                sensitive_resolved = sensitive.resolve()
+            except (OSError, RuntimeError):
+                sensitive_resolved = sensitive
+            if resolved.is_relative_to(sensitive_resolved):
                 raise ValueError(f"Cannot write to sensitive directory: {resolved}")
 
         if not resolved.parent.exists():

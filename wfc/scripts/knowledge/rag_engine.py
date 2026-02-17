@@ -10,10 +10,9 @@ from __future__ import annotations
 import hashlib
 import json
 import logging
+import math
 from dataclasses import asdict, dataclass
 from pathlib import Path
-
-import numpy as np
 
 from wfc.scripts.knowledge.chunker import KnowledgeChunk, KnowledgeChunker
 from wfc.scripts.knowledge.embeddings import EmbeddingProvider, get_embedding_provider
@@ -97,11 +96,10 @@ class _JsonVectorStore:
     def _cosine_similarity(a: list[float], b: list[float]) -> float:
         if len(a) != len(b):
             return 0.0
-        a_arr = np.array(a)
-        b_arr = np.array(b)
-        norm_a = np.linalg.norm(a_arr)
-        norm_b = np.linalg.norm(b_arr)
-        return float(np.dot(a_arr, b_arr) / (norm_a * norm_b)) if norm_a > 0 and norm_b > 0 else 0.0
+        dot = sum(x * y for x, y in zip(a, b))
+        norm_a = math.sqrt(sum(x * x for x in a))
+        norm_b = math.sqrt(sum(x * x for x in b))
+        return dot / (norm_a * norm_b) if norm_a > 0 and norm_b > 0 else 0.0
 
 
 class _ChromaVectorStore:

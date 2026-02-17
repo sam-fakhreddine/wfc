@@ -74,12 +74,8 @@ class ConsensusScore:
                 summary=self._generate_summary(0.0, "informational", [], False),
             )
 
-        # Apply validation weights: weight=0.0 means skip finding entirely
         effective_weights: dict[str, float] = weights or {}
-        active_findings = [
-            f for f in findings
-            if effective_weights.get(f.fingerprint, 1.0) > 0.0
-        ]
+        active_findings = [f for f in findings if effective_weights.get(f.fingerprint, 1.0) > 0.0]
 
         if not active_findings:
             return ConsensusScoreResult(

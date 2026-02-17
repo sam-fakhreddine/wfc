@@ -41,36 +41,10 @@ class TestPersonaPythonModulesDeleted:
         assert path.exists(), "wfc/scripts/token_manager.py (wfc-implement) was accidentally deleted"
 
 
-class TestPersonaJsonsArchived:
-    """Assert persona JSONs have been moved to .development/archive/personas/."""
+class TestPersonaJsonsRemoved:
+    """Assert legacy persona JSONs have been removed from the source tree."""
 
-    def test_archive_directory_exists(self):
-        """Archive directory must exist."""
-        archive_dir = REPO_ROOT / ".development" / "archive" / "personas"
-        assert archive_dir.exists(), "Archive directory .development/archive/personas/ not found"
-
-    def test_archive_has_panels(self):
-        """Archive must contain the panels directory with subdirectories."""
-        panels_dir = REPO_ROOT / ".development" / "archive" / "personas" / "panels"
-        assert panels_dir.exists(), "Archive panels directory not found"
-        subdirs = [d.name for d in panels_dir.iterdir() if d.is_dir()]
-        assert len(subdirs) >= 8, f"Expected 8+ panel subdirectories, found {len(subdirs)}: {subdirs}"
-
-    def test_archive_has_json_files(self):
-        """Archive must contain persona JSON files."""
-        panels_dir = REPO_ROOT / ".development" / "archive" / "personas" / "panels"
-        json_files = list(panels_dir.glob("**/*.json"))
-        assert len(json_files) >= 50, f"Expected 50+ persona JSONs in archive, found {len(json_files)}"
-
-    def test_archive_has_registry(self):
-        """Archive must contain registry.json and registry-progressive.json."""
-        archive_dir = REPO_ROOT / ".development" / "archive" / "personas"
-        assert (archive_dir / "registry.json").exists(), "registry.json not in archive"
-        assert (
-            archive_dir / "registry-progressive.json"
-        ).exists(), "registry-progressive.json not in archive"
-
-    def test_source_personas_removed(self):
+    def test_source_panels_removed(self):
         """Original persona panels directory must not exist."""
         panels_dir = REPO_ROOT / "wfc" / "references" / "personas" / "panels"
         assert not panels_dir.exists(), f"Persona panels still exist at {panels_dir}"
