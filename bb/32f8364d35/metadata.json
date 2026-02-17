@@ -1,0 +1,28 @@
+{
+  "cli_version": "0.4.2",
+  "checkpoint_id": "bb32f8364d35",
+  "strategy": "manual-commit",
+  "branch": "main",
+  "checkpoints_count": 1,
+  "files_touched": [
+    "tests/test_doc_auditor.py",
+    "wfc/scripts/skills/review/doc_auditor.py",
+    "wfc/scripts/skills/review/orchestrator.py"
+  ],
+  "sessions": [
+    {
+      "metadata": "/bb/32f8364d35/0/metadata.json",
+      "transcript": "/bb/32f8364d35/0/full.jsonl",
+      "context": "/bb/32f8364d35/0/context.md",
+      "content_hash": "/bb/32f8364d35/0/content_hash.txt",
+      "prompt": "/bb/32f8364d35/0/prompt.txt"
+    }
+  ],
+  "token_usage": {
+    "input_tokens": 63,
+    "cache_creation_tokens": 121639,
+    "cache_read_tokens": 2674123,
+    "output_tokens": 586,
+    "api_call_count": 43
+  }
+}
