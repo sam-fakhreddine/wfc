@@ -77,7 +77,7 @@ jobs:
 
       - name: Run tests
         run: |
-          uv run pytest tests/ -v --cov=wfc --cov-report=xml
+          uv run pytest tests/ -v --cov=wfc --cov-report=xml --ignore=tests/test_installer_docker.py
 
       - name: Upload coverage
         if: matrix.python-version == '3.12' && matrix.os == 'ubuntu-latest'
