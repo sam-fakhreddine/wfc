@@ -252,7 +252,7 @@ class TestPlanAuditTrailSchema:
         audit_data = {
             "hash_algorithm": "sha256",
             "original_hash": "abc123...",
-            "isthissmart_score": 7.5,
+            "validate_score": 7.5,
             "revision_count": 2,
             "review_score": 8.7,
             "final_hash": "def456...",
@@ -269,7 +269,7 @@ class TestPlanAuditTrailSchema:
         required_fields = [
             "hash_algorithm",
             "original_hash",
-            "isthissmart_score",
+            "validate_score",
             "revision_count",
             "review_score",
             "final_hash",
@@ -286,7 +286,7 @@ class TestPlanAuditTrailSchema:
         audit_data = {
             "hash_algorithm": "sha256",
             "original_hash": "original123",
-            "isthissmart_score": 8.0,
+            "validate_score": 8.0,
             "revision_count": 1,
             "review_score": 9.0,
             "final_hash": "final456",
@@ -315,7 +315,7 @@ class TestPlanAuditTrailSchema:
         audit_data = {
             "hash_algorithm": "sha256",
             "original_hash": "hash1",
-            "isthissmart_score": 7.8,
+            "validate_score": 7.8,
             "revision_count": 0,
             "review_score": 8.5,
             "final_hash": "hash2",
@@ -384,7 +384,7 @@ class TestEndToEndTeamcharterFlow:
         audit_data = {
             "hash_algorithm": "sha256",
             "original_hash": "export123",
-            "isthissmart_score": 8.2,
+            "validate_score": 8.2,
             "revision_count": 1,
             "review_score": 8.8,
             "final_hash": "export456",

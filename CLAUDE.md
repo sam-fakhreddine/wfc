@@ -64,7 +64,7 @@ wfc validate                     # Validate skills (after install)
 /wfc-ba
 
 # Step 2: Validate requirements quality
-/wfc-isthissmart
+/wfc-validate
 
 # Step 3: Create structured plan from validated BA
 /wfc-plan
@@ -90,7 +90,7 @@ wfc validate                     # Validate skills (after install)
 ```
 1. Generate Plan (wfc-plan)
    ↓
-2. IsThisSmart Review (7-dimension critique)
+2. Validate Review (7-dimension critique)
    ↓
 3. Revise Plan (based on feedback)
    ↓
@@ -101,7 +101,7 @@ wfc validate                     # Validate skills (after install)
 
 **What happens:**
 - Plan generator creates initial TASKS.md with values alignment
-- IsThisSmart skill performs 7-dimension critique (complexity, risk, customer value, etc.)
+- Validate skill performs 7-dimension critique (complexity, risk, customer value, etc.)
 - Plan is revised based on feedback
 - Multi-agent code review validates quality (loops until 8.5+ weighted score)
 - Final plan includes immutable audit trail showing validation was performed
@@ -175,7 +175,7 @@ WFC autonomous loop:
 | Architecture docs | `/wfc-architecture` | C4 diagrams + ADRs |
 | Generate tests | `/wfc-test` | Property-based tests |
 | Add monitoring | `/wfc-observe` | Observability from properties |
-| Validate idea | `/wfc-isthissmart` | 7-dimension analysis |
+| Validate idea | `/wfc-validate` | 7-dimension analysis |
 | Security hooks | `/wfc-safeguard` | Real-time pattern enforcement |
 | Custom rules | `/wfc-rules` | Markdown-based code standards |
 | Visual exploration | `/wfc-playground` | Interactive HTML prototyping |

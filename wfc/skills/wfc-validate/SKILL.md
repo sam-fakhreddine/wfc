@@ -1,10 +1,10 @@
 ---
-name: wfc-isthissmart
-description: Critical thinking advisor that analyzes plans, ideas, and technical approaches across 7 dimensions (feasibility, complexity, risk, value, alternatives, assumptions, trade-offs). Provides discerning but constructive feedback to ensure smart decisions before committing time and resources. Use when evaluating new features, architectural decisions, or technical approaches. Triggers on "is this a good idea", "should I do this", "analyze this approach", "what do you think of this plan", or explicit /wfc-isthissmart. Ideal for architectural decisions, feature planning, and technology choices. Not for implementation details or code review.
+name: wfc-validate
+description: Critical thinking advisor that analyzes plans, ideas, and technical approaches across 7 dimensions (feasibility, complexity, risk, value, alternatives, assumptions, trade-offs). Provides discerning but constructive feedback to ensure smart decisions before committing time and resources. Use when evaluating new features, architectural decisions, or technical approaches. Triggers on "is this a good idea", "should I do this", "analyze this approach", "what do you think of this plan", or explicit /wfc-validate. Ideal for architectural decisions, feature planning, and technology choices. Not for implementation details or code review.
 license: MIT
 ---
 
-# WFC:ISTHISSMART - Thoughtful Advisor
+# WFC:VALIDATE - Thoughtful Advisor
 
 The experienced staff engineer who asks "is this the right approach?" before we commit.
 
@@ -26,21 +26,21 @@ Returns balanced assessment with verdict: PROCEED, PROCEED WITH ADJUSTMENTS, REC
 
 ```bash
 # Analyze current plan
-/wfc-isthissmart
+/wfc-validate
 
 # Analyze a freeform idea
-/wfc-isthissmart "rewrite auth system in Rust"
+/wfc-validate "rewrite auth system in Rust"
 
 # Analyze specific artifact
-/wfc-isthissmart --plan
-/wfc-isthissmart --architecture
-/wfc-isthissmart --task TASK-005
+/wfc-validate --plan
+/wfc-validate --architecture
+/wfc-validate --task TASK-005
 ```
 
-## Output: ISTHISSMART.md
+## Output: VALIDATE.md
 
 ```markdown
-# Is This Smart? Analysis
+# Validation Analysis
 
 ## Subject: Rewrite auth system in Rust
 ## Verdict: 🟡 PROCEED WITH ADJUSTMENTS
@@ -112,7 +112,7 @@ Not a naysayer - wants us to succeed with the best approach. Highlights both str
 - Freeform ideas (text input)
 
 ### Produces
-- ISTHISSMART.md report
+- VALIDATE.md report
 - Simpler alternatives
 - Final recommendation
 

@@ -16,7 +16,7 @@ We embrace creative thinking, new methodologies, and bold experimentation, ensur
 
 **How WFC enforces this:**
 - ReflexionMemory captures learnings from failures, not just errors
-- Plans are validated through IsThisSmart critique before implementation
+- Plans are validated through wfc-validate critique before implementation
 - Future: Experiment mode (`--experiment`) for throwaway prototyping
 
 ### 2. Accountability & Simplicity
@@ -35,7 +35,7 @@ We foster a culture of collaboration, knowledge sharing, and mutual support, rec
 
 **How WFC enforces this:**
 - Multi-agent consensus review (5 expert personas per review)
-- Plan validation uses two gates (IsThisSmart + Code Review) for multi-perspective feedback
+- Plan validation uses two gates (Validate + Code Review) for multi-perspective feedback
 - Review loop until 8.5+ weighted score ensures quality through collaboration
 - Customer Advocate persona ensures stakeholder voice is heard
 

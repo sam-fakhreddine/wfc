@@ -5,11 +5,11 @@ WFC Doctor - Comprehensive Health Check
 Runs diagnostics to ensure WFC is properly installed and configured.
 """
 
-import sys
-import subprocess
 import shutil
+import subprocess
+import sys
 from pathlib import Path
-from typing import List, Tuple, Optional
+from typing import List, Optional, Tuple
 
 
 class HealthCheck:
@@ -20,7 +20,7 @@ class HealthCheck:
         self.category = category
         self.passed = False
         self.message = ""
-        self.severity = "error"  # error, warning, info
+        self.severity = "error"
 
     def pass_check(self, message: str = ""):
         """Mark check as passed."""
@@ -54,29 +54,22 @@ class WFCDoctor:
         print("=" * 60)
         print()
 
-        # Core checks
         self._check_python_version()
         self._check_wfc_installation()
         self._check_project_structure()
 
-        # Dependencies
         self._check_optional_dependencies()
         self._check_dev_dependencies()
         self._check_external_tools()
 
-        # Skills validation
         self._check_skills_installation()
 
-        # Configuration
         self._check_configuration_files()
 
-        # Performance
         self._check_token_manager()
 
-        # Print results
         self._print_results()
 
-        # Return overall health
         critical_failures = [c for c in self.checks if not c.passed and c.severity == "error"]
 
         return len(critical_failures) == 0
@@ -101,7 +94,6 @@ class WFCDoctor:
         wfc_cmd = shutil.which("wfc")
 
         if wfc_cmd:
-            # Try to get version
             try:
                 result = subprocess.run(
                     ["wfc", "--version"], capture_output=True, text=True, timeout=5
@@ -141,7 +133,6 @@ class WFCDoctor:
 
     def _check_optional_dependencies(self):
         """Check optional dependencies."""
-        # tiktoken (for token management)
         check_tiktoken = self.add_check("tiktoken (tokens)", "Optional")
 
         try:
@@ -173,7 +164,6 @@ class WFCDoctor:
 
     def _check_external_tools(self):
         """Check external tools."""
-        # Trunk.io (recommended)
         check_trunk = self.add_check("trunk.io (quality)", "External")
 
         if shutil.which("trunk"):
@@ -190,13 +180,11 @@ class WFCDoctor:
                 "Install: curl https://get.trunk.io -fsSL | bash", severity="warning"
             )
 
-        # skills-ref (for validation)
         check_skills_ref = self.add_check("skills-ref (validation)", "External")
 
         skills_ref_path = Path.home() / "repos/agentskills/skills-ref"
 
         if skills_ref_path.exists():
-            # Check if virtualenv exists
             venv_path = skills_ref_path / ".venv"
             if venv_path.exists():
                 check_skills_ref.pass_check(f"Available at {skills_ref_path}")
@@ -220,7 +208,6 @@ class WFCDoctor:
             check.fail_check("~/.claude/skills directory not found", severity="error")
             return
 
-        # List of expected WFC skills
         expected_skills = [
             "wfc-implement",
             "wfc-review",
@@ -231,7 +218,7 @@ class WFCDoctor:
             "wfc-observe",
             "wfc-retro",
             "wfc-safeclaude",
-            "wfc-isthissmart",
+            "wfc-validate",
             "wfc-newskill",
         ]
 
@@ -272,7 +259,6 @@ class WFCDoctor:
         if not found:
             check_config.fail_check("No config found - will use defaults", severity="info")
 
-        # Check PROJECT_INDEX.json
         check_index = self.add_check("PROJECT_INDEX.json", "Configuration")
 
         index_path = self.project_root / "PROJECT_INDEX.json"
@@ -287,15 +273,13 @@ class WFCDoctor:
         check = self.add_check("Token management", "Performance")
 
         try:
-            # Try to import token manager
             sys.path.insert(0, str(self.project_root))
-            from wfc.scripts.token_manager import TokenManager, TaskComplexity
+            from wfc.scripts.token_manager import TaskComplexity, TokenManager
 
-            # Try to create a budget
             manager = TokenManager()
             budget = manager.create_budget("TEST", TaskComplexity.M, use_history=False)
 
-            if budget.budget_total == 1000:  # Medium complexity default
+            if budget.budget_total == 1000:
                 check.pass_check("Functional (default budgets working)")
             else:
                 check.fail_check("Budget calculation incorrect", severity="warning")
@@ -310,14 +294,12 @@ class WFCDoctor:
         print("=" * 60)
         print()
 
-        # Group by category
         categories = {}
         for check in self.checks:
             if check.category not in categories:
                 categories[check.category] = []
             categories[check.category].append(check)
 
-        # Print by category
         for category, checks in categories.items():
             print(f"{category}:")
             for check in checks:
@@ -330,7 +312,6 @@ class WFCDoctor:
                 print(f"  {status_icon} {check.name}: {check.message}")
             print()
 
-        # Summary
         total = len(self.checks)
         passed = len([c for c in self.checks if c.passed])
         failed = total - passed
@@ -367,7 +348,6 @@ def main():
     doctor = WFCDoctor()
     is_healthy = doctor.run_all_checks()
 
-    # Exit code: 0 if healthy, 1 if issues
     sys.exit(0 if is_healthy else 1)
 
 

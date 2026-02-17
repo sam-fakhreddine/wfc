@@ -14,9 +14,6 @@ from pathlib import Path
 SKILL_MD_PATH = Path(__file__).resolve().parent.parent / "wfc" / "skills" / "wfc-plan" / "SKILL.md"
 
 
-# ---------------------------------------------------------------------------
-# TASK-005a: SKILL.md content validation
-# ---------------------------------------------------------------------------
 
 
 class TestSkillMDValidationPipelineSection:
@@ -31,9 +28,9 @@ class TestSkillMDValidationPipelineSection:
             "## Plan Validation Pipeline" in content
         ), "SKILL.md must contain a '## Plan Validation Pipeline' section"
 
-    def test_has_isthissmart_gate_instructions(self):
+    def test_has_validate_gate_instructions(self):
         content = SKILL_MD_PATH.read_text()
-        assert "IsThisSmart Gate" in content, "SKILL.md must describe the IsThisSmart Gate step"
+        assert "Validate Gate" in content, "SKILL.md must describe the Validate Gate step"
 
     def test_has_revision_mechanism(self):
         content = SKILL_MD_PATH.read_text()
@@ -73,7 +70,7 @@ class TestSkillMDValidationPipelineSection:
         required_fields = [
             "hash_algorithm",
             "original_hash",
-            "isthissmart_score",
+            "validate_score",
             "revision_count",
             "review_score",
             "final_hash",
@@ -103,9 +100,6 @@ class TestSkillMDValidationPipelineSection:
         assert "Should-Do" in content, "SKILL.md must describe Should-Do recommendations"
 
 
-# ---------------------------------------------------------------------------
-# TASK-005a/b: SHA-256 hash computation utility
-# ---------------------------------------------------------------------------
 
 
 class TestPlanHashComputation:
@@ -140,19 +134,15 @@ class TestPlanHashComputation:
         combined = tasks + properties + test_plan
         h = hashlib.sha256(combined).hexdigest()
         assert len(h) == 64
-        # Verify it matches recomputation
         assert h == hashlib.sha256(tasks + properties + test_plan).hexdigest()
 
 
-# ---------------------------------------------------------------------------
-# TASK-005b: plan-audit.json schema validation
-# ---------------------------------------------------------------------------
 
 
 AUDIT_SCHEMA_REQUIRED_FIELDS = {
     "hash_algorithm": str,
     "original_hash": str,
-    "isthissmart_score": (int, float),
+    "validate_score": (int, float),
     "revision_count": int,
     "review_score": (int, float),
     "final_hash": str,
@@ -170,7 +160,7 @@ class TestPlanAuditJsonSchema:
         return {
             "hash_algorithm": "sha256",
             "original_hash": hashlib.sha256(b"draft plan content").hexdigest(),
-            "isthissmart_score": 7.8,
+            "validate_score": 7.8,
             "revision_count": 2,
             "review_score": 8.7,
             "final_hash": hashlib.sha256(b"final plan content").hexdigest(),
@@ -204,7 +194,7 @@ class TestPlanAuditJsonSchema:
 
     def test_scores_are_numeric(self):
         audit = self._make_valid_audit()
-        assert isinstance(audit["isthissmart_score"], (int, float))
+        assert isinstance(audit["validate_score"], (int, float))
         assert isinstance(audit["review_score"], (int, float))
 
     def test_validated_true_when_review_passes(self):
@@ -239,9 +229,6 @@ class TestPlanAuditJsonSchema:
         ), "After revision, original and final hashes should differ"
 
 
-# ---------------------------------------------------------------------------
-# TASK-005a: revision-log.md format validation
-# ---------------------------------------------------------------------------
 
 
 class TestRevisionLogFormat:
@@ -255,7 +242,7 @@ class TestRevisionLogFormat:
 ## Original Plan Hash
 `abc123def456...` (SHA-256)
 
-## IsThisSmart Score
+## Validate Score
 7.8/10
 
 ## Revisions Applied
@@ -263,23 +250,23 @@ class TestRevisionLogFormat:
 ### Must-Do
 
 1. **TASK-003 dependency missing** - Added TASK-002 as dependency for TASK-003
-   - Source: IsThisSmart recommendation #1
+   - Source: Validate recommendation #1
    - File changed: TASKS.md
 
 2. **Missing SAFETY property** - Added PROP-004 for input validation
-   - Source: IsThisSmart recommendation #3
+   - Source: Validate recommendation #3
    - File changed: PROPERTIES.md
 
 ### Should-Do
 
 1. **Add performance test** - Added TEST-008 for response time validation
-   - Source: IsThisSmart recommendation #2
+   - Source: Validate recommendation #2
    - Status: Applied (low effort)
 
 ### Deferred
 
 1. **Consider event sourcing** - Architecture suggestion deferred to future iteration
-   - Source: IsThisSmart recommendation #5
+   - Source: Validate recommendation #5
    - Reason: High effort, not blocking
 
 ## Review Gate Results
@@ -301,9 +288,9 @@ class TestRevisionLogFormat:
         log = self._make_revision_log()
         assert "Original Plan Hash" in log
 
-    def test_revision_log_has_isthissmart_score(self):
+    def test_revision_log_has_validate_score(self):
         log = self._make_revision_log()
-        assert "IsThisSmart Score" in log
+        assert "Validate Score" in log
 
     def test_revision_log_has_must_do_section(self):
         log = self._make_revision_log()

@@ -1,12 +1,12 @@
 """
-IsThisSmart Analyzer
+Validate Analyzer
 
 7-dimension analysis of plans, ideas, and approaches.
 """
 
 from dataclasses import dataclass
-from typing import List
 from enum import Enum
+from typing import List
 
 
 class Verdict(Enum):
@@ -23,7 +23,7 @@ class DimensionAnalysis:
     """Analysis of a single dimension"""
 
     dimension: str
-    score: int  # 1-10
+    score: int
     strengths: List[str]
     concerns: List[str]
     recommendation: str
@@ -31,7 +31,7 @@ class DimensionAnalysis:
 
 @dataclass
 class SmartAnalysis:
-    """Complete IsThisSmart analysis"""
+    """Complete validation analysis"""
 
     subject: str
     verdict: Verdict
@@ -42,7 +42,7 @@ class SmartAnalysis:
     final_recommendation: str
 
 
-class IsThisSmartAnalyzer:
+class ValidateAnalyzer:
     """
     Analyzes plans/ideas across 7 dimensions.
 
@@ -66,19 +66,14 @@ class IsThisSmartAnalyzer:
             self._analyze_timeline(subject, content),
         ]
 
-        # Calculate overall score
         overall_score = sum(d.score for d in dimensions) / len(dimensions)
 
-        # Determine verdict
         verdict = self._determine_verdict(overall_score, dimensions)
 
-        # Generate summary
         executive_summary = self._generate_summary(subject, dimensions, overall_score)
 
-        # Suggest alternatives
         alternatives = self._suggest_alternatives(subject, content, dimensions)
 
-        # Final recommendation
         final_recommendation = self._generate_recommendation(verdict, dimensions)
 
         return SmartAnalysis(
@@ -93,7 +88,6 @@ class IsThisSmartAnalyzer:
 
     def _analyze_need(self, subject: str, content: str) -> DimensionAnalysis:
         """Dimension 1: Do we even need this?"""
-        # Simplified - real implementation would use LLM
         return DimensionAnalysis(
             dimension="Do We Even Need This?",
             score=8,
@@ -166,7 +160,6 @@ class IsThisSmartAnalyzer:
         self, overall_score: float, dimensions: List[DimensionAnalysis]
     ) -> Verdict:
         """Determine overall verdict"""
-        # Check for critical concerns
         has_low_score = any(d.score <= 4 for d in dimensions)
 
         if has_low_score:
@@ -188,9 +181,9 @@ class IsThisSmartAnalyzer:
         return f"""
 Overall, this approach shows {strengths_count} clear strengths and {concerns_count} areas for consideration.
 
-The strongest aspects are: {', '.join(d.dimension for d in sorted(dimensions, key=lambda x: x.score, reverse=True)[:3])}.
+The strongest aspects are: {", ".join(d.dimension for d in sorted(dimensions, key=lambda x: x.score, reverse=True)[:3])}.
 
-Key considerations: {', '.join(d.concerns[0] if d.concerns else 'None' for d in dimensions[:3])}.
+Key considerations: {", ".join(d.concerns[0] if d.concerns else "None" for d in dimensions[:3])}.
 
 With an overall score of {score:.1f}/10, this is a solid approach that can move forward with attention to the identified concerns.
         """.strip()
@@ -199,7 +192,6 @@ With an overall score of {score:.1f}/10, this is a solid approach that can move 
         self, subject: str, content: str, dimensions: List[DimensionAnalysis]
     ) -> List[str]:
         """Suggest simpler alternatives"""
-        # Simplified - real implementation would be smarter
         return [
             "Start with a simpler MVP and iterate based on feedback",
             "Consider using existing solution (e.g., off-the-shelf library) and extending it",

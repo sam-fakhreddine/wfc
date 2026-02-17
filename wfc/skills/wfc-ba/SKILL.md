@@ -25,7 +25,7 @@ WITHOUT BA:
   Vague idea → /wfc-plan (guesses) → /wfc-implement (wrong thing) → Rework
 
 WITH BA:
-  Vague idea → /wfc-ba (clarifies) → /wfc-isthissmart (validates) → /wfc-plan (precise) → /wfc-implement (right thing)
+  Vague idea → /wfc-ba (clarifies) → /wfc-validate (validates) → /wfc-plan (precise) → /wfc-implement (right thing)
 ```
 
 ## Usage
@@ -271,8 +271,8 @@ User: /wfc-ba "add rate limiting"
 ## Integration with WFC
 
 ### Upstream (feeds into):
-- **wfc-isthissmart** — BA document is validated for quality (next step in pipeline)
-- **wfc-plan** — After isthissmart validation, BA feeds into structured planning
+- **wfc-validate** — BA document is validated for quality (next step in pipeline)
+- **wfc-plan** — After validation, BA feeds into structured planning
 - **wfc-build** — Quick mode BA can feed directly into build for small features
 
 ### Downstream (consumes from):
@@ -283,7 +283,7 @@ User: /wfc-ba "add rate limiting"
 ### Workflow Position
 
 ```
-/wfc-ba (requirements) → /wfc-isthissmart (validate) → /wfc-plan (planning) → /wfc-implement (building)
+/wfc-ba (requirements) → /wfc-validate (validate) → /wfc-plan (planning) → /wfc-implement (building)
     ↑                                                                                ↓
     └──────────────────── feedback loop (requirements change) ←──────────────────────┘
 ```
@@ -317,8 +317,8 @@ After the interview is complete:
 6. Write BA document to `ba/BA-{feature-slug}.md`
 7. Write interview transcript to `ba/interview-transcript.json`
 8. If `--ref` was used, write competitive analysis to `ba/competitive-analysis.md`
-9. **Run `/wfc-isthissmart`** on the generated BA document to validate quality before handing off to planning
-10. Apply any Must-Do revisions from isthissmart feedback to the BA document
+9. **Run `/wfc-validate`** on the generated BA document to validate quality before handing off to planning
+10. Apply any Must-Do revisions from validate feedback to the BA document
 
 ### Output Location
 
@@ -437,7 +437,7 @@ A: Kodus AI's validation pipeline (already analyzed)
 ✅ BA document: ba/BA-finding-validation.md
 ✅ Transcript: ba/interview-transcript.json
 
-Next: Run `/wfc-isthissmart` to validate, then `/wfc-plan` to generate tasks
+Next: Run `/wfc-validate` to validate, then `/wfc-plan` to generate tasks
 ```
 
 ## Philosophy

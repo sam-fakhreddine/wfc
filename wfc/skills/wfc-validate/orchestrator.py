@@ -1,5 +1,5 @@
 """
-IsThisSmart Orchestrator
+Validate Orchestrator
 
 Coordinates analysis → report generation.
 """
@@ -7,19 +7,19 @@ Coordinates analysis → report generation.
 from pathlib import Path
 from typing import Optional
 
-from .analyzer import IsThisSmartAnalyzer, SmartAnalysis
+from .analyzer import SmartAnalysis, ValidateAnalyzer
 
 
-class IsThisSmartOrchestrator:
+class ValidateOrchestrator:
     """
-    Orchestrates IsThisSmart analysis.
+    Orchestrates validation analysis.
 
     ELEGANT: Simple coordination.
     MULTI-TIER: Logic layer only.
     """
 
     def __init__(self):
-        self.analyzer = IsThisSmartAnalyzer()
+        self.analyzer = ValidateAnalyzer()
 
     def analyze(
         self, subject: str, content: Optional[str] = None, output_dir: Optional[Path] = None
@@ -30,29 +30,25 @@ class IsThisSmartOrchestrator:
         Returns SmartAnalysis with verdict.
         """
 
-        # If no content provided, try to load from plan directory
         if content is None:
             content = self._load_plan_content()
 
-        # Run analysis
         analysis = self.analyzer.analyze(subject, content)
 
-        # Generate report if output directory provided
         if output_dir:
-            report_path = output_dir / "ISTHISSMART.md"
+            report_path = output_dir / "VALIDATE.md"
             self._generate_report(analysis, report_path)
 
         return analysis
 
     def _load_plan_content(self) -> str:
         """Load content from plan directory"""
-        # Simplified - real implementation would read from plan/
         return "[Plan content would be loaded here]"
 
     def _generate_report(self, analysis: SmartAnalysis, path: Path) -> None:
-        """Generate ISTHISSMART.md report"""
+        """Generate VALIDATE.md report"""
         lines = [
-            "# Is This Smart? Analysis",
+            "# Validation Analysis",
             "",
             f"## Subject: {analysis.subject}",
             f"## Verdict: {analysis.verdict.value}",

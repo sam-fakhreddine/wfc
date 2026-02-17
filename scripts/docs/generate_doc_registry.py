@@ -11,9 +11,9 @@ Similar to persona registry but for documentation.
 
 import json
 import re
+from dataclasses import asdict, dataclass
 from pathlib import Path
-from typing import List, Dict, Optional
-from dataclasses import dataclass, asdict
+from typing import Dict, List, Optional
 
 
 @dataclass
@@ -27,8 +27,8 @@ class DocMetadata:
     topics: List[str]
     skills: List[str]
     size_lines: int
-    size_tokens: int  # Estimated (lines * 8)
-    category: str  # guide, example, reference, architecture
+    size_tokens: int
+    category: str
 
 
 def extract_title_from_file(file_path: Path) -> str:
@@ -50,36 +50,29 @@ def extract_summary_from_file(file_path: Path, max_chars: int = 150) -> str:
         with open(file_path) as f:
             lines = f.readlines()
 
-        # Skip title and empty lines
         summary_lines = []
         started = False
 
         for line in lines:
             line = line.strip()
 
-            # Skip title
             if line.startswith("# "):
                 started = True
                 continue
 
-            # Skip empty lines before summary
             if not started or not line:
                 continue
 
-            # Stop at next heading or code block
             if line.startswith("#") or line.startswith("```"):
                 break
 
-            # Collect summary
             summary_lines.append(line)
 
-            # Stop if we have enough
             if len(" ".join(summary_lines)) >= max_chars:
                 break
 
         summary = " ".join(summary_lines)
 
-        # Truncate to max_chars
         if len(summary) > max_chars:
             summary = summary[:max_chars].rsplit(" ", 1)[0] + "..."
 
@@ -93,11 +86,9 @@ def extract_topics_from_file(file_path: Path) -> List[str]:
     """Extract topics from filename and content"""
     topics = []
 
-    # From filename
     name_parts = file_path.stem.lower().replace("_", "-").split("-")
     topics.extend(name_parts)
 
-    # From content (look for keywords)
     keywords = [
         "plan",
         "implement",
@@ -127,7 +118,7 @@ def extract_topics_from_file(file_path: Path) -> List[str]:
     except Exception:
         pass
 
-    return sorted(set(topics))[:10]  # Max 10 topics
+    return sorted(set(topics))[:10]
 
 
 def extract_skills_from_file(file_path: Path) -> List[str]:
@@ -141,7 +132,7 @@ def extract_skills_from_file(file_path: Path) -> List[str]:
         "wfc-security",
         "wfc-architecture",
         "wfc-observe",
-        "wfc-isthissmart",
+        "wfc-validate",
         "wfc-safeclaude",
         "wfc-retro",
         "wfc-newskill",
@@ -176,28 +167,22 @@ def scan_docs_directory(docs_dir: Path) -> List[DocMetadata]:
     """Scan docs directory and collect metadata"""
     docs = []
 
-    # Find all markdown files
     md_files = sorted(docs_dir.rglob("*.md"))
 
     for md_file in md_files:
-        # Skip registry files themselves
         if md_file.name.startswith("REGISTRY"):
             continue
 
-        # Count lines
         try:
             lines = len(md_file.read_text().splitlines())
         except Exception:
             lines = 0
 
-        # Estimate tokens (rough: 1 line ≈ 8 tokens)
         tokens = lines * 8
 
-        # Generate ID from relative path
         rel_path = md_file.relative_to(docs_dir)
         doc_id = str(rel_path).replace("/", "_").replace(".md", "").lower()
 
-        # Extract metadata
         metadata = DocMetadata(
             id=doc_id,
             path=str(rel_path),
@@ -223,7 +208,7 @@ def generate_registry_json(docs: List[DocMetadata], output_path: Path) -> None:
         "total_docs": len(docs),
         "total_lines": sum(d.size_lines for d in docs),
         "total_tokens_full": sum(d.size_tokens for d in docs),
-        "total_tokens_summaries": len(docs) * 100,  # ~100 tokens per summary
+        "total_tokens_summaries": len(docs) * 100,
         "savings_percent": round(
             (1 - (len(docs) * 100) / sum(d.size_tokens for d in docs)) * 100, 1
         ),
@@ -258,7 +243,6 @@ def generate_registry_markdown(docs: List[DocMetadata], output_path: Path) -> No
         "",
     ]
 
-    # Group by category
     categories = {}
     for doc in docs:
         categories.setdefault(doc.category, []).append(doc)
@@ -293,7 +277,6 @@ def generate_registry_markdown(docs: List[DocMetadata], output_path: Path) -> No
 
 def main():
     """Main entry point"""
-    # Find docs directory
     script_dir = Path(__file__).parent
     repo_root = script_dir.parent.parent
     docs_dir = repo_root / "docs"
@@ -304,14 +287,12 @@ def main():
 
     print(f"📁 Scanning {docs_dir}")
 
-    # Scan docs
     docs = scan_docs_directory(docs_dir)
 
     if not docs:
         print("⚠️  No documentation files found")
         return 1
 
-    # Generate registries
     reference_dir = docs_dir / "reference"
     reference_dir.mkdir(parents=True, exist_ok=True)
     generate_registry_json(docs, reference_dir / "REGISTRY.json")

@@ -64,7 +64,7 @@ Auto-generated index of all WFC documentation.
 - **Summary:** **Status**: ✅ COMPLETE (2026-02-10) All WFC skills now comply with the [Agent Skills specification](https://github.com/anthropics/agentskills).
 - **Size:** 278 lines (~2,224 tokens)
 - **Topics:** agent, architecture, compliance, implement, orchestrator, persona, plan, quality, review, security
-- **Skills:** wfc-architecture, wfc-implement, wfc-isthissmart, wfc-newskill, wfc-observe, wfc-plan, wfc-retro, wfc-review, wfc-safeclaude, wfc-security, wfc-test
+- **Skills:** wfc-architecture, wfc-implement, wfc-validate, wfc-newskill, wfc-observe, wfc-plan, wfc-retro, wfc-review, wfc-safeclaude, wfc-security, wfc-test
 
 ### Contributing to WFC
 - **Path:** `CONTRIBUTING.md` (repo root)
