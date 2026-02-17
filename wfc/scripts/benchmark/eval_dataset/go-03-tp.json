@@ -1,0 +1,16 @@
+{
+  "id": "go-03-tp",
+  "language": "go",
+  "example_type": "true_positive",
+  "source_code": "func processFiles(paths []string) error {\n\tfor _, p := range paths {\n\t\tf, err := os.Open(p)\n\t\tif err != nil {\n\t\t\treturn err\n\t\t}\n\t\tdefer f.Close()\n\t\t// process f\n\t}\n\treturn nil\n}\n",
+  "findings": [
+    {
+      "line_start": 7,
+      "line_end": 7,
+      "category": "defer-in-loop",
+      "severity": 6.5,
+      "description": "defer inside a loop does not execute until the surrounding function returns; all file handles remain open until processFiles exits, not at the end of each iteration"
+    }
+  ],
+  "notes": "defer in a loop causes resource accumulation. Should close inline or use a helper closure."
+}

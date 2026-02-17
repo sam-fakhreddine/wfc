@@ -316,7 +316,7 @@ RUN { \
     echo 'alias wfc-test="claude /wfc-test"'; \
     echo 'alias wfc-architecture="claude /wfc-architecture"'; \
     echo 'alias wfc-observe="claude /wfc-observe"'; \
-    echo 'alias wfc-isthissmart="claude /wfc-isthissmart"'; \
+    echo 'alias wfc-validate="claude /wfc-validate"'; \
     echo 'alias wfc-safeguard="claude /wfc-safeguard"'; \
     echo 'alias wfc-rules="claude /wfc-rules"'; \
     echo 'alias wfc-playground="claude /wfc-playground"'; \

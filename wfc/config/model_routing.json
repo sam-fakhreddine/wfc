@@ -1,0 +1,20 @@
+{
+  "default": "claude-sonnet-4-5-20250929",
+  "reviewers": {
+    "security": "claude-opus-4-6",
+    "correctness": "claude-sonnet-4-5-20250929",
+    "performance": "claude-sonnet-4-5-20250929",
+    "maintainability": "claude-haiku-4-5-20251001",
+    "reliability": "claude-opus-4-6"
+  },
+  "validation_cross_check": "claude-haiku-4-5-20251001",
+  "auto_routing": {
+    "small_diff_lines": 50,
+    "large_diff_lines": 500,
+    "small_model": "claude-haiku-4-5-20251001",
+    "medium_model": "claude-sonnet-4-5-20250929",
+    "large_high_stakes_model": "claude-opus-4-6",
+    "large_other_model": "claude-sonnet-4-5-20250929",
+    "high_stakes_reviewers": ["security", "reliability"]
+  }
+}

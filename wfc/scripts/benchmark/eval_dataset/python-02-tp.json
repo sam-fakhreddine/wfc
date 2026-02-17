@@ -1,0 +1,16 @@
+{
+  "id": "python-02-tp",
+  "language": "python",
+  "example_type": "true_positive",
+  "source_code": "def read_config(path):\n    f = open(path, 'r')\n    data = f.read()\n    return data\n",
+  "findings": [
+    {
+      "line_start": 2,
+      "line_end": 2,
+      "category": "resource-leak",
+      "severity": 6.5,
+      "description": "File handle opened but never closed; exception before f.read() will leak the handle"
+    }
+  ],
+  "notes": "Should use 'with open(path) as f' context manager to guarantee closure."
+}

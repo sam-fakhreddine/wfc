@@ -1,0 +1,16 @@
+{
+  "id": "go-04-tp",
+  "language": "go",
+  "example_type": "true_positive",
+  "source_code": "var cache map[string]int\n\nfunc store(key string, val int) {\n\tcache[key] = val\n}\n",
+  "findings": [
+    {
+      "line_start": 4,
+      "line_end": 4,
+      "category": "nil-map-write",
+      "severity": 9.0,
+      "description": "Writing to a nil map panics at runtime; cache is declared but never initialized with make()"
+    }
+  ],
+  "notes": "Writing to a nil map always panics. cache must be initialized: 'var cache = make(map[string]int)'."
+}

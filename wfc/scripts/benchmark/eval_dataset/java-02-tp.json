@@ -1,0 +1,16 @@
+{
+  "id": "java-02-tp",
+  "language": "java",
+  "example_type": "true_positive",
+  "source_code": "public boolean isAdmin(String role) {\n    return role == \"admin\";\n}\n",
+  "findings": [
+    {
+      "line_start": 2,
+      "line_end": 2,
+      "category": "string-identity-comparison",
+      "severity": 7.5,
+      "description": "Using == compares String references, not values; two \"admin\" literals from different sources may not be the same object, causing the check to return false unexpectedly"
+    }
+  ],
+  "notes": "Classic Java string comparison bug. Should use role.equals(\"admin\") or \"admin\".equals(role)."
+}

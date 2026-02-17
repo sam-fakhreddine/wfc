@@ -229,7 +229,7 @@ WFC includes 19 skills:
 | `wfc-implement` | Parallel TDD implementation | "implement this plan" |
 | `wfc-test` | Generate tests from properties | "generate tests" |
 | `wfc-security` | STRIDE threat modeling | "threat model this" |
-| `wfc-isthissmart` | Critical thinking advisor | "is this a good idea?" |
+| `wfc-validate` | Critical thinking advisor | "is this a good idea?" |
 | `wfc-architecture` | Architecture docs + diagrams | "document architecture" |
 | `wfc-observe` | Observability from properties | "add monitoring" |
 | `wfc-safeclaude` | Safe command allowlist | "reduce approval prompts" |
@@ -244,7 +244,7 @@ WFC includes 19 skills:
 ### Workflow 1: New Feature
 
 ```
-1. /wfc-isthissmart "Add OAuth2 login"
+1. /wfc-validate "Add OAuth2 login"
    → Validates approach before starting
 
 2. /wfc-plan

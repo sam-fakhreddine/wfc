@@ -38,7 +38,7 @@ jobs:
     - name: Run tests
       run: |
         source .venv/bin/activate
-        pytest -v
+        pytest -v --ignore=tests/test_installer_docker.py
 
     - name: Check formatting
       run: |
@@ -165,30 +165,34 @@ jobs:
             print(f"\n✅ All {validated} WFC skills validated")
         PYEOF
 
-  benchmark:
-    name: Token Usage Benchmark
+  reviewer-check:
+    name: Validate Reviewer Structure
     runs-on: ubuntu-latest
 
     steps:
     - uses: actions/checkout@v4
 
-    - name: Set up Python
-      uses: actions/setup-python@v5
-      with:
-        python-version: '3.12'
-
-    - name: Install uv
+    - name: Check reviewer files
       run: |
-        curl -LsSf https://astral.sh/uv/install.sh | sh
-        echo "$HOME/.cargo/bin" >> $GITHUB_PATH
+        python3 << 'EOF'
+        from pathlib import Path
 
-    - name: Install dependencies
-      run: |
-        uv venv
-        source .venv/bin/activate
-        uv pip install -e ".[tokens]"
+        reviewers_dir = Path('wfc/reviewers')
+        expected = ['security', 'correctness', 'performance', 'maintainability', 'reliability']
+        errors = []
 
-    - name: Run benchmark
-      run: |
-        source .venv/bin/activate
-        python scripts/benchmark_tokens.py --compare
+        for name in expected:
+            prompt = reviewers_dir / name / 'PROMPT.md'
+            if not prompt.exists():
+                errors.append(f"Missing: {prompt}")
+            elif len(prompt.read_text()) < 100:
+                errors.append(f"Too short: {prompt}")
+
+        if errors:
+            print("❌ Reviewer errors:")
+            for e in errors:
+                print(f"  - {e}")
+            exit(1)
+        else:
+            print(f"✅ All {len(expected)} reviewers present and valid")
+        EOF

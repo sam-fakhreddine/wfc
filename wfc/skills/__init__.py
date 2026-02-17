@@ -32,7 +32,7 @@ _SKILL_ALIAS_MAP: dict[str, str] = {
     "wfc_build": "wfc-build",
     "wfc_implement": "wfc-implement",
     "wfc_init": "wfc-init",
-    "wfc_isthissmart": "wfc-isthissmart",
+    "wfc_validate": "wfc-validate",
     "wfc_newskill": "wfc-newskill",
     "wfc_observe": "wfc-observe",
     "wfc_plan": "wfc-plan",

@@ -92,7 +92,7 @@ done
 - ✅ wfc-build
 - ✅ wfc-implement
 - ✅ wfc-init
-- ✅ wfc-isthissmart
+- ✅ wfc-validate
 - ✅ wfc-newskill
 - ✅ wfc-observe
 - ✅ wfc-plan
@@ -207,7 +207,7 @@ Updated frontmatter in:
 - `~/.claude/skills/wfc-build/SKILL.md`
 - `~/.claude/skills/wfc-implement/SKILL.md`
 - `~/.claude/skills/wfc-init/SKILL.md`
-- `~/.claude/skills/wfc-isthissmart/SKILL.md`
+- `~/.claude/skills/wfc-validate/SKILL.md`
 - `~/.claude/skills/wfc-newskill/SKILL.md`
 - `~/.claude/skills/wfc-observe/SKILL.md`
 - `~/.claude/skills/wfc-plan/SKILL.md`
