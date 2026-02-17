@@ -34,7 +34,7 @@ wfc validate                     # Validate skills (after install)
 ### Complete Workflow
 
 ```
-1. Plan → 2. Build/Implement → 3. Review → 4. User Pushes
+1. BA → 2. Validate → 3. Plan → 4. Build/Implement → 5. Review → 6. User Pushes
 ```
 
 #### Option A: Quick Features (Intentional Vibe)
@@ -60,13 +60,19 @@ wfc validate                     # Validate skills (after install)
 #### Option B: Complex Features (Full Planning)
 
 ```bash
-# Step 1: Create structured plan
+# Step 1: Gather and structure requirements
+/wfc-ba
+
+# Step 2: Validate requirements quality
+/wfc-isthissmart
+
+# Step 3: Create structured plan from validated BA
 /wfc-plan
 
-# Step 2: Execute plan with parallel agents
+# Step 4: Execute plan with parallel agents
 /wfc-implement
 
-# Step 3: Final review (if not already done per-task)
+# Step 5: Final review (if not already done per-task)
 /wfc-review
 ```
 
