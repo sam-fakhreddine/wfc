@@ -93,31 +93,39 @@ class KnowledgeChunker:
         match = _ENTRY_PATTERN.match(line)
         if match:
             date, text, source = match.groups()
+            normalized_text = text.strip()
+            normalized_source = source.strip()
             return KnowledgeChunk(
-                text=text.strip(),
+                text=normalized_text,
                 reviewer_id=reviewer_id,
                 section=section,
                 date=date,
-                source=source.strip(),
-                chunk_id=self._make_chunk_id(reviewer_id, section, text),
+                source=normalized_source,
+                chunk_id=self._make_chunk_id(
+                    reviewer_id, section, date, normalized_source, normalized_text
+                ),
             )
 
         match = _ENTRY_NO_SOURCE_PATTERN.match(line)
         if match:
             date, text = match.groups()
+            normalized_text = text.strip()
             return KnowledgeChunk(
-                text=text.strip(),
+                text=normalized_text,
                 reviewer_id=reviewer_id,
                 section=section,
                 date=date,
                 source="unknown",
-                chunk_id=self._make_chunk_id(reviewer_id, section, text),
+                chunk_id=self._make_chunk_id(
+                    reviewer_id, section, date, "unknown", normalized_text
+                ),
             )
 
         return None
 
     @staticmethod
-    def _make_chunk_id(reviewer_id: str, section: str, text: str) -> str:
-        """Generate a deterministic chunk ID from content."""
-        raw = f"{reviewer_id}:{section}:{text}"
+    def _make_chunk_id(reviewer_id: str, section: str, date: str, source: str, text: str) -> str:
+        """Generate a deterministic chunk ID from normalized content."""
+        normalized_text = " ".join(text.split())
+        raw = f"{reviewer_id}:{section}:{date}:{source}:{normalized_text}"
         return hashlib.sha256(raw.encode("utf-8")).hexdigest()[:16]

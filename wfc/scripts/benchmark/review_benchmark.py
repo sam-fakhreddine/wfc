@@ -67,14 +67,14 @@ class ReviewBenchmark:
 
     def load_dataset(self) -> list[dict]:
         """Load and return the benchmark dataset."""
-        with open(self._dataset_path) as f:
+        with open(self._dataset_path, encoding="utf-8") as f:
             return json.load(f)
 
     def evaluate_findings(self, test_case: dict, actual_findings: list[dict]) -> dict:
         """Compare actual findings against expected for a single test case.
 
-        Returns a dict with keys: reviewer_id (aggregated), true_positives,
-        false_positives, false_negatives, plus per-reviewer breakdowns.
+        Returns a dict with keys: test_case_id, true_positives,
+        false_positives, false_negatives, per_reviewer (reviewer_id -> counts).
         """
         tp = 0
         fp = 0
