@@ -1,8 +1,8 @@
 #!/bin/bash
 
-# WFC Worktree Manager
-# Reliable worktree lifecycle: create, list, switch, cleanup, env sync
-# NEVER call `git worktree add` directly — always use this script.
+# WFC Isolated Workspace Controller
+# Provisions, lists, tears down, and syncs worktrees for parallel agent work.
+# Raw `git worktree add` skips env/config bootstrap — route through here instead.
 
 set -e
 
@@ -301,29 +301,29 @@ cmd_status() {
 
 cmd_help() {
   cat << 'EOF'
-WFC Worktree Manager
+WFC Isolated Workspace Controller
 
 Usage: worktree-manager.sh <command> [options]
 
 Commands:
-  create <name> [base]   Create worktree (default base: develop)
-                         Auto-copies .env files, config files
-                         Creates wfc/<name> branch
-  list | ls              List all worktrees with status
-  switch | go <name>     Switch to worktree
-  status [name]          Show git status (all or specific)
-  copy-env | env <name>  Sync .env files from repo root
-  cleanup | clean        Remove clean worktrees (skips dirty ones)
-  help                   Show this message
+  create <name> [base]   Provision a new workspace (base defaults to develop)
+                         Bootstraps env vars and runtime configs
+                         Branches as wfc/<name>
+  list | ls              Show all active workspaces
+  switch | go <name>     Enter a workspace
+  status [name]          Report git status (all or one)
+  copy-env | env <name>  Push env vars from repo root into workspace
+  cleanup | clean        Tear down idle workspaces (preserves dirty ones)
+  help                   Print this message
 
-What it does that raw `git worktree add` doesn't:
-  - Copies .env, .env.local, .env.test (not .env.example)
-  - Copies .tool-versions, .node-version, .python-version, .nvmrc
-  - Ensures .worktrees is in .gitignore
-  - Uses wfc/ branch naming convention
-  - Defaults to develop as base branch
-  - Skips cleanup of dirty worktrees (uncommitted changes)
-  - Prunes stale git worktree references
+Why this instead of bare git worktree:
+  - Bootstraps .env, .env.local, .env.test (skips .env.example)
+  - Propagates .tool-versions, .node-version, .python-version, .nvmrc
+  - Registers .worktrees in .gitignore automatically
+  - Enforces wfc/ branch prefix convention
+  - Bases on develop by default
+  - Refuses to tear down workspaces with uncommitted work
+  - Prunes stale worktree refs on cleanup
 
 Examples:
   worktree-manager.sh create TASK-001

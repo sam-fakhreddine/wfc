@@ -4,18 +4,18 @@ description: Post-plan research enhancement that spawns parallel research subage
 license: MIT
 ---
 
-# WFC:DEEPEN - Post-Plan Research Enhancement
+# WFC:DEEPEN - Sharpen the Plan
 
-**"Make a plan quickly, then make it thorough."**
+**"Draft fast. Sharpen with evidence."**
 
 ## What It Does
 
-Takes an existing plan (from wfc-plan) and enriches it with parallel research without re-running the full planning process.
+Injects parallel research into an existing plan without re-running the full planning cycle.
 
-1. **Read** - Load existing plan (TASKS.md, PROPERTIES.md, TEST-PLAN.md)
-2. **Research** - Spawn parallel subagents for targeted research
-3. **Enrich** - Merge research findings into existing plan files
-4. **Validate** - Ensure enriched plan still passes validation
+1. **Ingest** - Load the plan artifacts (TASKS.md, PROPERTIES.md, TEST-PLAN.md)
+2. **Investigate** - Dispatch parallel subagents for targeted evidence gathering
+3. **Annotate** - Weave findings into existing plan files as research addenda
+4. **Revalidate** - Confirm the annotated plan still clears validation
 
 ## Usage
 
@@ -155,7 +155,7 @@ Interview → Plan → Deepen → Implement → Review
 
 ## Philosophy
 
-**SEPARATION**: Planning and research are distinct activities
-**PARALLEL**: All research happens concurrently
-**ADDITIVE**: Never removes plan content, only enriches
-**TRACEABLE**: Every addition logged with source
+**DECOUPLED**: Planning and evidence-gathering run as separate phases
+**CONCURRENT**: All research agents fire at once
+**ACCRETIVE**: Findings layer on top — nothing gets stripped
+**SOURCED**: Every annotation cites where it came from

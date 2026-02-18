@@ -4,18 +4,18 @@ description: Multi-platform skill export that converts WFC skills into formats c
 license: MIT
 ---
 
-# WFC:EXPORT - Multi-Platform Skill Export
+# WFC:EXPORT - Cross-Platform Skill Distribution
 
-**"WFC skills everywhere your team codes."**
+**"Same quality guardrails, whichever IDE your team opens."**
 
 ## What It Does
 
-Converts WFC skills into formats compatible with 7+ AI coding platforms, so teams using different tools all benefit from WFC's quality infrastructure.
+Translates WFC skill definitions into native configs for 7+ AI coding platforms — same guardrails, different runtime.
 
-1. **Scan** - Read all WFC skill SKILL.md files
-2. **Convert** - Transform to target platform format
-3. **Write** - Output platform-specific files
-4. **Verify** - Validate generated configs
+1. **Inventory** - Walk all WFC SKILL.md files
+2. **Translate** - Map to target platform schema
+3. **Emit** - Write platform-native config files
+4. **Validate** - Confirm generated output parses cleanly
 
 ## Usage
 
@@ -212,7 +212,7 @@ tools: Bash, Read, Write, Glob, Grep
 
 ## Philosophy
 
-**PORTABLE**: WFC skills work everywhere
-**FAITHFUL**: Content preserved, only format changes
-**SELECTIVE**: Export what matters, skip internals
-**AUTOMATED**: One command to sync across platforms
+**POLYGLOT**: Same guardrails, any AI coding tool
+**LOSSLESS**: Skill logic survives the format swap
+**FILTERED**: Ship the signal, drop the scaffolding
+**ONE-SHOT**: Single invocation syncs every platform

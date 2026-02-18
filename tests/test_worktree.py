@@ -267,7 +267,7 @@ class TestWorktreeManagerScript:
                 ["bash", str(script), "help"],
                 capture_output=True, text=True
             )
-            assert "WFC Worktree Manager" in result.stdout
+            assert "WFC Isolated Workspace Controller" in result.stdout
             assert "create" in result.stdout
             assert "cleanup" in result.stdout
 

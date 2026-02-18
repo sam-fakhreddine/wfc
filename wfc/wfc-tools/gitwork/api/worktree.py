@@ -1,13 +1,13 @@
 """
 Worktree operations API
 
-Isolated workspaces for parallel agent work.
-Uses worktree-manager.sh for reliable lifecycle management:
-  - Auto-copies .env files (not .env.example)
-  - Copies config files (.tool-versions, .node-version, etc.)
-  - Ensures .worktrees in .gitignore
-  - Uses wfc/ branch naming convention
-  - Defaults to develop as base branch
+Provisions isolated workspaces for parallel agent execution.
+Delegates to worktree-manager.sh for full lifecycle control:
+  - Bootstraps env vars (.env, .env.local — skips .env.example)
+  - Propagates runtime configs (.tool-versions, .node-version, etc.)
+  - Registers .worktrees in .gitignore
+  - Enforces wfc/ branch prefix
+  - Bases on develop by default
 """
 
 import subprocess
@@ -47,26 +47,26 @@ def _run_manager(args: List[str], cwd: Optional[str] = None) -> subprocess.Compl
 
 
 class WorktreeOperations:
-    """Worktree operations for WFC.
+    """Workspace provisioning and teardown for WFC agents.
 
-    All operations delegate to worktree-manager.sh which handles:
-    - .env file copying (not .env.example)
-    - .gitignore management
-    - Config file syncing (.tool-versions, .node-version, etc.)
-    - wfc/ branch naming convention
+    Routes through worktree-manager.sh for:
+    - Env var bootstrap (.env, .env.local — skips .env.example)
+    - .gitignore registration
+    - Runtime config propagation (.tool-versions, .node-version, etc.)
+    - wfc/ branch prefix enforcement
     """
 
     def __init__(self, worktree_dir: str = ".worktrees"):
         self.worktree_dir = worktree_dir
 
     def create(self, task_id: str, base_ref: str = "develop") -> Dict:
-        """Create worktree for task using worktree-manager.sh.
+        """Provision an isolated workspace for a task.
 
-        This delegates to the shell script which handles:
-        - Creating the worktree with wfc/<task_id> branch
-        - Copying .env files from repo root
-        - Copying config files (.tool-versions, etc.)
-        - Ensuring .worktrees is in .gitignore
+        Routes through worktree-manager.sh which:
+        - Branches as wfc/<task_id>
+        - Bootstraps env vars from repo root
+        - Propagates runtime configs
+        - Registers .worktrees in .gitignore
         """
         validation_error = validate_worktree_input(task_id, base_ref)
         if validation_error:

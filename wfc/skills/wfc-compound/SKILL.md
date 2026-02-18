@@ -4,19 +4,19 @@ description: Knowledge codification skill that documents solved problems into se
 license: MIT
 ---
 
-# WFC:COMPOUND - Knowledge Codification
+# WFC:COMPOUND - Distill What You Learned
 
-**"First solve = 30 min. Document it = 5 min. Next time = 2-min lookup."**
+**"Solve it once. Write it down. Look it up forever."**
 
 ## What It Does
 
-Captures solved problems as structured, searchable knowledge so your team never solves the same problem twice.
+Distills solved problems into structured, indexed knowledge that feeds back into planning and review.
 
-1. **Detect** - Recognizes when a problem has been solved (auto-trigger or manual)
-2. **Analyze** - Parallel subagents extract context, solution, prevention, and category
-3. **Assemble** - Single orchestrator writes one searchable markdown document
-4. **Index** - Document stored in `docs/solutions/{category}/` with YAML frontmatter
-5. **Integrate** - wfc-plan and wfc-review automatically search solutions during their workflows
+1. **Recognize** - Detects a resolved issue (auto-trigger or explicit invocation)
+2. **Decompose** - Parallel subagents pull apart context, root cause, fix, prevention, and category
+3. **Synthesize** - Orchestrator consolidates into one searchable markdown file
+4. **Catalog** - Filed under `docs/solutions/{category}/` with YAML frontmatter
+5. **Wire In** - wfc-plan and wfc-review query the catalog during their workflows
 
 ## Usage
 
@@ -194,7 +194,7 @@ Problem Solved → /wfc-compound → docs/solutions/{category}/{file}.md
 
 ## Philosophy
 
-**COMPOUND**: Each solved problem makes the next easier
-**SEARCHABLE**: YAML frontmatter enables machine and human search
-**ACTIONABLE**: Every entry has code, prevention, and monitoring
-**ELEGANT**: One file, one problem, clear structure
+**COMPOUND**: Every fix sharpens the next one
+**INDEXED**: YAML frontmatter powers machine and human lookup
+**PRESCRIPTIVE**: Every entry carries code, prevention, and monitoring
+**LEAN**: One file per problem, zero fluff

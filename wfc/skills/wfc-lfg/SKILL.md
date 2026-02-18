@@ -4,13 +4,13 @@ description: Autonomous end-to-end pipeline that chains the full WFC workflow wi
 license: MIT
 ---
 
-# WFC:LFG - Autonomous Pipeline
+# WFC:LFG - Full-Send Pipeline
 
-**"Plan it. Build it. Ship it. No stopping."**
+**"One command. Zero hand-offs. PR on the other side."**
 
 ## What It Does
 
-Chains the entire WFC workflow into one autonomous pipeline. Each step feeds into the next without human intervention.
+Sequences every WFC phase into a single unattended run. Output of each step feeds the next — you get a PR at the end.
 
 ```
 /wfc-lfg "add rate limiting to API"
@@ -204,8 +204,8 @@ Post-Deploy Validation:
 
 ## Philosophy
 
-**AUTONOMOUS**: No human bottleneck between steps
-**SAFE**: Hard stops on critical issues, never pushes to main
-**FAST**: Parallel where possible, sequential where required
-**TRACEABLE**: Full audit trail of every step
-**INTENTIONAL**: You choose when to go full auto
+**UNATTENDED**: Zero hand-offs between phases
+**GUARDED**: Hard-stops on critical findings, main stays untouched
+**SATURATING**: Concurrent where safe, serial where ordering matters
+**AUDITABLE**: Every phase writes its own receipt
+**OPT-IN**: You decide when to hand over the keys

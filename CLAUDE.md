@@ -627,16 +627,16 @@ All 28 WFC skills are Agent Skills compliant:
 - **NEVER** bypass pre-commit validation
 - **ALWAYS** update tests when changing code
 
-### Worktree Management
-- **NEVER** call `git worktree add` directly — use `worktree-manager.sh`
-- **ALWAYS** use the script: `bash wfc/wfc-tools/gitwork/scripts/worktree-manager.sh create <name>`
-- **WHY**: Raw `git worktree add` skips .env copying, .gitignore setup, and config sync
-- **ALWAYS** clean up worktrees after work: `worktree-manager.sh cleanup`
+### Workspace Isolation
+- **NEVER** provision worktrees with bare `git worktree add` — route through `worktree-manager.sh`
+- **ALWAYS** invoke the controller: `bash wfc/wfc-tools/gitwork/scripts/worktree-manager.sh create <name>`
+- **WHY**: Bare git skips env bootstrap, .gitignore registration, and config propagation
+- **ALWAYS** tear down idle workspaces when done: `worktree-manager.sh cleanup`
 
-### Knowledge Codification
-- **ALWAYS** run `/wfc-compound` after solving non-trivial problems
-- **NEVER** skip documenting solutions that took >15 minutes to find
-- **ALWAYS** include code examples (before/after) and prevention steps
+### Knowledge Capture
+- **ALWAYS** invoke `/wfc-compound` after resolving non-trivial problems
+- **NEVER** let solutions that took >15 minutes go undocumented
+- **ALWAYS** show before/after code and prevention guidance
 
 ## 📊 Key Metrics
 
