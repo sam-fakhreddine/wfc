@@ -1,0 +1,389 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Esports Platform Data Model</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Russo+One&family=Chakra+Petch:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+
+  :root{
+    --primary:#7C3AED;
+    --secondary:#A78BFA;
+    --cta:#F43F5E;
+    --bg:#0F0F23;
+    --text:#E2E8F0;
+    --border:#4C1D95;
+    --card-bg:rgba(255,255,255,0.03);
+    --card-border:rgba(124,58,237,0.3);
+    --card-glow:rgba(124,58,237,0.1);
+    --heading-font:'Russo One',sans-serif;
+    --body-font:'Chakra Petch',sans-serif;
+  }
+
+  @media(prefers-color-scheme:light){
+    :root{
+      --bg:#F0F0F8;
+      --text:#1E1B4B;
+      --card-bg:rgba(124,58,237,0.06);
+      --card-border:rgba(124,58,237,0.25);
+      --card-glow:rgba(124,58,237,0.08);
+      --border:#7C3AED;
+    }
+  }
+
+  html{font-size:16px;scroll-behavior:smooth}
+  body{
+    background:var(--bg);
+    color:var(--text);
+    font-family:var(--body-font);
+    line-height:1.6;
+    min-height:100vh;
+    padding:2rem 1rem;
+    overflow-x:hidden;
+  }
+
+  .container{max-width:1200px;margin:0 auto}
+
+  h1{
+    font-family:var(--heading-font);
+    font-size:clamp(1.6rem,4vw,2.4rem);
+    text-align:center;
+    margin-bottom:.5rem;
+    background:linear-gradient(135deg,var(--primary),var(--cta));
+    -webkit-background-clip:text;
+    -webkit-text-fill-color:transparent;
+    background-clip:text;
+  }
+
+  .subtitle{
+    text-align:center;
+    color:var(--secondary);
+    font-size:.95rem;
+    margin-bottom:2rem;
+    font-weight:500;
+    letter-spacing:.5px;
+  }
+
+  .diagram-wrapper{
+    background:var(--card-bg);
+    backdrop-filter:blur(12px);
+    -webkit-backdrop-filter:blur(12px);
+    border:1px solid var(--card-border);
+    border-radius:16px;
+    padding:2rem;
+    box-shadow:0 0 20px var(--card-glow),inset 0 1px 0 rgba(255,255,255,0.05);
+    overflow:auto;
+    position:relative;
+  }
+
+  .diagram-inner{
+    min-width:fit-content;
+    transform-origin:top left;
+    transition:transform .3s ease;
+  }
+
+  .zoom-controls{
+    display:flex;gap:.5rem;
+    justify-content:center;
+    margin-bottom:1rem;
+  }
+  .zoom-btn{
+    background:var(--card-bg);
+    backdrop-filter:blur(12px);
+    -webkit-backdrop-filter:blur(12px);
+    border:1px solid var(--card-border);
+    color:var(--text);
+    font-family:var(--body-font);
+    font-size:.85rem;
+    font-weight:600;
+    padding:.45rem .9rem;
+    border-radius:8px;
+    cursor:pointer;
+    transition:all .2s ease;
+    box-shadow:0 0 10px var(--card-glow);
+  }
+  .zoom-btn:hover{
+    background:rgba(124,58,237,0.15);
+    box-shadow:0 0 20px var(--card-glow);
+  }
+  .zoom-level{
+    display:flex;align-items:center;
+    font-size:.8rem;color:var(--secondary);
+    min-width:3.5rem;justify-content:center;
+  }
+
+  .mermaid{text-align:center}
+
+  /* Schema summary cards */
+  .schema-grid{
+    display:grid;
+    grid-template-columns:repeat(4,1fr);
+    gap:.65rem;
+    margin-top:1.5rem;
+  }
+  @media(max-width:900px){
+    .schema-grid{grid-template-columns:repeat(2,1fr)}
+  }
+  @media(max-width:500px){
+    .schema-grid{grid-template-columns:1fr}
+  }
+  .schema-card{
+    background:var(--card-bg);
+    backdrop-filter:blur(12px);
+    -webkit-backdrop-filter:blur(12px);
+    border:1px solid var(--card-border);
+    border-radius:10px;
+    padding:.8rem;
+    box-shadow:0 0 15px var(--card-glow),inset 0 1px 0 rgba(255,255,255,0.05);
+  }
+  .schema-card h3{
+    font-family:var(--heading-font);
+    font-size:.7rem;
+    color:var(--primary);
+    margin-bottom:.3rem;
+    text-transform:uppercase;
+    letter-spacing:.5px;
+  }
+  .schema-card .count{
+    font-family:var(--heading-font);
+    font-size:1.5rem;
+    color:var(--text);
+    display:block;
+  }
+  .schema-card .label{
+    font-size:.7rem;
+    color:var(--secondary);
+  }
+
+  .fade-up{
+    opacity:0;transform:translateY(24px);
+    animation:fadeUp .6s ease forwards;
+  }
+  @keyframes fadeUp{to{opacity:1;transform:translateY(0)}}
+  .delay-1{animation-delay:.1s}
+  .delay-2{animation-delay:.2s}
+  .delay-3{animation-delay:.35s}
+  .delay-4{animation-delay:.5s}
+
+  @media(prefers-reduced-motion:reduce){
+    .fade-up{opacity:1;transform:none;animation:none}
+  }
+
+  .footer{
+    text-align:center;margin-top:2rem;
+    font-size:.75rem;color:var(--secondary);opacity:.6;
+  }
+</style>
+</head>
+<body>
+<div class="container">
+  <h1 class="fade-up">Esports Platform Data Model</h1>
+  <p class="subtitle fade-up delay-1">Entity-Relationship schema for competitive gaming infrastructure</p>
+
+  <div class="zoom-controls fade-up delay-2">
+    <button class="zoom-btn" onclick="zoomOut()">&#8722; Zoom</button>
+    <span class="zoom-level" id="zoomLevel">100%</span>
+    <button class="zoom-btn" onclick="zoomIn()">&#43; Zoom</button>
+    <button class="zoom-btn" onclick="zoomReset()">Reset</button>
+  </div>
+
+  <div class="diagram-wrapper fade-up delay-3">
+    <div class="diagram-inner" id="diagramInner">
+      <div class="mermaid">
+erDiagram
+    PLAYERS ||--o{ TEAM_MEMBERS : joins
+    TEAMS ||--o{ TEAM_MEMBERS : has
+    TEAMS ||--o{ TOURNAMENT_ENTRIES : registers
+    TOURNAMENTS ||--o{ TOURNAMENT_ENTRIES : accepts
+    TOURNAMENTS ||--o{ MATCHES : contains
+    MATCHES ||--o{ MATCH_PLAYERS : features
+    PLAYERS ||--o{ MATCH_PLAYERS : participates
+    MATCH_PLAYERS ||--o{ MATCH_EVENTS : generates
+    PLAYERS ||--o{ PLAYER_STATS : accumulates
+    MATCHES ||--o{ VODS : recorded_as
+    TOURNAMENTS ||--o{ PRIZE_POOLS : awards
+
+    PLAYERS {
+        string id PK
+        string username
+        string display_name
+        int elo_rating
+        string region
+        timestamp joined_at
+    }
+
+    TEAMS {
+        string id PK
+        string name
+        string tag
+        string logo_url
+        string region
+        int ranking
+    }
+
+    TEAM_MEMBERS {
+        string id PK
+        string player_id FK
+        string team_id FK
+        string role
+        date joined
+        date left
+    }
+
+    TOURNAMENTS {
+        string id PK
+        string name
+        string game
+        string format
+        int max_teams
+        decimal prize_pool
+        timestamp start_date
+        string status
+    }
+
+    TOURNAMENT_ENTRIES {
+        string id PK
+        string tournament_id FK
+        string team_id FK
+        int seed
+        string status
+    }
+
+    MATCHES {
+        string id PK
+        string tournament_id FK
+        int round
+        string team_a_id FK
+        string team_b_id FK
+        int score_a
+        int score_b
+        string winner_id
+        timestamp played_at
+        string map
+    }
+
+    MATCH_PLAYERS {
+        string id PK
+        string match_id FK
+        string player_id FK
+        int kills
+        int deaths
+        int assists
+        float damage
+        string agent
+    }
+
+    MATCH_EVENTS {
+        string id PK
+        string match_player_id FK
+        string event_type
+        json payload
+        int tick
+        timestamp occurred_at
+    }
+
+    PLAYER_STATS {
+        string id PK
+        string player_id FK
+        string game
+        float win_rate
+        float kd_ratio
+        int matches_played
+        int rating
+    }
+
+    VODS {
+        string id PK
+        string match_id FK
+        string url
+        int duration_seconds
+        int views
+    }
+
+    PRIZE_POOLS {
+        string id PK
+        string tournament_id FK
+        int placement
+        decimal amount
+        string currency
+    }
+      </div>
+    </div>
+  </div>
+
+  <div class="schema-grid fade-up delay-4">
+    <div class="schema-card">
+      <h3>Entities</h3>
+      <span class="count">12</span>
+      <span class="label">Tables in schema</span>
+    </div>
+    <div class="schema-card">
+      <h3>Relationships</h3>
+      <span class="count">11</span>
+      <span class="label">Foreign key constraints</span>
+    </div>
+    <div class="schema-card">
+      <h3>Attributes</h3>
+      <span class="count">68</span>
+      <span class="label">Total columns</span>
+    </div>
+    <div class="schema-card">
+      <h3>Indexes</h3>
+      <span class="count">24+</span>
+      <span class="label">Recommended indexes</span>
+    </div>
+  </div>
+
+  <div class="footer fade-up delay-4">Esports Platform Data Model &mdash; Neon Dashboard</div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+<script>
+  const isDark = window.matchMedia('(prefers-color-scheme: dark)').matches || !window.matchMedia('(prefers-color-scheme: light)').matches;
+
+  mermaid.initialize({
+    startOnLoad: true,
+    theme: 'base',
+    themeVariables: {
+      darkMode: isDark,
+      background: isDark ? '#0F0F23' : '#F0F0F8',
+      primaryColor: '#1a1a3e',
+      primaryTextColor: '#E2E8F0',
+      primaryBorderColor: '#7C3AED',
+      lineColor: '#7C3AED',
+      secondaryColor: '#1a1a3e',
+      tertiaryColor: '#1a1a3e',
+      attributeBackgroundColorEven: isDark ? '#12122e' : '#E8E0F8',
+      attributeBackgroundColorOdd: isDark ? '#1a1a3e' : '#F0E8FF',
+      fontSize: '13px',
+      fontFamily: 'Chakra Petch, sans-serif',
+      nodeTextColor: '#E2E8F0',
+      edgeLabelBackground: isDark ? '#0F0F23' : '#F0F0F8'
+    },
+    er: {
+      diagramPadding: 20,
+      entityPadding: 15,
+      useMaxWidth: true,
+      minEntityWidth: 100,
+      minEntityHeight: 75,
+      fontSize: 13
+    }
+  });
+
+  let currentZoom = 1;
+  const inner = document.getElementById('diagramInner');
+  function setZoom(z) {
+    currentZoom = Math.max(0.3, Math.min(2, z));
+    inner.style.transform = 'scale(' + currentZoom + ')';
+    document.getElementById('zoomLevel').textContent = Math.round(currentZoom * 100) + '%';
+  }
+  function zoomIn() { setZoom(currentZoom + 0.1); }
+  function zoomOut() { setZoom(currentZoom - 0.1); }
+  function zoomReset() { setZoom(1); }
+</script>
+</body>
+</html>

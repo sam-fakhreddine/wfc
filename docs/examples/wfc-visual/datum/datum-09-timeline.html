@@ -1,0 +1,608 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DATUM Release Timeline</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600;700&family=Fira+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --primary: #1E40AF;
+    --secondary: #3B82F6;
+    --cta: #F59E0B;
+    --bg: #F8FAFC;
+    --text: #1E3A8A;
+    --border: #DBEAFE;
+    --surface: #FFFFFF;
+    --surface-alt: #EFF6FF;
+    --grid-color: rgba(30, 64, 175, 0.06);
+    --grid-color-strong: rgba(30, 64, 175, 0.1);
+    --shadow: 0 1px 3px rgba(30, 58, 138, 0.08), 0 4px 12px rgba(30, 58, 138, 0.04);
+    --shadow-lg: 0 4px 12px rgba(30, 58, 138, 0.1), 0 12px 32px rgba(30, 58, 138, 0.06);
+    --muted: #64748B;
+    --success: #059669;
+    --cat-foundation: #3B82F6;
+    --cat-intelligence: #F59E0B;
+    --cat-governance: #059669;
+    --cat-ai: #7C3AED;
+    --cat-planned: #64748B;
+    --timeline-line: #DBEAFE;
+    --timeline-dot: #3B82F6;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --primary: #3B82F6;
+      --secondary: #60A5FA;
+      --cta: #FBBF24;
+      --bg: #0B1120;
+      --text: #DBEAFE;
+      --border: #1E3A5F;
+      --surface: #111827;
+      --surface-alt: #1A2332;
+      --grid-color: rgba(59, 130, 246, 0.06);
+      --grid-color-strong: rgba(59, 130, 246, 0.12);
+      --shadow: 0 1px 3px rgba(0, 0, 0, 0.3), 0 4px 12px rgba(0, 0, 0, 0.2);
+      --shadow-lg: 0 4px 12px rgba(0, 0, 0, 0.4), 0 12px 32px rgba(0, 0, 0, 0.3);
+      --muted: #94A3B8;
+      --success: #34D399;
+      --cat-foundation: #60A5FA;
+      --cat-intelligence: #FBBF24;
+      --cat-governance: #34D399;
+      --cat-ai: #A78BFA;
+      --cat-planned: #94A3B8;
+      --timeline-line: #1E3A5F;
+      --timeline-dot: #60A5FA;
+    }
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Fira Sans', sans-serif;
+    background-color: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    overflow-x: hidden;
+    background-image:
+      linear-gradient(var(--grid-color) 1px, transparent 1px),
+      linear-gradient(90deg, var(--grid-color) 1px, transparent 1px),
+      linear-gradient(var(--grid-color-strong) 1px, transparent 1px),
+      linear-gradient(90deg, var(--grid-color-strong) 1px, transparent 1px);
+    background-size: 20px 20px, 20px 20px, 100px 100px, 100px 100px;
+    background-position: center center;
+  }
+
+  .page-container {
+    max-width: 960px;
+    margin: 0 auto;
+    padding: 2rem 1.5rem;
+  }
+
+  /* Header */
+  .page-header {
+    text-align: center;
+    margin-bottom: 2.5rem;
+    opacity: 0;
+    transform: translateY(20px);
+    animation: fadeUp 0.6s ease-out forwards;
+  }
+
+  .page-header .badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 9999px;
+    padding: 0.35rem 1rem;
+    font-family: 'Fira Code', monospace;
+    font-size: 0.75rem;
+    color: var(--secondary);
+    margin-bottom: 1rem;
+    letter-spacing: 0.05em;
+  }
+
+  .page-header .badge::before {
+    content: '';
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--cta);
+    animation: pulse-dot 2s ease-in-out infinite;
+  }
+
+  .page-header h1 {
+    font-family: 'Fira Sans', sans-serif;
+    font-size: clamp(1.5rem, 4vw, 2.25rem);
+    font-weight: 700;
+    color: var(--primary);
+    margin-bottom: 0.5rem;
+    letter-spacing: -0.02em;
+  }
+
+  .page-header .subtitle {
+    font-size: 0.95rem;
+    color: var(--muted);
+    max-width: 600px;
+    margin: 0 auto;
+    line-height: 1.6;
+  }
+
+  /* Legend */
+  .legend-bar {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 1rem 2rem;
+    margin-bottom: 2.5rem;
+    opacity: 0;
+    transform: translateY(20px);
+    animation: fadeUp 0.6s ease-out 0.1s forwards;
+  }
+
+  .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 0.45rem;
+    font-size: 0.8rem;
+    color: var(--muted);
+  }
+
+  .legend-swatch {
+    width: 14px;
+    height: 4px;
+    border-radius: 2px;
+  }
+
+  .legend-swatch.foundation { background: var(--cat-foundation); }
+  .legend-swatch.intelligence { background: var(--cat-intelligence); }
+  .legend-swatch.governance { background: var(--cat-governance); }
+  .legend-swatch.ai { background: var(--cat-ai); }
+  .legend-swatch.planned { background: var(--cat-planned); }
+
+  /* Timeline */
+  .timeline {
+    position: relative;
+    padding: 0;
+  }
+
+  /* Central line */
+  .timeline::before {
+    content: '';
+    position: absolute;
+    left: 50%;
+    top: 0;
+    bottom: 0;
+    width: 2px;
+    background: var(--timeline-line);
+    transform: translateX(-50%);
+  }
+
+  .timeline-entry {
+    position: relative;
+    width: 50%;
+    padding: 0 2.5rem 3rem;
+    opacity: 0;
+    transform: translateY(30px);
+  }
+
+  .timeline-entry.left {
+    left: 0;
+    text-align: right;
+    padding-right: 3rem;
+    padding-left: 0;
+  }
+
+  .timeline-entry.right {
+    left: 50%;
+    text-align: left;
+    padding-left: 3rem;
+    padding-right: 0;
+  }
+
+  /* Central dot */
+  .timeline-entry::before {
+    content: '';
+    position: absolute;
+    top: 0.5rem;
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    background: var(--surface);
+    border: 3px solid var(--timeline-dot);
+    z-index: 2;
+  }
+
+  .timeline-entry.left::before {
+    right: -7px;
+  }
+
+  .timeline-entry.right::before {
+    left: -7px;
+  }
+
+  /* Connector line */
+  .timeline-entry::after {
+    content: '';
+    position: absolute;
+    top: 0.85rem;
+    width: 2rem;
+    height: 1px;
+    background: var(--timeline-line);
+  }
+
+  .timeline-entry.left::after {
+    right: 7px;
+  }
+
+  .timeline-entry.right::after {
+    left: 7px;
+  }
+
+  /* Card */
+  .timeline-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 1.25rem 1.5rem;
+    box-shadow: var(--shadow);
+    position: relative;
+    transition: box-shadow 0.2s ease, transform 0.2s ease;
+  }
+
+  .timeline-card:hover {
+    box-shadow: var(--shadow-lg);
+    transform: translateY(-2px);
+  }
+
+  .timeline-card.foundation { border-left: 4px solid var(--cat-foundation); }
+  .timeline-card.intelligence { border-left: 4px solid var(--cat-intelligence); }
+  .timeline-card.governance { border-left: 4px solid var(--cat-governance); }
+  .timeline-card.ai { border-left: 4px solid var(--cat-ai); }
+  .timeline-card.planned { border-left: 4px solid var(--cat-planned); }
+
+  /* Right-side cards: border on left is fine */
+  .timeline-entry.left .timeline-card.foundation { border-left: none; border-right: 4px solid var(--cat-foundation); }
+  .timeline-entry.left .timeline-card.intelligence { border-left: none; border-right: 4px solid var(--cat-intelligence); }
+  .timeline-entry.left .timeline-card.governance { border-left: none; border-right: 4px solid var(--cat-governance); }
+  .timeline-entry.left .timeline-card.ai { border-left: none; border-right: 4px solid var(--cat-ai); }
+  .timeline-entry.left .timeline-card.planned { border-left: none; border-right: 4px solid var(--cat-planned); }
+
+  .version-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.15rem 0.6rem;
+    border-radius: 9999px;
+    font-family: 'Fira Code', monospace;
+    font-size: 0.7rem;
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+    letter-spacing: 0.03em;
+  }
+
+  .version-badge.foundation { background: rgba(59, 130, 246, 0.12); color: var(--cat-foundation); }
+  .version-badge.intelligence { background: rgba(245, 158, 11, 0.12); color: var(--cat-intelligence); }
+  .version-badge.governance { background: rgba(5, 150, 105, 0.12); color: var(--cat-governance); }
+  .version-badge.ai { background: rgba(124, 58, 237, 0.12); color: var(--cat-ai); }
+  .version-badge.planned { background: rgba(100, 116, 139, 0.12); color: var(--cat-planned); }
+
+  .timeline-card .date {
+    font-family: 'Fira Code', monospace;
+    font-size: 0.7rem;
+    color: var(--muted);
+    margin-bottom: 0.35rem;
+    letter-spacing: 0.03em;
+  }
+
+  .timeline-card .release-name {
+    font-size: 1.05rem;
+    font-weight: 600;
+    color: var(--text);
+    margin-bottom: 0.6rem;
+  }
+
+  .timeline-card ul {
+    list-style: none;
+    padding: 0;
+  }
+
+  .timeline-card li {
+    font-size: 0.82rem;
+    color: var(--muted);
+    padding: 0.15rem 0;
+    line-height: 1.5;
+  }
+
+  .timeline-card li::before {
+    content: '\2022';
+    color: var(--secondary);
+    margin-right: 0.5rem;
+    font-weight: bold;
+  }
+
+  .timeline-entry.left .timeline-card li {
+    direction: rtl;
+  }
+
+  .timeline-entry.left .timeline-card li::before {
+    margin-right: 0;
+    margin-left: 0.5rem;
+  }
+
+  /* Animate in */
+  .timeline-entry.visible {
+    opacity: 1;
+    transform: translateY(0);
+    transition: opacity 0.6s ease-out, transform 0.6s ease-out;
+  }
+
+  /* Footer */
+  .page-footer {
+    text-align: center;
+    margin-top: 2rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid var(--border);
+    opacity: 0;
+    transform: translateY(20px);
+    animation: fadeUp 0.6s ease-out 0.5s forwards;
+  }
+
+  .page-footer p {
+    font-family: 'Fira Code', monospace;
+    font-size: 0.7rem;
+    color: var(--muted);
+    letter-spacing: 0.05em;
+  }
+
+  /* Animations */
+  @keyframes fadeUp {
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  @keyframes pulse-dot {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.4; }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .page-header,
+    .legend-bar,
+    .page-footer {
+      opacity: 1;
+      transform: none;
+      animation: none;
+    }
+    .page-header .badge::before {
+      animation: none;
+    }
+    .timeline-entry {
+      opacity: 1;
+      transform: none;
+    }
+    .timeline-entry.visible {
+      transition: none;
+    }
+  }
+
+  /* Mobile: single column */
+  @media (max-width: 768px) {
+    .page-container { padding: 1rem; }
+
+    .timeline::before {
+      left: 20px;
+    }
+
+    .timeline-entry,
+    .timeline-entry.left,
+    .timeline-entry.right {
+      width: 100%;
+      left: 0;
+      text-align: left;
+      padding-left: 3.5rem;
+      padding-right: 0;
+    }
+
+    .timeline-entry.left::before,
+    .timeline-entry.right::before {
+      left: 13px;
+      right: auto;
+    }
+
+    .timeline-entry.left::after,
+    .timeline-entry.right::after {
+      left: 27px;
+      right: auto;
+    }
+
+    .timeline-entry.left .timeline-card {
+      border-right: none;
+    }
+
+    .timeline-entry.left .timeline-card.foundation { border-left: 4px solid var(--cat-foundation); }
+    .timeline-entry.left .timeline-card.intelligence { border-left: 4px solid var(--cat-intelligence); }
+    .timeline-entry.left .timeline-card.governance { border-left: 4px solid var(--cat-governance); }
+    .timeline-entry.left .timeline-card.ai { border-left: 4px solid var(--cat-ai); }
+    .timeline-entry.left .timeline-card.planned { border-left: 4px solid var(--cat-planned); }
+
+    .timeline-entry.left .timeline-card li {
+      direction: ltr;
+    }
+
+    .timeline-entry.left .timeline-card li::before {
+      margin-right: 0.5rem;
+      margin-left: 0;
+    }
+
+    .legend-bar { gap: 0.5rem 1rem; }
+  }
+</style>
+</head>
+<body>
+<div class="page-container">
+  <header class="page-header">
+    <div class="badge">DATUM // ROADMAP</div>
+    <h1>Release Timeline</h1>
+    <p class="subtitle">From Genesis to AI-Native: the evolution of the DATUM platform across 8 major releases spanning 3+ years of development.</p>
+  </header>
+
+  <div class="legend-bar">
+    <div class="legend-item"><span class="legend-swatch foundation"></span> Foundation</div>
+    <div class="legend-item"><span class="legend-swatch intelligence"></span> Intelligence</div>
+    <div class="legend-item"><span class="legend-swatch governance"></span> Governance</div>
+    <div class="legend-item"><span class="legend-swatch ai"></span> AI-Native</div>
+    <div class="legend-item"><span class="legend-swatch planned"></span> Planned</div>
+  </div>
+
+  <div class="timeline">
+    <!-- v0.1 -->
+    <div class="timeline-entry left" data-delay="0">
+      <div class="timeline-card foundation">
+        <span class="version-badge foundation">v0.1</span>
+        <div class="date">January 2023</div>
+        <div class="release-name">Genesis</div>
+        <ul>
+          <li>Core ingestion engine</li>
+          <li>S3 connector</li>
+          <li>Basic SQL queries</li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- v0.5 -->
+    <div class="timeline-entry right" data-delay="1">
+      <div class="timeline-card foundation">
+        <span class="version-badge foundation">v0.5</span>
+        <div class="date">June 2023</div>
+        <div class="release-name">Foundation</div>
+        <ul>
+          <li>Spark integration</li>
+          <li>Schema registry</li>
+          <li>10 connectors</li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- v1.0 -->
+    <div class="timeline-entry left" data-delay="2">
+      <div class="timeline-card foundation">
+        <span class="version-badge foundation">v1.0</span>
+        <div class="date">December 2023</div>
+        <div class="release-name">General Availability</div>
+        <ul>
+          <li>Production-ready</li>
+          <li>RBAC access control</li>
+          <li>Audit logging</li>
+          <li>50 connectors</li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- v1.5 -->
+    <div class="timeline-entry right" data-delay="3">
+      <div class="timeline-card intelligence">
+        <span class="version-badge intelligence">v1.5</span>
+        <div class="date">April 2024</div>
+        <div class="release-name">Intelligence</div>
+        <ul>
+          <li>Auto-schema detection</li>
+          <li>Query optimizer v2</li>
+          <li>Data lineage</li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- v2.0 -->
+    <div class="timeline-entry left" data-delay="4">
+      <div class="timeline-card intelligence">
+        <span class="version-badge intelligence">v2.0</span>
+        <div class="date">September 2024</div>
+        <div class="release-name">Lakehouse</div>
+        <ul>
+          <li>Iceberg native support</li>
+          <li>Federated queries</li>
+          <li>Real-time CDC</li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- v2.5 -->
+    <div class="timeline-entry right" data-delay="5">
+      <div class="timeline-card governance">
+        <span class="version-badge governance">v2.5</span>
+        <div class="date">February 2025</div>
+        <div class="release-name">Governance</div>
+        <ul>
+          <li>PII detection</li>
+          <li>Compliance dashboards</li>
+          <li>Cost attribution</li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- v3.0 -->
+    <div class="timeline-entry left" data-delay="6">
+      <div class="timeline-card ai">
+        <span class="version-badge ai">v3.0</span>
+        <div class="date">August 2025</div>
+        <div class="release-name">AI-Native</div>
+        <ul>
+          <li>Feature store</li>
+          <li>Vector search</li>
+          <li>ML pipeline orchestration</li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- v3.5 -->
+    <div class="timeline-entry right" data-delay="7">
+      <div class="timeline-card planned">
+        <span class="version-badge planned">v3.5</span>
+        <div class="date">Q1 2026</div>
+        <div class="release-name">Planned</div>
+        <ul>
+          <li>Multi-region support</li>
+          <li>Disaster recovery</li>
+          <li>Edge processing</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <footer class="page-footer">
+    <p>DATUM Platform // Release Timeline // v0.1 (Jan 2023) through v3.5 (Q1 2026)</p>
+  </footer>
+</div>
+
+<script>
+  // Staggered fade-in on scroll
+  const prefersReduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  function revealEntries() {
+    const entries = document.querySelectorAll('.timeline-entry');
+    entries.forEach((entry) => {
+      const rect = entry.getBoundingClientRect();
+      const delay = parseInt(entry.dataset.delay || '0', 10);
+      if (rect.top < window.innerHeight - 60) {
+        if (prefersReduced) {
+          entry.classList.add('visible');
+        } else {
+          setTimeout(() => {
+            entry.classList.add('visible');
+          }, delay * 120);
+        }
+      }
+    });
+  }
+
+  // Initial reveal
+  revealEntries();
+
+  // On scroll
+  window.addEventListener('scroll', revealEntries, { passive: true });
+</script>
+</body>
+</html>

@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Esports Platform Comparison</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Russo+One&family=Chakra+Petch:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+  :root{
+    --primary:#7C3AED;--secondary:#A78BFA;--cta:#F43F5E;
+    --bg:#0F0F23;--text:#E2E8F0;--border:#4C1D95;
+    --surface:rgba(124,58,237,0.08);--glass:rgba(15,15,35,0.7);
+    --glow-primary:0 0 20px rgba(124,58,237,0.4);
+    --glow-cta:0 0 20px rgba(244,63,94,0.4);
+    --lead:#10B981;--tied:#F59E0B;--behind:#F43F5E;
+    --row-alt:rgba(124,58,237,0.04);
+    --row-hover:rgba(124,58,237,0.12);
+  }
+  @media(prefers-color-scheme:light){
+    :root{
+      --bg:#F0EEFF;--text:#1E1B4B;--glass:rgba(255,255,255,0.75);
+      --surface:rgba(124,58,237,0.06);--border:#C4B5FD;
+      --row-alt:rgba(124,58,237,0.03);--row-hover:rgba(124,58,237,0.1);
+    }
+  }
+  html{scroll-behavior:smooth}
+  body{
+    font-family:'Chakra Petch',sans-serif;background:var(--bg);color:var(--text);
+    min-height:100vh;overflow-x:hidden;
+  }
+  .page-wrapper{max-width:1400px;margin:0 auto;padding:2rem 1.5rem}
+  header{text-align:center;margin-bottom:2rem}
+  header h1{
+    font-family:'Russo One',sans-serif;font-size:clamp(1.5rem,4vw,2.5rem);
+    background:linear-gradient(135deg,var(--primary),var(--secondary),var(--cta));
+    -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+    background-clip:text;letter-spacing:0.02em;
+  }
+  header p{color:var(--secondary);margin-top:0.5rem;font-size:0.95rem;font-weight:300}
+  .badge{
+    display:inline-block;padding:0.25rem 0.75rem;border-radius:9999px;font-size:0.75rem;
+    font-weight:600;background:rgba(124,58,237,0.15);color:var(--secondary);
+    border:1px solid var(--border);margin-top:0.75rem;letter-spacing:0.05em;
+    text-transform:uppercase;
+  }
+
+  /* KPI Cards */
+  .kpi-row{
+    display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));
+    gap:1rem;margin-bottom:2rem;
+  }
+  .kpi-card{
+    background:var(--glass);border:1px solid var(--border);border-radius:0.75rem;
+    padding:1.25rem;text-align:center;backdrop-filter:blur(16px);
+    -webkit-backdrop-filter:blur(16px);position:relative;overflow:hidden;
+    transition:transform 0.3s ease,box-shadow 0.3s ease;
+  }
+  .kpi-card:hover{transform:translateY(-2px);box-shadow:var(--glow-primary)}
+  .kpi-card::before{
+    content:'';position:absolute;top:0;left:0;right:0;height:2px;
+    background:linear-gradient(90deg,transparent,var(--primary),transparent);
+  }
+  .kpi-card.lead::before{background:linear-gradient(90deg,transparent,var(--lead),transparent)}
+  .kpi-card.tied::before{background:linear-gradient(90deg,transparent,var(--tied),transparent)}
+  .kpi-card.behind::before{background:linear-gradient(90deg,transparent,var(--behind),transparent)}
+  .kpi-value{
+    font-family:'Russo One',sans-serif;font-size:2rem;
+    color:var(--primary);line-height:1.2;
+  }
+  .kpi-card.lead .kpi-value{color:var(--lead)}
+  .kpi-card.tied .kpi-value{color:var(--tied)}
+  .kpi-card.behind .kpi-value{color:var(--behind)}
+  .kpi-label{font-size:0.85rem;color:var(--secondary);margin-top:0.25rem;font-weight:400}
+
+  /* Legend */
+  .legend-bar{
+    display:flex;gap:1.5rem;justify-content:center;align-items:center;
+    margin-bottom:1.5rem;flex-wrap:wrap;
+  }
+  .legend-entry{display:flex;align-items:center;gap:0.4rem;font-size:0.85rem}
+  .status-badge{
+    display:inline-flex;align-items:center;justify-content:center;
+    padding:0.2rem 0.6rem;border-radius:9999px;font-size:0.7rem;
+    font-weight:700;text-transform:uppercase;letter-spacing:0.05em;
+    min-width:56px;
+  }
+  .status-badge.lead{background:rgba(16,185,129,0.15);color:var(--lead);border:1px solid rgba(16,185,129,0.3)}
+  .status-badge.tied{background:rgba(245,158,11,0.15);color:var(--tied);border:1px solid rgba(245,158,11,0.3)}
+  .status-badge.behind{background:rgba(244,63,94,0.15);color:var(--behind);border:1px solid rgba(244,63,94,0.3)}
+
+  /* Table */
+  .table-wrapper{
+    background:var(--glass);border:1px solid var(--border);border-radius:1rem;
+    backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);
+    box-shadow:var(--glow-primary);overflow:hidden;position:relative;
+  }
+  .table-wrapper::before{
+    content:'';position:absolute;top:0;left:0;right:0;height:2px;
+    background:linear-gradient(90deg,transparent,var(--primary),var(--cta),transparent);
+    z-index:1;
+  }
+  .table-scroll{overflow-x:auto}
+  table{width:100%;border-collapse:collapse;min-width:800px}
+  thead{position:sticky;top:0;z-index:2}
+  thead th{
+    font-family:'Russo One',sans-serif;font-size:0.8rem;font-weight:400;
+    text-transform:uppercase;letter-spacing:0.08em;
+    padding:1rem 0.75rem;text-align:left;
+    background:rgba(124,58,237,0.12);border-bottom:2px solid var(--border);
+    color:var(--secondary);white-space:nowrap;
+  }
+  thead th:first-child{padding-left:1.25rem}
+  thead th:last-child{text-align:center}
+  tbody tr{transition:background 0.2s ease}
+  tbody tr:nth-child(even){background:var(--row-alt)}
+  tbody tr:hover{background:var(--row-hover);box-shadow:inset 0 0 30px rgba(124,58,237,0.05)}
+  tbody td{
+    padding:0.85rem 0.75rem;font-size:0.85rem;border-bottom:1px solid rgba(124,58,237,0.08);
+    vertical-align:top;line-height:1.5;
+  }
+  tbody td:first-child{
+    padding-left:1.25rem;font-weight:600;color:var(--text);white-space:nowrap;
+  }
+  tbody td:last-child{text-align:center}
+  tbody td.ours{color:var(--secondary);font-weight:500}
+
+  tfoot td{
+    padding:0.85rem 0.75rem;font-size:0.85rem;font-weight:700;
+    border-top:2px solid var(--border);
+    background:rgba(124,58,237,0.08);
+  }
+  tfoot td:first-child{padding-left:1.25rem}
+  tfoot td:last-child{text-align:center}
+
+  .fade-up{opacity:0;transform:translateY(24px);animation:fadeUp 0.6s ease forwards}
+  .fade-up:nth-child(1){animation-delay:0.05s}
+  .fade-up:nth-child(2){animation-delay:0.15s}
+  .fade-up:nth-child(3){animation-delay:0.25s}
+  .fade-up:nth-child(4){animation-delay:0.35s}
+  .fade-up:nth-child(5){animation-delay:0.45s}
+  @keyframes fadeUp{to{opacity:1;transform:translateY(0)}}
+  @media(prefers-reduced-motion:reduce){
+    .fade-up{opacity:1;transform:none;animation:none}
+  }
+  @media(max-width:640px){
+    .page-wrapper{padding:1rem}
+    .kpi-row{grid-template-columns:repeat(2,1fr);gap:0.75rem}
+    .kpi-value{font-size:1.5rem}
+  }
+</style>
+</head>
+<body>
+<div class="page-wrapper">
+  <header class="fade-up">
+    <h1>Esports Platform Comparison</h1>
+    <p>Feature-by-feature analysis across leading competitive gaming platforms</p>
+    <span class="badge">Data Table / Comparison Matrix</span>
+  </header>
+
+  <div class="kpi-row fade-up">
+    <div class="kpi-card">
+      <div class="kpi-value">12</div>
+      <div class="kpi-label">Features Compared</div>
+    </div>
+    <div class="kpi-card lead">
+      <div class="kpi-value">9</div>
+      <div class="kpi-label">Our Platform Leads</div>
+    </div>
+    <div class="kpi-card tied">
+      <div class="kpi-value">2</div>
+      <div class="kpi-label">Tied</div>
+    </div>
+    <div class="kpi-card behind">
+      <div class="kpi-value">1</div>
+      <div class="kpi-label">Behind</div>
+    </div>
+  </div>
+
+  <div class="legend-bar fade-up">
+    <div class="legend-entry"><span class="status-badge lead">Lead</span> Our platform excels</div>
+    <div class="legend-entry"><span class="status-badge tied">Tied</span> Comparable offering</div>
+    <div class="legend-entry"><span class="status-badge behind">Behind</span> Competitor advantage</div>
+  </div>
+
+  <div class="table-wrapper fade-up">
+    <div class="table-scroll">
+      <table>
+        <thead>
+          <tr>
+            <th>Feature</th>
+            <th>Our Platform</th>
+            <th>FACEIT</th>
+            <th>ESEA</th>
+            <th>Battlefy</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Anti-Cheat</td>
+            <td class="ours">Kernel + ML behavioral</td>
+            <td>Kernel-level (AC)</td>
+            <td>ESEA Client</td>
+            <td>None (TO-provided)</td>
+            <td><span class="status-badge lead">Lead</span></td>
+          </tr>
+          <tr>
+            <td>Matchmaking</td>
+            <td class="ours">Glicko-2 + behavior score</td>
+            <td>ELO-based</td>
+            <td>RWS-based</td>
+            <td>Manual seeding</td>
+            <td><span class="status-badge lead">Lead</span></td>
+          </tr>
+          <tr>
+            <td>Tournament Tools</td>
+            <td class="ours">Full bracket + swiss + round robin</td>
+            <td>Hubs + tournaments</td>
+            <td>League-focused</td>
+            <td>Strong bracket tools</td>
+            <td><span class="status-badge tied">Tied</span></td>
+          </tr>
+          <tr>
+            <td>Live Stats</td>
+            <td class="ours">Real-time per-round</td>
+            <td>Post-match</td>
+            <td>Post-match</td>
+            <td>Basic</td>
+            <td><span class="status-badge lead">Lead</span></td>
+          </tr>
+          <tr>
+            <td>Spectator Mode</td>
+            <td class="ours">128-tick GOTV + overlays</td>
+            <td>GOTV</td>
+            <td>GOTV</td>
+            <td>Game-native</td>
+            <td><span class="status-badge lead">Lead</span></td>
+          </tr>
+          <tr>
+            <td>Fantasy/Predictions</td>
+            <td class="ours">Built-in fantasy + pick'em</td>
+            <td>Via partners</td>
+            <td>None</td>
+            <td>None</td>
+            <td><span class="status-badge lead">Lead</span></td>
+          </tr>
+          <tr>
+            <td>Streaming Integration</td>
+            <td class="ours">Native OBS + Twitch overlay API</td>
+            <td>Twitch drops</td>
+            <td>None</td>
+            <td>None</td>
+            <td><span class="status-badge lead">Lead</span></td>
+          </tr>
+          <tr>
+            <td>Prize Pool Support</td>
+            <td class="ours">Crowdfunding + guaranteed pools</td>
+            <td>Subscription model</td>
+            <td>League prizes</td>
+            <td>Entry fee based</td>
+            <td><span class="status-badge lead">Lead</span></td>
+          </tr>
+          <tr>
+            <td>Game Coverage</td>
+            <td class="ours">12 titles</td>
+            <td>5 titles</td>
+            <td>CS2 only</td>
+            <td>30+ titles</td>
+            <td><span class="status-badge behind">Behind</span></td>
+          </tr>
+          <tr>
+            <td>API Access</td>
+            <td class="ours">Full REST + GraphQL + WebSocket</td>
+            <td>REST API</td>
+            <td>Limited</td>
+            <td>REST API</td>
+            <td><span class="status-badge lead">Lead</span></td>
+          </tr>
+          <tr>
+            <td>Mobile App</td>
+            <td class="ours">Full-featured iOS + Android</td>
+            <td>iOS + Android</td>
+            <td>None</td>
+            <td>Basic web</td>
+            <td><span class="status-badge lead">Lead</span></td>
+          </tr>
+          <tr>
+            <td>Community Features</td>
+            <td class="ours">Forums + Discord bot + LFG</td>
+            <td>Hub communities</td>
+            <td>Forums</td>
+            <td>Basic</td>
+            <td><span class="status-badge tied">Tied</span></td>
+          </tr>
+        </tbody>
+        <tfoot>
+          <tr>
+            <td>Total Score</td>
+            <td style="color:var(--lead);font-weight:700">9 Leads / 2 Tied / 1 Behind</td>
+            <td>Moderate</td>
+            <td>Limited</td>
+            <td>Niche</td>
+            <td><span class="status-badge lead">Lead</span></td>
+          </tr>
+        </tfoot>
+      </table>
+    </div>
+  </div>
+</div>
+</body>
+</html>
