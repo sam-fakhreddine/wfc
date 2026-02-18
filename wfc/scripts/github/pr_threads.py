@@ -112,16 +112,18 @@ def fetch_threads(owner: str, repo: str, pr_number: int) -> list[ReviewThread]:
         if not node["comments"]["nodes"]:
             continue
         comment = node["comments"]["nodes"][0]
-        threads.append(ReviewThread(
-            id=node["id"],
-            is_resolved=node["isResolved"],
-            is_outdated=node["isOutdated"],
-            path=node["path"],
-            line=node.get("line"),
-            comment_id=comment["id"],
-            author=comment["author"]["login"],
-            body=comment["body"],
-        ))
+        threads.append(
+            ReviewThread(
+                id=node["id"],
+                is_resolved=node["isResolved"],
+                is_outdated=node["isOutdated"],
+                path=node["path"],
+                line=node.get("line"),
+                comment_id=comment["id"],
+                author=comment["author"]["login"],
+                body=comment["body"],
+            )
+        )
     return threads
 
 
@@ -165,11 +167,13 @@ def bulk_resolve(owner: str, repo: str, manifest_path: str) -> list[dict]:
             continue
         try:
             result = reply_and_resolve(item["thread_id"], item["message"])
-            results.append({
-                "thread_id": item["thread_id"],
-                "status": "resolved" if result["resolved"] else "failed",
-                **result,
-            })
+            results.append(
+                {
+                    "thread_id": item["thread_id"],
+                    "status": "resolved" if result["resolved"] else "failed",
+                    **result,
+                }
+            )
             print(f"✅ Resolved {item['thread_id'][:20]}...")
         except Exception as e:
             results.append({"thread_id": item["thread_id"], "status": "error", "error": str(e)})
@@ -194,14 +198,22 @@ def _cmd_fetch(args):
     owner, repo, pr_number = args.owner, args.repo, int(args.pr_number)
     threads = fetch_threads(owner, repo, pr_number)
     if args.json:
-        print(json.dumps([{
-            "id": t.id,
-            "is_resolved": t.is_resolved,
-            "path": t.path,
-            "line": t.line,
-            "author": t.author,
-            "body": t.body[:200],
-        } for t in threads], indent=2))
+        print(
+            json.dumps(
+                [
+                    {
+                        "id": t.id,
+                        "is_resolved": t.is_resolved,
+                        "path": t.path,
+                        "line": t.line,
+                        "author": t.author,
+                        "body": t.body[:200],
+                    }
+                    for t in threads
+                ],
+                indent=2,
+            )
+        )
     else:
         unresolved = [t for t in threads if not t.is_resolved]
         print(f"PR #{pr_number}: {len(threads)} total, {len(unresolved)} unresolved")
@@ -242,7 +254,9 @@ if __name__ == "__main__":
 
     p_resolve = sub.add_parser("resolve", help="Reply to and resolve a single thread")
     p_resolve.add_argument("thread_id", help="GraphQL thread node ID (PRRT_...)")
-    p_resolve.add_argument("--message", required=True, help="Reply message to post before resolving")
+    p_resolve.add_argument(
+        "--message", required=True, help="Reply message to post before resolving"
+    )
     p_resolve.set_defaults(func=_cmd_resolve)
 
     p_bulk = sub.add_parser("bulk-resolve", help="Resolve threads from a JSON manifest")
