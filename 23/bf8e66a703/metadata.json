@@ -1,0 +1,30 @@
+{
+  "cli_version": "0.4.2",
+  "checkpoint_id": "23bf8e66a703",
+  "strategy": "manual-commit",
+  "branch": "claude/enhance-workflow-plugin-c25hS",
+  "checkpoints_count": 0,
+  "files_touched": [
+    ".development/housekeeping/keep-list.json",
+    ".development/scratch/pr21_resolve_manifest.json",
+    "README.md",
+    "wfc/skills/wfc-gh-debug/SKILL.md",
+    "wfc/skills/wfc-pr-comments/SKILL.md"
+  ],
+  "sessions": [
+    {
+      "metadata": "/23/bf8e66a703/0/metadata.json",
+      "transcript": "/23/bf8e66a703/0/full.jsonl",
+      "context": "/23/bf8e66a703/0/context.md",
+      "content_hash": "/23/bf8e66a703/0/content_hash.txt",
+      "prompt": "/23/bf8e66a703/0/prompt.txt"
+    }
+  ],
+  "token_usage": {
+    "input_tokens": 14,
+    "cache_creation_tokens": 129158,
+    "cache_read_tokens": 1409643,
+    "output_tokens": 3924,
+    "api_call_count": 11
+  }
+}

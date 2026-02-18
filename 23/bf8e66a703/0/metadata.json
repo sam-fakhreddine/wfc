@@ -1,0 +1,36 @@
+{
+  "cli_version": "0.4.2",
+  "checkpoint_id": "23bf8e66a703",
+  "session_id": "6b2be0e6-9a4f-45c5-82c0-fbe952af39a5",
+  "strategy": "manual-commit",
+  "created_at": "2026-02-18T21:44:22.181166Z",
+  "branch": "claude/enhance-workflow-plugin-c25hS",
+  "checkpoints_count": 0,
+  "files_touched": [
+    ".development/housekeeping/keep-list.json",
+    ".development/scratch/pr21_resolve_manifest.json",
+    "README.md",
+    "wfc/skills/wfc-gh-debug/SKILL.md",
+    "wfc/skills/wfc-pr-comments/SKILL.md"
+  ],
+  "agent": "Claude Code",
+  "transcript_identifier_at_start": "f728a8a8-48bc-4892-a1ea-4e326dc20af2",
+  "checkpoint_transcript_start": 474,
+  "transcript_lines_at_start": 474,
+  "token_usage": {
+    "input_tokens": 14,
+    "cache_creation_tokens": 129158,
+    "cache_read_tokens": 1409643,
+    "output_tokens": 3924,
+    "api_call_count": 11
+  },
+  "initial_attribution": {
+    "calculated_at": "2026-02-18T21:44:22.096632Z",
+    "agent_lines": 289,
+    "human_added": 0,
+    "human_modified": 38,
+    "human_removed": 117,
+    "total_committed": 327,
+    "agent_percentage": 88.37920489296636
+  }
+}
