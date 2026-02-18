@@ -238,16 +238,93 @@ Example:
 └─────────────────────────────┘
 ```
 
+## Living Plan Documents
+
+Plans are living documents that track progress during implementation, not static artifacts.
+
+### YAML Frontmatter
+
+Every TASKS.md includes frontmatter for machine-readable status tracking:
+
+```yaml
+---
+title: OAuth2 Authentication
+status: active          # active | in_progress | completed | abandoned
+created: 2026-02-18T14:30:00Z
+updated: 2026-02-18T16:45:00Z
+tasks_total: 5
+tasks_completed: 0
+complexity: M
+---
+```
+
+### Checkbox Progress
+
+Each acceptance criterion uses markdown checkboxes. wfc-implement updates these as tasks complete:
+
+```markdown
+## TASK-001: Setup project structure
+- **Status**: completed
+- **Acceptance Criteria**:
+  - [x] Project structure follows best practices
+  - [x] Dependencies documented
+
+## TASK-002: Implement JWT auth
+- **Status**: in_progress
+- **Acceptance Criteria**:
+  - [x] Token generation works
+  - [ ] Token refresh implemented
+  - [ ] Rate limiting on auth endpoints
+```
+
+### Status Lifecycle
+
+```
+active → in_progress → completed
+                    ↘ abandoned (with reason)
+```
+
+- **active**: Plan created, not yet started
+- **in_progress**: wfc-implement is executing tasks
+- **completed**: All tasks done, tests passing, PR merged
+- **abandoned**: Scope changed, plan no longer relevant (reason recorded)
+
+### Divergence Tracking
+
+When implementation diverges from the plan, wfc-implement records it:
+
+```markdown
+## Divergence Log
+
+### TASK-003: Redis caching layer
+- **Planned**: Use Redis Cluster with 3 nodes
+- **Actual**: Switched to single Redis instance (sufficient for current scale)
+- **Reason**: Over-engineered for <1000 req/s
+- **Impact**: TASK-004 dependency removed (cluster config no longer needed)
+```
+
+### Knowledge Integration
+
+Plans automatically search `docs/solutions/` (via wfc-compound) during generation:
+
+```markdown
+## TASK-005: Connection pool configuration
+- **Known pitfall**: docs/solutions/performance-issues/redis-pool-exhaustion.md
+  - Size pools relative to worker count, not static
+  - Monitor utilization > 80%
+```
+
 ## Integration with WFC
 
-### Produces (consumed by wfc-implement)
-- `plan/TASKS.md` → Task orchestration
+### Produces (consumed by wfc-implement, wfc-deepen, wfc-lfg)
+- `plan/TASKS.md` → Task orchestration (living document)
 - `plan/PROPERTIES.md` → TDD test requirements
 - `plan/TEST-PLAN.md` → Test strategy
 
-### Consumes (future)
-- `wfc-architecture` for architecture analysis
-- `wfc-security` for threat model properties
+### Consumes
+- `docs/solutions/` → Past solutions for pitfall warnings (via wfc-compound)
+- `wfc-architecture` → Architecture analysis
+- `wfc-security` → Threat model properties
 
 ## Configuration
 
