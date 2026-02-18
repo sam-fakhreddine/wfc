@@ -46,6 +46,7 @@ _SKILL_ALIAS_MAP: dict[str, str] = {
     "wfc_security": "wfc-security",
     "wfc_test": "wfc-test",
     "wfc_vibe": "wfc-vibe",
+    "wfc_visual": "wfc-visual",
 }
 
 _imported_cache: dict[str, Any] = {}
