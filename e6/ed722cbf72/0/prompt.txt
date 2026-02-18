@@ -1,0 +1,771 @@
+Base directory for this skill: /Users/samfakhreddine/.claude/skills/wfc-housekeeping
+
+# WFC:HOUSEKEEPING - Project Hygiene & Cleanup
+
+**Keep the codebase World Fucking Class.** Systematic cleanup with safety guardrails.
+
+## What It Does
+
+1. **Scan** - Analyze the codebase for cleanup opportunities across 5 domains
+2. **Report** - Present categorized findings with severity and safety ratings
+3. **Approve** - User reviews and selects which cleanups to apply
+4. **Execute** - Apply cleanups in parallel (safe categories) with test validation
+5. **Verify** - Run full test suite to confirm no regressions
+
+## Usage
+
+```bash
+# Full scan — all 5 domains
+/wfc-housekeeping
+
+# Specific domain
+/wfc-housekeeping branches
+/wfc-housekeeping dead-code
+/wfc-housekeeping imports
+/wfc-housekeeping files
+/wfc-housekeeping dev-artifacts
+
+# With flags
+/wfc-housekeeping --safe          # Only auto-fixable items (no approval needed)
+/wfc-housekeeping --preview       # Scan and report only, don't fix anything
+/wfc-housekeeping --aggressive    # Include borderline items (more approval prompts)
+
+# Target specific path
+/wfc-housekeeping dead-code wfc/scripts/
+```
+
+## The 5 Cleanup Domains
+
+### 1. BRANCHES — Stale Branch Cleanup
+
+**Scans:**
+- Local branches merged into main/develop
+- Local branches with no remote tracking
+- Remote branches merged into main/develop
+- Branches older than 30 days with no recent commits
+
+**Commands to run:**
+
+```bash
+# List merged local branches (excluding main/develop/current)
+git branch --merged main | grep -v -E '^\*|main|develop'
+
+# List merged remote branches
+git branch -r --merged origin/main | grep -v -E 'main|develop|HEAD'
+
+# List local branches with no remote
+git branch -vv | grep ': gone]'
+
+# Show branch age (last commit date)
+git for-each-ref --sort=-committerdate --format='%(refname:short) %(committerdate:relative)' refs/heads/
+```
+
+**Auto-fix:** Delete local merged branches.
+**Approval required:** Delete remote branches, delete unmerged branches.
+
+**Safety:** NEVER delete `main`, `develop`, or the current branch.
+
+### 2. DEAD CODE — Unused Code Detection
+
+**Scans:**
+- Functions/classes with zero references outside their own file
+- Commented-out code blocks (3+ consecutive commented lines)
+- Unreachable code after return/raise/break/continue
+- Empty `except: pass` blocks
+- Unused variables (assigned but never read)
+
+**How to detect:**
+
+For each Python function/class definition found via Grep:
+1. Search the entire codebase for references to that name
+2. Exclude the definition file itself and `__init__.py` re-exports
+3. If zero external references → candidate for removal
+
+```bash
+# Find all function definitions
+uv run ruff check --select F841,F811 .  # Unused variables, redefined
+
+# Find commented-out code blocks
+# Grep for 3+ consecutive lines starting with #(space)(lowercase/import/def/class/if/for/return)
+```
+
+**Auto-fix:** Remove unused imports (ruff --fix), remove empty `except: pass`.
+**Approval required:** Remove functions/classes, remove commented-out code.
+
+**Safety:**
+- NEVER remove code with `# TODO`, `# FIXME`, `# HACK` comments (intentional)
+- NEVER remove `__all__` exports or `__init__.py` re-exports
+- NEVER remove test fixtures/utilities (check `tests/` and `conftest.py` usage)
+- If ANY usage path exists, prompt user
+
+### 3. IMPORTS — Import Optimization
+
+**Scans:**
+- Unused imports
+- Duplicate imports
+- Import ordering (stdlib → third-party → local)
+- Star imports (`from x import *`)
+
+**Commands:**
+
+```bash
+# Ruff handles all of this
+uv run ruff check --select F401,F811,I001,F403 .
+uv run ruff check --select F401,F811,I001,F403 --fix --diff .  # Preview fixes
+```
+
+**Auto-fix:** All import issues (ruff is authoritative here).
+
+### 4. FILES — Orphaned & Redundant Files
+
+**Scans:**
+- `.pyc` files and `__pycache__` directories not in `.gitignore`
+- Empty `__init__.py` files that serve no purpose
+- Duplicate files (same content, different locations)
+- Files not imported/referenced anywhere
+- Temporary files (`.tmp`, `.bak`, `.swp`, `.orig`)
+- Large files that shouldn't be in version control (>1MB)
+
+**Detection:**
+
+```bash
+# Find .pyc and __pycache__ tracked by git
+git ls-files '*.pyc' '__pycache__'
+
+# Find empty files
+find . -name '*.py' -empty -not -path './.git/*'
+
+# Find large files
+find . -size +1M -not -path './.git/*' -not -path './node_modules/*'
+
+# Find temp files
+git ls-files '*.tmp' '*.bak' '*.swp' '*.orig'
+```
+
+**Auto-fix:** Remove `.pyc` files, `__pycache__` dirs, temp files.
+**Approval required:** Remove empty `__init__.py`, orphaned files, large files.
+
+### 5. DEV ARTIFACTS — Development Leftovers
+
+**Scans:**
+- Orphaned worktree directories (`.worktrees/`)
+- Debug print statements (`print(`, `console.log(`, `debugger`)
+- Hardcoded `localhost`/`127.0.0.1` URLs outside of tests
+- `breakpoint()` calls
+- Files with `TODO` or `FIXME` (report only, don't remove)
+
+**Preserved (NEVER clean):**
+- `.development/plans/` — Plan history is valuable project context. Never delete.
+- `.development/summaries/` — Session summaries are kept for reference.
+
+**Detection:**
+
+```bash
+# Orphaned worktrees
+git worktree list --porcelain | grep 'prunable'
+
+# Debug statements in Python files (excluding tests)
+uv run ruff check --select T201,T203 .  # print statements, pdb
+```
+
+**Auto-fix:** Prune orphaned worktrees.
+**Approval required:** Remove debug statements, TODO/FIXME items (report only).
+**Never touch:** `.development/plans/`, `.development/summaries/`.
+
+## Keep List — Persistent Memory
+
+Items the user chose to **keep** in previous runs are stored in `.development/housekeeping/keep-list.json`. This file persists across sessions and is consulted every run.
+
+### Keep List Format
+
+```json
+{
+  "kept_items": [
+    {
+      "item": "entire/checkpoints/v1",
+      "domain": "branches",
+      "reason": "User chose to keep",
+      "kept_on": "2026-02-15",
+      "runs_kept": 1
+    },
+    {
+      "item": "wfc/scripts/old_helper.py",
+      "domain": "dead-code",
+      "reason": "Still referenced in docs",
+      "kept_on": "2026-02-14",
+      "runs_kept": 3
+    }
+  ]
+}
+```
+
+### How It Works
+
+1. **On scan**: After finding cleanup candidates, read `.development/housekeeping/keep-list.json`
+2. **On report**: Items on the keep list get a special marker in the table: `KEPT (2x)` showing how many times they've been kept. These items are **still shown** — the user can always change their mind and delete them.
+3. **On approval**: When the user says "keep" for an item, add/update it in the keep list with today's date and increment `runs_kept`.
+4. **On delete**: When the user deletes a previously-kept item, remove it from the keep list.
+
+### Keep List in Reports
+
+Previously-kept items appear with context so the user remembers why:
+
+```markdown
+### Branches (4 items)
+| # | Item | Severity | Safety | Action |
+|---|------|----------|--------|--------|
+| 1 | feat/old-feature (merged, local) | low | auto-fix | DELETE |
+| 2 | fix/stale-pr (merged, remote) | low | approval | DELETE |
+| 3 | entire/checkpoints/v1 (local) | info | — | KEPT (3x since 2026-02-15) |
+| 4 | claude/experiment (no remote) | medium | approval | DELETE? |
+```
+
+The `KEPT (3x since 2026-02-15)` marker tells the user: "you've seen this 3 times and chosen to keep it each time, first on Feb 15th." This is informational — the user can still override and delete it.
+
+### Managing the Keep List
+
+```bash
+# View what's on the keep list
+/wfc-housekeeping --show-kept
+
+# Clear the keep list (start fresh)
+/wfc-housekeeping --clear-kept
+
+# Remove a specific item from the keep list
+/wfc-housekeeping --forget "entire/checkpoints/v1"
+```
+
+## Workflow
+
+### Step 0: LOAD KEEP LIST
+
+Before scanning, read `.development/housekeeping/keep-list.json` if it exists. If the file doesn't exist, start with an empty keep list.
+
+```bash
+# Check for keep list
+cat .development/housekeeping/keep-list.json 2>/dev/null || echo '{"kept_items": []}'
+```
+
+### Step 1: SCAN
+
+Run all applicable scanners. For each finding, record:
+- **Domain**: branches | dead-code | imports | files | dev-artifacts
+- **Item**: What was found (file path, branch name, function name)
+- **Severity**: critical | high | medium | low | info
+- **Safety**: auto-fix | approval-required
+- **Effort**: Size of change (lines affected)
+- **Keep status**: Check if item is on the keep list
+
+### Step 2: REPORT
+
+Present findings as a categorized table. Items on the keep list are marked with their history:
+
+```markdown
+## Housekeeping Report
+
+### Branches (4 items)
+| # | Item | Severity | Safety | Action |
+|---|------|----------|--------|--------|
+| 1 | feat/old-feature (merged, local) | low | auto-fix | DELETE |
+| 2 | fix/stale-pr (merged, remote) | low | approval | DELETE |
+| 3 | entire/checkpoints/v1 (local) | info | — | KEPT (2x since 2026-02-15) |
+| 4 | claude/experiment (no remote) | medium | approval | DELETE? |
+
+### Dead Code (2 items)
+| # | Item | Severity | Safety | Action |
+|---|------|----------|--------|--------|
+| 5 | wfc/old_module.py:deprecated_func() (0 refs) | medium | approval | REMOVE |
+| 6 | 3 commented-out blocks in scripts/ | low | approval | REMOVE |
+
+### Imports (8 items)
+| # | Item | Severity | Safety | Action |
+|---|------|----------|--------|--------|
+| 7 | 8 unused imports across 5 files | low | auto-fix | FIX |
+
+### Files (1 item)
+| # | Item | Severity | Safety | Action |
+|---|------|----------|--------|--------|
+| 8 | 2 .pyc files tracked by git | low | auto-fix | REMOVE |
+
+### Dev Artifacts (2 items)
+| # | Item | Severity | Safety | Action |
+|---|------|----------|--------|--------|
+| 9 | 2 orphaned worktrees | low | auto-fix | PRUNE |
+| 10 | 14 TODOs across codebase | info | — | REPORT |
+
+---
+
+**Summary:** 10 items found — 4 auto-fix, 4 approval-required, 1 previously kept, 1 info-only
+
+Proceed with cleanup?
+```
+
+### Step 3: APPROVE
+
+Use **AskUserQuestion** to get user approval:
+- "Apply all auto-fixes + approved items?"
+- User can override individual items (e.g., "skip #4, fix #5, delete #3")
+- `--safe` mode: skip this step, only apply auto-fix items
+- `--preview` mode: stop here, don't apply anything
+
+**After approval:**
+- Items the user chose to **keep** → add/update in keep list (increment `runs_kept`, update date)
+- Items the user chose to **delete** that were on the keep list → remove from keep list
+- Write updated keep list to `.development/housekeeping/keep-list.json`
+
+### Step 4: EXECUTE
+
+Apply approved cleanups. Parallelize by domain using Task tool subagents:
+
+- **Branches agent**: Deletes approved branches (local first, then remote)
+- **Code agent**: Removes dead code, fixes imports (runs `uv run ruff check --fix`)
+- **Files agent**: Removes orphaned files, cleans dev artifacts, prunes worktrees
+
+Each agent:
+1. Applies its changes
+2. Runs `uv run pytest` on affected test files
+3. Reports what was changed
+
+### Step 5: VERIFY
+
+After all agents complete:
+
+```bash
+# Run full test suite
+uv run pytest --tb=short -q
+
+# Run linters
+uv run ruff check .
+uv run black --check .
+
+# Verify git status is clean (only expected changes)
+git status
+```
+
+If tests fail → **rollback** the offending change and report which cleanup caused the failure.
+
+### Step 6: REPORT
+
+Display final summary:
+
+```markdown
+## Housekeeping Complete
+
+**Cleaned:** 8 items
+**Skipped:** 2 items
+**Info:** 1 item
+
+### Changes Applied
+- Deleted 3 local merged branches
+- Deleted 1 remote merged branch
+- Fixed 8 unused imports (ruff --fix)
+- Removed 2 .pyc files from tracking
+- Pruned 2 orphaned worktrees
+
+### Skipped
+- entire/checkpoints/v1 — user chose to keep
+- claude/experiment — user chose to keep
+
+### Info (no action taken)
+- 14 TODOs across codebase (run /wfc-housekeeping --type todo for details)
+
+### Verification
+- Tests: 424 passed, 9 failed (pre-existing)
+- Lint: clean
+- Format: clean
+
+No regressions introduced.
+```
+
+## Git Safety
+
+**CRITICAL:** Same rules as all WFC skills.
+
+- NEVER force-push
+- NEVER delete `main` or `develop`
+- NEVER delete the current branch
+- NEVER delete remote branches without explicit user approval
+- NEVER commit cleanup changes without test verification
+- All branch deletions are logged for audit
+
+## Integration with WFC
+
+### Complements
+- `/wfc-retro` — Retro can recommend running housekeeping
+- `/wfc-build` / `/wfc-implement` — Run housekeeping before starting new features
+- `/wfc-pr-comments` — Reviewers may request cleanup
+
+### Produces
+- Clean codebase (fewer files, cleaner imports, no dead branches)
+- Housekeeping report (optional: save to `.development/summaries/`)
+
+### Consumes
+- Git history (branch analysis)
+- Ruff/black (import and lint analysis)
+- Test suite (verification)
+
+## Configuration
+
+```json
+{
+  "housekeeping": {
+    "branch_age_threshold_days": 30,
+    "preserve_dev_plans": true,
+    "preserve_dev_summaries": true,
+    "max_file_size_mb": 1,
+    "auto_fix_imports": true,
+    "auto_prune_worktrees": true,
+    "protected_branches": ["main", "develop"],
+    "excluded_paths": [".git", "node_modules", ".venv"],
+    "report_todos": true
+  }
+}
+```
+
+## Philosophy
+
+**ELEGANT**: Simple scan → report → approve → execute flow
+**MULTI-TIER**: Scanners (logic) separated from reporting (presentation)
+**PARALLEL**: Domain agents run concurrently during execution
+**SAFE**: User approval gate, test verification, rollback on failure
+
+---
+
+create a feature branch and push it up
+
+---
+
+[Request interrupted by user]
+
+---
+
+creat a chore branch and push it up
+
+---
+
+why do test files have imports in the functions
+
+---
+
+ok cool! good answer
+
+---
+
+is this PR still needing to be merged? https://github.com/sam-fakhreddine/wfc/pull/15
+
+---
+
+yep
+
+---
+
+rework the readme it is no longer uptodate.
+
+---
+
+commit and push up
+
+---
+
+Base directory for this skill: /Users/samfakhreddine/.claude/skills/wfc-pr-comments
+
+# WFC:PR-COMMENTS - Intelligent PR Comment Triage & Fix
+
+**Fetch, triage, fix.** Automates addressing PR review comments from humans, Copilot, CodeRabbit, and other reviewers.
+
+## What It Does
+
+1. **Fetch** all PR comments via `gh` CLI
+2. **Triage** each comment against 5 validity criteria
+3. **Present** triage summary to user for approval
+4. **Fix** valid comments in parallel (subagents by category)
+5. **Commit & push** fixes to the PR branch
+
+## Usage
+
+```bash
+# Auto-detect PR from current branch
+/wfc-pr-comments
+
+# Specific PR number
+/wfc-pr-comments 42
+
+# PR URL
+/wfc-pr-comments https://github.com/owner/repo/pull/42
+```
+
+---
+
+## Workflow
+
+Follow these steps exactly in order.
+
+### Step 1: DETECT PR
+
+Determine which PR to work on:
+
+1. If the user provided a PR number or URL as argument, use that.
+2. Otherwise, auto-detect from the current branch:
+
+```bash
+gh pr view --json number,url,headRefName,baseRefName,title
+```
+
+If no PR is found, tell the user and stop.
+
+Display: `PR #N: <title> (<head> -> <base>)`
+
+### Step 2: FETCH UNRESOLVED COMMENTS
+
+Fetch only **unresolved** review comments from the PR. Use GraphQL — the REST API does not expose thread resolution status.
+
+```bash
+gh api graphql -f query='
+  query($owner: String!, $repo: String!, $number: Int!) {
+    repository(owner: $owner, name: $repo) {
+      pullRequest(number: $number) {
+        reviewThreads(first: 100) {
+          nodes {
+            isResolved
+            isOutdated
+            path
+            line
+            startLine
+            diffSide
+            comments(first: 50) {
+              nodes {
+                id
+                body
+                author { login }
+                createdAt
+                path
+                diffHunk
+                originalLine
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+' -f owner='{owner}' -f repo='{repo}' -F number={number}
+```
+
+**Filter:** Only process threads where `isResolved` is `false`. Skip all resolved threads entirely — they have already been addressed.
+
+Optionally also skip threads where `isOutdated` is `true` (the code has changed since the comment was made), but flag these to the user in the triage table.
+
+Extract from each unresolved thread's first comment:
+- `id` — unique identifier
+- `author.login` — who wrote it
+- `body` — comment text
+- `path` — file being commented on
+- `line` / `originalLine` — line number
+- `diffHunk` — surrounding diff context
+- `createdAt` — timestamp
+
+**Deduplication:** If two threads reference the same file + line + substantially identical message, treat them as one.
+
+**Group by file** for display purposes.
+
+If there are zero unresolved comments, tell the user "All review threads are resolved" and stop.
+
+### Step 3: TRIAGE
+
+This is the core intelligence. For each comment, evaluate 5 dimensions and assign a verdict.
+
+**Read each file being commented on** before evaluating (use the Read tool).
+
+#### Dimension 1: ARCHITECTURAL VALIDITY
+
+Does this suggestion align with project patterns?
+- Check existing conventions in the file and codebase
+- Consider CLAUDE.md / PLANNING.md rules
+- A suggestion that contradicts project conventions → lean toward SKIP
+
+#### Dimension 2: SCOPE CHECK
+
+Is this about code in this PR's diff, or asking for unrelated work?
+- Comment about code changed in this PR → in scope
+- Request for unrelated refactoring → out of scope → SKIP
+- Feature request disguised as review comment → SKIP
+
+#### Dimension 3: CORRECTNESS
+
+Is the suggested fix actually correct?
+- Would implementing it introduce bugs?
+- Does it handle edge cases the reviewer may have missed?
+- Is the reviewer wrong about the issue? If so → SKIP with explanation
+
+#### Dimension 4: SEVERITY
+
+- **Critical** (security, data loss, crashes) → always FIX
+- **High** (bugs, logic errors) → FIX
+- **Medium** (code quality, patterns) → FIX if valid
+- **Low** (style, preferences) → FIX if trivial, SKIP if opinionated
+- **Info** (questions, suggestions) → RESPOND only
+
+#### Dimension 5: EFFORT vs VALUE
+
+- **Trivial** (1-2 lines) → always FIX
+- **Medium** (function-level) → FIX if high value
+- **Large** (multi-file refactor) → SKIP, suggest follow-up issue
+
+**Verdict per comment:** `FIX` | `SKIP (reason)` | `RESPOND (reply only)`
+
+### Step 4: PRESENT TRIAGE TO USER
+
+Display a markdown table summarizing the triage:
+
+```
+| # | File | Comment (summary) | Verdict | Reason |
+|---|------|-------------------|---------|--------|
+| 1 | security_hook.py:45 | Add lru_cache to pattern loading | FIX | Valid perf improvement, trivial |
+| 2 | orchestrator.py:120 | Rewrite auth flow | SKIP | Out of scope for this PR |
+| 3 | README.md:8 | Fix typo "teh" → "the" | FIX | Trivial |
+| 4 | consensus.py:30 | Why not use dataclass? | RESPOND | Question, not actionable |
+```
+
+Then show summary counts:
+
+```
+Summary: 8 FIX, 2 SKIP, 1 RESPOND
+
+Proceed with fixes?
+```
+
+**Use AskUserQuestion** to get approval. The user may:
+- Approve as-is
+- Override specific verdicts (e.g., "skip #1, fix #4")
+- Cancel entirely
+
+Apply any user overrides before proceeding.
+
+### Step 5: CATEGORIZE & DELEGATE
+
+Group all `FIX` comments into categories:
+
+| Category | Examples |
+|----------|----------|
+| **Lint** | Unused imports, formatting, naming conventions |
+| **Code Quality** | Caching, error handling, type safety, simplification |
+| **Design** | Architecture changes, API modifications, patterns |
+| **Docs** | Typos, missing docs, outdated comments |
+| **Security** | Vulnerabilities, hardcoded secrets, input validation |
+
+Spawn **1 subagent per category** via the Task tool (run in parallel).
+
+Each subagent receives this prompt:
+
+```
+You are fixing PR review comments in category: {category}
+
+PR: #{number} on branch {headRefName}
+Repository root: {repo_root}
+
+Comments to address:
+{for each comment in this category:}
+---
+File: {path}:{line}
+Comment by {author}: {body}
+Diff context:
+{diff_hunk}
+---
+{end for}
+
+Instructions:
+1. Read each file mentioned above
+2. Apply the fix described in each comment
+3. Verify the fix is correct — do not introduce regressions
+4. Run relevant tests if they exist (use: uv run pytest {test_file} -v)
+5. Do NOT fix anything not in the comment list above
+6. Do NOT make unrelated improvements or refactors
+```
+
+For `RESPOND` comments: Do NOT spawn a subagent. Instead, after fixes are committed, use `gh api` to reply to the comment on GitHub with an explanation.
+
+### Step 6: COMMIT & PUSH
+
+After all fix subagents complete:
+
+1. Check which files were modified: `git status`
+2. Stage all fixed files (by name, not `git add -A`)
+3. Create a single commit:
+
+```
+fix: address N PR review comments
+
+- {file1}: {brief description of fix}
+- {file2}: {brief description of fix}
+...
+
+Addresses comments on PR #{number}
+
+Co-Authored-By: Claude Opus 4.6 <noreply@anthropic.com>
+```
+
+4. Push to the PR branch:
+
+```bash
+git push origin {headRefName}
+```
+
+### Step 7: REPORT
+
+Display a final summary:
+
+```
+## PR Comment Fixes Complete
+
+**PR:** #{number} — {title}
+**Branch:** {headRefName}
+
+### Fixed (N comments)
+- {file}:{line} — {brief fix description}
+- ...
+
+### Skipped (N comments)
+- {file}:{line} — {reason}
+- ...
+
+### Responded (N comments)
+- {file}:{line} — {reply summary}
+- ...
+
+Pushed to {headRefName}. PR updated.
+```
+
+---
+
+## Integration with WFC
+
+### Fits After
+- `wfc-build` or `wfc-implement` (which create PRs)
+- Any workflow that pushes a branch and creates a PR
+
+### Complements
+- `wfc-review` — internal review BEFORE creating a PR
+- `wfc-pr-comments` — external feedback AFTER PR is created
+
+### Typical Flow
+```
+wfc-build → Push PR → Reviewers comment → /wfc-pr-comments → Push fixes → Merge
+```
+
+## Philosophy
+
+**ELEGANT:** Single skill replaces manual comment-by-comment triage
+**PARALLEL:** Fix subagents run concurrently by category
+**TOKEN-AWARE:** Only reads files that have comments, not the entire codebase
+**SAFE:** User approval gate before any fixes are applied
+
+
+ARGUMENTS: https://github.com/sam-fakhreddine/wfc/pull/21
+
+---
+
+please resolve all comments that are dealt with
+
+---
+
+write a helper script so we dont have to through this all the time and make it part of the PR comment workflow, once done, comment on the PR comment with what you did and then resolve. https://docs.github.com/en/graphql/reference/mutations#resolvereviewthread
