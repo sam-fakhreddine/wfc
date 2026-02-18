@@ -629,7 +629,7 @@ All 28 WFC skills are Agent Skills compliant:
 
 ### Workspace Isolation
 - **NEVER** provision worktrees with bare `git worktree add` — route through `worktree-manager.sh`
-- **ALWAYS** invoke the controller: `bash wfc/wfc-tools/gitwork/scripts/worktree-manager.sh create <name>`
+- **ALWAYS** invoke the controller: `bash wfc/wfc_tools/gitwork/scripts/worktree-manager.sh create <name>`
 - **WHY**: Bare git skips env bootstrap, .gitignore registration, and config propagation
 - **ALWAYS** tear down idle workspaces when done: `worktree-manager.sh cleanup`
 
@@ -671,7 +671,7 @@ All 28 WFC skills are Agent Skills compliant:
 **Security Patterns**: `wfc/scripts/hooks/patterns/security.json`
 **Architecture Designer**: `wfc/skills/wfc-plan/architecture_designer.py`
 **Playground Templates**: `wfc/assets/templates/playground/`
-**Worktree Manager**: `wfc/wfc-tools/gitwork/scripts/worktree-manager.sh`
+**Worktree Manager**: `wfc/wfc_tools/gitwork/scripts/worktree-manager.sh`
 **Worktree API**: `wfc/wfc_tools/gitwork/api/worktree.py`
 **Knowledge Codification**: `wfc/skills/wfc-compound/SKILL.md`
 **Autonomous Pipeline**: `wfc/skills/wfc-lfg/SKILL.md`

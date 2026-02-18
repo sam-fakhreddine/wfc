@@ -10,6 +10,7 @@ Delegates to worktree-manager.sh for full lifecycle control:
   - Bases on develop by default
 """
 
+import re
 import subprocess
 from pathlib import Path
 from typing import Dict, List, Optional
@@ -18,6 +19,9 @@ from .validators import has_path_traversal, is_flag_injection
 
 _SCRIPT_DIR = Path(__file__).parent.parent / "scripts"
 _MANAGER_SCRIPT = _SCRIPT_DIR / "worktree-manager.sh"
+
+# Unsafe git ref characters: ~, ^, :, whitespace, null/control bytes
+_UNSAFE_REF_RE = re.compile(r"[~^:\s\x00-\x1f]")
 
 
 def validate_worktree_input(task_id: str, base_ref: str = "develop") -> Optional[str]:
@@ -32,18 +36,45 @@ def validate_worktree_input(task_id: str, base_ref: str = "develop") -> Optional
         return f"Invalid base_ref: {base_ref} (flag injection)"
     if has_path_traversal(base_ref):
         return f"Invalid base_ref: {base_ref} (path traversal)"
+    if _UNSAFE_REF_RE.search(base_ref):
+        return f"Invalid base_ref: {base_ref} (unsafe git ref characters)"
+    return None
+
+
+def _repo_root() -> Optional[str]:
+    """Return the absolute path of the git repository root, or None on failure."""
+    try:
+        result = subprocess.run(
+            ["git", "rev-parse", "--show-toplevel"],
+            capture_output=True,
+            text=True,
+            timeout=10,
+        )
+        if result.returncode == 0:
+            return result.stdout.strip()
+    except (subprocess.TimeoutExpired, OSError):
+        pass
     return None
 
 
 def _run_manager(args: List[str], cwd: Optional[str] = None) -> subprocess.CompletedProcess:
     """Run the worktree-manager.sh script with given arguments."""
     cmd = ["bash", str(_MANAGER_SCRIPT)] + args
-    return subprocess.run(
-        cmd,
-        capture_output=True,
-        text=True,
-        cwd=cwd,
-    )
+    try:
+        return subprocess.run(
+            cmd,
+            capture_output=True,
+            text=True,
+            cwd=cwd,
+            timeout=30,
+        )
+    except subprocess.TimeoutExpired:
+        return subprocess.CompletedProcess(
+            args=cmd,
+            returncode=1,
+            stdout="",
+            stderr="worktree-manager.sh timed out after 30 seconds",
+        )
 
 
 class WorktreeOperations:
@@ -58,6 +89,14 @@ class WorktreeOperations:
 
     def __init__(self, worktree_dir: str = ".worktrees"):
         self.worktree_dir = worktree_dir
+
+    def _worktree_path(self, task_id: str) -> Path:
+        """Return the absolute path for a task's worktree, anchored to repo root."""
+        root = _repo_root()
+        if root:
+            return Path(root) / self.worktree_dir / f"wfc-{task_id}"
+        # Fall back to relative path if git command fails
+        return Path(self.worktree_dir) / f"wfc-{task_id}"
 
     def create(self, task_id: str, base_ref: str = "develop") -> Dict:
         """Provision an isolated workspace for a task.
@@ -75,7 +114,7 @@ class WorktreeOperations:
                 "message": f"Validation failed: {validation_error}",
             }
 
-        worktree_path = f"{self.worktree_dir}/wfc-{task_id}"
+        worktree_path = self._worktree_path(task_id)
         branch_name = f"wfc/{task_id}"
 
         if _MANAGER_SCRIPT.exists():
@@ -83,7 +122,7 @@ class WorktreeOperations:
             if result.returncode == 0:
                 return {
                     "success": True,
-                    "worktree_path": worktree_path,
+                    "worktree_path": str(worktree_path),
                     "branch_name": branch_name,
                     "created_from": base_ref,
                     "env_synced": True,
@@ -96,15 +135,15 @@ class WorktreeOperations:
                 }
 
         try:
-            Path(self.worktree_dir).mkdir(parents=True, exist_ok=True)
+            worktree_path.mkdir(parents=True, exist_ok=True)
             subprocess.run(
-                ["git", "worktree", "add", worktree_path, "-b", branch_name, base_ref],
+                ["git", "worktree", "add", str(worktree_path), "-b", branch_name, base_ref],
                 check=True,
                 capture_output=True,
             )
             return {
                 "success": True,
-                "worktree_path": worktree_path,
+                "worktree_path": str(worktree_path),
                 "branch_name": branch_name,
                 "created_from": base_ref,
                 "env_synced": False,
@@ -124,17 +163,19 @@ class WorktreeOperations:
                 "message": f"Validation failed: {validation_error}",
             }
 
-        worktree_path = f"{self.worktree_dir}/wfc-{task_id}"
+        worktree_path = self._worktree_path(task_id)
 
         try:
-            cmd = ["git", "worktree", "remove", worktree_path]
+            cmd = ["git", "worktree", "remove", str(worktree_path)]
             if force:
                 cmd.append("--force")
 
-            subprocess.run(cmd, check=True, capture_output=True)
-            subprocess.run(["git", "worktree", "prune"], capture_output=True)
+            subprocess.run(cmd, check=True, capture_output=True, timeout=30)
+            subprocess.run(["git", "worktree", "prune"], capture_output=True, timeout=30)
 
             return {"success": True, "message": f"Deleted worktree {worktree_path}"}
+        except subprocess.TimeoutExpired:
+            return {"success": False, "message": "git command timed out"}
         except subprocess.CalledProcessError as e:
             return {
                 "success": False,
@@ -149,6 +190,7 @@ class WorktreeOperations:
                 check=True,
                 capture_output=True,
                 text=True,
+                timeout=30,
             )
 
             worktrees = []
@@ -165,19 +207,22 @@ class WorktreeOperations:
                 worktrees.append(current)
 
             return worktrees
+        except subprocess.TimeoutExpired:
+            return []
         except subprocess.CalledProcessError:
             return []
 
     def status(self, task_id: str) -> Dict:
         """Get worktree status"""
-        worktree_path = f"{self.worktree_dir}/wfc-{task_id}"
+        worktree_path = self._worktree_path(task_id)
 
         try:
             result = subprocess.run(
-                ["git", "-C", worktree_path, "status", "--short"],
+                ["git", "-C", str(worktree_path), "status", "--short"],
                 check=True,
                 capture_output=True,
                 text=True,
+                timeout=30,
             )
 
             return {
@@ -185,10 +230,12 @@ class WorktreeOperations:
                 "clean": len(result.stdout.strip()) == 0,
                 "status": result.stdout,
             }
+        except subprocess.TimeoutExpired:
+            return {"success": False, "message": "git command timed out"}
         except subprocess.CalledProcessError as e:
             return {
                 "success": False,
-                "message": f"Failed to get status: {e.stderr.decode() if e.stderr else str(e)}",
+                "message": f"Failed to get status: {e.stderr or str(e)}",
             }
 
     def cleanup(self) -> Dict:

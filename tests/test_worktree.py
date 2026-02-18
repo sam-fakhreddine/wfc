@@ -88,7 +88,9 @@ class TestWorktreeOperationsCreate:
         assert result["success"] is True
         assert result["env_synced"] is True
         assert result["branch_name"] == "wfc/TASK-001"
-        assert result["worktree_path"] == ".worktrees/wfc-TASK-001"
+        # _worktree_path may return absolute or relative depending on _repo_root;
+        # assert on the suffix that is always present.
+        assert result["worktree_path"].endswith(".worktrees/wfc-TASK-001")
         mock_run.assert_called_once_with(["create", "TASK-001", "develop"])
 
     @patch("wfc.wfc_tools.gitwork.api.worktree._MANAGER_SCRIPT")
@@ -130,6 +132,22 @@ class TestWorktreeOperationsCreate:
                 ops.create("TASK-002")
                 mock_run.assert_called_once_with(["create", "TASK-002", "develop"])
 
+    @patch("wfc.wfc_tools.gitwork.api.worktree._MANAGER_SCRIPT")
+    @patch("wfc.wfc_tools.gitwork.api.worktree._repo_root")
+    @patch("subprocess.run")
+    def test_create_fallback_git_failure(self, mock_run, mock_repo_root, mock_script):
+        # Manager script absent → raw-git fallback.
+        # _repo_root is patched to return None so _worktree_path falls back to
+        # a relative path and does NOT consume a subprocess.run call.
+        # subprocess.run then raises CalledProcessError simulating git failure.
+        mock_script.exists.return_value = False
+        mock_repo_root.return_value = None
+        mock_run.side_effect = subprocess.CalledProcessError(128, "git", stderr=b"branch already exists")
+        ops = WorktreeOperations()
+        result = ops.create("TASK-001", "main")
+        assert result["success"] is False
+        assert "Failed to create worktree" in result["message"]
+
 
 class TestWorktreeOperationsDelete:
     def test_delete_validates_input(self):
@@ -137,8 +155,11 @@ class TestWorktreeOperationsDelete:
         result = ops.delete("")
         assert result["success"] is False
 
+    @patch("wfc.wfc_tools.gitwork.api.worktree._repo_root")
     @patch("subprocess.run")
-    def test_delete_prunes_after_remove(self, mock_run):
+    def test_delete_prunes_after_remove(self, mock_run, mock_repo_root):
+        # Patch _repo_root so _worktree_path doesn't call subprocess.run.
+        mock_repo_root.return_value = "/fake/repo"
         mock_run.return_value = MagicMock(returncode=0)
 
         ops = WorktreeOperations()
@@ -147,8 +168,10 @@ class TestWorktreeOperationsDelete:
         assert result["success"] is True
         assert mock_run.call_count == 2
 
+    @patch("wfc.wfc_tools.gitwork.api.worktree._repo_root")
     @patch("subprocess.run")
-    def test_delete_with_force(self, mock_run):
+    def test_delete_with_force(self, mock_run, mock_repo_root):
+        mock_repo_root.return_value = "/fake/repo"
         mock_run.return_value = MagicMock(returncode=0)
 
         ops = WorktreeOperations()
@@ -203,6 +226,15 @@ class TestWorktreeOperationsCleanup:
         result = ops.cleanup()
         assert result["success"] is False
 
+    @patch("wfc.wfc_tools.gitwork.api.worktree._MANAGER_SCRIPT")
+    @patch("wfc.wfc_tools.gitwork.api.worktree._run_manager")
+    def test_cleanup_manager_failure(self, mock_run, mock_script):
+        mock_script.exists.return_value = True
+        mock_run.return_value = MagicMock(returncode=1, stdout="cleanup failed", stderr="")
+        ops = WorktreeOperations()
+        result = ops.cleanup()
+        assert result["success"] is False
+
 
 class TestWorktreeOperationsSyncEnv:
     @patch("wfc.wfc_tools.gitwork.api.worktree._MANAGER_SCRIPT")
@@ -221,6 +253,23 @@ class TestWorktreeOperationsSyncEnv:
         ops = WorktreeOperations()
         result = ops.sync_env("")
         assert result["success"] is False
+
+    @patch("wfc.wfc_tools.gitwork.api.worktree._MANAGER_SCRIPT")
+    @patch("wfc.wfc_tools.gitwork.api.worktree._run_manager")
+    def test_sync_env_manager_failure(self, mock_run, mock_script):
+        mock_script.exists.return_value = True
+        mock_run.return_value = MagicMock(returncode=1, stdout="", stderr="env copy failed")
+        ops = WorktreeOperations()
+        result = ops.sync_env("TASK-001")
+        assert result["success"] is False
+
+    @patch("wfc.wfc_tools.gitwork.api.worktree._MANAGER_SCRIPT")
+    def test_sync_env_missing_manager(self, mock_script):
+        mock_script.exists.return_value = False
+        ops = WorktreeOperations()
+        result = ops.sync_env("TASK-001")
+        assert result["success"] is False
+        assert "not found" in result["message"]
 
 
 class TestWorktreeOperationsStatus:
@@ -244,6 +293,18 @@ class TestWorktreeOperationsStatus:
         assert result["success"] is True
         assert result["clean"] is False
 
+    @patch("wfc.wfc_tools.gitwork.api.worktree._repo_root")
+    @patch("subprocess.run")
+    def test_status_git_failure(self, mock_run, mock_repo_root):
+        # Patch _repo_root so _worktree_path doesn't consume a subprocess.run
+        # call; then the CalledProcessError fires on the git status command.
+        mock_repo_root.return_value = "/fake/repo"
+        mock_run.side_effect = subprocess.CalledProcessError(128, "git", stderr=b"not a git repo")
+        ops = WorktreeOperations()
+        result = ops.status("TASK-001")
+        assert result["success"] is False
+        assert "Failed to get status" in result["message"]
+
 
 
 
@@ -251,17 +312,17 @@ class TestWorktreeManagerScript:
     """Tests that verify the worktree-manager.sh script exists and is valid."""
 
     def test_script_exists(self):
-        script = Path(__file__).parent.parent / "wfc" / "wfc-tools" / "gitwork" / "scripts" / "worktree-manager.sh"
+        script = Path(__file__).parent.parent / "wfc" / "wfc_tools" / "gitwork" / "scripts" / "worktree-manager.sh"
         assert script.exists(), f"worktree-manager.sh not found at {script}"
 
     def test_script_is_executable(self):
-        script = Path(__file__).parent.parent / "wfc" / "wfc-tools" / "gitwork" / "scripts" / "worktree-manager.sh"
+        script = Path(__file__).parent.parent / "wfc" / "wfc_tools" / "gitwork" / "scripts" / "worktree-manager.sh"
         if script.exists():
             import os
             assert os.access(script, os.X_OK), "worktree-manager.sh is not executable"
 
     def test_script_help_runs(self):
-        script = Path(__file__).parent.parent / "wfc" / "wfc-tools" / "gitwork" / "scripts" / "worktree-manager.sh"
+        script = Path(__file__).parent.parent / "wfc" / "wfc_tools" / "gitwork" / "scripts" / "worktree-manager.sh"
         if script.exists():
             result = subprocess.run(
                 ["bash", str(script), "help"],
