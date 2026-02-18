@@ -218,11 +218,22 @@ Instructions:
 2. Apply the fix described in each comment
 3. Verify the fix is correct — do not introduce regressions
 4. Run relevant tests if they exist (use: uv run pytest {test_file} -v)
-5. Do NOT fix anything not in the comment list above
-6. Do NOT make unrelated improvements or refactors
+5. Run auto-lint on every modified file:
+   - Python files: `uv run ruff check --fix {file}` then `uv run black {file}`
+   - TypeScript/JS files: `npx prettier --write {file}` (if available)
+   - Go files: `gofmt -w {file}` (if available)
+   Report any remaining lint errors that couldn't be auto-fixed.
+6. Do NOT fix anything not in the comment list above
+7. Do NOT make unrelated improvements or refactors
 ```
 
 For `RESPOND` comments: Do NOT spawn a subagent. Instead, after fixes are committed, use `gh api` to reply to the comment on GitHub with an explanation.
+
+**Auto-lint gate:** Before committing, run a final format check across all modified files:
+```bash
+uv run black --check wfc/ && uv run ruff check .
+```
+If black would reformat any file, run `uv run black {modified_files}` first. This prevents CI failures from formatting issues.
 
 ### Step 6: COMMIT & PUSH
 
