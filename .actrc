@@ -1,0 +1,11 @@
+# WFC act configuration
+# https://github.com/nektos/act
+
+# Use catthehacker images — arm64-compatible and widely tested
+-P ubuntu-latest=catthehacker/ubuntu:act-22.04
+
+# Avoid act warnings about missing artifact server
+--artifact-server-path /tmp/artifacts
+
+# Avoid port conflicts with other act instances
+--no-cache-server

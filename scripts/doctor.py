@@ -61,6 +61,7 @@ class WFCDoctor:
         self._check_optional_dependencies()
         self._check_dev_dependencies()
         self._check_external_tools()
+        self._check_act_integration()
 
         self._check_skills_installation()
 
@@ -196,6 +197,65 @@ class WFCDoctor:
         else:
             check_skills_ref.fail_check(
                 "Clone to: ~/repos/agentskills/skills-ref", severity="warning"
+            )
+
+    def _check_act_integration(self):
+        """Check act (local GitHub Actions runner) integration."""
+        check_act = self.add_check("act (local CI runner)", "CI/CD")
+
+        if shutil.which("act"):
+            try:
+                result = subprocess.run(
+                    ["act", "--version"], capture_output=True, text=True, timeout=5
+                )
+                if result.returncode == 0:
+                    version = result.stdout.strip()
+                    check_act.pass_check(version)
+                else:
+                    check_act.pass_check("installed")
+            except Exception:
+                check_act.pass_check("installed")
+        else:
+            check_act.fail_check("act not found - install: brew install act", severity="warning")
+
+        check_docker = self.add_check("Docker daemon", "CI/CD")
+
+        try:
+            result = subprocess.run(
+                ["docker", "info", "--format", "{{.ServerVersion}}"],
+                capture_output=True,
+                text=True,
+                timeout=10,
+            )
+            if result.returncode == 0:
+                docker_version = result.stdout.strip()
+                check_docker.pass_check(f"Docker Engine {docker_version}")
+            else:
+                check_docker.fail_check(
+                    "Docker daemon not running - start Docker Desktop or dockerd",
+                    severity="warning",
+                )
+        except FileNotFoundError:
+            check_docker.fail_check(
+                "docker CLI not found - install Docker Desktop: https://docs.docker.com/get-docker/",
+                severity="warning",
+            )
+        except Exception as e:
+            check_docker.fail_check(
+                f"Docker check failed ({e}) - ensure Docker daemon is running",
+                severity="warning",
+            )
+
+        check_actrc = self.add_check(".actrc config", "CI/CD")
+
+        actrc_path = self.project_root / ".actrc"
+        if actrc_path.exists():
+            check_actrc.pass_check(f"Found at {actrc_path}")
+        else:
+            check_actrc.fail_check(
+                "Missing .actrc in repo root - create it to configure act defaults"
+                " (e.g. --container-architecture linux/amd64)",
+                severity="warning",
             )
 
     def _check_skills_installation(self):

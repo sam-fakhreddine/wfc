@@ -1,6 +1,7 @@
 # WFC Makefile - World Fucking Class development tasks
 
-.PHONY: help install test validate lint format clean check-all doctor
+.PHONY: help install test validate lint format clean check-all doctor \
+		 act-pull act-check act-fast act-lint act-test act-validate pr
 
 # Default target
 help:
@@ -18,6 +19,15 @@ help:
 	@echo "  make clean           - Remove build artifacts"
 	@echo "  make pre-commit      - Install pre-commit hooks"
 	@echo "  make benchmark       - Run token usage benchmarks"
+	@echo ""
+	@echo "act (Local CI) targets:"
+	@echo "  make act-pull        - Pull act Docker images (first run, ~5-15 min)"
+	@echo "  make act-check       - Full act CI gate (both workflows, ~10 min)"
+	@echo "  make act-fast        - Fast mode: lint + validate only (~2 min)"
+	@echo "  make act-lint        - Run only the lint job via act"
+	@echo "  make act-test        - Run only the test job via act (ubuntu)"
+	@echo "  make act-validate    - Run only validate.yml via act"
+	@echo "  make pr              - Create PR (runs act gate first; bypass: WFC_SKIP_ACT=1 make pr)"
 
 # Installation
 install:
@@ -166,6 +176,37 @@ dev: install-dev pre-commit
 	@echo "  make test         - Run tests"
 	@echo "  make validate     - Validate skills"
 	@echo "  make check-all    - Run all checks"
+
+
+## ─── act (Local CI) ─────────────────────────────────────────────────────────
+
+act-pull: ## Pull act Docker images (first run, ~5-15 min)
+	@echo "📦 Pulling act Docker images (catthehacker/ubuntu:act-22.04)..."
+	@act -W .github/workflows/ci.yml -j lint --pull=true --list
+
+act-check: ## Run full act CI gate (both workflows, ~10 min after image pull)
+	@bash scripts/act-check.sh
+
+act-fast: ## Run act fast mode — lint + validate only (~2 min)
+	@bash scripts/act-check.sh --fast
+
+act-lint: ## Run only the lint job via act
+	@act -W .github/workflows/ci.yml -j lint --pull=false
+
+act-test: ## Run only the test job via act (ubuntu)
+	@act -W .github/workflows/ci.yml -j test --matrix os:ubuntu-latest --pull=false
+
+act-validate: ## Run only validate.yml via act
+	@act -W .github/workflows/validate.yml --pull=false
+
+pr: ## Create PR (runs act gate first; bypass: WFC_SKIP_ACT=1 make pr)
+	@if [ "$(WFC_SKIP_ACT)" = "1" ]; then \
+		echo "⚠  Skipping act gate (WFC_SKIP_ACT=1)"; \
+	else \
+		echo "▶  Running act gate before PR creation..."; \
+		bash scripts/act-check.sh --fast || exit 1; \
+	fi
+	@gh pr create --fill
 
 # CI simulation
 ci: format-check test validate lint
