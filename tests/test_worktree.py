@@ -4,11 +4,9 @@ import subprocess
 from pathlib import Path
 from unittest.mock import MagicMock, patch
 
-import pytest
-
 from wfc.gitwork.api.worktree import (
-    WorktreeOperations,
     _MANAGER_SCRIPT,
+    WorktreeOperations,
     validate_worktree_input,
 )
 
