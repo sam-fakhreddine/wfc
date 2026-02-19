@@ -15,6 +15,7 @@ WFC Safeguard installs a PreToolUse hook that intercepts every Write, Edit, and 
 ### Pattern Categories
 
 **Blocked (action prevented)**:
+
 - `eval()` injection (Python, JavaScript)
 - `new Function()` code execution (JavaScript)
 - `os.system()` command injection (Python)
@@ -24,6 +25,7 @@ WFC Safeguard installs a PreToolUse hook that intercepts every Write, Edit, and 
 - GitHub Actions script injection via `${{ github.event.* }}` (YAML)
 
 **Warned (action allowed with notice)**:
+
 - `.innerHTML` / `dangerouslySetInnerHTML` XSS risk (JavaScript/TypeScript)
 - `pickle.load()` deserialization risk (Python)
 - `child_process.exec` command injection (JavaScript)

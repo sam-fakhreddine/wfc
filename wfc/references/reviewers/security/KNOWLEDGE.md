@@ -11,7 +11,7 @@
 ## False Positives to Avoid
 
 - [2026-02-16] eval() appears as a string literal in security.json pattern definitions ("\\beval\\s*\\(") -> this is a regex pattern for detection, not executable eval() usage (Source: initial-seed)
-- [2026-02-16] subprocess.run() calls in _checkers/python.py and _util.py use capture_output=True without shell=True -> these are safe invocations of known binaries (ruff, pyright, git) with no user-controlled input (Source: initial-seed)
+- [2026-02-16] subprocess.run() calls in _checkers/python.py and_util.py use capture_output=True without shell=True -> these are safe invocations of known binaries (ruff, pyright, git) with no user-controlled input (Source: initial-seed)
 - [2026-02-16] os.system pattern in security.json is a detection regex, not actual os.system() usage in the codebase -> do not flag the pattern file itself (Source: initial-seed)
 
 ## Incidents Prevented

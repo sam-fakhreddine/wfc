@@ -45,6 +45,7 @@ Gathers requirements across 8 skill dimensions:
 ### Generated Prompt ({skill-name}-prompt.md)
 
 Complete Claude Code agentic prompt following WFC patterns:
+
 - YAML front matter (name, description, user-invocable)
 - Purpose and usage
 - Inputs/outputs
@@ -56,6 +57,7 @@ Complete Claude Code agentic prompt following WFC patterns:
 ### Optional: Auto-Build
 
 When `--build` flag is used:
+
 1. Feeds prompt into `wfc-plan` → generates TASKS.md
 2. Feeds TASKS.md into `wfc-implement` → builds the skill
 3. Registers new skill as working slash command

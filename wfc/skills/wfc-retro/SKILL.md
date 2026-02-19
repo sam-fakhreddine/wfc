@@ -54,11 +54,13 @@ Say:Do Ratio = tasks_completed_at_estimated_complexity / tasks_with_valid_comple
 ```
 
 A task is "on-estimate" when:
+
 - Estimated complexity matches actual complexity (S stayed S, M stayed M)
 - No re-estimation was needed
 - No quality gate failures
 
 Display format:
+
 ```
 **Say:Do Ratio: 0.75** (6 of 8 tasks on-estimate)
 ```

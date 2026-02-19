@@ -7,9 +7,11 @@
 ## Test Coverage by Module
 
 ### 1. Interview Module (16 tests)
+
 **File:** `tests/test_build_interview.py`
 
 **Coverage:**
+
 - ✅ Interview completion speed (PROP-008)
 - ✅ Max questions limit enforcement
 - ✅ Feature hint argument handling
@@ -28,9 +30,11 @@
 - ✅ Module LOC estimation (100-500)
 
 ### 2. Complexity Assessor (8 tests)
+
 **File:** `tests/test_build_complexity.py`
 
 **Coverage:**
+
 - ✅ S complexity detection (single file, <50 LOC)
 - ✅ M complexity detection (2-3 files, 50-200 LOC)
 - ✅ L complexity detection (4-10 files, 200-500 LOC)
@@ -41,9 +45,11 @@
 - ✅ Boundary L→XL transition
 
 ### 3. Orchestrator (14 tests)
+
 **File:** `tests/test_build_orchestrator.py`
 
 **Coverage:**
+
 - ✅ Orchestrator initialization
 - ✅ Execute with feature hint
 - ✅ Dry-run mode (no implementation)
@@ -60,9 +66,11 @@
 - ✅ PROP-007: TDD workflow enforced
 
 ### 4. CLI Interface (11 tests)
+
 **File:** `tests/test_build_cli.py`
 
 **Coverage:**
+
 - ✅ CLI script exists in SKILL.md
 - ✅ Argument parsing logic
 - ✅ BuildOrchestrator import
@@ -76,9 +84,11 @@
 - ✅ Arguments passed to orchestrator
 
 ### 5. Integration (14 tests)
+
 **File:** `tests/test_build_integration.py`
 
 **Coverage:**
+
 - ✅ Build config section exists
 - ✅ Build config values correct
 - ✅ Safety properties in config
@@ -97,19 +107,23 @@
 ## Property Verification
 
 ### Safety Properties
+
 - ✅ **PROP-001:** Never bypass quality gates (tested in 3 locations)
 - ✅ **PROP-002:** Never skip consensus review (tested in 3 locations)
 - ✅ **PROP-003:** Never auto-push to remote (tested in 3 locations)
 
 ### Liveness Properties
+
 - ✅ **PROP-004:** Always complete or fail gracefully (tested)
 - ✅ **PROP-005:** Always provide actionable feedback (implicit in all tests)
 
 ### Invariant Properties
+
 - ✅ **PROP-006:** Deterministic complexity assessment (tested with 10 iterations)
 - ✅ **PROP-007:** TDD workflow enforced (tested in 3 locations)
 
 ### Performance Properties
+
 - ✅ **PROP-008:** Interview completes in <30 seconds (tested)
 - ✅ **PROP-009:** 50% faster than full workflow (implicit in design)
 
@@ -142,6 +156,7 @@ uv run pytest tests/test_build_integration.py -v
 ## Coverage Analysis
 
 **Modules Covered:**
+
 - ✅ `wfc/scripts/skills/build/interview.py` (100%)
 - ✅ `wfc/scripts/skills/build/complexity_assessor.py` (100%)
 - ✅ `wfc/scripts/skills/build/orchestrator.py` (100%)
@@ -149,6 +164,7 @@ uv run pytest tests/test_build_integration.py -v
 - ✅ `wfc/shared/config/wfc_config.py` (build section verified)
 
 **Test Types:**
+
 - Unit tests: 49 (78%)
 - Integration tests: 14 (22%)
 

@@ -59,31 +59,37 @@ Every new Claude Code session in a new project means approving `ls`, `cat`, `gre
 ## Categories
 
 ### Universal (always safe)
+
 ```
 ls, cat, grep, find, wc, diff, pwd, env, stat, which
 ```
 
 ### Git Read (always safe)
+
 ```
 git status, git log, git diff, git show, git branch
 ```
 
 ### Git Write (approved per project)
+
 ```
 git add, git commit, git push, git pull, git checkout
 ```
 
 ### Language-Specific (detected)
+
 ```
 npm install, npm test, python, pytest, cargo build, go test
 ```
 
 ### Build/CI (detected)
+
 ```
 npm run build, docker ps, docker logs, gh
 ```
 
 ### File Patterns
+
 - **Source dirs**: `src/**`, `lib/**` (read/write)
 - **Config dirs**: `.github/**` (read-only)
 - **Generated**: `node_modules/**`, `dist/**` (read-only)
@@ -96,6 +102,7 @@ npm run build, docker ps, docker logs, gh
 ```
 
 Generates **read-only** allowlist:
+
 - Universal safe commands ✅
 - Git read commands ✅
 - Language read commands ✅
@@ -108,6 +115,7 @@ Use for: production environments, shared codebases, auditing.
 ## Output
 
 **`.claude/settings.local.json`**:
+
 ```json
 {
   "allowedCommands": [
@@ -125,12 +133,14 @@ Use for: production environments, shared codebases, auditing.
 ## Safety Guarantees
 
 **Never proposed**:
+
 - Destructive commands (`rm -rf`, `git reset --hard`)
 - Secret writes (`.env` always read-only)
 - Generated dir writes (`node_modules`, `dist`)
 - Force operations (`git push --force`)
 
 **Always read-only**:
+
 - Environment files
 - Config directories
 - Generated/build artifacts
@@ -172,6 +182,7 @@ Approve? (y/n/modify): y
 ## Integration
 
 Works with WFC skills:
+
 - **wfc-implement** - Agents use approved commands without friction
 - **wfc-security** - Audit current allowlist vs best practices
 - **wfc-architecture** - Detect commands needed by architecture

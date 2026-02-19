@@ -11,6 +11,7 @@ license: MIT
 ## What It Does
 
 Natural chat interface that lets you brainstorm freely without workflow enforcement:
+
 1. **Vibe naturally** - Just talk, no formal structure required
 2. **Smart detection** - Recognizes when scope grows large (not annoying)
 3. **Passive reminders** - Subtle hints every ~10 messages
@@ -19,12 +20,14 @@ Natural chat interface that lets you brainstorm freely without workflow enforcem
 ## When to Use
 
 **Use wfc-vibe when:**
+
 - ✅ Brainstorming ideas
 - ✅ Exploring possibilities
 - ✅ Stream-of-consciousness thinking
 - ✅ Not ready to commit to implementation
 
 **Transition to planning when:**
+
 - ⚠️ Scope growing large (>3 features)
 - ⚠️ Ready to implement
 - ⚠️ Need structured breakdown
@@ -51,14 +54,16 @@ Natural chat interface that lets you brainstorm freely without workflow enforcem
 
 ## Key Behaviors
 
-### What wfc-vibe DOES:
+### What wfc-vibe DOES
+
 - ✅ Respond naturally like normal chat
 - ✅ Track conversation context
 - ✅ Passive reminder every ~10 messages (8-12 randomized)
 - ✅ Detect when scope grows large (once per conversation)
 - ✅ Smooth transition with relevant context summary
 
-### What wfc-vibe DOESN'T DO:
+### What wfc-vibe DOESN'T DO
+
 - ❌ Force workflow transitions
 - ❌ Interrupt natural flow
 - ❌ Ask "want to plan?" constantly
@@ -67,6 +72,7 @@ Natural chat interface that lets you brainstorm freely without workflow enforcem
 ## Smart Detection
 
 Suggests planning when:
+
 - Multiple features mentioned (>3)
 - Architecture discussion detected
 - Many files mentioned (>5)
@@ -77,6 +83,7 @@ Suggests planning when:
 ## Transition Preview
 
 When you say "let's plan this":
+
 ```
 📋 I'll help you plan this. Here's what I captured:
 
@@ -106,6 +113,7 @@ Route to: wfc-build (simple) or wfc-plan (complex)?
 ## Examples
 
 ### Natural Brainstorming
+
 ```
 You: I'm thinking about adding user authentication
 Claude: What kind of auth are you considering?
@@ -118,12 +126,14 @@ You: Probably email, password hash, role
 ```
 
 ### Scope Growing
+
 ```
 You: We need auth, RBAC, audit logging, email notifications, webhooks
 Claude: 💭 *This is growing into a sizable project. Consider using /wfc-plan to structure it when ready.*
 ```
 
 ### Smooth Transition
+
 ```
 You: let's plan this
 

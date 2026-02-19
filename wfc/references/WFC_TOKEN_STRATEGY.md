@@ -1,9 +1,11 @@
 # WFC Token Management Strategy
+
 ## World Fucking Class Approach to LLM Context Optimization
 
 ### The Challenge
 
 When orchestrating multi-agent reviews with WFC, token usage multiplies:
+
 - **5 personas** × **50k tokens/prompt** = **250k tokens sent**
 - Context limits hit quickly with large codebases
 - Slower response times, higher costs, degraded quality
@@ -129,6 +131,7 @@ task["token_metrics"] = {
 ### File Condensing Strategy
 
 #### Python Files
+
 ```python
 # BEFORE (100 lines, 3000 tokens)
 import os
@@ -152,15 +155,18 @@ def complex_algorithm(data):
 ```
 
 **Preserves**:
+
 - ✅ All imports (dependency context)
 - ✅ Function signature (API contract)
 - ✅ Docstring (intent & behavior)
 - ✅ Type hints (interface)
 
 **Truncates**:
+
 - ⚠️ Implementation details (reviewers see logic patterns from signature)
 
 #### Generic Files
+
 ```
 [First 70% of content]
 ... [45 lines truncated] ...
@@ -170,6 +176,7 @@ def complex_algorithm(data):
 ### Prompt Compression
 
 #### Before (Verbose)
+
 ```
 You are Alice Chen, a distinguished security architect with 15 years
 of experience in cryptography, threat modeling, and secure system design.
@@ -200,6 +207,7 @@ Communication Style:
 **Result**: ~3000 tokens
 
 #### After (Compressed)
+
 ```
 You are Alice Chen, expert code reviewer.
 
@@ -229,6 +237,7 @@ Be specific. Reference files/lines. Independent thinking. Actionable feedback.
 **Result**: ~1500 tokens (50% reduction)
 
 **Preserved**:
+
 - ✅ Core identity and expertise
 - ✅ Review focus and dimensions
 - ✅ Output format requirements
@@ -236,6 +245,7 @@ Be specific. Reference files/lines. Independent thinking. Actionable feedback.
 - ✅ Key instructions
 
 **Removed**:
+
 - ❌ Verbose backstory
 - ❌ Philosophical essays
 - ❌ Redundant examples
@@ -263,6 +273,7 @@ Out of 150k context window:
 ```
 
 **Per-File Allocation**:
+
 - 5 files → 26k tokens each
 - 10 files → 13k tokens each
 - Auto-condense if file exceeds budget
@@ -270,6 +281,7 @@ Out of 150k context window:
 ### Installation
 
 #### Required
+
 ```bash
 # Core WFC (works without tiktoken)
 git clone https://github.com/you/wfc.git
@@ -277,6 +289,7 @@ cd wfc && ./install.sh
 ```
 
 #### Recommended
+
 ```bash
 # Install tiktoken for accurate counting
 pip install tiktoken
@@ -305,6 +318,7 @@ python examples/token_management_demo.py
 ### Fallback Behavior
 
 If `tiktoken` not installed:
+
 - ✅ Falls back to estimation (chars ÷ 4)
 - ⚠️ Less accurate (±20% error)
 - ✅ All other features work
@@ -323,6 +337,7 @@ If `tiktoken` not installed:
 ### Best Practices
 
 #### ✅ Do
+
 - Install tiktoken for production
 - Review token metrics in logs
 - Trust auto-condensing (it's smart)
@@ -330,6 +345,7 @@ If `tiktoken` not installed:
 - Split very large reviews into batches
 
 #### ❌ Don't
+
 - Disable token management without reason
 - Ignore "over budget" warnings
 - Try to review 100+ files at once
@@ -395,6 +411,7 @@ This is how you build **World Fucking Class** LLM orchestration systems.
 ---
 
 **See Also**:
+
 - [Full Documentation](TOKEN_MANAGEMENT.md)
 - [Demo Script](examples/token_management_demo.py)
 - [Persona Executor](wfc/personas/persona_executor.py)

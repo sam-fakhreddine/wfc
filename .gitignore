@@ -59,6 +59,8 @@ wfc-*-prompt.md
 
 # Development notes (local only - task summaries, dev logs, scratch)
 .development/
+test-results/
+validation/
 
 # Entire.io session data (local-only by default, privacy-first)
 .entire/

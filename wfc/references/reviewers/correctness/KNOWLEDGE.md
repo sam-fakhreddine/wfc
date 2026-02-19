@@ -11,7 +11,7 @@
 ## False Positives to Avoid
 
 - [2026-02-16] consensus.py returns None for consensus_areas, unique_insights, and divergent_views when there are 4 or fewer reviewers -> this is intentional, not a missing-data bug; these fields are only computed in persona mode (>4 reviewers) (Source: initial-seed)
-- [2026-02-16] check_python() in _checkers/python.py returns (2, "") on success -> exit code 2 with empty reason means "checks passed, notify Claude" not "error occurred" (Source: initial-seed)
+- [2026-02-16] check_python() in_checkers/python.py returns (2, "") on success -> exit code 2 with empty reason means "checks passed, notify Claude" not "error occurred" (Source: initial-seed)
 - [2026-02-16] The _bypass_count global variables in security_hook.py, rule_engine.py, and pretooluse_hook.py are module-level mutable state -> this is intentional for lightweight telemetry, not a thread-safety bug in this single-threaded hook context (Source: initial-seed)
 
 ## Incidents Prevented

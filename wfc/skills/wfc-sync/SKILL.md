@@ -30,7 +30,7 @@ license: MIT
 
 ---
 
-# EXECUTION SEQUENCE
+## EXECUTION SEQUENCE
 
 ## Phase 1: Read Existing Rules & Skills
 
@@ -62,6 +62,7 @@ license: MIT
    - Whether each skill is still relevant
 
 3. **Build mental inventory:**
+
    ```
    Documented rules: [list]
    Documented skills: [list]
@@ -119,14 +120,15 @@ license: MIT
 
 **Update `.claude/rules/project.md` with current project state.**
 
-### If project.md exists:
+### If project.md exists
+
 - Compare documented tech stack with actual
 - Verify directory structure is current
 - Check if commands still work
 - Update timestamp
 - Preserve custom sections
 
-### If project.md doesn't exist, create it:
+### If project.md doesn't exist, create it
 
 ```markdown
 # Project: [Name]
@@ -185,12 +187,14 @@ Use AskUserQuestion with multiSelect:
 - "None" - Skip skill updates
 
 For each selected skill:
+
 - Update content to reflect current state
 - Update any referenced scripts/assets
 
 ### Step 5.3: Remove Obsolete Skills
 
 If a skill is no longer relevant, ask user:
+
 - "Yes, remove it"
 - "Keep it"
 - "Update instead"
@@ -239,10 +243,13 @@ For each selected pattern:
 ```
 
 ### Why
+
 [1-2 sentences if not obvious]
 
 ### Common Mistakes
+
 - [Mistake to avoid]
+
 ```
 
 Write to `.claude/rules/[pattern-name].md`
@@ -252,19 +259,25 @@ Write to `.claude/rules/[pattern-name].md`
 **Report what was synced:**
 
 ```
+
 ## Sync Complete
 
 **Rules Updated:**
+
 - project.md - Updated tech stack, commands
 
 **New Rules Created:**
+
 - api-responses.md - Response envelope pattern
 
 **Skills Updated:**
+
 - my-workflow - Updated steps for new API
 
 **No Changes Needed:**
+
 - existing-rule.md - Still current
+
 ```
 
 Offer to continue:

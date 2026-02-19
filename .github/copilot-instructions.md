@@ -161,11 +161,13 @@ As the reviewer, verify these exist. If missing, flag the PR:
 ## Autonomous Pipeline Awareness
 
 This repo uses a fully autonomous CI/CD pipeline:
+
 - `develop-health.yml` auto-reverts broken merges and creates bug issues
 - `cut-rc.yml` cuts release candidates from develop on Fridays
 - `promote-rc.yml` auto-merges RCs to main after 24h soak with green CI
 
 When reviewing workflow files (`.github/workflows/*.yml`):
+
 - Flag any workflow that pushes to `main` directly (only `promote-rc.yml` should)
 - Flag missing `if` guards that could cause infinite loops (bot triggering its own workflow)
 - Flag hardcoded branch names that should use the configurable `branching.integration_branch`

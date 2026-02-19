@@ -263,6 +263,7 @@ Properties that must hold across the implementation.
 ### 1. Clarity and Testability
 
 Each requirement is **unambiguous**:
+
 - **WHEN** user submits credentials → clear trigger
 - **WHILE** token is valid → clear condition
 - **IF** login fails 3 times → clear threshold
@@ -274,12 +275,14 @@ This makes test generation **deterministic**.
 ### 2. Complete Specification
 
 EARS forces you to specify:
+
 - What happens when trigger occurs
 - What happens when trigger does NOT occur
 - What happens when state changes
 - Edge cases and error conditions
 
 Example:
+
 ```
 WHEN validation succeeds multiple times, behavior is consistent
 WHEN validation does NOT occur, no action is taken
@@ -305,6 +308,7 @@ This enables **automated test generation** from EARS requirements.
 ### 4. Traceability
 
 Clear relationships:
+
 - TASK-002 → PROP-001, PROP-002, PROP-003
 - PROP-001 → TEST-001
 - TEST-001 → Specific test steps derived from EARS

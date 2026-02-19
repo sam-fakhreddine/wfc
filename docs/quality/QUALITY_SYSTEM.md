@@ -14,6 +14,7 @@ WFC implements a **comprehensive quality system** that enforces code standards b
 ## The WFC Way: Trunk.io
 
 **Why Trunk?**
+
 - ✅ **Universal**: One tool for Python, JS, TS, Go, Rust, Java, Ruby, C#, YAML, JSON, Markdown
 - ✅ **100+ tools integrated**: ruff, eslint, prettier, clippy, gofmt, rubocop, etc.
 - ✅ **Auto-detection**: Recognizes file types and runs appropriate tools
@@ -21,6 +22,7 @@ WFC implements a **comprehensive quality system** that enforces code standards b
 - ✅ **One command**: `trunk check` for everything
 
 **Instead of**:
+
 ```bash
 black src/
 ruff check src/
@@ -31,6 +33,7 @@ golangci-lint run services/
 ```
 
 **Do**:
+
 ```bash
 trunk check          # All languages, all tools
 trunk check --fix    # Auto-fix everything
@@ -88,6 +91,7 @@ trunk check --watch
 ### In wfc-implement Workflow
 
 **Automatic enforcement**:
+
 ```
 Agent implements code
     ↓
@@ -242,12 +246,14 @@ def agent_workflow(task):
 ### wfc-review
 
 Reviewers focus on high-level issues:
+
 - ✅ Logic and algorithms
 - ✅ Architecture and design
 - ✅ Security vulnerabilities
 - ✅ Performance implications
 
 **NOT** on:
+
 - ❌ Code formatting
 - ❌ Unused imports
 - ❌ Line length
@@ -260,21 +266,21 @@ Reviewers focus on high-level issues:
 ```makefile
 # Universal quality check (Trunk)
 quality-check:
-	trunk check
+ trunk check
 
 # With auto-fix
 quality-check-fix:
-	trunk check --fix
+ trunk check --fix
 
 # Watch mode
 quality-check-watch:
-	trunk check --watch
+ trunk check --watch
 
 # Specific language (if Trunk not available)
 quality-check-python:
-	black --check wfc/
-	ruff check wfc/
-	pytest
+ black --check wfc/
+ ruff check wfc/
+ pytest
 ```
 
 ## Pre-commit Integration
@@ -367,6 +373,7 @@ Total: 10,000 tokens, 1 cycle, productive review
 If Trunk unavailable, WFC falls back to language-specific tools:
 
 **Python**:
+
 ```bash
 black --check wfc/
 ruff check wfc/
@@ -374,6 +381,7 @@ pytest
 ```
 
 **JavaScript/TypeScript**:
+
 ```bash
 prettier --check src/
 eslint src/
@@ -381,6 +389,7 @@ jest
 ```
 
 **Go**:
+
 ```bash
 gofmt -l .
 golangci-lint run
@@ -392,6 +401,7 @@ See `wfc/scripts/quality_checker.py` for Python-specific checker.
 ## Philosophy
 
 **WFC = World Fucking Class**:
+
 - ✅ **UNIVERSAL**: One tool for all languages (Trunk)
 - ✅ **ELEGANT**: Simple, fast, comprehensive
 - ✅ **TOKEN-AWARE**: Fix locally (free) not in review (expensive)
