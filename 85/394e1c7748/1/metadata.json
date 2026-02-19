@@ -1,0 +1,35 @@
+{
+  "cli_version": "0.4.5",
+  "checkpoint_id": "85394e1c7748",
+  "session_id": "bf9607d2-0692-422b-812d-809b12eae44f",
+  "strategy": "manual-commit",
+  "created_at": "2026-02-19T17:45:51.703581Z",
+  "branch": "claude/fix-installer-hooks-verbosity",
+  "checkpoints_count": 0,
+  "files_touched": [
+    "install-universal.sh",
+    "wfc/scripts/hooks/register_hooks.py"
+  ],
+  "agent": "Claude Code",
+  "turn_id": "a0ce0ffe774a",
+  "transcript_identifier_at_start": "226a784b-1340-4ef2-823a-6af6cbc48aa8",
+  "checkpoint_transcript_start": 235,
+  "transcript_lines_at_start": 235,
+  "token_usage": {
+    "input_tokens": 17,
+    "cache_creation_tokens": 10736,
+    "cache_read_tokens": 1267813,
+    "output_tokens": 3084,
+    "api_call_count": 13
+  },
+  "initial_attribution": {
+    "calculated_at": "2026-02-19T17:45:51.529625Z",
+    "agent_lines": 0,
+    "human_added": 16,
+    "human_modified": 49,
+    "human_removed": 0,
+    "total_committed": 16,
+    "agent_percentage": 0
+  },
+  "transcript_path": ".claude/projects/-Users-samfakhreddine-repos-wfc/bf9607d2-0692-422b-812d-809b12eae44f.jsonl"
+}
