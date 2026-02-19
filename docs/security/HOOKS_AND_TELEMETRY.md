@@ -19,11 +19,13 @@ WFC provides optional git hooks that warn about workflow violations using **soft
 **File**: `wfc/gitwork/hooks/pre_commit.py`
 
 **Checks**:
+
 - ⚠️ Warn if committing to protected branches (main/master/develop/production)
 - ⚠️ Validate branch naming convention (feat/TASK-XXX-description)
 - ⚠️ Detect sensitive files (.env, credentials, keys, tokens)
 
 **Example Output**:
+
 ```bash
 $ git commit -m "test"
 
@@ -42,17 +44,20 @@ $ git commit -m "test"
 **File**: `wfc/gitwork/hooks/commit_msg.py`
 
 **Checks**:
+
 - ⚠️ Validate conventional commit format
 - ⚠️ Check for TASK-XXX reference
 - ⚠️ Suggest improvements
 
 **Valid Formats**:
+
 - `TASK-001: Add rate limiting` (preferred)
 - `feat: add user authentication`
 - `fix(api): resolve timeout`
 - `chore: update dependencies`
 
 **Example Output**:
+
 ```bash
 $ git commit -m "Added feature"
 
@@ -76,11 +81,13 @@ $ git commit -m "Added feature"
 **File**: `wfc/gitwork/hooks/pre_push.py`
 
 **Checks**:
+
 - ⚠️ Warn if pushing to protected branches
 - ⚠️ Warn about force pushes
 - ⚠️ Log push telemetry
 
 **Example Output**:
+
 ```bash
 $ git push origin main
 
@@ -105,6 +112,7 @@ $ git push origin main
 **File**: `wfc/gitwork/hooks/installer.py`
 
 **Features**:
+
 - Non-destructive installation (preserves existing hooks)
 - Automatic wrapping of existing hooks
 - Easy uninstall with restore
@@ -113,16 +121,17 @@ $ git push origin main
 
 ```bash
 # Install all WFC hooks
-python -m wfc.wfc_tools.gitwork.hooks.installer install
+python -m wfc.gitwork.hooks.installer install
 
 # Uninstall all WFC hooks
-python -m wfc.wfc_tools.gitwork.hooks.installer uninstall
+python -m wfc.gitwork.hooks.installer uninstall
 
 # Check hook status
-python -m wfc.wfc_tools.gitwork.hooks.installer status
+python -m wfc.gitwork.hooks.installer status
 ```
 
 **Status Output**:
+
 ```
 WFC Git Hooks Status
 ==================================================
@@ -168,6 +177,7 @@ exit 0
 ```
 
 **Benefits**:
+
 - Preserves existing hooks (e.g., Claude Code hooks)
 - Easy to uninstall (restores original)
 - No conflicts with other tools
@@ -189,12 +199,14 @@ WFC now includes a real-time security and rule enforcement system via Claude Cod
 ### Security Patterns
 
 Patterns defined in `wfc/scripts/hooks/patterns/`:
+
 - `security.json` - 11 patterns (eval, os.system, innerHTML, pickle, hardcoded secrets, SQL injection, etc.)
 - `github_actions.json` - 2 patterns (script injection, pull_request_target)
 
 ### Custom Rules
 
 Users can create `.wfc/rules/*.md` files with YAML frontmatter:
+
 - Conditions: regex_match, contains, not_contains, equals, starts_with, ends_with
 - Actions: block (exit 2) or warn (stderr)
 - Events: file (Write/Edit) or bash (Bash tool)
@@ -222,6 +234,7 @@ WFC telemetry tracks workflow compliance, PR creation, and hook violations for o
 **Event**: `pr_created`
 
 **Data**:
+
 ```json
 {
   "event": "pr_created",
@@ -247,6 +260,7 @@ WFC telemetry tracks workflow compliance, PR creation, and hook violations for o
 **Event**: `hook_warning`
 
 **Data**:
+
 ```json
 {
   "event": "hook_warning",
@@ -259,6 +273,7 @@ WFC telemetry tracks workflow compliance, PR creation, and hook violations for o
 ```
 
 **Violations Tracked**:
+
 - `direct_commit_to_protected` - Committing to main/master
 - `non_conventional_branch` - Invalid branch name
 - `sensitive_files_staged` - Sensitive files in commit
@@ -275,6 +290,7 @@ WFC telemetry tracks workflow compliance, PR creation, and hook violations for o
 **Event**: `commit_with_task`
 
 **Data**:
+
 ```json
 {
   "event": "commit_with_task",
@@ -330,6 +346,7 @@ print_workflow_metrics(days=30)
 ```
 
 **Output**:
+
 ```
 ============================================================
 📊 WFC WORKFLOW METRICS (Last 30 Days)
@@ -360,6 +377,7 @@ Recent Hook Warnings (5):
 **Location**: `~/.wfc/telemetry/`
 
 **Files**:
+
 - `session-YYYYMMDD-HHMMSS.jsonl` - Session metrics (tasks)
 - `aggregate.json` - Aggregated task metrics
 - `events.jsonl` - Generic events (NEW - hooks, PRs, etc.)
@@ -417,7 +435,7 @@ def log_telemetry(event: str, data: Dict[str, Any]) -> None:
 ```bash
 # Install WFC hooks
 cd /Users/samfakhreddine/repos/wfc
-python -m wfc.wfc_tools.gitwork.hooks.installer install
+python -m wfc.gitwork.hooks.installer install
 
 # Output:
 # ✅ Installed 3/3 hooks
@@ -445,6 +463,7 @@ git commit -m "test"
 ```
 
 **Telemetry Logged**:
+
 ```json
 {"event": "hook_warning", "violation": "direct_commit_to_protected", ...}
 {"event": "hook_warning", "violation": "non_conventional_commit", ...}
@@ -501,7 +520,7 @@ result = merge_engine.create_pr(
 
 ```bash
 # Install hooks
-python -m wfc.wfc_tools.gitwork.hooks.installer install
+python -m wfc.gitwork.hooks.installer install
 
 # Test pre-commit
 git checkout main
@@ -517,7 +536,7 @@ git commit -m "bad message"  # Should warn but allow
 git push origin main  # Should warn but allow
 
 # Uninstall
-python -m wfc.wfc_tools.gitwork.hooks.installer uninstall
+python -m wfc.gitwork.hooks.installer uninstall
 ```
 
 ---
@@ -600,7 +619,7 @@ Hooks can be individually disabled by uninstalling:
 
 ```bash
 # Uninstall specific hook
-python -m wfc.wfc_tools.gitwork.hooks.installer uninstall --hook pre-commit
+python -m wfc.gitwork.hooks.installer uninstall --hook pre-commit
 
 # Or remove executable permission
 chmod -x .git/hooks/pre-commit
@@ -670,6 +689,7 @@ wfc metrics export --format json --output metrics.json
 ### Phase 3: Git Hooks ✅
 
 **What Works**:
+
 - ✅ 3 git hooks (pre-commit, commit-msg, pre-push)
 - ✅ Soft enforcement (warnings only)
 - ✅ Non-destructive installation
@@ -677,6 +697,7 @@ wfc metrics export --format json --output metrics.json
 - ✅ Hook status checking
 
 **Not Implemented**:
+
 - ⚠️ Strict enforcement mode
 - ⚠️ Hook customization via config
 - ⚠️ `wfc hooks` CLI command
@@ -686,6 +707,7 @@ wfc metrics export --format json --output metrics.json
 ### Phase 6: Telemetry ✅
 
 **What Works**:
+
 - ✅ Generic event logging (`log_event`)
 - ✅ PR creation tracking
 - ✅ Hook violation tracking
@@ -694,6 +716,7 @@ wfc metrics export --format json --output metrics.json
 - ✅ Events stored in `~/.wfc/telemetry/events.jsonl`
 
 **Not Implemented**:
+
 - ⚠️ `wfc metrics workflow` CLI command
 - ⚠️ Metrics export functionality
 - ⚠️ Metrics visualization

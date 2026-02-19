@@ -1,371 +1,110 @@
 # WFC Architecture
 
-> **System design and implementation details for the WFC multi-agent consensus review framework**
+## What WFC Does
 
-## Overview
+WFC (World Fucking Class) is a multi-agent engineering system built on top of Claude Code. It takes a feature request or a task description and runs it through a structured pipeline: requirements gathering, parallel implementation by subagents, automated quality gates, five-agent consensus review, and a PR to your repository.
 
-WFC is built on a **multi-agent orchestration pattern** where specialized expert personas independently review code and contribute to consensus decision-making.
+The goal is to close the gap between "good code written by a single AI" and "code that would survive a rigorous engineering review." WFC does this by making the review process multi-perspective, mathematical, and persistent — reviewers accumulate domain knowledge across every session.
 
 ## Core Components
 
-### 1. Persona Library (`wfc/personas/`)
+### 1. Skills Layer
 
-**Purpose**: Pool of expert personas that can be dynamically selected based on task context
+WFC exposes its capabilities through 30 Agent Skills installed at `~/.claude/skills/wfc-*/`. Each skill is a self-contained package with a `SKILL.md` that Claude loads on invocation. Skills follow the Agent Skills specification: hyphenated names, valid frontmatter, and XML prompt generation.
 
-**Structure**:
-```
-personas/
-├── panels/                    # 9 expert panels
-│   ├── engineering/           # 11 personas
-│   ├── security/              # 8 personas
-│   ├── architecture/          # 7 personas
-│   ├── quality/               # 10 personas
-│   ├── data/                  # 4 personas
-│   ├── product/               # 3 personas
-│   ├── operations/            # 4 personas
-│   ├── domain-experts/        # 5 personas
-│   └── specialists/           # 4 personas
-├── schemas/                   # JSON schemas for validation
-├── persona_orchestrator.py    # Selection + registry logic
-├── persona_executor.py        # Subagent execution
-└── registry.json              # Fast lookup index
-```
+Key skills: `wfc-build` (quick features), `wfc-plan` + `wfc-implement` (structured complex work), `wfc-review` (standalone consensus review), `wfc-lfg` (fully autonomous end-to-end pipeline), `wfc-compound` (knowledge codification).
 
-**New in quality panel**: Silent Failure Hunter (error-handling) and Code Simplifier (simplification) bring the quality panel to 10 personas.
+### 2. Review System
 
-**Total**: 56 personas across 9 panels.
-
-**Persona Definition**:
-Each persona is a JSON file containing:
-- `skills`: Technical expertise with proficiency levels
-- `lens`: Decision-making perspective and focus areas
-- `personality`: Communication style, risk tolerance
-- `selection_criteria`: When to use this persona (tech stacks, task types, anti-patterns)
-- `model_preference`: Which Claude model to use (opus/sonnet/haiku)
-
-### 2. Orchestrator (`wfc/skills/review/orchestrator.py`)
-
-**Purpose**: Coordinates the review process from request to consensus
-
-**Flow**:
-```
-ReviewRequest
-    ↓
-Extract context (tech stack, complexity, properties)
-    ↓
-PersonaSelector.select_personas() → 5 personas
-    ↓
-PersonaExecutor.execute_parallel_reviews()
-    ↓
-Consensus.calculate() → weighted synthesis
-    ↓
-ReviewResult
-```
-
-**Key Methods**:
-- `review()`: Main entry point, determines persona vs legacy mode
-- `_review_with_personas()`: Persona-based review flow
-- `_extract_tech_stack()`: Analyze files to detect technologies
-
-### 3. Persona Selector (`wfc/personas/persona_orchestrator.py`)
-
-**Purpose**: Intelligent selection of relevant personas based on task context
-
-**Selection Algorithm** (multi-stage scoring):
-
-1. **Tech Stack Matching (40% weight)**
-   ```python
-   # Extract from file extensions and imports
-   tech_stack = ['python', 'fastapi', 'postgresql']
-   # Match persona tech_stacks
-   score += overlap_ratio * 0.4
-   ```
-
-2. **Properties Alignment (30% weight)**
-   ```python
-   # SECURITY property → security personas
-   # PERFORMANCE property → performance experts
-   if property in persona.properties:
-       score += 0.3
-   ```
-
-3. **Complexity Filtering (15% weight)**
-   ```python
-   # XL tasks need expert/senior personas
-   # S tasks can use any complexity range
-   if complexity in persona.complexity_range:
-       score += 0.15
-   ```
-
-4. **Task Type (10% weight)**
-   ```python
-   # api-implementation, refactoring, security-fix, etc.
-   if task_type in persona.task_types:
-       score += 0.1
-   ```
-
-5. **Domain Knowledge (5% weight)**
-   ```python
-   # Payment processing → fintech expert
-   if domain_keyword in persona.domain_knowledge:
-       score += 0.05
-   ```
-
-6. **Diversity Enforcement**
-   ```python
-   # No more than 2 personas from same panel
-   panel_counts = Counter(p.panel for p in selected)
-   if panel_counts[persona.panel] >= 2:
-       exclude
-   ```
-
-**Output**: Top 5 personas ranked by relevance score
-
-### 4. Persona Executor (`wfc/personas/persona_executor.py`)
-
-**Purpose**: Execute independent reviews as separate subagents
-
-**Critical Design**: Each persona runs in **isolation** (no context sharing)
-
-```python
-def execute_parallel_reviews(personas, request):
-    """
-    Spawn SEPARATE subagent for each persona.
-    No context shared during review phase.
-    """
-    reviews = []
-    for persona in personas:
-        # Build persona-specific system prompt
-        system_prompt = build_persona_system_prompt(persona, request)
-
-        # Spawn INDEPENDENT subagent
-        review = spawn_subagent(
-            persona_id=persona["id"],
-            system_prompt=system_prompt,
-            model=resolve_model_name(persona["model_preference"]["default"])
-        )
-        reviews.append(review)
-
-    return reviews
-```
-
-**Why Isolation Matters**:
-- **No anchoring bias**: Personas don't see others' opinions
-- **Genuine independence**: True expert assessment
-- **Disagreements preserved**: Not averaged away prematurely
-- **Unique insights surface**: Only 1 persona caught something critical
-
-### 5. Consensus Engine (`wfc/skills/review/consensus.py`)
-
-**Purpose**: Synthesize independent reviews into unified decision
-
-**Synthesis Steps**:
-
-1. **Weighted Scoring**
-   ```python
-   # Weight by relevance, not fixed weights
-   overall = sum(review.score * relevance for review, relevance in zip(reviews, scores))
-   ```
-
-2. **Consensus Detection**
-   ```python
-   # Find issues mentioned by N+ personas (N=3 by default)
-   consensus_issues = find_issues_mentioned_by_n_plus(reviews, threshold=3)
-   ```
-
-3. **Unique Insights**
-   ```python
-   # Issues only 1 persona caught (specialist value)
-   unique = find_issues_mentioned_by_only_one(reviews)
-   ```
-
-4. **Divergent Views**
-   ```python
-   # Where experts disagree (important signal)
-   divergence = find_conflicting_recommendations(reviews)
-   ```
-
-5. **Decision Making**
-   ```python
-   if overall_score >= 9.0: return "APPROVE"
-   elif overall_score >= 7.0: return "CONDITIONAL_APPROVE"
-   else: return "NEEDS_WORK"
-   ```
-
-### 6. Model Resolution (`wfc/personas/persona_orchestrator.py`)
-
-**Purpose**: Map persona model preferences to actual Claude model IDs
-
-```python
-MODEL_MAPPING = {
-    "opus": "claude-opus-4-20250514",
-    "sonnet": "claude-sonnet-4-20250514",
-    "haiku": "claude-haiku-4-5-20251001"
-}
-
-def resolve_model_name(model_ref: str) -> str:
-    """
-    Personas specify "opus", "sonnet", or "haiku"
-    This resolves to actual model IDs
-    Future model updates: just change mapping
-    """
-    return MODEL_MAPPING.get(model_ref, MODEL_MAPPING["sonnet"])
-```
-
-## Data Flow
-
-### End-to-End Review Flow
+Five fixed specialist reviewers analyze every code change in parallel. Findings are deduplicated by SHA-256 fingerprint, scored by the Consensus Score algorithm, and routed to one of four decision tiers (Informational, Moderate, Important, Critical). See [REVIEW_SYSTEM.md](../concepts/REVIEW_SYSTEM.md) for the full specification.
 
 ```
-User → /wfc-consensus-review TASK-001
-    ↓
-Orchestrator.review(ReviewRequest)
-    ↓
-    ├─→ Extract context from files
-    │   ├─ Tech stack: ['python', 'fastapi']
-    │   ├─ Complexity: 'L'
-    │   └─ Properties: ['SECURITY', 'PERFORMANCE']
-    ↓
-PersonaSelector.select_personas(context, num=5)
-    ↓
-    ├─→ Score all personas (tech 40%, properties 30%, ...)
-    ├─→ Enforce diversity (max 2 per panel)
-    └─→ Return top 5 with relevance scores
-    ↓
-PersonaExecutor.execute_parallel_reviews(personas, request)
-    ↓
-    ├─→ Persona 1 (subagent) → Review 1
-    ├─→ Persona 2 (subagent) → Review 2
-    ├─→ Persona 3 (subagent) → Review 3
-    ├─→ Persona 4 (subagent) → Review 4
-    └─→ Persona 5 (subagent) → Review 5
-    ↓
-    [All reviews complete independently]
-    ↓
-Consensus.calculate(reviews, relevance_scores)
-    ↓
-    ├─→ Weighted score: 8.2/10
-    ├─→ Consensus: 4/5 agree on auth flow
-    ├─→ Critical: PII in JWT (2 caught)
-    └─→ Unique: Missing index (1 caught)
-    ↓
-ReviewResult → User
+ReviewOrchestrator
+  ├── prepare_review() ─── 5 reviewer task specs (parallel)
+  │     ReviewerLoader ──► wfc/references/reviewers/{name}/PROMPT.md
+  │     KnowledgeRetriever ──► KNOWLEDGE.md (two-tier RAG)
+  │
+  └── finalize_review()
+        ReviewerEngine.parse_results() ──► findings per reviewer
+        Fingerprinter.deduplicate()    ──► SHA-256 dedup with ±3-line tolerance
+        ConsensusScore.calculate()     ──► CS with Minority Protection Rule
+        ──► REVIEW-{task_id}.md report
 ```
 
-## Configuration
+Source: `wfc/scripts/orchestrators/review/`
 
-### WFC Config (`wfc/shared/config/wfc_config.py`)
+### 3. Quality Gates
 
-```python
-DEFAULTS = {
-    "personas": {
-        "enabled": True,                 # Use persona system
-        "num_reviewers": 5,              # How many personas
-        "require_diversity": True,       # Enforce panel diversity
-        "min_relevance_score": 0.3,      # Filter low-relevance personas
-        "synthesis": {
-            "consensus_threshold": 3,    # N personas for consensus
-            "weight_by_relevance": True  # Weight scores
-        }
-    },
-    "models": {
-        "opus": "claude-opus-4-20250514",
-        "sonnet": "claude-sonnet-4-20250514",
-        "haiku": "claude-haiku-4-5-20251001"
-    }
-}
+Automated linting and type checking runs at two points: immediately after every file write (PostToolUse), and as a blocking gate before review. Language-specific checkers cover Python (ruff + pyright), TypeScript (prettier + eslint + tsc), and Go (gofmt + go vet + golangci-lint). Trunk.io integration provides a universal 100+ tool gate when available. See [QUALITY_GATES.md](../concepts/QUALITY_GATES.md).
+
+### 4. Hook Infrastructure
+
+PreToolUse hooks enforce 13 security patterns before tool calls execute (eval injection, hardcoded secrets, SQL concatenation, destructive shell commands, GitHub Actions injection, and more). PostToolUse hooks run auto-lint (`file_checker.py`), TDD reminders (`tdd_enforcer.py`), and context window monitoring (`context_monitor.py`). All hooks are fail-open: an internal hook error never blocks the workflow. See [HOOKS.md](../concepts/HOOKS.md).
+
+Source: `wfc/scripts/hooks/`
+
+### 5. Knowledge System
+
+Each reviewer maintains a `KNOWLEDGE.md` file that accumulates learnings from past reviews. A two-tier RAG pipeline (embedding similarity + keyword fallback) retrieves relevant entries at review time. Findings above severity thresholds are auto-appended after each review. A drift detector flags stale (>90d), bloated (>50 entries), contradictory, and orphaned entries. See [KNOWLEDGE_SYSTEM.md](../concepts/KNOWLEDGE_SYSTEM.md).
+
+Source: `wfc/scripts/knowledge/`
+Reviewer knowledge files: `wfc/references/reviewers/{security,correctness,performance,maintainability,reliability}/KNOWLEDGE.md`
+
+### 6. Git Operations
+
+WFC manages branches, worktrees, and PRs through a controlled git layer. Worktrees are always provisioned through `wfc/gitwork/scripts/worktree-manager.sh` (never with bare `git worktree add`) to ensure environment bootstrap, `.gitignore` registration, and config propagation happen correctly. The default integration target is `develop`; main is protected and receives only release candidates.
+
+Source: `wfc/gitwork/`
+
+## Directory Layout
+
+```
+wfc/
+├── scripts/
+│   ├── orchestrators/
+│   │   └── review/           # Review pipeline (orchestrator, engine, CS, fingerprint, CLI)
+│   ├── hooks/                # PreToolUse + PostToolUse hook infrastructure
+│   │   ├── patterns/         # security.json, github_actions.json
+│   │   └── _checkers/        # python.py, typescript.py, go.py
+│   └── knowledge/            # RAG engine, knowledge writer, drift detector
+│
+├── references/
+│   └── reviewers/            # Per-reviewer PROMPT.md + KNOWLEDGE.md
+│       ├── security/
+│       ├── correctness/
+│       ├── performance/
+│       ├── maintainability/
+│       └── reliability/
+│
+├── gitwork/                  # Git operations (worktree manager, worktree API)
+│   ├── scripts/
+│   └── api/
+│
+├── skills/                   # Agent Skills source packages (wfc-build/, wfc-plan/, etc.)
+└── assets/                   # Templates (playground HTML, etc.)
+
+~/.claude/skills/wfc-*/       # Installed skills (30 total, Agent Skills compliant)
 ```
 
-### 7. Hook System (`wfc/scripts/hooks/`)
+## Request Lifecycle
 
-**Purpose**: Extensible hook infrastructure for injecting behavior at key workflow points
+A typical `wfc-build` invocation flows through the system as follows:
 
-Hooks allow patterns like post-review simplification, confidence filtering, and custom rule enforcement to be added without modifying core workflow logic. New hook patterns can be added by creating a hook module in `wfc/scripts/hooks/` and registering it with the orchestrator.
+1. **Interview** — 3–5 adaptive questions establish scope and constraints.
+2. **Orchestration** — complexity is assessed; one or more subagents are dispatched.
+3. **Implementation** — each subagent follows TDD: write failing tests (RED), implement until green (GREEN), refactor (REFACTOR).
+4. **Quality gate** — language-specific checkers run on all changed files; failures block progression.
+5. **Review** — five specialist reviewers analyze the diff in parallel; CS is calculated.
+6. **Decision** — CS tier determines whether the PR is created, blocked, or escalated.
+7. **Knowledge update** — high-quality findings are appended to reviewer KNOWLEDGE.md files.
+8. **PR** — branch is pushed to `claude/*` and a PR is opened to `develop`.
 
-### 8. Templates (`wfc/assets/templates/`)
+## Design Principles
 
-**Purpose**: Reusable templates for skill outputs and playground experiments
+**Fail-open**: Hooks, quality gates, and review infrastructure never block the workflow due to internal errors. Bugs in tooling surface as warnings, not hard stops.
 
-Includes templates for playground sandbox environments (`wfc/assets/templates/playground/`), enabling rapid prototyping and experimentation workflows via the wfc-playground skill.
+**Mathematical scoring**: The Consensus Score removes subjectivity from the merge/block decision. The formula, thresholds, and Minority Protection Rule are fixed and auditable.
 
-### 9. Skills (17 total)
+**Persistent learning**: Reviewers are not stateless. Knowledge accumulated from past reviews improves future analysis on the same codebase, with drift detection to keep the knowledge base healthy.
 
-WFC provides 17 Agent Skills compliant skills installed at `~/.claude/skills/wfc-*/`:
-
-| Skill | Purpose |
-|-------|---------|
-| wfc-review | Multi-agent consensus review |
-| wfc-plan | Adaptive planning with architecture design phase |
-| wfc-implement | Parallel implementation engine |
-| wfc-build | Intentional Vibe quick feature building |
-| wfc-security | STRIDE threat analysis |
-| wfc-architecture | Architecture docs + C4 diagrams |
-| wfc-test | Property-based test generation |
-| wfc-observe | Observability from properties |
-| wfc-validate | 7-dimension analysis |
-| wfc-vibe | Default conversational mode |
-| wfc-init | Project initialization |
-| wfc-safeguard | Defensive coding safeguards |
-| wfc-rules | Custom rule definition and enforcement |
-| wfc-playground | Sandbox experimentation environment |
-| ... | (additional utility skills) |
-
-### 10. Architecture Designer (`wfc/skills/wfc-plan/architecture_designer.py`)
-
-**Purpose**: Enhanced planning phase that generates architecture decisions before implementation
-
-The architecture designer runs during `wfc-plan` to produce architecture decision records (ADRs) and structural guidance. It evaluates trade-offs, selects patterns, and feeds constraints into the implementation phase so agents have clear architectural boundaries.
-
-## Extension Points
-
-### Adding New Personas
-
-1. Create JSON in `wfc/personas/panels/{panel}/{PERSONA_ID}.json`
-2. Follow schema: `wfc/personas/schemas/persona.schema.json`
-3. Rebuild registry:
-   ```bash
-   cd ~/.claude/skills/wfc/personas
-   python3 -c "from persona_orchestrator import PersonaRegistry; PersonaRegistry.rebuild_registry()"
-   ```
-
-### Custom Selection Logic
-
-Override `PersonaSelector.select_personas()` to implement custom scoring:
-
-```python
-class CustomSelector(PersonaSelector):
-    def select_personas(self, context, num_personas=5):
-        # Custom logic here
-        return selected_personas
-```
-
-### Custom Synthesis
-
-Override `Consensus.calculate()` for different synthesis strategies:
-
-```python
-class CustomConsensus(Consensus):
-    def calculate(self, reviews, relevance_scores):
-        # Custom synthesis logic
-        return consensus_result
-```
-
-## Performance Characteristics
-
-- **Persona Selection**: O(P) where P = number of personas (~56)
-- **Review Execution**: O(N) where N = num_reviewers (5), reviews run in parallel
-- **Consensus**: O(N) linear in number of reviews
-- **Registry Lookup**: O(1) with indexes
-
-## Future Enhancements
-
-1. **True Parallel Execution**: Use Task tool for concurrent subagent spawning
-2. **Adaptive Selection**: Learn from review outcomes to improve selection
-3. **Persona Composition**: Combine persona traits dynamically
-4. **Caching**: Cache persona selections for similar tasks
-5. **Analytics**: Track persona performance metrics
-
----
-
-**Version**: 1.1.0
-**Last Updated**: 2026-02-13
+**Progressive disclosure**: Skills load only what they need. A `SKILL.md` under 500 lines handles the common case; reference documents and scripts are loaded on demand.

@@ -132,6 +132,7 @@ WFC includes **56 expert personas** across **9 specialized panels**. Each person
 ### Automatic Selection
 
 WFC automatically selects 5 personas based on:
+
 - Tech stack (extracted from files)
 - Task complexity
 - Review properties (SECURITY, PERFORMANCE, etc.)
@@ -140,6 +141,7 @@ WFC automatically selects 5 personas based on:
 ### Manual Override
 
 Select specific personas:
+
 ```
 /wfc-consensus-review TASK-001 --personas APPSEC_SPECIALIST,DB_ARCHITECT_SQL,BACKEND_PYTHON_SENIOR
 ```
@@ -147,6 +149,7 @@ Select specific personas:
 ### Persona Traits
 
 Each persona has:
+
 - **Skills**: Technical expertise areas
 - **Lens**: What they focus on during reviews
 - **Personality**: Communication style and risk tolerance

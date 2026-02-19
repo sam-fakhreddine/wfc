@@ -20,6 +20,7 @@ Kodus AI is an open-source AI code review platform that has solved several probl
 ## 2. Current State Analysis
 
 ### 2.1 WFC Strengths (Keep)
+
 | Capability | WFC Implementation | Assessment |
 |---|---|---|
 | Consensus scoring | CS algorithm with MPR, 5 fixed reviewers | Best-in-class, mathematically sound |
@@ -30,6 +31,7 @@ Kodus AI is an open-source AI code review platform that has solved several probl
 | Progressive disclosure | Load-on-demand architecture | Well-designed |
 
 ### 2.2 WFC Gaps (Fix)
+
 | Gap | Current State | Impact |
 |---|---|---|
 | Finding validation | Dedup only (catches dupes, not hallucinations) | High false-positive rate on LLM-generated findings |
@@ -86,17 +88,17 @@ WFC's current review flow is: `5 Reviewers → Fingerprint Dedup → Consensus S
 
 **SHOULD HAVE**:
 
-6. **Validation metrics** tracked per review:
+1. **Validation metrics** tracked per review:
    - `findings_before_validation: int`
    - `findings_after_validation: int`
    - `false_positive_rate: float` (disputed + rejected / total)
    - Logged in review report
 
-7. **Bypass flag**: `--skip-validation` to disable for speed when iterating quickly
+2. **Bypass flag**: `--skip-validation` to disable for speed when iterating quickly
 
 **COULD HAVE**:
 
-8. **ML-based filter** (future): Train a classifier on accepted/rejected findings over time. Kodus uses this as their first filter layer. Requires collecting labeled data first.
+1. **ML-based filter** (future): Train a classifier on accepted/rejected findings over time. Kodus uses this as their first filter layer. Requires collecting labeled data first.
 
 #### 3.1.3 Integration Points
 
@@ -158,18 +160,18 @@ WFC reviews are purely LLM-based — reviewers receive file content as text and 
 
 **SHOULD HAVE**:
 
-5. **Language detection** from file extension (already partially exists in hooks `_checkers/`)
+1. **Language detection** from file extension (already partially exists in hooks `_checkers/`)
    - Reuse `wfc/scripts/hooks/_checkers/` infrastructure for language detection
    - AST parser selection based on detected language
 
-6. **Complexity report** in review output:
+2. **Complexity report** in review output:
    - Per-function cyclomatic complexity
    - Per-file aggregate complexity
    - Highlighted if complexity increased from the diff
 
 **COULD HAVE**:
 
-7. **Cross-file dependency graph** — full project-level import graph. Expensive to compute, defer to later.
+1. **Cross-file dependency graph** — full project-level import graph. Expensive to compute, defer to later.
 
 #### 3.2.3 Integration Points
 
@@ -233,17 +235,17 @@ WFC has `review_benchmark.py` with basic precision/recall/F1 metrics but no syst
 
 **SHOULD HAVE**:
 
-5. **Per-reviewer breakdown**: Which of the 5 reviewers contributes most true positives vs false positives?
+1. **Per-reviewer breakdown**: Which of the 5 reviewers contributes most true positives vs false positives?
    - Helps identify which reviewer prompts need tuning
    - Output: per-reviewer precision/recall table
 
-6. **Model comparison mode**: Run the same eval across different models (Opus, Sonnet, Haiku)
+2. **Model comparison mode**: Run the same eval across different models (Opus, Sonnet, Haiku)
    - Output: cost vs quality tradeoff table
    - Informs multi-model routing decisions (Feature 5)
 
 **COULD HAVE**:
 
-7. **promptfoo integration** — Kodus uses promptfoo as the eval harness. Consider adopting it for standardized eval infrastructure.
+1. **promptfoo integration** — Kodus uses promptfoo as the eval harness. Consider adopting it for standardized eval infrastructure.
 
 #### 3.3.3 Integration Points
 
@@ -312,15 +314,15 @@ WFC has zero production telemetry. When a review takes too long, produces bad re
 
 **SHOULD HAVE**:
 
-5. **LLM call tracing**: Log model, prompt length, response length, latency for each reviewer call
+1. **LLM call tracing**: Log model, prompt length, response length, latency for each reviewer call
    - Helps identify slow reviewers or token-heavy prompts
 
-6. **Dashboard template**: Grafana JSON dashboard for WFC metrics (committed as a reference)
+2. **Dashboard template**: Grafana JSON dashboard for WFC metrics (committed as a reference)
 
 **COULD HAVE**:
 
-7. **Pyroscope continuous profiling** for CPU-heavy operations (AST parsing, fingerprinting)
-8. **PostHog-style product analytics** (which skills are used most, review pass rates over time)
+1. **Pyroscope continuous profiling** for CPU-heavy operations (AST parsing, fingerprinting)
+2. **PostHog-style product analytics** (which skills are used most, review pass rates over time)
 
 #### 3.4.3 Integration Points
 
@@ -355,6 +357,7 @@ WFC sends all 5 reviewers to the same Claude model. Kodus routes different analy
 **MUST HAVE**:
 
 1. **Model routing configuration** (`wfc/config/model_routing.json`):
+
    ```json
    {
      "default": "claude-sonnet-4-5-20250929",
@@ -368,6 +371,7 @@ WFC sends all 5 reviewers to the same Claude model. Kodus routes different analy
      "validation_cross_check": "claude-haiku-4-5-20251001"
    }
    ```
+
    - Security and reliability use strongest model (highest stakes)
    - Maintainability uses cheapest model (style checks don't need Opus)
    - Cross-check validation uses cheapest model (binary yes/no)
@@ -384,7 +388,7 @@ WFC sends all 5 reviewers to the same Claude model. Kodus routes different analy
 
 **SHOULD HAVE**:
 
-4. **Auto-routing based on diff complexity**:
+1. **Auto-routing based on diff complexity**:
    - Small diffs (< 50 lines): use Haiku for all reviewers
    - Medium diffs (50-500 lines): use Sonnet for all
    - Large diffs (> 500 lines): use Opus for security/reliability, Sonnet for rest
@@ -392,7 +396,7 @@ WFC sends all 5 reviewers to the same Claude model. Kodus routes different analy
 
 **COULD HAVE**:
 
-5. **Non-Claude model support** (OpenAI, Deepseek, Gemini) via API adapters
+1. **Non-Claude model support** (OpenAI, Deepseek, Gemini) via API adapters
    - Requires standardizing the reviewer prompt/response format
    - Significant effort, defer to much later
 

@@ -2,7 +2,11 @@
 
 **Status**: ✅ **CORE COMPLETE** (Phases 1-5 of 6)
 
-This document describes the new GitHub PR workflow implementation for WFC.
+This document describes the GitHub PR workflow implementation for WFC.
+As of v3.0, WFC targets `develop` as the integration branch. Agents push
+`claude/*` branches and open PRs to `develop`, not to `main`.
+
+See `docs/workflow/GIT_WORKFLOW.md` for the full branching model.
 
 ---
 
@@ -13,6 +17,7 @@ This document describes the new GitHub PR workflow implementation for WFC.
 **File**: `wfc/skills/implement/executor.py:252`
 
 **Issue**: Parameter mismatch in merge call
+
 - **Before**: `merge_engine.merge(task_id=task.id, ...)`
 - **After**: `merge_engine.merge(task=task, ...)`
 
@@ -38,12 +43,14 @@ This document describes the new GitHub PR workflow implementation for WFC.
    - `_generate_pr_body()` - Generates PR body with review data
 
 **Safety Features**:
+
 - Protected branch detection (never push to main/master)
 - Force push safety (`--force-with-lease` only, never to protected)
 - Timeout handling (network failures)
 - Clear error messages with recovery instructions
 
 **Example PR Body Generated**:
+
 ```markdown
 ## Task: TASK-001
 
@@ -70,10 +77,12 @@ Add rate limiting to API endpoints
 ### Phase 3: Merge Engine Integration ✅
 
 **Modified Files**:
+
 - `wfc/skills/implement/merge_engine.py`
 - `wfc/skills/implement/executor.py`
 
 **MergeResult Updates**:
+
 ```python
 @dataclass
 class MergeResult:
@@ -87,22 +96,24 @@ class MergeResult:
 ```
 
 **New Method**: `MergeEngine.create_pr()`
-- Rebase onto latest main
+
+- Rebase onto latest develop
 - Run tests in worktree
 - Push branch to remote
-- Create GitHub PR
+- Create GitHub PR targeting `develop`
 - Preserve worktree for user review
-- Does NOT merge to main (user merges via GitHub)
+- Does NOT merge to develop (auto-merge via CI when checks pass)
 
 **Executor Routing**:
+
 ```python
 merge_strategy = config.get("merge.strategy", "pr")  # Default: PR
 
 if merge_strategy == "pr":
-    # NEW: Push + create PR
+    # Push claude/* branch + create PR to develop
     result = merge_engine.create_pr(...)
 else:
-    # LEGACY: Merge to local main
+    # LEGACY: Merge to local main (requires "merge.strategy": "direct")
     result = merge_engine.merge(...)
 ```
 
@@ -122,7 +133,7 @@ DEFAULTS = {
         "strategy": "pr",  # NEW DEFAULT
         "pr": {
             "enabled": True,
-            "base_branch": "main",
+            "base_branch": "develop",
             "draft": True,
             "auto_push": True,
             "require_gh_cli": True
@@ -175,10 +186,12 @@ DEFAULTS = {
 ### Phase 5: Documentation Updates ✅
 
 **Modified Files**:
+
 - `docs/security/GIT_SAFETY_POLICY.md` - Complete rewrite (521 lines)
 - `CLAUDE.md` - Updated workflow sections
 
 **New Documentation Includes**:
+
 1. **Philosophy Change** - v1.0 (local-only) → v2.0 (PR-first)
 2. **Why PR Workflow** - Benefits of GitHub integration
 3. **Requirements** - gh CLI installation & authentication
@@ -195,6 +208,7 @@ DEFAULTS = {
 ### Phase 3: Git Hooks ⚠️
 
 **Planned Components**:
+
 - `pre-commit.py` - Warn about direct commits to main
 - `commit-msg.py` - Validate conventional commits
 - `pre-push.py` - Warn about pushing to protected branches
@@ -209,6 +223,7 @@ DEFAULTS = {
 ### Phase 6: Telemetry & Tracking ⚠️
 
 **Planned Events**:
+
 ```json
 {
   "event": "pr_created",
@@ -242,12 +257,14 @@ uv run pytest tests/test_implement_integration.py::test_integration_smoke -v
 ### Unit Tests Needed
 
 **Files to test**:
+
 - `tests/test_pr_operations.py` - PR creation, gh CLI detection
 - `tests/test_hooks.py` - Hook validation (Phase 3)
 
 ### Integration Tests Needed
 
 **Manual testing required**:
+
 1. Install gh CLI: `brew install gh`
 2. Authenticate: `gh auth login`
 3. Run WFC implement on test task
@@ -258,7 +275,7 @@ uv run pytest tests/test_implement_integration.py::test_integration_smoke -v
 
 ## Usage Examples
 
-### Default PR Workflow (NEW)
+### Default PR Workflow (v3.0)
 
 ```bash
 # WFC implements feature
@@ -268,10 +285,11 @@ wfc implement plan/TASKS.md
 # ✅ Task TASK-001 complete
 # ✅ Quality checks passed
 # ✅ Consensus review: APPROVED (8.5/10)
-# ✅ Pushed branch: feat/TASK-001-rate-limiting
-# ✅ Created PR #42: https://github.com/user/repo/pull/42
+# ✅ Pushed branch: claude/TASK-001-rate-limiting-1738000000
+# ✅ Created PR #42 (base: develop): https://github.com/user/repo/pull/42
 
-# You review PR on GitHub and merge when ready
+# CI runs on the PR → auto-merges to develop when green
+# develop-health.yml validates the merge → self-heals on failure
 ```
 
 ### Legacy Local Workflow
@@ -286,12 +304,14 @@ wfc implement plan/TASKS.md
 # WFC output:
 # ✅ Task TASK-001 complete
 # ✅ Merged to local main
-# ⚠️  Remember to push: git push origin main
+# ⚠️  Remember to push via branch + PR: git push origin <branch>
 
-# You review and push manually
+# You review and push via PR manually
 git log -1
 git diff HEAD~1
-git push origin main
+git checkout -b feat/my-branch
+git push origin HEAD
+gh pr create --base develop
 ```
 
 ---
@@ -301,12 +321,15 @@ git push origin main
 ### For Existing Users
 
 1. **Default workflow changed** from `direct` to `pr`
-2. **Requires gh CLI** installed and authenticated
-3. **Pushes to remote** (previously never pushed)
+2. **Integration branch changed** from `main` to `develop`
+3. **Branch naming changed**: agent branches now use `claude/*` prefix
+4. **Requires gh CLI** installed and authenticated
+5. **Pushes to remote** (previously never pushed)
 
 ### Migration Path
 
-**Keep old behavior**:
+**Keep old (direct merge) behavior**:
+
 ```bash
 # Global config
 cat > ~/.claude/wfc.config.json << EOF
@@ -318,7 +341,8 @@ cat > ~/.claude/wfc.config.json << EOF
 EOF
 ```
 
-**Adopt new workflow**:
+**Adopt v3.0 workflow** (develop-first, claude/* branches):
+
 ```bash
 # Install gh CLI
 brew install gh
@@ -326,9 +350,11 @@ brew install gh
 # Authenticate
 gh auth login
 
-# Ready to use PR workflow
+# Ready to use PR workflow — agents push claude/* branches to develop
 wfc implement plan/TASKS.md
 ```
+
+See `docs/workflow/GIT_WORKFLOW.md` for full branching model details.
 
 ---
 
@@ -350,20 +376,22 @@ wfc implement plan/TASKS.md
           ┌─────────────┴─────────────┐
           │                           │
           ▼                           ▼
-┌────────────────────┐      ┌──────────────────┐
-│  PR Workflow (NEW) │      │ Direct (LEGACY)  │
-├────────────────────┤      ├──────────────────┤
-│ 1. Rebase          │      │ 1. Rebase        │
-│ 2. Test in WT      │      │ 2. Test in WT    │
-│ 3. Push branch     │      │ 3. Merge to main │
-│ 4. Create PR       │      │ 4. Test on main  │
-│ 5. [STOP]          │      │ 5. [STOP]        │
-└────────────────────┘      └──────────────────┘
+┌────────────────────────┐  ┌──────────────────┐
+│  PR Workflow (DEFAULT) │  │ Direct (LEGACY)  │
+├────────────────────────┤  ├──────────────────┤
+│ 1. Rebase              │  │ 1. Rebase        │
+│ 2. Test in WT          │  │ 2. Test in WT    │
+│ 3. Push claude/* branch│  │ 3. Merge to main │
+│ 4. Create PR → develop │  │ 4. Test on main  │
+│ 5. CI → auto-merge     │  │ 5. [STOP]        │
+│ 6. [STOP]              │  │                  │
+└────────────────────────┘  └──────────────────┘
           │                           │
           ▼                           ▼
-┌────────────────────┐      ┌──────────────────┐
-│ User merges on GH  │      │ User pushes main │
-└────────────────────┘      └──────────────────┘
+┌────────────────────────┐  ┌──────────────────────┐
+│ develop-health.yml     │  │ User creates PR to   │
+│ validates merge        │  │ develop manually     │
+└────────────────────────┘  └──────────────────────┘
 ```
 
 ---
@@ -393,30 +421,33 @@ wfc implement plan/TASKS.md
 
 ### Phase 3 (Optional - Nice to Have)
 
-4. **Implement git hooks** (pre-commit, commit-msg, pre-push)
-5. **Add CLI commands** (`wfc hooks install/status/uninstall`)
+1. **Implement git hooks** (pre-commit, commit-msg, pre-push)
+2. **Add CLI commands** (`wfc hooks install/status/uninstall`)
 
 ### Phase 6 (Optional - Observability)
 
-6. **Add telemetry events** (PR creation, workflow violations)
-7. **Create metrics dashboard** (`wfc metrics workflow`)
+1. **Add telemetry events** (PR creation, workflow violations)
+2. **Create metrics dashboard** (`wfc metrics workflow`)
 
 ---
 
 ## Risk Assessment
 
 ### Low Risk ✅
+
 - Backward compatible (legacy mode available)
 - Well-documented migration path
 - Soft enforcement (warnings, not blocks)
 - User still controls final merge
 
 ### Medium Risk ⚠️
+
 - Requires gh CLI (dependency)
 - Network operations (can fail)
 - Changes default behavior (config override needed)
 
 ### Mitigations
+
 - Clear error messages with recovery steps
 - Automatic fallback on gh CLI failure
 - Comprehensive documentation

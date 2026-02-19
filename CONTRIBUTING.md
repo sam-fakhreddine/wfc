@@ -4,186 +4,74 @@ Thank you for your interest in contributing to WFC! This document provides guide
 
 ## How to Contribute
 
-### Adding New Personas
+### Contributing Reviewer Knowledge
 
-The most valuable contribution is adding expert personas to expand "the bench."
+The most valuable contribution is adding domain knowledge to the 5 fixed specialist reviewers, helping them catch more issues in specific areas.
 
-#### 1. Choose a Persona
+WFC v2.0 uses 5 fixed reviewers (Security, Correctness, Performance, Maintainability, Reliability). Each reviewer has a `KNOWLEDGE.md` file that accumulates learned patterns from past reviews.
 
-Identify a gap in current coverage:
-- **Language specialists** (Kotlin, Swift, Scala, Elixir, etc.)
-- **Framework experts** (Django, Spring, Rails, etc.)
-- **Domain experts** (Legal tech, Education, Energy, etc.)
-- **Specialized skills** (GraphQL, WebAssembly, etc.)
+#### 1. Identify a Knowledge Gap
 
-Check existing personas to avoid duplicates (currently 56 personas across 9 panels):
-```bash
-grep -r "\"name\":" wfc/personas/panels/
+Look for patterns that reviewers are missing. Common gaps:
+
+- Framework-specific pitfalls (e.g., Django ORM N+1, React hook dependency arrays)
+- Language idioms a reviewer should flag (e.g., Python mutable default arguments)
+- Domain anti-patterns (e.g., JWT expiry misconfigurations)
+
+#### 2. Find the Right Reviewer
+
+```
+wfc/references/reviewers/
+├── security/KNOWLEDGE.md       # OWASP, injection, auth/authz
+├── correctness/KNOWLEDGE.md    # Logic bugs, edge cases, type safety
+├── performance/KNOWLEDGE.md    # Algorithmic efficiency, N+1, memory
+├── maintainability/KNOWLEDGE.md # Readability, SOLID, DRY, coupling
+└── reliability/KNOWLEDGE.md    # Error handling, fault tolerance
 ```
 
-#### 2. Create Persona File
+#### 3. Add a Knowledge Entry
 
-Create JSON file in appropriate panel:
-```bash
-# Choose panel: engineering, security, architecture, quality (10 personas), data, product, operations, domain-experts, specialists
-cd wfc/personas/panels/{panel}/
-touch MY_EXPERT_ID.json
+Append to the appropriate `KNOWLEDGE.md`:
+
+```markdown
+## [Category]: Short title of the pattern
+
+**Pattern**: What to look for (code or structural signal)
+
+**Risk**: Why this is a problem
+
+**Example (Bad)**:
+```python
+# Problematic code example
 ```
 
-#### 3. Define Persona
+**Example (Good)**:
 
-Use this template:
-
-```json
-{
-  "id": "MY_EXPERT_ID",
-  "name": "Descriptive Expert Name",
-  "panel": "engineering",
-  "subpanel": "backend",
-
-  "skills": [
-    {
-      "name": "Primary Skill",
-      "level": "expert",
-      "context": "Specific expertise details"
-    },
-    {
-      "name": "Secondary Skill",
-      "level": "proficient",
-      "context": "Supporting expertise"
-    }
-  ],
-
-  "domain_knowledge": [
-    "Domain Area 1",
-    "Domain Area 2"
-  ],
-
-  "lens": {
-    "focus": "What this persona pays attention to",
-    "philosophy": "Core belief guiding reviews",
-    "review_dimensions": [
-      {"dimension": "key_dimension", "weight": 0.3},
-      {"dimension": "secondary_dimension", "weight": 0.25}
-    ]
-  },
-
-  "personality": {
-    "communication_style": "direct",
-    "risk_tolerance": "moderate",
-    "detail_orientation": "balanced"
-  },
-
-  "selection_criteria": {
-    "task_types": [
-      "task-type-1",
-      "task-type-2"
-    ],
-    "tech_stacks": [
-      "tech1",
-      "tech2"
-    ],
-    "complexity_range": ["M", "L", "XL"],
-    "anti_patterns": [
-      "anti-pattern-1",
-      "anti-pattern-2"
-    ],
-    "properties": [
-      "PROPERTY1",
-      "PROPERTY2"
-    ]
-  },
-
-  "model_preference": {
-    "default": "sonnet",
-    "reasoning": "Why this model is appropriate",
-    "fallback": "opus"
-  },
-
-  "system_prompt_additions": "Detailed persona description for Claude. Explain expertise, what to catch, how to evaluate...",
-
-  "tags": [
-    "tag1",
-    "tag2",
-    "tag3"
-  ],
-
-  "version": "1.0.0",
-  "enabled": true
-}
+```python
+# Correct code example
 ```
 
-#### 4. Guidelines for Good Personas
+**References**: CVE, CWE, or documentation link (if applicable)
 
-**Skills**:
-- 3-5 skills max
-- Use levels: `expert`, `proficient`, `intermediate`
-- Provide context for each skill
-
-**Lens**:
-- Focus: What specifically they look for
-- Philosophy: 1-2 sentence guiding principle
-- Dimensions: 3-5 weighted dimensions (should sum to 1.0)
-
-**Selection Criteria**:
-- `task_types`: When is this persona relevant?
-- `tech_stacks`: What technologies trigger selection?
-- `complexity_range`: S, M, L, XL
-- `anti_patterns`: What bad patterns does this persona catch?
-- `properties`: Which review properties align?
-
-**System Prompt**:
-- Be specific about what the persona catches
-- Mention specific patterns, anti-patterns
-- Explain evaluation criteria
-- Keep under 200 words
-
-**Model Selection**:
-- `opus`: Deep reasoning needed (cryptography, distributed systems, complex architecture)
-- `sonnet`: Balanced (most personas) - pattern matching, code review
-- `haiku`: Simple, fast checks (future use)
-
-#### 5. Validate Schema
-
-```bash
-cd wfc/personas
-python3 -c "
-import json
-from pathlib import Path
-with open('panels/{panel}/{PERSONA_ID}.json') as f:
-    persona = json.load(f)
-print(f'✅ Valid persona: {persona[\"name\"]}')
-"
 ```
 
-#### 6. Submit PR
+#### 4. Validate & Submit PR
 
 ```bash
-git checkout -b add-persona-{name}
-git add wfc/personas/panels/{panel}/{PERSONA_ID}.json
-git commit -m "Add {Persona Name} to {panel} panel"
-git push origin add-persona-{name}
+# Check for formatting issues
+uv run pre-commit run --all-files
+
+git checkout -b add-knowledge-{reviewer}-{topic}
+git add wfc/references/reviewers/{reviewer}/KNOWLEDGE.md
+git commit -m "docs(reviewers): add {topic} pattern to {reviewer} knowledge"
+git push origin add-knowledge-{reviewer}-{topic}
 ```
 
 Create PR with description:
-- What expertise does this persona add?
-- When should it be selected?
-- Example scenarios where it's valuable
 
-### Improving Selection Algorithm
-
-To enhance persona selection:
-
-1. **Fork the repo**
-2. **Modify** `wfc/personas/persona_orchestrator.py`
-3. **Add tests** in `wfc/personas/tests/`
-4. **Document** changes in PR
-
-Example improvements:
-- Better tech stack detection
-- Improved scoring weights
-- New selection dimensions
-- Caching for performance
+- Which reviewer this knowledge extends
+- What pattern it teaches
+- Example of code that would now be caught
 
 ### Adding Features
 
@@ -215,14 +103,16 @@ WFC supports custom rules via the wfc-rules skill. User-defined rules live in `.
 3. **Test** that the rule fires correctly during review or implementation
 4. **Document** the rule's purpose, trigger conditions, and expected behavior
 
-### Available Skills (17 total)
+### Available Skills (30 total)
 
-WFC currently provides 17 Agent Skills compliant skills. When contributing, be aware of the full set:
+WFC currently provides 30 Agent Skills compliant skills. When contributing, be aware of the full set:
 
-- **wfc-review** - Multi-agent consensus review
+- **wfc-review** - Multi-agent consensus review (5 fixed specialist reviewers)
 - **wfc-plan** - Adaptive planning with architecture design phase
 - **wfc-implement** - Parallel implementation engine
 - **wfc-build** - Intentional Vibe quick feature building
+- **wfc-lfg** - Autonomous end-to-end pipeline
+- **wfc-deepen** - Post-plan parallel research enhancement
 - **wfc-security** - STRIDE threat analysis
 - **wfc-architecture** - Architecture docs + C4 diagrams
 - **wfc-test** - Property-based test generation
@@ -230,10 +120,25 @@ WFC currently provides 17 Agent Skills compliant skills. When contributing, be a
 - **wfc-validate** - 7-dimension analysis
 - **wfc-vibe** - Default conversational mode
 - **wfc-init** - Project initialization
-- **wfc-safeguard** - Defensive coding safeguards
+- **wfc-safeguard** - Real-time security hook enforcement
 - **wfc-rules** - Custom rule definition and enforcement
-- **wfc-playground** - Sandbox experimentation environment
-- Plus additional utility skills
+- **wfc-playground** - Interactive HTML playground generator
+- **wfc-compound** - Knowledge codification to docs/solutions/
+- **wfc-ba** - Business analysis and requirements gathering
+- **wfc-agentic** - GitHub Agentic Workflow generator
+- **wfc-export** - Multi-platform skill export
+- **wfc-sync** - Rule and pattern discovery and sync
+- **wfc-pr-comments** - PR comment triage and fix
+- **wfc-gh-debug** - GitHub Actions CI failure debugger
+- **wfc-housekeeping** - Project hygiene and dead code cleanup
+- **wfc-retro** - Retrospective analysis
+- **wfc-newskill** - Meta-skill for creating new WFC skills
+- **wfc-safeclaude** - Project-specific command allowlist generator
+- **wfc-code-standards** - Language-agnostic coding standards
+- **wfc-python** - Python-specific development standards
+- **wfc-isthissmart** - Quick idea sanity check
+
+See `docs/skills/README.md` for the full selection matrix.
 
 ### Documentation Improvements
 
@@ -255,18 +160,20 @@ Documentation PRs are always welcome:
 Before submitting PR:
 
 ```bash
-# Test persona selection
-cd wfc/personas/tests
-python3 -m pytest test_persona_selection.py -v
+# Run full test suite
+uv run pytest
 
-# Validate all persona JSONs
-cd wfc/personas
-for f in panels/*/*.json; do
-    python3 -c "import json; json.load(open('$f'))" || echo "Invalid: $f"
-done
+# Run with coverage
+uv run pytest --cov=wfc --cov-report=term-missing
 
-# Rebuild registry
-python3 -c "from persona_orchestrator import PersonaRegistry; PersonaRegistry.rebuild_registry()"
+# Run specific test file
+uv run pytest tests/test_review_system.py -v
+
+# Validate all WFC skills (Agent Skills compliance)
+make validate
+
+# Run all quality checks
+make check-all
 ```
 
 ## Review Process
@@ -280,7 +187,7 @@ python3 -c "from persona_orchestrator import PersonaRegistry; PersonaRegistry.re
 
 - **Issues**: Open an issue for bugs, questions
 - **Discussions**: Use GitHub Discussions for ideas
-- **Email**: wfc-maintainers@example.com (TODO: update)
+- **Email**: <wfc-maintainers@example.com> (TODO: update)
 
 ## License
 

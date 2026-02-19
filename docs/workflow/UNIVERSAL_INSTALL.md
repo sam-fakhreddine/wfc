@@ -23,6 +23,7 @@ For CI or automated installation, use the `--ci` flag:
 ```
 
 This skips all prompts and uses sensible defaults:
+
 - Existing install: Refresh (keep settings)
 - Branding: NSFW (World Fucking Class)
 - Platform: All detected platforms
@@ -41,12 +42,7 @@ This skips all prompts and uses sensible defaults:
 ├── wfc-safeguard/
 ├── wfc-rules/
 ├── wfc-playground/
-├── ... (19 skills total)
-└── wfc/              # Shared resources
-    ├── personas/
-    ├── shared/
-    ├── scripts/hooks/       # Hook infrastructure
-    └── templates/           # Reusable templates
+└── ... (30 skills total)
 ```
 
 **When to use:** You only have Claude Code installed
@@ -61,12 +57,7 @@ This skips all prompts and uses sensible defaults:
 ├── wfc-safeguard/
 ├── wfc-rules/
 ├── wfc-playground/
-├── ... (19 skills total)
-└── wfc/              # Shared resources
-    ├── personas/
-    ├── shared/
-    ├── scripts/hooks/       # Hook infrastructure
-    └── templates/           # Reusable templates
+└── ... (30 skills total)
 ```
 
 **When to use:** You only have Kiro installed
@@ -81,28 +72,25 @@ This skips all prompts and uses sensible defaults:
 │   ├── wfc-safeguard/
 │   ├── wfc-rules/
 │   ├── wfc-playground/
-│   └── ... (19 skills total)
-├── personas/
+│   └── ... (30 skills total)
 ├── scripts/hooks/                       # Hook infrastructure
 └── templates/                           # Reusable templates
 
 ~/.claude/skills/
 ├── wfc-review -> ~/.wfc/skills/wfc-review  # Symlinks
-├── wfc-implement -> ~/.wfc/skills/wfc-implement
-└── wfc/personas -> ~/.wfc/personas
+└── wfc-implement -> ~/.wfc/skills/wfc-implement
 
 ~/.kiro/skills/
 ├── wfc-review -> ~/.wfc/skills/wfc-review  # Symlinks
-├── wfc-implement -> ~/.wfc/skills/wfc-implement
-└── wfc/personas -> ~/.wfc/personas
+└── wfc-implement -> ~/.wfc/skills/wfc-implement
 ```
 
 **When to use:** You have both Claude Code and Kiro
 
 **Benefits:**
+
 - ✅ Single source of truth
 - ✅ Updates automatically sync to both platforms
-- ✅ Add custom personas once, available everywhere
 - ✅ Consistent behavior across platforms
 
 ---
@@ -112,28 +100,30 @@ This skips all prompts and uses sensible defaults:
 ### Agent Skills Standard
 
 WFC follows the [Agent Skills specification](https://agentskills.io), making it compatible with:
+
 - ✅ Claude Code
 - ✅ Kiro
 - ✅ Any Agent Skills compliant platform
 
-### Progressive Disclosure
+### Token Efficiency
 
-WFC implements progressive disclosure for optimal performance:
+WFC v2.0 uses ultra-minimal reviewer prompts for maximum performance:
 
-| Metric | Traditional | Progressive | Savings |
-|--------|-------------|-------------|---------|
-| **Initial context** | ~43K tokens | ~3.4K tokens | **92.1%** |
-| **Load time** | Slow | Fast | **10x faster** |
-| **Memory usage** | High | Low | **90% less** |
+| Metric | Traditional | WFC v2.0 | Savings |
+|--------|-------------|----------|---------|
+| **Reviewer prompt** | ~3,000 tokens | ~200 tokens | **93%** |
+| **Review context** | Full file content | File paths only | **95%** |
 
 **How it works:**
-1. **Initial load** - Lightweight registry (IDs + summaries)
-2. **On selection** - Full persona details loaded on-demand
-3. **Caching** - Loaded personas cached for session
+
+1. **Skills layer** — `SKILL.md` loaded on invocation (~500 lines)
+2. **Reviewer prompts** — Ultra-minimal identity + focus (200 tokens each)
+3. **File references** — Paths sent, not file content
 
 **Works with both:**
-- Claude Code: Uses Read tool for on-demand loading
-- Kiro: Native progressive disclosure support
+
+- Claude Code: Skills loaded from `~/.claude/skills/wfc-*/`
+- Kiro: Same Agent Skills specification
 
 ---
 
@@ -145,7 +135,7 @@ WFC implements progressive disclosure for optimal performance:
 # Start Claude Code in your project
 claude
 
-# Use any WFC skill (17 available)
+# Use any WFC skill (30 available)
 /wfc-review
 /wfc-implement
 /wfc-plan
@@ -161,7 +151,7 @@ claude
 # Start Kiro in your project
 kiro
 
-# Use any WFC skill (17 available)
+# Use any WFC skill (30 available)
 /wfc-review
 /wfc-implement
 /wfc-plan
@@ -175,14 +165,18 @@ kiro
 
 Changes made in one platform automatically sync to the other:
 
-1. **Add custom persona in Claude Code:**
+1. **Update a skill in one place:**
+
    ```bash
-   # Add to ~/.wfc/personas/custom/MY_EXPERT.json
+   cd ~/path/to/wfc-repo
+   git pull
+   ./install.sh  # Refresh
    ```
 
-2. **Immediately available in Kiro:**
+2. **Immediately available in both:**
+
    ```bash
-   # Can now use /wfc-review --personas MY_EXPERT
+   # Both Claude Code and Kiro see the updated skill via symlinks
    ```
 
 ---
@@ -215,10 +209,11 @@ The installer preserves user customizations across updates:
 
 - **User rules** (`.wfc/rules/`) - Custom rules defined via wfc-rules are never overwritten
 - **Configuration** (`.wfc_branding`, `wfc.config.json`) - Settings preserved on refresh
-- **Custom personas** - User-added personas in custom directories are retained
+- **Reviewer knowledge** (`wfc/references/reviewers/*/KNOWLEDGE.md`) - Accumulated review learnings are preserved
 
-The installer also now installs additional infrastructure:
-- **Hook system** (`scripts/hooks/`) - Extensible workflow hooks for patterns like post-review simplification and confidence filtering
+The installer also installs additional infrastructure:
+
+- **Hook system** (`scripts/hooks/`) - Extensible workflow hooks for security and quality enforcement
 - **Templates** (`templates/`) - Reusable templates including playground sandbox environments
 
 ---
@@ -238,12 +233,14 @@ When you run the installer on an existing installation, you'll get reinstall opt
 ```
 
 **What happens:**
+
 - ✅ Updates all WFC files to latest version
 - ✅ Keeps current branding mode
 - ✅ Preserves all configuration
 - ✅ Maintains symlinks and platform setup
 
 **Best for:**
+
 - Pulling latest updates from Git
 - Fixing corrupted files
 - Restoring deleted files
@@ -261,12 +258,14 @@ When you run the installer on an existing installation, you'll get reinstall opt
 ```
 
 **What happens:**
+
 - ✅ Keeps all files and configuration
 - ✅ Prompts for new branding choice
 - ✅ Updates branding config only
 - ✅ Everything else stays the same
 
 **Best for:**
+
 - Moving from personal to corporate environment
 - Switching teams or projects
 - Testing both modes
@@ -284,17 +283,20 @@ When you run the installer on an existing installation, you'll get reinstall opt
 ```
 
 **What happens:**
+
 - ✅ Backs up current config to `~/.wfc_backup_TIMESTAMP/`
 - ✅ Runs complete installation from scratch
 - ✅ Prompts for all settings again
 - ✅ Fresh start with clean configuration
 
 **Best for:**
+
 - Major troubleshooting
 - Broken configuration
 - Starting over with different setup
 
 **Backup location:**
+
 ```bash
 ~/.wfc_backup_20260211_143022/.wfc_branding
 ```
@@ -312,6 +314,7 @@ When you run the installer on an existing installation, you'll get reinstall opt
 ```
 
 **What happens:**
+
 - ✅ Exits installer without changes
 - ✅ No files modified
 - ✅ Configuration unchanged
@@ -333,16 +336,12 @@ ls -la ~/.kiro/skills/ | grep wfc
 ls -la ~/.wfc/
 ```
 
-### Test Progressive Disclosure
+### Test Installation
 
 ```bash
-# Run the savings calculator
-python3 ~/.wfc/scripts/personas/progressive_registry.py
-
-# Should show:
-# Summaries only: ~3395 tokens
-# Full personas:  ~43200 tokens
-# Savings:        ~39805 tokens (92.1%)
+# Verify skills are accessible
+ls ~/.claude/skills/ | grep wfc | wc -l
+# Should show: 30
 ```
 
 ---
@@ -354,6 +353,7 @@ python3 ~/.wfc/scripts/personas/progressive_registry.py
 **Issue:** Symlinks show as broken
 
 **Fix:**
+
 ```bash
 # Re-run installer
 cd ~/path/to/wfc-repo
@@ -365,6 +365,7 @@ cd ~/path/to/wfc-repo
 **Issue:** WFC skills don't appear in Claude Code or Kiro
 
 **Claude Code Fix:**
+
 ```bash
 # Restart Claude Code
 # Check installation
@@ -372,23 +373,23 @@ ls ~/.claude/skills/ | grep wfc
 ```
 
 **Kiro Fix:**
+
 ```bash
 # Restart Kiro
 # Check installation
 ls ~/.kiro/skills/ | grep wfc
 ```
 
-### Progressive Disclosure Not Working
+### Skills Count Mismatch
 
-**Issue:** Full personas loading instead of summaries
+**Issue:** Fewer than 30 skills showing after install
 
 **Fix:**
-```bash
-# Regenerate registry
-python3 ~/.wfc/scripts/personas/progressive_registry.py
 
-# Verify registry exists
-ls ~/.wfc/references/personas/registry-progressive.json
+```bash
+# Re-run the installer to sync all skills
+cd ~/path/to/wfc-repo
+./install.sh
 ```
 
 ---
@@ -430,12 +431,7 @@ If you prefer manual installation:
 # Copy individual skills
 cp -r wfc/skills/wfc-review ~/.claude/skills/
 cp -r wfc/skills/wfc-implement ~/.claude/skills/
-# ... repeat for all skills
-
-# Copy shared resources
-mkdir -p ~/.claude/skills/wfc
-cp -r wfc/personas ~/.claude/skills/wfc/
-cp -r wfc/shared ~/.claude/skills/wfc/
+# ... repeat for all skills (30 total, see docs/skills/README.md)
 ```
 
 ### Kiro

@@ -1,6 +1,8 @@
-# WFC Task Tool Integration - Working Example
+# WFC Task Tool Integration - Historical Example (v1.0)
 
-This document demonstrates how to use WFC's persona-based review system with Claude Code's Task tool for true independent subagent execution.
+> **Note**: This example documents the v1.0 persona-based review system (54 dynamic personas). The current system (v2.0) uses 5 fixed specialist reviewers — see [docs/concepts/REVIEW_SYSTEM.md](../concepts/REVIEW_SYSTEM.md). This file is preserved as a reference for the Task tool integration pattern, which remains valid.
+
+This document demonstrates how WFC used Claude Code's Task tool for independent subagent execution in the v1.0 persona system.
 
 ## Architecture Overview
 
@@ -117,6 +119,7 @@ Each Task runs as an independent subprocess with isolated context.
 ```
 
 The result from each Task is a JSON string containing the persona's review:
+
 ```json
 {
   "persona_id": "BACKEND_PYTHON_SENIOR",
@@ -162,19 +165,25 @@ print(f"Report: {final_result.report_path}")
 ## Key Benefits
 
 ### ✅ True Independence
+
 Each persona runs as a separate subprocess with its own:
+
 - System prompt
 - Context window
 - No visibility into other reviews
 
 ### ✅ True Parallelism
+
 Claude Code executes all Task calls concurrently, not sequentially in threads.
 
 ### ✅ Proper Isolation
+
 No context bleeding - personas can't see each other's opinions until synthesis.
 
 ### ✅ Model Selection
+
 Each persona can use a different model:
+
 - Security reviews → Opus (more thorough)
 - Simple reviews → Haiku (faster, cheaper)
 - Balanced reviews → Sonnet
@@ -214,6 +223,7 @@ Report: /tmp/wfc-reviews/REVIEW-example-review.md
 ## Comparison: Old vs New
 
 ### Old Architecture (Wrong)
+
 ```python
 # Python tried to spawn subagents with ThreadPoolExecutor
 with ThreadPoolExecutor() as executor:
@@ -224,6 +234,7 @@ with ThreadPoolExecutor() as executor:
 ```
 
 ### New Architecture (Correct)
+
 ```python
 # Phase 1: Python prepares specifications
 task_specs = prepare_subagent_tasks(personas)
@@ -250,4 +261,4 @@ results = parse_subagent_results(responses)
 
 **Architecture Status**: ✅ Correct implementation following Claude Code best practices
 
-Based on: https://code.claude.com/docs/en/sub-agents
+Based on: <https://code.claude.com/docs/en/sub-agents>

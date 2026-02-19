@@ -60,6 +60,7 @@ WFC already produces significant telemetry. The problem is consumption, not prod
 **Effort:** Small (1-2 days). Touches `orchestrator.py`, `cli.py`, `knowledge_writer.py`, `drift_detector.py`.
 
 **Files modified:**
+
 - `wfc/scripts/skills/review/orchestrator.py` -- add `_write_json_report()`
 - `wfc/scripts/skills/review/cli.py` -- add disk write for JSON format
 - `wfc/scripts/knowledge/knowledge_writer.py` -- add `log_event()` call in `append_entries()`
@@ -85,6 +86,7 @@ WFC already produces significant telemetry. The problem is consumption, not prod
 ```
 
 **plugin.toml:**
+
 ```toml
 [plugin]
 name = "wfc-dashboard"
@@ -177,6 +179,7 @@ The `plugin_registry` is optional -- if no plugins are installed, there is zero 
 **Effort:** Medium (3-5 days). New module `wfc/scripts/plugins/` with registry, loader, protocol, context.
 
 **New files:**
+
 - `wfc/scripts/plugins/__init__.py`
 - `wfc/scripts/plugins/registry.py` -- discovery + loading
 - `wfc/scripts/plugins/protocol.py` -- `WFCPlugin` protocol + `PluginContext`
@@ -184,6 +187,7 @@ The `plugin_registry` is optional -- if no plugins are installed, there is zero 
 - `wfc/scripts/plugins/loader.py` -- TOML parsing + importlib loading
 
 **Files modified:**
+
 - `wfc/scripts/skills/review/orchestrator.py` -- optional `plugin_registry` param, event dispatch
 - `pyproject.toml` -- add `plugins` optional extra with `tomli` dependency
 
@@ -241,6 +245,7 @@ wfc dashboard
 **Effort:** Medium-large (5-8 days). Plugin implementation + 6 dashboard views + WebSocket.
 
 **New files:**
+
 - `~/.wfc/plugins/wfc-dashboard/plugin.toml`
 - `~/.wfc/plugins/wfc-dashboard/dashboard_plugin.py` -- FastAPI app + WebSocket
 - `~/.wfc/plugins/wfc-dashboard/templates/` -- HTML views with Alpine.js
@@ -317,6 +322,7 @@ Transform `events.jsonl` into structured format suitable for SIEM ingestion:
 ```
 
 Output targets (configurable):
+
 - **File**: `~/.wfc/logs/wfc-structured.jsonl` (default)
 - **Syslog**: RFC 5424 via UDP/TCP
 - **Stdout**: For containerized environments (pipe to fluentd/vector)
@@ -357,6 +363,7 @@ groups:
 **Effort:** Medium (3-5 days). Prometheus client is well-documented; structured logging is straightforward.
 
 **New files:**
+
 - `~/.wfc/plugins/wfc-observability/plugin.toml`
 - `~/.wfc/plugins/wfc-observability/observability_plugin.py` -- Prometheus + log export
 - `~/.wfc/plugins/wfc-observability/alerting/wfc.rules.yml` -- Alertmanager rules
@@ -414,6 +421,7 @@ This roadmap **revises Reject #4** from the Loki Mode Analysis. The original rej
 > "Enterprise observability and access control should be addressed through integration with existing tools rather than building them into the code quality framework itself."
 
 This roadmap follows that principle exactly:
+
 - Prometheus metrics are **exposed** by WFC but **consumed** by existing Prometheus/Grafana infrastructure
 - Structured logs are **emitted** by WFC but **ingested** by existing SIEM/log aggregation
 - The dashboard is a **plugin** that reads WFC data, not a feature built into the review pipeline

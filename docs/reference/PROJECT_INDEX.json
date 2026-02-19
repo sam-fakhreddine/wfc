@@ -10,10 +10,9 @@
     "repository": "https://github.com/samfakhreddine/wfc"
   },
   "generated": {
-    "timestamp": "2026-02-11T00:00:00Z",
-    "generator": "wfc-implement Phase 3 (TASK-010)",
-    "latest_commit": "b15ebf7",
-    "version": "1.0.0"
+    "timestamp": "2026-02-18T12:00:00Z",
+    "generator": "docs-modernization plan (TASK-008)",
+    "version": "2.0.0"
   },
   "structure": {
     "entry_points": {
@@ -58,20 +57,25 @@
         ]
       },
       "review": {
-        "path": "wfc/skills/review",
-        "purpose": "Multi-agent consensus code review",
+        "path": "wfc/scripts/orchestrators/review",
+        "purpose": "Five-agent consensus code review",
         "features": [
-          "54 specialized expert personas",
-          "Automatic persona selection",
-          "Weighted consensus voting",
-          "Severity-based filtering",
-          "Review report generation"
+          "5 fixed specialist reviewers (Security, Correctness, Performance, Maintainability, Reliability)",
+          "Consensus Score (CS) algorithm with Minority Protection Rule",
+          "SHA-256 finding deduplication (±3 line tolerance)",
+          "Decision tiers: Informational / Moderate / Important / Critical",
+          "Review report generation (REVIEW-{task_id}.md)"
         ],
         "files": [
           "orchestrator.py",
-          "consensus.py",
-          "agents.py"
-        ]
+          "reviewer_engine.py",
+          "consensus_score.py",
+          "fingerprint.py",
+          "reviewer_loader.py",
+          "emergency_bypass.py",
+          "cli.py"
+        ],
+        "reviewer_prompts": "wfc/references/reviewers/{security,correctness,performance,maintainability,reliability}/PROMPT.md"
       },
       "plan": {
         "path": "wfc/skills/plan",
@@ -284,21 +288,38 @@
         ]
       }
     },
-    "personas": {
-      "path": "wfc/personas",
-      "purpose": "Multi-agent persona system",
+    "hooks": {
+      "path": "wfc/scripts/hooks",
+      "purpose": "PreToolUse and PostToolUse hook infrastructure",
       "features": [
-        "54 expert personas",
-        "Token-optimized prompts",
-        "File reference system",
-        "Ultra-minimal prompts",
-        "Persona orchestration"
+        "13 security patterns enforced via PreToolUse",
+        "Auto-lint on file write (file_checker.py)",
+        "TDD reminders on implementation change (tdd_enforcer.py)",
+        "Context window monitoring (context_monitor.py)",
+        "Fail-open design: internal errors never block workflow"
       ],
       "files": [
-        "persona_executor.py",
-        "persona_orchestrator.py",
-        "file_reference_prompts.py",
-        "ultra_minimal_prompts.py"
+        "pretooluse_hook.py",
+        "security_hook.py",
+        "file_checker.py",
+        "tdd_enforcer.py",
+        "context_monitor.py",
+        "patterns/security.json"
+      ]
+    },
+    "knowledge": {
+      "path": "wfc/scripts/knowledge",
+      "purpose": "RAG-powered per-reviewer knowledge accumulation",
+      "features": [
+        "Two-tier retrieval: embedding similarity + keyword fallback",
+        "Auto-append findings after each review",
+        "Drift detection: stale (>90d), bloated (>50), contradictory, orphaned"
+      ],
+      "files": [
+        "knowledge_writer.py",
+        "retriever.py",
+        "rag_engine.py",
+        "drift_detector.py"
       ]
     }
   },
@@ -412,9 +433,9 @@
     "project_index": "PROJECT_INDEX.json - This file"
   },
   "getting_started": {
-    "install": "pip install -e .",
-    "install_with_tokens": "pip install -e '.[tokens]'",
-    "install_dev": "pip install -e '.[dev]'",
+    "install": "uv pip install -e '.[all]'",
+    "install_with_tokens": "uv pip install -e '.[tokens]'",
+    "install_dev": "uv pip install -e '.[dev]'",
     "initialize": "wfc init",
     "create_plan": "wfc plan",
     "implement": "wfc implement",

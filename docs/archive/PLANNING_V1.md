@@ -1,6 +1,6 @@
 # PLANNING.md
 
-**Architecture, Design Principles, and Absolute Rules for WFC**
+## Architecture, Design Principles, and Absolute Rules for WFC
 
 > This document is read by Claude Code at session start to ensure consistent, high-quality development aligned with project standards.
 
@@ -9,12 +9,14 @@
 ## 🎯 Project Vision
 
 **WFC (World Fucking Class)** transforms multi-agent code review through:
+
 - **99% token reduction** via ultra-minimal prompts + file references
 - **Agent Skills compliance** for Claude Code integration
 - **56 expert personas** with automatic selection
 - **Weighted consensus** algorithm for quality decisions
 
 **Core Mission**: Provide production-grade, token-efficient, multi-agent consensus code review that is:
+
 - **Accurate** - Specialized personas with domain expertise
 - **Efficient** - 99% token reduction (150k → 1.5k tokens)
 - **Compliant** - Agent Skills specification enforced
@@ -27,6 +29,7 @@
 ### Current State (v0.1.0)
 
 WFC is a **Python package** with:
+
 - Ultra-minimal persona system (200 tokens per persona)
 - File reference architecture (send paths, not content)
 - Token budget manager (accurate tiktoken counting)
@@ -106,6 +109,7 @@ WFC Architecture v0.1.0
 ### Completed Enhancements (v0.1.0)
 
 ✅ **wfc-implement Complete** (Phases 1-3):
+
 - Memory system (cross-session learning via ReflexionMemory)
 - Confidence-first implementation (prevent wrong-direction work)
 - Workflow metrics tracking (tokens, time, success rates)
@@ -118,6 +122,7 @@ WFC Architecture v0.1.0
 ### Future State (v0.2.0+)
 
 Planned enhancements:
+
 - Dashboard (WebSocket, Mermaid visualization) - Phase 4 Optional
 - Enhanced MCP integration
 - Advanced pattern learning
@@ -128,6 +133,7 @@ Planned enhancements:
 **Values-Driven Workflow**: All plans are validated against 6 core values
 
 **6 Core Values**:
+
 1. **Innovation & Experimentation** - Embrace failure as learning, validate through critique
 2. **Accountability & Simplicity** - Complexity budgets, Say:Do ratio tracking
 3. **Teamwork & Collaboration** - Multi-agent consensus, customer advocate persona
@@ -136,6 +142,7 @@ Planned enhancements:
 6. **Trust & Autonomy** - Confidence thresholds, informed decision-making
 
 **Enforcement Mechanisms**:
+
 - **Complexity Budgets**: Pre-gate flags when tasks exceed S/M/L/XL limits
 - **Interview Questions**: "Who is the customer?", "What does success look like?"
 - **Review Personas**: Customer Advocate ensures stakeholder voice in reviews
@@ -149,10 +156,12 @@ Plan Generation → Validate (7D critique) → Revise → Code Review (loop to 8
 ```
 
 **Governance Documents**:
+
 - `wfc/references/TEAMCHARTER.md` - Human-readable values and enforcement
 - `wfc/references/teamcharter_values.json` - Machine-readable schema for agents
 
 **Why This Matters**:
+
 - Prevents over-engineering through evidence-based complexity assessment
 - Ensures customer value is central to every task
 - Builds institutional memory through values-aligned retrospectives
@@ -167,18 +176,21 @@ Plan Generation → Validate (7D critique) → Revise → Code Review (loop to 8
 **Goal**: Minimize token usage while maximizing review quality
 
 **How**:
+
 - **Ultra-minimal prompts**: 200 tokens (was 3000) - 93% reduction
 - **File references**: Send paths, not content - 95% reduction
 - **Domain guidance**: What to look for, not how to grep
 - **Progressive disclosure**: Load only what's needed
 
 **Never**:
+
 - ❌ Send full file content to personas
 - ❌ Use verbose backstories or examples
 - ❌ Include redundant information
 - ❌ Exceed token budgets without justification
 
 **Always**:
+
 - ✅ Measure token usage with benchmarks
 - ✅ Use file reference architecture
 - ✅ Build ultra-minimal prompts
@@ -189,6 +201,7 @@ Plan Generation → Validate (7D critique) → Revise → Code Review (loop to 8
 **Goal**: All WFC skills comply with Agent Skills specification
 
 **How**:
+
 - Valid frontmatter (only: name, description, license)
 - Hyphenated names (wfc-review, not wfc-review)
 - Comprehensive descriptions (triggers, use cases, anti-use cases)
@@ -197,12 +210,14 @@ Plan Generation → Validate (7D critique) → Revise → Code Review (loop to 8
 - Validated with skills-ref
 
 **Never**:
+
 - ❌ Use colons in skill names
 - ❌ Include invalid frontmatter fields
 - ❌ Skip validation before commit
 - ❌ Break XML prompt generation
 
 **Always**:
+
 - ✅ Validate with `make validate`
 - ✅ Test XML generation
 - ✅ Follow progressive disclosure
@@ -213,6 +228,7 @@ Plan Generation → Validate (7D critique) → Revise → Code Review (loop to 8
 **Goal**: Never guess - always verify
 
 **How**:
+
 - Read files before editing
 - Check existing code with Glob/Grep
 - Verify assumptions with tests
@@ -220,12 +236,14 @@ Plan Generation → Validate (7D critique) → Revise → Code Review (loop to 8
 - Validate skills with skills-ref
 
 **Never**:
+
 - ❌ Implement based on assumptions
 - ❌ Skip reading existing code
 - ❌ Guess at file locations
 - ❌ Trust outdated knowledge
 
 **Always**:
+
 - ✅ Read before writing
 - ✅ Search before creating
 - ✅ Test before claiming success
@@ -234,31 +252,37 @@ Plan Generation → Validate (7D critique) → Revise → Code Review (loop to 8
 ### 4. WFC Philosophy (ELEGANT)
 
 **E**LEGANT: Simplest solution wins
+
 - No over-engineering
 - Clear, readable code
 - Minimal abstractions
 
 **M**ULTI-TIER: Clear separation of concerns
+
 - Logic separated from presentation
 - Personas (logic) vs CLI (presentation)
 - Progressive disclosure (load on demand)
 
 **P**ARALLEL: True concurrent execution
+
 - Independent subagents
 - No context bleeding
 - Claude Code Task tool integration
 
 **P**ROGRESSIVE: Load only what's needed
+
 - SKILL.md first (< 500 lines)
 - References on demand
 - Scripts when executed
 
 **T**OKEN-AWARE: Every token counts
+
 - Measure with benchmarks
 - 99% reduction target
 - Budget enforcement
 
 **C**OMPLIANT: Agent Skills spec enforced
+
 - Validated with skills-ref
 - XML prompts work
 - No regressions
@@ -268,18 +292,21 @@ Plan Generation → Validate (7D critique) → Revise → Code Review (loop to 8
 **Goal**: Correctness and maintainability trump quick implementations
 
 **How**:
+
 - Run `make check-all` before commit
 - Fix failing tests immediately
 - Document non-obvious decisions
 - Follow pre-commit hooks
 
 **Never**:
+
 - ❌ Skip tests to save time
 - ❌ Bypass pre-commit hooks
 - ❌ Leave TODOs in production code
 - ❌ Commit broken code
 
 **Always**:
+
 - ✅ Run tests before commit
 - ✅ Format code with `make format`
 - ✅ Validate skills with `make validate`
@@ -294,6 +321,7 @@ Plan Generation → Validate (7D critique) → Revise → Code Review (loop to 8
 **Pattern**: All implementations follow strict TDD workflow
 
 **Phases**:
+
 1. **UNDERSTAND** - Read task, assess confidence (≥90%), search past errors
 2. **TEST_FIRST** - Write tests BEFORE implementation (RED phase - tests fail)
 3. **IMPLEMENT** - Write minimum code to pass tests (GREEN phase - tests pass)
@@ -304,6 +332,7 @@ Plan Generation → Validate (7D critique) → Revise → Code Review (loop to 8
 **Why**: Prevents over-engineering, ensures testability, documents behavior
 
 **Example**:
+
 ```python
 # 1. UNDERSTAND
 task = read_task("TASK-001")
@@ -346,6 +375,7 @@ route_to_review(agent_report)
 **Pattern**: Assess confidence BEFORE starting work (SuperClaude pattern)
 
 **Decision Tree**:
+
 - **≥90%**: Proceed with implementation
 - **70-89%**: Present alternatives + ask clarifying questions
 - **<70%**: STOP - Investigate more, ask user for guidance
@@ -353,6 +383,7 @@ route_to_review(agent_report)
 **Why**: Prevents 25-250x token waste from wrong-direction work
 
 **Example**:
+
 ```python
 assessment = confidence_checker.assess(task)
 
@@ -370,12 +401,14 @@ else:
 **Pattern**: Log errors and fixes for future reference
 
 **Files**:
+
 - `wfc/memory/reflexion.jsonl` - Errors and fixes
 - `wfc/memory/workflow_metrics.jsonl` - Performance metrics
 
 **Why**: Don't repeat the same mistakes across sessions
 
 **Example**:
+
 ```python
 # Log reflexion entry
 reflexion = ReflexionEntry(
@@ -399,6 +432,7 @@ if similar:
 **Pattern**: Complexity-based budgets with historical learning
 
 **Budgets**:
+
 - S (Simple): 200 tokens
 - M (Medium): 1,000 tokens
 - L (Large): 2,500 tokens
@@ -407,6 +441,7 @@ if similar:
 **Why**: Prevent over-engineering, optimize based on history
 
 **Example**:
+
 ```python
 budget = token_manager.create_budget("TASK-M", TaskComplexity.M, use_history=True)
 # If history shows M tasks average 1,500 tokens:
@@ -424,11 +459,13 @@ if budget.is_approaching_limit():
 **Why**: "Warnings aren't failures but broken code is" (user feedback)
 
 **Decision**:
+
 - **WARNING**: Linting warnings, style issues → Don't block
 - **ERROR**: Test failures, compilation errors → Block but retry (max 2)
 - **CRITICAL**: Security vulnerabilities, data loss → Immediate failure
 
 **Example**:
+
 ```python
 severity = classify_test_failure(test_result)
 
@@ -448,6 +485,7 @@ else:  # CRITICAL
 **Pattern**: Main branch always passing, worktrees preserved on failure
 
 **Workflow**:
+
 1. Rebase on main
 2. Re-run tests after rebase
 3. Merge to main
@@ -457,6 +495,7 @@ else:  # CRITICAL
 **Why**: Safety - never break main, preserve evidence for investigation
 
 **Example**:
+
 ```python
 # Merge workflow
 result = merge_engine.merge(task, branch, worktree_path)
@@ -481,6 +520,7 @@ elif result.status == MergeStatus.FAILED_TESTS:
 **Why**: Maximum safe concurrency, respect task dependencies
 
 **Example**:
+
 ```python
 # Task graph with dependencies
 tasks = [
@@ -507,12 +547,14 @@ for level in levels:
 ### Token Management
 
 **NEVER**:
+
 - Send full file content to personas
 - Use verbose persona backstories
 - Exceed token budgets without justification
 - Skip token benchmarking
 
 **ALWAYS**:
+
 - Use file reference architecture
 - Build ultra-minimal prompts (200 tokens)
 - Measure token usage with `make benchmark`
@@ -521,12 +563,14 @@ for level in levels:
 ### Agent Skills Compliance
 
 **NEVER**:
+
 - Use colons in skill names (use hyphens: `wfc-review`)
 - Include invalid frontmatter fields (`user-invocable`, `disable-model-invocation`, `argument-hint`)
 - Skip validation (`make validate`)
 - Break XML prompt generation
 
 **ALWAYS**:
+
 - Validate with skills-ref before commit
 - Use only allowed frontmatter fields (name, description, license)
 - Test XML generation
@@ -535,12 +579,14 @@ for level in levels:
 ### Code Quality
 
 **NEVER**:
+
 - Commit failing tests
 - Skip pre-commit hooks
 - Bypass linting
 - Leave debugging code
 
 **ALWAYS**:
+
 - Run `make check-all` before commit
 - Format code with `make format`
 - Fix linting errors
@@ -549,12 +595,14 @@ for level in levels:
 ### Development Workflow
 
 **NEVER**:
+
 - Use `python -m` or `pip install` directly
 - Bypass Make for common tasks
 - Commit without running tests
 - Skip documentation updates
 
 **ALWAYS**:
+
 - Use UV for Python operations (`uv run pytest`)
 - Use Make for common tasks (`make test`, `make validate`)
 - Run `make check-all` before commit
@@ -563,12 +611,14 @@ for level in levels:
 ### Git Workflow
 
 **NEVER**:
+
 - Force push to main/master
 - Commit secrets or credentials
 - Skip commit message quality
 - Bypass CI/CD checks
 
 **ALWAYS**:
+
 - Write clear commit messages
 - Include Co-Authored-By for AI assistance
 - Let CI/CD run before merge
@@ -581,6 +631,7 @@ for level in levels:
 ### Pre-commit
 
 **Must pass before commit**:
+
 1. ✅ All skills validate (skills-ref)
 2. ✅ All tests pass (pytest)
 3. ✅ Code is formatted (black + ruff)
@@ -591,6 +642,7 @@ for level in levels:
 ### CI/CD
 
 **Must pass before merge**:
+
 1. ✅ All tests pass
 2. ✅ All skills validate
 3. ✅ Code formatting correct
@@ -603,6 +655,7 @@ for level in levels:
 ### Release
 
 **Must pass before release**:
+
 1. ✅ All quality gates pass
 2. ✅ Documentation updated
 3. ✅ CHANGELOG.md updated
