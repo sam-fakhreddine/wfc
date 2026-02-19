@@ -117,3 +117,86 @@ Base directory for this skill: /Users/samfakhreddine/.claude/skills/wfc-pr-comme
 3. **Fetch** all unresolved review comments via `gh` CLI
 4. **Triage** each commen...
 
+### Prompt 18
+
+Base directory for this skill: /Users/samfakhreddine/.claude/skills/wfc-plan
+
+# WFC:PLAN - Adaptive Planning with Formal Properties
+
+Converts requirements into structured implementation plans through adaptive interviewing.
+
+## What It Does
+
+1. **Adaptive Interview** - Asks intelligent questions that adapt based on answers
+2. **Task Generation** - Breaks down requirements into structured TASKS.md with dependencies
+3. **Property Extraction** - Identifies formal properties (SAFETY, LIVENESS, INVARI...
+
+### Prompt 19
+
+why cant we do all?
+
+### Prompt 20
+
+Base directory for this skill: /Users/samfakhreddine/.claude/skills/wfc-validate
+
+# WFC:VALIDATE - Thoughtful Advisor
+
+The experienced staff engineer who asks "is this the right approach?" before we commit.
+
+## What It Does
+
+Analyzes any WFC artifact (plan, architecture, idea) across 7 dimensions:
+
+1. **Do We Even Need This?** - Real problem vs hypothetical
+2. **Is This the Simplest Approach?** - Avoid over-engineering
+3. **Is the Scope Right?** - Not too much, not too little
+4. **What Are We Tr...
+
+### Prompt 21
+
+This session is being continued from a previous conversation that ran out of context. The summary below covers the earlier portion of the conversation.
+
+Analysis:
+Let me analyze the conversation chronologically:
+
+1. **Session resumed from previous context** - The conversation resumed from a compacted summary. The previous session had been working on merge conflict resolution between main and develop branches.
+
+2. **Key context from summary**:
+   - PR #27 (main→develop sync) was still open but ...
+
+### Prompt 22
+
+so ar develop and main in sync now
+
+### Prompt 23
+
+bring main into develop just for my brain
+
+### Prompt 24
+
+yeah lets fix this properly
+
+### Prompt 25
+
+youre a good bot
+
+### Prompt 26
+
+yes
+
+### Prompt 27
+
+Base directory for this skill: /Users/samfakhreddine/.claude/skills/wfc-implement
+
+# wfc-implement - Multi-Agent Parallel Implementation Engine
+
+**Core skill #3** - Reads TASKS.md, orchestrates N agents in isolated worktrees, enforces TDD, routes through review, auto-merges, handles rollbacks.
+
+## Status
+
+🚧 **IN DEVELOPMENT**
+
+- ✅ Shared infrastructure (config, telemetry, schemas, utils)
+- ✅ Mock dependencies (wfc-plan, wfc-consensus-review)
+- ✅ Orchestrator logic (task queue, dependenc...
+

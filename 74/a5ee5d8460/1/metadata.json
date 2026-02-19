@@ -3,11 +3,15 @@
   "checkpoint_id": "74a5ee5d8460",
   "session_id": "e2e7a891-0583-49a4-abad-e5c8bd79801b",
   "strategy": "manual-commit",
-  "created_at": "2026-02-19T04:10:00.163324Z",
-  "branch": "claude/develop-to-main-1771473189",
-  "checkpoints_count": 2,
+  "created_at": "2026-02-19T04:45:41.818001Z",
+  "branch": "claude/act-integration-1771475571",
+  "checkpoints_count": 1,
   "files_touched": [
     ".development/housekeeping/keep-list.json",
+    ".development/plans/plan_act_integration_20260219/PROPERTIES.md",
+    ".development/plans/plan_act_integration_20260219/TASKS.md",
+    ".development/plans/plan_act_integration_20260219/TEST-PLAN.md",
+    ".development/plans/plan_act_integration_20260219/VALIDATE.md",
     ".github/workflows/ci.yml",
     ".github/workflows/validate.yml",
     ".pre-commit-config.yaml",
@@ -24,23 +28,23 @@
     "wfc/scripts/github/pr_threads.py"
   ],
   "agent": "Claude Code",
-  "transcript_identifier_at_start": "a5a178b7-1bd3-4196-8f33-bfb095693e18",
-  "checkpoint_transcript_start": 422,
-  "transcript_lines_at_start": 422,
+  "transcript_identifier_at_start": "1b08ae65-eb73-4997-aadc-a64cc7afa29f",
+  "checkpoint_transcript_start": 1239,
+  "transcript_lines_at_start": 1239,
   "token_usage": {
-    "input_tokens": 129,
-    "cache_creation_tokens": 442765,
-    "cache_read_tokens": 12864021,
-    "output_tokens": 9524,
-    "api_call_count": 104
+    "input_tokens": 84,
+    "cache_creation_tokens": 110057,
+    "cache_read_tokens": 6143799,
+    "output_tokens": 8315,
+    "api_call_count": 61
   },
   "initial_attribution": {
-    "calculated_at": "2026-02-19T04:10:00.003696Z",
-    "agent_lines": 354,
-    "human_added": 442,
-    "human_modified": 67,
-    "human_removed": 0,
-    "total_committed": 863,
-    "agent_percentage": 41.01969872537659
+    "calculated_at": "2026-02-19T04:45:41.571373Z",
+    "agent_lines": 60,
+    "human_added": 0,
+    "human_modified": 284,
+    "human_removed": 266,
+    "total_committed": 344,
+    "agent_percentage": 17.441860465116278
   }
 }
