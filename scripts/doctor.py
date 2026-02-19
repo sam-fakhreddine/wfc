@@ -160,7 +160,7 @@ class WFCDoctor:
                 version = getattr(module, "__version__", "installed")
                 check.pass_check(f"{version}")
             except ImportError:
-                check.fail_check(f"Install with: pip install -e '.[dev]'", severity="warning")
+                check.fail_check("Install with: pip install -e '.[dev]'", severity="warning")
 
     def _check_external_tools(self):
         """Check external tools."""
@@ -195,7 +195,7 @@ class WFCDoctor:
                 )
         else:
             check_skills_ref.fail_check(
-                f"Clone to: ~/repos/agentskills/skills-ref", severity="warning"
+                "Clone to: ~/repos/agentskills/skills-ref", severity="warning"
             )
 
     def _check_skills_installation(self):
@@ -314,7 +314,6 @@ class WFCDoctor:
 
         total = len(self.checks)
         passed = len([c for c in self.checks if c.passed])
-        failed = total - passed
         errors = len([c for c in self.checks if not c.passed and c.severity == "error"])
         warnings = len([c for c in self.checks if not c.passed and c.severity == "warning"])
 
