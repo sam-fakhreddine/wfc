@@ -701,10 +701,10 @@ if [ "$STRATEGY" = "symlink" ]; then
     echo "  • Found $SKILLS_FOUND WFC skills"
 
     # Copy reviewers (5 fixed specialist reviewers)
-    if [ -d "$SCRIPT_DIR/wfc/reviewers" ]; then
+    if [ -d "$SCRIPT_DIR/wfc/references/reviewers" ]; then
         echo "  • Installing reviewers..."
         mkdir -p "$WFC_ROOT/reviewers"
-        cp -r "$SCRIPT_DIR/wfc/reviewers"/* "$WFC_ROOT/reviewers/"
+        cp -r "$SCRIPT_DIR/wfc/references/reviewers"/* "$WFC_ROOT/reviewers/"
     fi
 
     # Copy hooks infrastructure
@@ -765,10 +765,10 @@ else
     echo "  • Found $SKILLS_FOUND WFC skills"
 
     # Copy reviewers (5 fixed specialist reviewers)
-    if [ -d "$SCRIPT_DIR/wfc/reviewers" ]; then
+    if [ -d "$SCRIPT_DIR/wfc/references/reviewers" ]; then
         echo "  • Installing reviewers..."
-        mkdir -p "$WFC_ROOT/wfc/reviewers"
-        cp -r "$SCRIPT_DIR/wfc/reviewers"/* "$WFC_ROOT/wfc/reviewers/"
+        mkdir -p "$WFC_ROOT/wfc/references/reviewers"
+        cp -r "$SCRIPT_DIR/wfc/references/reviewers"/* "$WFC_ROOT/wfc/references/reviewers/"
     fi
 
     # Copy hooks infrastructure

@@ -14,8 +14,6 @@ from pathlib import Path
 SKILL_MD_PATH = Path(__file__).resolve().parent.parent / "wfc" / "skills" / "wfc-plan" / "SKILL.md"
 
 
-
-
 class TestSkillMDValidationPipelineSection:
     """Verify SKILL.md contains all required plan validation pipeline instructions."""
 
@@ -30,7 +28,9 @@ class TestSkillMDValidationPipelineSection:
 
     def test_has_isthissmart_gate_instructions(self):
         content = SKILL_MD_PATH.read_text()
-        assert "Validate Gate" in content or "IsThisSmart Gate" in content, "SKILL.md must describe the Validate Gate step"
+        assert (
+            "Validate Gate" in content or "IsThisSmart Gate" in content
+        ), "SKILL.md must describe the Validate Gate step"
 
     def test_has_revision_mechanism(self):
         content = SKILL_MD_PATH.read_text()
@@ -100,8 +100,6 @@ class TestSkillMDValidationPipelineSection:
         assert "Should-Do" in content, "SKILL.md must describe Should-Do recommendations"
 
 
-
-
 class TestPlanHashComputation:
     """Verify SHA-256 hash computation for plan integrity tracking."""
 
@@ -135,8 +133,6 @@ class TestPlanHashComputation:
         h = hashlib.sha256(combined).hexdigest()
         assert len(h) == 64
         assert h == hashlib.sha256(tasks + properties + test_plan).hexdigest()
-
-
 
 
 AUDIT_SCHEMA_REQUIRED_FIELDS = {
@@ -227,8 +223,6 @@ class TestPlanAuditJsonSchema:
         assert (
             audit["original_hash"] != audit["final_hash"]
         ), "After revision, original and final hashes should differ"
-
-
 
 
 class TestRevisionLogFormat:

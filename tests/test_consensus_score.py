@@ -7,12 +7,12 @@ from __future__ import annotations
 
 import pytest
 
-from wfc.scripts.skills.review.consensus_score import (
+from wfc.scripts.orchestrators.review.consensus_score import (
     ConsensusScore,
     ConsensusScoreResult,
     ScoredFinding,
 )
-from wfc.scripts.skills.review.fingerprint import DeduplicatedFinding
+from wfc.scripts.orchestrators.review.fingerprint import DeduplicatedFinding
 
 
 def _make_finding(
@@ -377,9 +377,14 @@ class TestMinorityProtection:
         MPR: R_max=9.5 >= 8.5, k=1 >= 1, reviewer=security -> applies
         CS_final = max(7.22, 0.7*9.5 + 2.0) = max(7.22, 8.65) = 8.65
         """
-        findings = [_make_finding_with_reviewers(
-            severity=9.5, confidence=10.0, k=1, reviewer_ids=["security"],
-        )]
+        findings = [
+            _make_finding_with_reviewers(
+                severity=9.5,
+                confidence=10.0,
+                k=1,
+                reviewer_ids=["security"],
+            )
+        ]
         result = self.cs.calculate(findings)
         assert result.cs == pytest.approx(8.65, abs=1e-6)
         assert result.minority_protection_applied is True
@@ -392,18 +397,28 @@ class TestMinorityProtection:
         MPR: R_max=8.5 >= 8.5, k=1 >= 1, reviewer=reliability -> applies
         CS_final = max(6.46, 0.7*8.5 + 2.0) = max(6.46, 7.95) = 7.95
         """
-        findings = [_make_finding_with_reviewers(
-            severity=8.5, confidence=10.0, k=1, reviewer_ids=["reliability"],
-        )]
+        findings = [
+            _make_finding_with_reviewers(
+                severity=8.5,
+                confidence=10.0,
+                k=1,
+                reviewer_ids=["reliability"],
+            )
+        ]
         result = self.cs.calculate(findings)
         assert result.cs == pytest.approx(7.95, abs=1e-6)
         assert result.minority_protection_applied is True
 
     def test_performance_finding_does_not_trigger_mpr(self) -> None:
         """Performance finding with R_max=9.5, k=1 -> MPR does NOT trigger."""
-        findings = [_make_finding_with_reviewers(
-            severity=9.5, confidence=10.0, k=1, reviewer_ids=["performance"],
-        )]
+        findings = [
+            _make_finding_with_reviewers(
+                severity=9.5,
+                confidence=10.0,
+                k=1,
+                reviewer_ids=["performance"],
+            )
+        ]
         result = self.cs.calculate(findings)
         expected_cs = (0.5 * 9.5) + (0.3 * 9.5 * (1 / 5)) + (0.2 * 9.5)
         assert result.cs == pytest.approx(expected_cs, abs=1e-6)
@@ -411,33 +426,53 @@ class TestMinorityProtection:
 
     def test_correctness_finding_does_not_trigger_mpr(self) -> None:
         """Correctness finding with R_max=9.0, k=1 -> MPR does NOT trigger."""
-        findings = [_make_finding_with_reviewers(
-            severity=9.0, confidence=10.0, k=1, reviewer_ids=["correctness"],
-        )]
+        findings = [
+            _make_finding_with_reviewers(
+                severity=9.0,
+                confidence=10.0,
+                k=1,
+                reviewer_ids=["correctness"],
+            )
+        ]
         result = self.cs.calculate(findings)
         assert result.minority_protection_applied is False
 
     def test_maintainability_finding_does_not_trigger_mpr(self) -> None:
         """Maintainability finding with R_max=9.0, k=1 -> MPR does NOT trigger."""
-        findings = [_make_finding_with_reviewers(
-            severity=9.0, confidence=10.0, k=1, reviewer_ids=["maintainability"],
-        )]
+        findings = [
+            _make_finding_with_reviewers(
+                severity=9.0,
+                confidence=10.0,
+                k=1,
+                reviewer_ids=["maintainability"],
+            )
+        ]
         result = self.cs.calculate(findings)
         assert result.minority_protection_applied is False
 
     def test_below_threshold_does_not_trigger_mpr(self) -> None:
         """R_max=8.4 from Security -> MPR does NOT trigger (below threshold)."""
-        findings = [_make_finding_with_reviewers(
-            severity=8.4, confidence=10.0, k=1, reviewer_ids=["security"],
-        )]
+        findings = [
+            _make_finding_with_reviewers(
+                severity=8.4,
+                confidence=10.0,
+                k=1,
+                reviewer_ids=["security"],
+            )
+        ]
         result = self.cs.calculate(findings)
         assert result.minority_protection_applied is False
 
     def test_mpr_sets_flag_true(self) -> None:
         """MPR applied -> minority_protection_applied=True in result."""
-        findings = [_make_finding_with_reviewers(
-            severity=9.0, confidence=10.0, k=1, reviewer_ids=["security"],
-        )]
+        findings = [
+            _make_finding_with_reviewers(
+                severity=9.0,
+                confidence=10.0,
+                k=1,
+                reviewer_ids=["security"],
+            )
+        ]
         result = self.cs.calculate(findings)
         assert result.minority_protection_applied is True
 
@@ -452,18 +487,28 @@ class TestMinorityProtection:
         Normal CS = (0.5*8.5) + (0.3*8.5*0.2) + (0.2*8.5) = 4.25 + 0.51 + 1.7 = 6.46 (moderate)
         MPR: max(6.46, 0.7*8.5+2.0) = max(6.46, 7.95) = 7.95 (important)
         """
-        findings = [_make_finding_with_reviewers(
-            severity=8.5, confidence=10.0, k=1, reviewer_ids=["security"],
-        )]
+        findings = [
+            _make_finding_with_reviewers(
+                severity=8.5,
+                confidence=10.0,
+                k=1,
+                reviewer_ids=["security"],
+            )
+        ]
         result = self.cs.calculate(findings)
         assert result.tier == "important"
         assert result.passed is False
 
     def test_mpr_not_applied_preserves_false(self) -> None:
         """MPR not applied -> minority_protection_applied=False (existing behavior)."""
-        findings = [_make_finding_with_reviewers(
-            severity=5.0, confidence=5.0, k=1, reviewer_ids=["performance"],
-        )]
+        findings = [
+            _make_finding_with_reviewers(
+                severity=5.0,
+                confidence=5.0,
+                k=1,
+                reviewer_ids=["performance"],
+            )
+        ]
         result = self.cs.calculate(findings)
         assert result.minority_protection_applied is False
 
@@ -476,18 +521,28 @@ class TestMinorityProtection:
         MPR: R_max=9.0 >= 8.5, from security+reliability -> applies
         CS_final = max(7.38, 0.7*9.0 + 2.0) = max(7.38, 8.3) = 8.3
         """
-        findings = [_make_finding_with_reviewers(
-            severity=9.0, confidence=10.0, k=2, reviewer_ids=["security", "reliability"],
-        )]
+        findings = [
+            _make_finding_with_reviewers(
+                severity=9.0,
+                confidence=10.0,
+                k=2,
+                reviewer_ids=["security", "reliability"],
+            )
+        ]
         result = self.cs.calculate(findings)
         assert result.cs == pytest.approx(8.3, abs=1e-6)
         assert result.minority_protection_applied is True
 
     def test_summary_mentions_minority_protection(self) -> None:
         """Summary mentions minority protection when MPR is applied."""
-        findings = [_make_finding_with_reviewers(
-            severity=9.5, confidence=10.0, k=1, reviewer_ids=["security"],
-        )]
+        findings = [
+            _make_finding_with_reviewers(
+                severity=9.5,
+                confidence=10.0,
+                k=1,
+                reviewer_ids=["security"],
+            )
+        ]
         result = self.cs.calculate(findings)
         assert result.minority_protection_applied is True
         assert "minority protection" in result.summary.lower()
@@ -501,11 +556,17 @@ class TestMinorityProtection:
         """
         findings = [
             _make_finding_with_reviewers(
-                severity=5.0, confidence=5.0, k=1, reviewer_ids=["security"],
+                severity=5.0,
+                confidence=5.0,
+                k=1,
+                reviewer_ids=["security"],
                 line_start=10,
             ),
             _make_finding_with_reviewers(
-                severity=9.5, confidence=10.0, k=1, reviewer_ids=["performance"],
+                severity=9.5,
+                confidence=10.0,
+                k=1,
+                reviewer_ids=["performance"],
                 line_start=50,
             ),
         ]

@@ -14,7 +14,7 @@ from dataclasses import asdict, dataclass
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
 
-from wfc.scripts.skills.review.consensus_score import ConsensusScoreResult
+from wfc.scripts.orchestrators.review.consensus_score import ConsensusScoreResult
 
 logger = logging.getLogger(__name__)
 

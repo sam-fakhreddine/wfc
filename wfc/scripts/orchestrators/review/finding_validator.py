@@ -43,7 +43,7 @@ from enum import Enum
 from pathlib import Path
 from typing import Any
 
-from wfc.scripts.skills.review.fingerprint import DeduplicatedFinding
+from wfc.scripts.orchestrators.review.fingerprint import DeduplicatedFinding
 
 logger = logging.getLogger(__name__)
 

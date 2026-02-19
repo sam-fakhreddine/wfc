@@ -14,7 +14,7 @@ from wfc.scripts.knowledge.chunker import KnowledgeChunk, KnowledgeChunker
 from wfc.scripts.knowledge.embeddings import TfidfEmbeddings, get_embedding_provider
 from wfc.scripts.knowledge.rag_engine import RAGEngine
 
-REVIEWERS_DIR = Path(__file__).resolve().parents[1] / "wfc" / "reviewers"
+REVIEWERS_DIR = Path(__file__).resolve().parents[1] / "wfc" / "references" / "reviewers"
 
 SAMPLE_KNOWLEDGE_MD = """\
 # KNOWLEDGE.md -- Test Reviewer
@@ -55,8 +55,6 @@ EMPTY_SECTIONS_MD = """\
 ## Codebase Context
 
 """
-
-
 
 
 class TestChunker:
@@ -123,8 +121,6 @@ class TestChunker:
             assert a.chunk_id == b.chunk_id
 
 
-
-
 class TestEmbeddings:
     def test_embedding_provider_available(self) -> None:
         """At least one embedding provider loads successfully."""
@@ -164,8 +160,6 @@ class TestEmbeddings:
         provider.fit(["hello world", "foo bar baz"])
         assert provider.dimension > 0
         assert provider.dimension <= 50
-
-
 
 
 class TestRAGEngine:

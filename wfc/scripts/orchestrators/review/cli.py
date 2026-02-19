@@ -16,7 +16,11 @@ import json
 import sys
 from pathlib import Path
 
-from wfc.scripts.skills.review.orchestrator import ReviewOrchestrator, ReviewRequest, ReviewResult
+from wfc.scripts.orchestrators.review.orchestrator import (
+    ReviewOrchestrator,
+    ReviewRequest,
+    ReviewResult,
+)
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -150,7 +154,7 @@ def main(argv: list[str] | None = None) -> int:
 
     if args.emergency_bypass:
         try:
-            from wfc.scripts.skills.review.emergency_bypass import EmergencyBypass
+            from wfc.scripts.orchestrators.review.emergency_bypass import EmergencyBypass
 
             bypass = EmergencyBypass(audit_dir=output_dir)
             bypass.create_bypass(

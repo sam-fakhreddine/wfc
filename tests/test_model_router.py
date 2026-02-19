@@ -3,6 +3,7 @@ Tests for ModelRouter (TASK-013).
 
 TDD: These tests are written BEFORE the implementation.
 """
+
 from __future__ import annotations
 
 import json
@@ -10,7 +11,7 @@ from pathlib import Path
 
 import pytest
 
-from wfc.scripts.skills.review.model_router import ModelRouter
+from wfc.scripts.orchestrators.review.model_router import ModelRouter
 
 
 @pytest.fixture()
@@ -52,7 +53,6 @@ def router_with_temp_config(temp_config: Path):
     return ModelRouter(config_path=temp_config)
 
 
-
 def test_load_default_config(default_router: ModelRouter):
     """Loads real json; security reviewer should map to opus."""
     cfg = default_router._config
@@ -69,7 +69,6 @@ def test_config_missing_returns_defaults(tmp_path: Path):
     assert model != ""
 
 
-
 def test_explicit_config_security_opus(router_with_temp_config: ModelRouter):
     """Security reviewer always gets Opus in medium diff range."""
     model = router_with_temp_config.get_model("security", diff_lines=200)
@@ -82,21 +81,19 @@ def test_explicit_config_maintainability_haiku(router_with_temp_config: ModelRou
     assert model == "claude-haiku-4-5-20251001"
 
 
-
 def test_auto_routing_small_diff(router_with_temp_config: ModelRouter):
     """All reviewers get Haiku for a 20-line diff."""
     for reviewer in ["security", "correctness", "performance", "maintainability", "reliability"]:
         model = router_with_temp_config.get_model(reviewer, diff_lines=20)
-        assert model == "claude-haiku-4-5-20251001", (
-            f"Expected haiku for {reviewer} on small diff, got {model}"
-        )
+        assert (
+            model == "claude-haiku-4-5-20251001"
+        ), f"Expected haiku for {reviewer} on small diff, got {model}"
 
 
 def test_explicit_overrides_auto_small(router_with_temp_config: ModelRouter):
     """Even security gets small_model on a tiny diff (auto wins over explicit for small diffs)."""
     model = router_with_temp_config.get_model("security", diff_lines=10)
     assert model == "claude-haiku-4-5-20251001"
-
 
 
 def test_auto_routing_large_diff_security(router_with_temp_config: ModelRouter):
@@ -111,14 +108,18 @@ def test_auto_routing_large_diff_maintainability(router_with_temp_config: ModelR
     assert model == "claude-sonnet-4-5-20250929"
 
 
-
 def test_auto_routing_medium_uses_explicit(router_with_temp_config: ModelRouter):
     """200-line diff falls in medium range → explicit per-reviewer config applies."""
     # security → opus (explicit)
     assert router_with_temp_config.get_model("security", diff_lines=200) == "claude-opus-4-6"
-    assert router_with_temp_config.get_model("maintainability", diff_lines=200) == "claude-haiku-4-5-20251001"
-    assert router_with_temp_config.get_model("correctness", diff_lines=200) == "claude-sonnet-4-5-20250929"
-
+    assert (
+        router_with_temp_config.get_model("maintainability", diff_lines=200)
+        == "claude-haiku-4-5-20251001"
+    )
+    assert (
+        router_with_temp_config.get_model("correctness", diff_lines=200)
+        == "claude-sonnet-4-5-20250929"
+    )
 
 
 def test_fallback_unknown_reviewer(router_with_temp_config: ModelRouter):
@@ -127,12 +128,10 @@ def test_fallback_unknown_reviewer(router_with_temp_config: ModelRouter):
     assert model == "claude-sonnet-4-5-20250929"
 
 
-
 def test_cross_check_model_is_haiku(router_with_temp_config: ModelRouter):
     """Validation cross-check model should be Haiku (cheap + fast)."""
     model = router_with_temp_config.get_cross_check_model()
     assert model == "claude-haiku-4-5-20251001"
-
 
 
 def test_cost_estimate(router_with_temp_config: ModelRouter):

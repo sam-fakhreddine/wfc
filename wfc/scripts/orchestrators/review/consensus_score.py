@@ -20,7 +20,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-from wfc.scripts.skills.review.fingerprint import DeduplicatedFinding
+from wfc.scripts.orchestrators.review.fingerprint import DeduplicatedFinding
 
 
 @dataclass

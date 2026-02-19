@@ -4,7 +4,7 @@ Tests for WFC Build Orchestrator
 Verifies orchestration flow and safety properties
 """
 
-from wfc.scripts.skills.build.orchestrator import BuildOrchestrator
+from wfc.scripts.orchestrators.build.orchestrator import BuildOrchestrator
 
 
 class TestBuildOrchestrator:

@@ -118,7 +118,7 @@ class ReviewerLoader:
             self.reviewers_dir = Path(reviewers_dir)
         else:
             project_root = Path(__file__).resolve().parent.parent.parent.parent
-            self.reviewers_dir = project_root / "reviewers"
+            self.reviewers_dir = project_root / "references" / "reviewers"
 
     def load_all(self, diff_files: list[str] | None = None) -> list[ReviewerConfig]:
         """

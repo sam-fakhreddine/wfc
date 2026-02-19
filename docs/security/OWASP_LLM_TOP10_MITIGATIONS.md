@@ -77,7 +77,7 @@ How WFC's architecture, hook infrastructure, consensus review, and token managem
 | **JSON parse fallback** | `persona_executor.py` returns `score=5.0, passed=False` on malformed output - never trusts broken responses |
 | **Path validation** | `_validate_output_path()` blocks writes to `/etc`, `/bin`, `~/.ssh`, `~/.aws` |
 
-**Key files:** `wfc/scripts/skills/review/consensus.py`, `wfc/scripts/personas/persona_executor.py`, `wfc/scripts/skills/review/orchestrator.py`
+**Key files:** `wfc/scripts/orchestrators/review/consensus.py`, `wfc/scripts/personas/persona_executor.py`, `wfc/scripts/orchestrators/review/orchestrator.py`
 
 ---
 
@@ -134,7 +134,7 @@ How WFC's architecture, hook infrastructure, consensus review, and token managem
 | **Relevance-weighted scoring** | Domain experts carry more weight; off-topic agents carry less |
 | **Confidence threshold** | Low-confidence claims filtered by default (threshold=80) |
 
-**Key files:** `wfc/scripts/skills/review/consensus.py`, `wfc/scripts/personas/persona_executor.py`
+**Key files:** `wfc/scripts/orchestrators/review/consensus.py`, `wfc/scripts/personas/persona_executor.py`
 
 ---
 
@@ -151,7 +151,7 @@ How WFC's architecture, hook infrastructure, consensus review, and token managem
 | **Model tier selection** | Cost-aware: haiku for simple reviews, sonnet for standard, opus for complex |
 | **10K response buffer** | Reserved response space prevents unbounded generation |
 
-**Key files:** `wfc/scripts/personas/token_manager.py`, `wfc/scripts/skills/review/orchestrator.py`
+**Key files:** `wfc/scripts/personas/token_manager.py`, `wfc/scripts/orchestrators/review/orchestrator.py`
 
 ---
 

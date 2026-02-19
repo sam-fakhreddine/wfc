@@ -12,15 +12,15 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from wfc.scripts.skills.review.cli import (
+from wfc.scripts.orchestrators.review.cli import (
     build_parser,
     format_json_output,
     format_text_output,
     main,
 )
-from wfc.scripts.skills.review.consensus_score import ConsensusScoreResult, ScoredFinding
-from wfc.scripts.skills.review.fingerprint import DeduplicatedFinding
-from wfc.scripts.skills.review.orchestrator import ReviewResult
+from wfc.scripts.orchestrators.review.consensus_score import ConsensusScoreResult, ScoredFinding
+from wfc.scripts.orchestrators.review.fingerprint import DeduplicatedFinding
+from wfc.scripts.orchestrators.review.orchestrator import ReviewResult
 
 
 def _make_finding(
@@ -159,7 +159,9 @@ class TestBuildParser:
 
     def test_has_emergency_bypass_flag(self):
         parser = build_parser()
-        args = parser.parse_args(["--files", "a.py", "--emergency-bypass", "--bypass-reason", "urgent"])
+        args = parser.parse_args(
+            ["--files", "a.py", "--emergency-bypass", "--bypass-reason", "urgent"]
+        )
         assert args.emergency_bypass is True
 
     def test_has_bypass_reason(self):
@@ -331,7 +333,7 @@ class TestTextAndJsonSameInfo:
 class TestMainReturnsExitCode:
     """test_main_returns_0_on_pass and test_main_returns_1_on_fail."""
 
-    @patch("wfc.scripts.skills.review.cli.ReviewOrchestrator")
+    @patch("wfc.scripts.orchestrators.review.cli.ReviewOrchestrator")
     def test_main_returns_0_on_pass(self, mock_orch_cls):
         result = _make_review_result(passed=True)
         mock_orch = MagicMock()
@@ -344,7 +346,7 @@ class TestMainReturnsExitCode:
 
         assert exit_code == 0
 
-    @patch("wfc.scripts.skills.review.cli.ReviewOrchestrator")
+    @patch("wfc.scripts.orchestrators.review.cli.ReviewOrchestrator")
     def test_main_returns_1_on_fail(self, mock_orch_cls):
         result = _make_review_result(passed=False, cs=8.0, tier="important")
         mock_orch = MagicMock()
@@ -361,7 +363,7 @@ class TestMainReturnsExitCode:
 class TestDiffFromFile:
     """test_diff_from_file - --diff with file path reads the file."""
 
-    @patch("wfc.scripts.skills.review.cli.ReviewOrchestrator")
+    @patch("wfc.scripts.orchestrators.review.cli.ReviewOrchestrator")
     def test_diff_from_file(self, mock_orch_cls):
         result = _make_review_result(passed=True)
         mock_orch = MagicMock()
@@ -388,7 +390,7 @@ class TestEmergencyBypass:
         exit_code = main(["--files", "a.py", "--emergency-bypass"])
         assert exit_code == 1
 
-    @patch("wfc.scripts.skills.review.cli.ReviewOrchestrator")
+    @patch("wfc.scripts.orchestrators.review.cli.ReviewOrchestrator")
     def test_emergency_bypass_with_reason_works(self, mock_orch_cls):
         result = _make_review_result(passed=True)
         mock_orch = MagicMock()
@@ -397,11 +399,16 @@ class TestEmergencyBypass:
         mock_orch_cls.return_value = mock_orch
 
         with tempfile.TemporaryDirectory() as tmpdir:
-            exit_code = main([
-                "--files", "a.py",
-                "--emergency-bypass",
-                "--bypass-reason", "hotfix for prod",
-                "--output-dir", tmpdir,
-            ])
+            exit_code = main(
+                [
+                    "--files",
+                    "a.py",
+                    "--emergency-bypass",
+                    "--bypass-reason",
+                    "hotfix for prod",
+                    "--output-dir",
+                    tmpdir,
+                ]
+            )
 
         assert exit_code == 0

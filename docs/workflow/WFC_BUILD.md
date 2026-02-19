@@ -217,7 +217,7 @@ wfc-build enforces all WFC safety properties:
 ### Module Structure
 
 ```
-wfc/scripts/skills/build/
+wfc/scripts/orchestrators/build/
 ├── __init__.py              # Package exports
 ├── interview.py             # QuickInterview class
 ├── complexity_assessor.py   # ComplexityAssessor class

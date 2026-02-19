@@ -58,9 +58,7 @@ class HookInstaller:
                 enabled = hook_path.stat().st_mode & 0o111 != 0
                 try:
                     content = hook_path.read_text()
-                    wfc_managed = (
-                        "WFC-managed" in content or "wfc/wfc_tools/gitwork/hooks" in content
-                    )
+                    wfc_managed = "WFC-managed" in content or "wfc/gitwork/hooks" in content
                 except Exception:
                     pass
 

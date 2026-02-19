@@ -163,7 +163,6 @@ class TestComplexityBudgetGate:
         assert data["severity"] == "warning"
 
 
-
 class TestReflexionMemoryValuesIntegration:
     """
     Test Scenario 4: ReflexionMemory stores and retrieves values tags

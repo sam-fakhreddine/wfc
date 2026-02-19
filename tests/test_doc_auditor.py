@@ -9,7 +9,7 @@ from __future__ import annotations
 import textwrap
 from pathlib import Path
 
-from wfc.scripts.skills.review.doc_auditor import DocAuditor, DocAuditReport, DocGap
+from wfc.scripts.orchestrators.review.doc_auditor import DocAuditor, DocAuditReport, DocGap
 
 
 class TestDocGapDataclass:
@@ -42,8 +42,6 @@ class TestDocGapDataclass:
             confidence="low",
         )
         assert gap.confidence == "low"
-
-
 
 
 class TestDocAuditReportDataclass:
@@ -79,8 +77,6 @@ class TestDocAuditReportDataclass:
         r = DocAuditReport("X", [], [], "ok", tmp_path / "f.md")
         assert r.gaps == []
         assert r.missing_docstrings == []
-
-
 
 
 class TestFindDocGaps:
@@ -176,8 +172,6 @@ class TestFindDocGaps:
         assert "wfc/scripts/skills/review/fingerprint.py" in changed_files_with_gaps
 
 
-
-
 class TestFindMissingDocstrings:
     def _auditor(self) -> DocAuditor:
         return DocAuditor()
@@ -254,8 +248,6 @@ class TestFindMissingDocstrings:
         assert missing == []
 
 
-
-
 class TestAnalyzeFailOpen:
     def _auditor(self) -> DocAuditor:
         return DocAuditor()
@@ -306,8 +298,6 @@ class TestAnalyzeFailOpen:
         assert result.task_id == "TASK-Z"
 
 
-
-
 class TestOrchestratorIntegration:
     """Tests that finalize_review() returns ReviewResult with doc_audit field."""
 
@@ -315,9 +305,9 @@ class TestOrchestratorIntegration:
         """Create a ReviewOrchestrator with minimal fixtures."""
         import textwrap
 
-        from wfc.scripts.skills.review.orchestrator import ReviewOrchestrator
-        from wfc.scripts.skills.review.reviewer_engine import ReviewerEngine
-        from wfc.scripts.skills.review.reviewer_loader import REVIEWER_IDS, ReviewerLoader
+        from wfc.scripts.orchestrators.review.orchestrator import ReviewOrchestrator
+        from wfc.scripts.orchestrators.review.reviewer_engine import ReviewerEngine
+        from wfc.scripts.orchestrators.review.reviewer_loader import REVIEWER_IDS, ReviewerLoader
 
         reviewers_dir = tmp_path / "reviewers"
         reviewers_dir.mkdir()
@@ -349,23 +339,25 @@ class TestOrchestratorIntegration:
         """Build minimal passing task responses for all 5 reviewers."""
         import json
 
-        from wfc.scripts.skills.review.reviewer_loader import REVIEWER_IDS
+        from wfc.scripts.orchestrators.review.reviewer_loader import REVIEWER_IDS
 
         responses = []
         for rid in REVIEWER_IDS:
-            output = json.dumps({
-                "reviewer": rid,
-                "score": 8.0,
-                "passed": True,
-                "summary": "Looks good.",
-                "findings": [],
-            })
+            output = json.dumps(
+                {
+                    "reviewer": rid,
+                    "score": 8.0,
+                    "passed": True,
+                    "summary": "Looks good.",
+                    "findings": [],
+                }
+            )
             responses.append({"reviewer_id": rid, "output": output})
         return responses
 
     def test_finalize_review_result_has_doc_audit_field(self, tmp_path: Path):
         """ReviewResult from finalize_review has a doc_audit attribute."""
-        from wfc.scripts.skills.review.orchestrator import ReviewRequest, ReviewResult
+        from wfc.scripts.orchestrators.review.orchestrator import ReviewRequest, ReviewResult
 
         orch = self._make_orchestrator(tmp_path)
         request = ReviewRequest(
@@ -383,7 +375,7 @@ class TestOrchestratorIntegration:
 
     def test_review_report_contains_documentation_audit_section(self, tmp_path: Path):
         """REVIEW-{task_id}.md includes a '## Documentation Audit' section."""
-        from wfc.scripts.skills.review.orchestrator import ReviewRequest
+        from wfc.scripts.orchestrators.review.orchestrator import ReviewRequest
 
         orch = self._make_orchestrator(tmp_path)
         request = ReviewRequest(
@@ -403,7 +395,7 @@ class TestOrchestratorIntegration:
         """doc_audit field does not affect the passed/failed decision."""
         import unittest.mock as mock
 
-        from wfc.scripts.skills.review.orchestrator import ReviewRequest
+        from wfc.scripts.orchestrators.review.orchestrator import ReviewRequest
 
         orch = self._make_orchestrator(tmp_path)
         request = ReviewRequest(
@@ -415,7 +407,7 @@ class TestOrchestratorIntegration:
         output_dir.mkdir()
 
         with mock.patch(
-            "wfc.scripts.skills.review.orchestrator.DocAuditor.analyze",
+            "wfc.scripts.orchestrators.review.orchestrator.DocAuditor.analyze",
             side_effect=RuntimeError("doc audit exploded"),
         ):
             result = orch.finalize_review(request, self._minimal_responses(), output_dir)
@@ -424,7 +416,7 @@ class TestOrchestratorIntegration:
 
     def test_doc_audit_report_file_created(self, tmp_path: Path):
         """DOC-AUDIT-{task_id}.md file is created in output_dir."""
-        from wfc.scripts.skills.review.orchestrator import ReviewRequest
+        from wfc.scripts.orchestrators.review.orchestrator import ReviewRequest
 
         orch = self._make_orchestrator(tmp_path)
         request = ReviewRequest(

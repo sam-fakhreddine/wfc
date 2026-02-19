@@ -1,7 +1,8 @@
 """Tests for finding deduplication with exact fingerprinting."""
+
 from __future__ import annotations
 
-from wfc.scripts.skills.review.fingerprint import DeduplicatedFinding, Fingerprinter
+from wfc.scripts.orchestrators.review.fingerprint import DeduplicatedFinding, Fingerprinter
 
 
 def _finding(
@@ -29,7 +30,6 @@ def _finding(
     if remediation is not None:
         f["remediation"] = remediation
     return f
-
 
 
 class TestFingerprinting:
@@ -79,7 +79,6 @@ class TestFingerprinting:
         fp = self.fp.compute_fingerprint("f.py", 1, "bug")
         assert len(fp) == 64
         assert all(c in "0123456789abcdef" for c in fp)
-
 
 
 class TestDeduplication:
@@ -189,7 +188,6 @@ class TestDeduplication:
         assert set(flat_result[0].reviewer_ids) == set(map_result[0].reviewer_ids)
 
 
-
 class TestEdgeCases:
     """Edge case handling."""
 
@@ -226,7 +224,12 @@ class TestEdgeCases:
 
     def test_malformed_finding_missing_one_key_skipped(self):
         """A finding missing 'category' alone is skipped and does not abort dedup."""
-        malformed = {"file": "app.py", "line_start": 10, "description": "no category", "reviewer_id": "security"}
+        malformed = {
+            "file": "app.py",
+            "line_start": 10,
+            "description": "no category",
+            "reviewer_id": "security",
+        }
         good = _finding(file="b.py", category="injection", reviewer_id="reliability")
         result = self.fp.deduplicate([malformed, good])
         assert len(result) == 1
@@ -236,7 +239,11 @@ class TestEdgeCases:
         """Mix of malformed and valid findings: valid ones are returned, malformed skipped."""
         findings = [
             _finding(file="a.py", category="injection", reviewer_id="security"),
-            {"description": "malformed - missing file/line_start/category", "severity": 9.0, "reviewer_id": "reliability"},
+            {
+                "description": "malformed - missing file/line_start/category",
+                "severity": 9.0,
+                "reviewer_id": "reliability",
+            },
             _finding(file="b.py", category="resource_leak", reviewer_id="correctness"),
         ]
         result = self.fp.deduplicate(findings)
@@ -252,7 +259,6 @@ class TestEdgeCases:
         ]
         result = self.fp.deduplicate(findings)
         assert result == []
-
 
 
 class TestSorting:

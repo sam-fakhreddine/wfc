@@ -53,18 +53,24 @@ def writer(reviewers_dir: Path, global_dir: Path) -> KnowledgeWriter:
     return KnowledgeWriter(reviewers_dir=reviewers_dir, global_knowledge_dir=global_dir)
 
 
-
-
 class TestExtractLearnings:
     def test_critical_finding_produces_incidents_prevented(self, writer: KnowledgeWriter) -> None:
-        findings = [{"text": "Command injection via unsanitized input", "severity": 9.5, "confidence": 9.0}]
+        findings = [
+            {"text": "Command injection via unsanitized input", "severity": 9.5, "confidence": 9.0}
+        ]
         entries = writer.extract_learnings(findings, "security", "review-2026-02-16-PR42")
         assert len(entries) == 1
         assert entries[0].section == "incidents_prevented"
         assert "Command injection" in entries[0].text
 
     def test_high_severity_produces_patterns_found(self, writer: KnowledgeWriter) -> None:
-        findings = [{"text": "Repeated N+1 query pattern in list endpoints", "severity": 8.0, "confidence": 8.5}]
+        findings = [
+            {
+                "text": "Repeated N+1 query pattern in list endpoints",
+                "severity": 8.0,
+                "confidence": 8.5,
+            }
+        ]
         entries = writer.extract_learnings(findings, "performance", "review-2026-02-16-PR42")
         assert len(entries) == 1
         assert entries[0].section == "patterns_found"
@@ -75,7 +81,14 @@ class TestExtractLearnings:
         assert len(entries) == 0
 
     def test_dismissed_finding_produces_false_positives(self, writer: KnowledgeWriter) -> None:
-        findings = [{"text": "eval() in test fixture", "severity": 7.0, "confidence": 8.0, "dismissed": True}]
+        findings = [
+            {
+                "text": "eval() in test fixture",
+                "severity": 7.0,
+                "confidence": 8.0,
+                "dismissed": True,
+            }
+        ]
         entries = writer.extract_learnings(findings, "security", "review-2026-02-16-PR42")
         assert len(entries) == 1
         assert entries[0].section == "false_positives"
@@ -99,10 +112,10 @@ class TestExtractLearnings:
         assert entries == []
 
 
-
-
 class TestAppendEntries:
-    def test_appends_entry_to_correct_section(self, writer: KnowledgeWriter, reviewers_dir: Path) -> None:
+    def test_appends_entry_to_correct_section(
+        self, writer: KnowledgeWriter, reviewers_dir: Path
+    ) -> None:
         entry = LearningEntry(
             text="New pattern detected",
             section="patterns_found",
@@ -128,10 +141,24 @@ class TestAppendEntries:
         content = (reviewers_dir / "security" / "KNOWLEDGE.md").read_text(encoding="utf-8")
         assert "- [2026-02-16] Format check (Source: PR-100)" in content
 
-    def test_multiple_entries_same_section(self, writer: KnowledgeWriter, reviewers_dir: Path) -> None:
+    def test_multiple_entries_same_section(
+        self, writer: KnowledgeWriter, reviewers_dir: Path
+    ) -> None:
         entries = [
-            LearningEntry(text="First", section="patterns_found", reviewer_id="security", source="s1", date="2026-02-16"),
-            LearningEntry(text="Second", section="patterns_found", reviewer_id="security", source="s2", date="2026-02-16"),
+            LearningEntry(
+                text="First",
+                section="patterns_found",
+                reviewer_id="security",
+                source="s1",
+                date="2026-02-16",
+            ),
+            LearningEntry(
+                text="Second",
+                section="patterns_found",
+                reviewer_id="security",
+                source="s2",
+                date="2026-02-16",
+            ),
         ]
         result = writer.append_entries(entries)
         assert result == {"security": 2}
@@ -151,10 +178,10 @@ class TestAppendEntries:
         assert result == {"security": 0}
 
 
-
-
 class TestFileAppend:
-    def test_entry_after_existing_in_section(self, writer: KnowledgeWriter, reviewers_dir: Path) -> None:
+    def test_entry_after_existing_in_section(
+        self, writer: KnowledgeWriter, reviewers_dir: Path
+    ) -> None:
         entry = LearningEntry(
             text="Added after existing",
             section="patterns_found",
@@ -172,8 +199,16 @@ class TestFileAppend:
         assert len(entry_lines) == 2
         assert "Added after existing" in entry_lines[-1]
 
-    def test_well_formatted_after_append(self, writer: KnowledgeWriter, reviewers_dir: Path) -> None:
-        entry = LearningEntry(text="Fmt test", section="repo_rules", reviewer_id="security", source="s", date="2026-02-16")
+    def test_well_formatted_after_append(
+        self, writer: KnowledgeWriter, reviewers_dir: Path
+    ) -> None:
+        entry = LearningEntry(
+            text="Fmt test",
+            section="repo_rules",
+            reviewer_id="security",
+            source="s",
+            date="2026-02-16",
+        )
         kp = reviewers_dir / "security" / "KNOWLEDGE.md"
         writer._append_to_file(kp, entry)
         content = kp.read_text(encoding="utf-8")
@@ -206,8 +241,6 @@ class TestFileAppend:
         assert "- [2026-02-16] End of file entry (Source: test)" in content
 
 
-
-
 class TestDuplicateDetection:
     def test_exact_match(self, writer: KnowledgeWriter) -> None:
         assert writer._is_duplicate("hello world", "hello world") is True
@@ -221,8 +254,6 @@ class TestDuplicateDetection:
 
     def test_case_insensitive(self, writer: KnowledgeWriter) -> None:
         assert writer._is_duplicate("SQL Injection Detected", "sql injection detected") is True
-
-
 
 
 class TestPruning:
@@ -318,8 +349,6 @@ class TestPruning:
         assert writer.prune_old_entries("security", max_age_days=180) == 2
 
 
-
-
 class TestPromoteToGlobal:
     def test_creates_global_directory(self, writer: KnowledgeWriter, global_dir: Path) -> None:
         entry = LearningEntry(
@@ -361,7 +390,9 @@ class TestPromoteToGlobal:
         assert writer.promote_to_global(entry, "proj") is True
         assert writer.promote_to_global(entry, "proj") is False
 
-    def test_entry_format_includes_original_source(self, writer: KnowledgeWriter, global_dir: Path) -> None:
+    def test_entry_format_includes_original_source(
+        self, writer: KnowledgeWriter, global_dir: Path
+    ) -> None:
         entry = LearningEntry(
             text="Check format",
             section="incidents_prevented",

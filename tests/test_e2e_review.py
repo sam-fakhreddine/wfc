@@ -12,18 +12,18 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from wfc.scripts.skills.review.cli import (
+from wfc.scripts.orchestrators.review.cli import (
     format_json_output,
     format_text_output,
 )
-from wfc.scripts.skills.review.cli import (
+from wfc.scripts.orchestrators.review.cli import (
     main as cli_main,
 )
-from wfc.scripts.skills.review.consensus_score import ConsensusScore, ConsensusScoreResult
-from wfc.scripts.skills.review.emergency_bypass import EmergencyBypass
-from wfc.scripts.skills.review.fingerprint import Fingerprinter
-from wfc.scripts.skills.review.orchestrator import ReviewOrchestrator, ReviewRequest
-from wfc.scripts.skills.review.reviewer_engine import ReviewerEngine
+from wfc.scripts.orchestrators.review.consensus_score import ConsensusScore, ConsensusScoreResult
+from wfc.scripts.orchestrators.review.emergency_bypass import EmergencyBypass
+from wfc.scripts.orchestrators.review.fingerprint import Fingerprinter
+from wfc.scripts.orchestrators.review.orchestrator import ReviewOrchestrator, ReviewRequest
+from wfc.scripts.orchestrators.review.reviewer_engine import ReviewerEngine
 
 
 def _clean_response(reviewer_id: str, score: float = 10.0, summary: str = "No issues") -> dict:
@@ -96,8 +96,6 @@ def _make_request(task_id: str = "TEST-001") -> ReviewRequest:
         files=["app/auth.py", "app/models.py"],
         diff_content="--- a/app/auth.py\n+++ b/app/auth.py\n@@ -1 +1 @@\n-old\n+new",
     )
-
-
 
 
 class TestPipelineE2E:
@@ -313,8 +311,6 @@ class TestPipelineE2E:
         assert "CS=" in report
 
 
-
-
 class TestCLIE2E:
     """Tests for the CLI interface and output formatting."""
 
@@ -335,7 +331,7 @@ class TestCLIE2E:
         result = mock_orchestrator.finalize_review(request, responses, tmp_path)
 
         with (
-            patch("wfc.scripts.skills.review.cli.ReviewOrchestrator") as MockOrch,
+            patch("wfc.scripts.orchestrators.review.cli.ReviewOrchestrator") as MockOrch,
             patch("sys.stdout") as mock_stdout,
             patch("sys.stderr") as mock_stderr,
         ):
@@ -348,8 +344,16 @@ class TestCLIE2E:
             inst.prepare_review.return_value = []
             inst.finalize_review.return_value = result
 
-            args = ["--files", "app/auth.py", "--task-id", "TEST-001",
-                    "--output-dir", str(tmp_path), "--format", fmt]
+            args = [
+                "--files",
+                "app/auth.py",
+                "--task-id",
+                "TEST-001",
+                "--output-dir",
+                str(tmp_path),
+                "--format",
+                fmt,
+            ]
             if extra_args:
                 args.extend(extra_args)
 
@@ -426,16 +430,21 @@ class TestCLIE2E:
         responses = _all_clean_responses()
         result = mock_orchestrator.finalize_review(request, responses, tmp_path)
 
-        with patch("wfc.scripts.skills.review.cli.ReviewOrchestrator") as MockOrch:
+        with patch("wfc.scripts.orchestrators.review.cli.ReviewOrchestrator") as MockOrch:
             inst = MockOrch.return_value
             inst.prepare_review.return_value = []
             inst.finalize_review.return_value = result
 
-            exit_code = cli_main([
-                "--files", "app/auth.py",
-                "--task-id", "TEST-001",
-                "--output-dir", str(tmp_path),
-            ])
+            exit_code = cli_main(
+                [
+                    "--files",
+                    "app/auth.py",
+                    "--task-id",
+                    "TEST-001",
+                    "--output-dir",
+                    str(tmp_path),
+                ]
+            )
 
         assert exit_code == 0
 
@@ -450,35 +459,46 @@ class TestCLIE2E:
             _clean_response("maintainability"),
             _clean_response("reliability"),
         ]
-        result = mock_orchestrator.finalize_review(request, responses, tmp_path, skip_validation=True)
+        result = mock_orchestrator.finalize_review(
+            request, responses, tmp_path, skip_validation=True
+        )
         assert result.passed is False
 
-        with patch("wfc.scripts.skills.review.cli.ReviewOrchestrator") as MockOrch:
+        with patch("wfc.scripts.orchestrators.review.cli.ReviewOrchestrator") as MockOrch:
             inst = MockOrch.return_value
             inst.prepare_review.return_value = []
             inst.finalize_review.return_value = result
 
-            exit_code = cli_main([
-                "--files", "app/auth.py",
-                "--task-id", "TEST-001",
-                "--output-dir", str(tmp_path),
-            ])
+            exit_code = cli_main(
+                [
+                    "--files",
+                    "app/auth.py",
+                    "--task-id",
+                    "TEST-001",
+                    "--output-dir",
+                    str(tmp_path),
+                ]
+            )
 
         assert exit_code == 1
 
-    def test_e2e_cli_emergency_bypass_requires_reason(self, tmp_path: Path, capsys: pytest.CaptureFixture) -> None:
+    def test_e2e_cli_emergency_bypass_requires_reason(
+        self, tmp_path: Path, capsys: pytest.CaptureFixture
+    ) -> None:
         """--emergency-bypass without --bypass-reason -> error exit code 1."""
-        exit_code = cli_main([
-            "--files", "app/auth.py",
-            "--emergency-bypass",
-            "--output-dir", str(tmp_path),
-        ])
+        exit_code = cli_main(
+            [
+                "--files",
+                "app/auth.py",
+                "--emergency-bypass",
+                "--output-dir",
+                str(tmp_path),
+            ]
+        )
 
         assert exit_code == 1
         captured = capsys.readouterr()
         assert "bypass-reason" in captured.err.lower() or "bypass_reason" in captured.err.lower()
-
-
 
 
 class TestEmergencyBypassE2E:
@@ -568,8 +588,6 @@ class TestEmergencyBypassE2E:
             )
 
 
-
-
 class TestCrossComponent:
     """Tests that verify integration between multiple components."""
 
@@ -584,7 +602,7 @@ class TestCrossComponent:
         mock_retriever.config.token_budget = 500
 
         mock_loader = MagicMock()
-        from wfc.scripts.skills.review.reviewer_loader import ReviewerConfig
+        from wfc.scripts.orchestrators.review.reviewer_loader import ReviewerConfig
 
         configs = [
             ReviewerConfig(
@@ -611,7 +629,7 @@ class TestCrossComponent:
     def test_e2e_full_cycle_prepare_finalize(self, tmp_path: Path) -> None:
         """prepare_review -> mock responses -> finalize_review -> validate all fields."""
         mock_loader = MagicMock()
-        from wfc.scripts.skills.review.reviewer_loader import ReviewerConfig
+        from wfc.scripts.orchestrators.review.reviewer_loader import ReviewerConfig
 
         configs = [
             ReviewerConfig(

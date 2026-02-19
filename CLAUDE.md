@@ -506,7 +506,7 @@ make test-coverage
 ReviewOrchestrator (orchestrator.py)
   ├── prepare_review(request) → 5 task specs
   │     └── ReviewerEngine.prepare_review_tasks()
-  │           └── ReviewerLoader (loads from wfc/reviewers/{name}/PROMPT.md)
+  │           └── ReviewerLoader (loads from wfc/references/reviewers/{name}/PROMPT.md)
   │                 └── KnowledgeRetriever (optional, two-tier RAG)
   │
   └── finalize_review(request, responses, output_dir) → ReviewResult
@@ -516,7 +516,7 @@ ReviewOrchestrator (orchestrator.py)
         └── Generate REVIEW-{task_id}.md report
 ```
 
-**5 Reviewers** (`wfc/reviewers/{name}/PROMPT.md + KNOWLEDGE.md`):
+**5 Reviewers** (`wfc/references/reviewers/{name}/PROMPT.md + KNOWLEDGE.md`):
 - **Security**: OWASP/CWE taxonomy, hostile threat modeling
 - **Correctness**: Edge cases, contract verification, type safety
 - **Performance**: Big-O analysis, N+1 detection, memory profiling
@@ -629,7 +629,7 @@ All 28 WFC skills are Agent Skills compliant:
 
 ### Workspace Isolation
 - **NEVER** provision worktrees with bare `git worktree add` — route through `worktree-manager.sh`
-- **ALWAYS** invoke the controller: `bash wfc/wfc_tools/gitwork/scripts/worktree-manager.sh create <name>`
+- **ALWAYS** invoke the controller: `bash wfc/gitwork/scripts/worktree-manager.sh create <name>`
 - **WHY**: Bare git skips env bootstrap, .gitignore registration, and config propagation
 - **ALWAYS** tear down idle workspaces when done: `worktree-manager.sh cleanup`
 
@@ -658,21 +658,21 @@ All 28 WFC skills are Agent Skills compliant:
 
 ### File Locations
 
-**Review Orchestrator**: `wfc/scripts/skills/review/orchestrator.py`
-**Reviewer Engine**: `wfc/scripts/skills/review/reviewer_engine.py`
-**Consensus Score**: `wfc/scripts/skills/review/consensus_score.py`
-**Fingerprinter**: `wfc/scripts/skills/review/fingerprint.py`
-**Emergency Bypass**: `wfc/scripts/skills/review/emergency_bypass.py`
-**Review CLI**: `wfc/scripts/skills/review/cli.py`
+**Review Orchestrator**: `wfc/scripts/orchestrators/review/orchestrator.py`
+**Reviewer Engine**: `wfc/scripts/orchestrators/review/reviewer_engine.py`
+**Consensus Score**: `wfc/scripts/orchestrators/review/consensus_score.py`
+**Fingerprinter**: `wfc/scripts/orchestrators/review/fingerprint.py`
+**Emergency Bypass**: `wfc/scripts/orchestrators/review/emergency_bypass.py`
+**Review CLI**: `wfc/scripts/orchestrators/review/cli.py`
 **Knowledge System**: `wfc/scripts/knowledge/`
 **Drift Detector**: `wfc/scripts/knowledge/drift_detector.py`
-**Reviewer Prompts**: `wfc/reviewers/{security,correctness,performance,maintainability,reliability}/PROMPT.md`
+**Reviewer Prompts**: `wfc/references/reviewers/{security,correctness,performance,maintainability,reliability}/PROMPT.md`
 **Hook Infrastructure**: `wfc/scripts/hooks/pretooluse_hook.py`
 **Security Patterns**: `wfc/scripts/hooks/patterns/security.json`
 **Architecture Designer**: `wfc/skills/wfc-plan/architecture_designer.py`
 **Playground Templates**: `wfc/assets/templates/playground/`
-**Worktree Manager**: `wfc/wfc_tools/gitwork/scripts/worktree-manager.sh`
-**Worktree API**: `wfc/wfc_tools/gitwork/api/worktree.py`
+**Worktree Manager**: `wfc/gitwork/scripts/worktree-manager.sh`
+**Worktree API**: `wfc/gitwork/api/worktree.py`
 **Knowledge Codification**: `wfc/skills/wfc-compound/SKILL.md`
 **Autonomous Pipeline**: `wfc/skills/wfc-lfg/SKILL.md`
 **Plan Deepening**: `wfc/skills/wfc-deepen/SKILL.md`

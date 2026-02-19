@@ -706,7 +706,7 @@ for level in levels:
 ### Code
 
 - **wfc/scripts/personas/** - Persona system
-- **wfc/scripts/skills/** - Skill implementations
+- **wfc/scripts/orchestrators/** - Skill implementations
 - **wfc/references/** - Progressive disclosure docs
 - **~/.claude/skills/wfc-*/** - Installed skills
 

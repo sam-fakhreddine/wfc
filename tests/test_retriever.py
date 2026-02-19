@@ -90,8 +90,6 @@ def config_with_stores(tmp_path: Path) -> RetrievalConfig:
     )
 
 
-
-
 class TestDiffSignalExtraction:
     """Test extraction of signals from git diffs."""
 
@@ -158,8 +156,6 @@ class TestDiffSignalExtraction:
         retriever = KnowledgeRetriever.__new__(KnowledgeRetriever)
         signals = retriever.extract_diff_signals(diff)
         assert "readme.txt" in signals
-
-
 
 
 class TestTwoTierRetrieval:
@@ -257,9 +253,7 @@ class TestTwoTierRetrieval:
 
 - [2026-02-16] Project deploys via custom shell scripts in scripts/ directory (Source: project-audit)
 """
-        project_engine = RAGEngine(
-            store_dir=project_dir, embedding_provider=provider
-        )
+        project_engine = RAGEngine(store_dir=project_dir, embedding_provider=provider)
         knowledge_path2 = tmp_path / "KNOWLEDGE2.md"
         knowledge_path2.write_text(project_knowledge, encoding="utf-8")
         project_engine.index("security", knowledge_path2)
@@ -336,8 +330,6 @@ class TestTwoTierRetrieval:
             assert r.score >= 0.99
 
 
-
-
 class TestFormatKnowledgeSection:
     """Test formatting of retrieval results into markdown."""
 
@@ -380,8 +372,6 @@ class TestFormatKnowledgeSection:
         assert output.startswith("## Relevant Knowledge")
 
 
-
-
 class TestTokenBudget:
     """Test token budget enforcement."""
 
@@ -416,15 +406,13 @@ class TestTokenBudget:
         assert output == ""
 
 
-
-
 class TestReviewerEngineIntegration:
     """Test ReviewerEngine integration with KnowledgeRetriever."""
 
     @pytest.fixture()
     def reviewers_dir(self, tmp_path: Path) -> Path:
         """Create a temporary reviewers directory with all 5 reviewers."""
-        from wfc.scripts.skills.review.reviewer_loader import REVIEWER_IDS
+        from wfc.scripts.orchestrators.review.reviewer_loader import REVIEWER_IDS
 
         for reviewer_id in REVIEWER_IDS:
             d = tmp_path / reviewer_id
@@ -451,12 +439,10 @@ class TestReviewerEngineIntegration:
             (d / "KNOWLEDGE.md").write_text(knowledge, encoding="utf-8")
         return tmp_path
 
-    def test_engine_with_retriever_uses_rag_knowledge(
-        self, reviewers_dir: Path
-    ) -> None:
+    def test_engine_with_retriever_uses_rag_knowledge(self, reviewers_dir: Path) -> None:
         """ReviewerEngine with retriever injects RAG-based knowledge section."""
-        from wfc.scripts.skills.review.reviewer_engine import ReviewerEngine
-        from wfc.scripts.skills.review.reviewer_loader import ReviewerLoader
+        from wfc.scripts.orchestrators.review.reviewer_engine import ReviewerEngine
+        from wfc.scripts.orchestrators.review.reviewer_loader import ReviewerLoader
 
         loader = ReviewerLoader(reviewers_dir=reviewers_dir)
 
@@ -481,12 +467,10 @@ class TestReviewerEngineIntegration:
         assert "Relevant Knowledge" in security_task["prompt"]
         assert "sanitize subprocess" in security_task["prompt"]
 
-    def test_engine_without_retriever_uses_raw_knowledge(
-        self, reviewers_dir: Path
-    ) -> None:
+    def test_engine_without_retriever_uses_raw_knowledge(self, reviewers_dir: Path) -> None:
         """ReviewerEngine without retriever falls back to raw KNOWLEDGE.md."""
-        from wfc.scripts.skills.review.reviewer_engine import ReviewerEngine
-        from wfc.scripts.skills.review.reviewer_loader import ReviewerLoader
+        from wfc.scripts.orchestrators.review.reviewer_engine import ReviewerEngine
+        from wfc.scripts.orchestrators.review.reviewer_loader import ReviewerLoader
 
         loader = ReviewerLoader(reviewers_dir=reviewers_dir)
         engine = ReviewerEngine(loader=loader)
@@ -500,12 +484,10 @@ class TestReviewerEngineIntegration:
         assert "Repository Knowledge" in security_task["prompt"]
         assert "Known pattern" in security_task["prompt"]
 
-    def test_engine_retriever_backward_compatible(
-        self, reviewers_dir: Path
-    ) -> None:
+    def test_engine_retriever_backward_compatible(self, reviewers_dir: Path) -> None:
         """Existing code that creates ReviewerEngine(loader=...) still works."""
-        from wfc.scripts.skills.review.reviewer_engine import ReviewerEngine
-        from wfc.scripts.skills.review.reviewer_loader import ReviewerLoader
+        from wfc.scripts.orchestrators.review.reviewer_engine import ReviewerEngine
+        from wfc.scripts.orchestrators.review.reviewer_loader import ReviewerLoader
 
         loader = ReviewerLoader(reviewers_dir=reviewers_dir)
         engine = ReviewerEngine(loader=loader)
