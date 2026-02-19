@@ -1,6 +1,6 @@
 ---
 name: wfc-pr-comments
-description: Intelligent PR comment triage and fix system. Fetches PR review comments via gh CLI, evaluates each against architectural validity, scope, correctness, and codebase conventions, then fixes valid comments in parallel via subagents. Use when a PR has review comments to address. Triggers on "address PR comments", "fix PR feedback", "handle review comments", or explicit /wfc-pr-comments. Ideal for PRs with multiple review comments from humans or bots (Copilot, CodeRabbit, etc.). Not for creating PRs (use wfc-build) or code review (use wfc-review).
+description: Intelligent PR comment triage, conflict resolution, and fix system. Fetches PR review comments via gh CLI, resolves any merge conflicts first, evaluates each comment against architectural validity, scope, correctness, and codebase conventions, then fixes valid comments in parallel via subagents. Use when a PR has review comments or merge conflicts to address. Triggers on "address PR comments", "fix PR feedback", "handle review comments", "resolve conflicts", or explicit /wfc-pr-comments. Ideal for PRs with multiple review comments from humans or bots (Copilot, CodeRabbit, etc.). Not for creating PRs (use wfc-build) or code review (use wfc-review).
 license: MIT
 ---
 
@@ -10,11 +10,13 @@ license: MIT
 
 ## What It Does
 
-1. **Fetch** all PR comments via `gh` CLI
-2. **Triage** each comment against 5 validity criteria
-3. **Present** triage summary to user for approval
-4. **Fix** valid comments in parallel (subagents by category)
-5. **Commit & push** fixes to the PR branch
+1. **Detect** the PR and check mergeability
+2. **Resolve** merge conflicts if the PR is blocked (merge base branch, resolve intelligently)
+3. **Fetch** all unresolved review comments via `gh` CLI
+4. **Triage** each comment against 5 validity criteria
+5. **Present** triage summary to user for approval
+6. **Fix** valid comments in parallel (subagents by category)
+7. **Commit & push** fixes to the PR branch
 
 ## Usage
 
@@ -50,7 +52,86 @@ If no PR is found, tell the user and stop.
 
 Display: `PR #N: <title> (<head> -> <base>)`
 
-### Step 2: FETCH UNRESOLVED COMMENTS
+### Step 2: RESOLVE CONFLICTS (if any)
+
+Check whether the PR has merge conflicts:
+
+```bash
+gh pr view {number} --json mergeable,mergeStateStatus
+```
+
+- `mergeable: MERGEABLE` — no conflicts, skip to Step 3
+- `mergeable: CONFLICTING` — resolve before proceeding
+- `mergeable: UNKNOWN` — GitHub is still computing; wait a moment and re-check
+
+**If conflicts exist:**
+
+#### 2a. Fetch and merge the base branch
+
+```bash
+git fetch origin
+git merge origin/{baseRefName} --no-edit
+```
+
+This will leave conflicted files marked with `<<<<<<<` / `=======` / `>>>>>>>` markers. List them:
+
+```bash
+git diff --name-only --diff-filter=U
+```
+
+#### 2b. Classify each conflicted file
+
+For each conflicted file, determine ownership:
+
+| Situation | Resolution |
+|-----------|------------|
+| File only changed on our branch (PR branch) | `git checkout --ours {file}` |
+| File only changed on base branch | `git checkout --theirs {file}` |
+| File changed on both sides | Read both versions, merge manually |
+| File deleted on our branch but modified on base | `git rm {file}` |
+
+**Rule of thumb:** Our branch (the PR) is typically more current — default to `--ours` unless the base branch has unique logic that must be preserved.
+
+#### 2c. Identify unique logic from the base branch
+
+Before taking `--ours` on heavily modified files, diff the two sides to check for unique additions on the base branch that we don't have:
+
+```bash
+git show MERGE_HEAD:{file}   # their version
+git show HEAD:{file}         # our version
+```
+
+If the base branch added new functionality (e.g., new methods, new imports, instrumentation) that our branch lacks, **cherry-pick that logic manually** into our version of the file before taking `--ours`.
+
+#### 2d. Run tests to verify
+
+After resolving all conflicts:
+
+```bash
+uv run pytest tests/ -q --tb=short --ignore=tests/test_installer_docker.py
+```
+
+Fix any test failures caused by the merge (wrong import paths, missing symbols, etc.) before proceeding.
+
+#### 2e. Complete the merge commit
+
+```bash
+git add {all resolved files}
+git commit --no-edit   # uses the auto-generated merge commit message
+git push origin {headRefName}
+```
+
+Report to the user:
+
+```
+Conflicts resolved: N files
+Strategy: --ours for M files, manual merge for K files
+Unique logic cherry-picked from {baseRefName}: [list]
+Tests: X passed
+Merge commit: {sha}
+```
+
+### Step 3: FETCH UNRESOLVED COMMENTS
 
 Fetch only **unresolved** review comments from the PR. Use GraphQL — the REST API does not expose thread resolution status.
 
@@ -110,7 +191,7 @@ Extract from each unresolved thread's first comment:
 
 If there are zero unresolved comments, tell the user "All review threads are resolved" and stop.
 
-### Step 3: TRIAGE
+### Step 4: TRIAGE
 
 This is the core intelligence. For each comment, evaluate 5 dimensions and assign a verdict.
 
@@ -153,7 +234,7 @@ Is the suggested fix actually correct?
 
 **Verdict per comment:** `FIX` | `SKIP (reason)` | `RESPOND (reply only)`
 
-### Step 4: PRESENT TRIAGE TO USER
+### Step 5: PRESENT TRIAGE TO USER
 
 Display a markdown table summarizing the triage:
 
@@ -181,7 +262,7 @@ Proceed with fixes?
 
 Apply any user overrides before proceeding.
 
-### Step 5: CATEGORIZE & DELEGATE
+### Step 6: CATEGORIZE & DELEGATE
 
 Group all `FIX` comments into categories:
 
@@ -235,7 +316,7 @@ uv run black --check wfc/ && uv run ruff check .
 ```
 If black would reformat any file, run `uv run black {modified_files}` first. This prevents CI failures from formatting issues.
 
-### Step 6: COMMIT & PUSH
+### Step 7: COMMIT & PUSH
 
 After all fix subagents complete:
 
@@ -261,7 +342,7 @@ Co-Authored-By: Claude Opus 4.6 <noreply@anthropic.com>
 git push origin {headRefName}
 ```
 
-### Step 7: RESOLVE THREADS
+### Step 8: RESOLVE THREADS
 
 After pushing, reply to and resolve every addressed thread using the pr_threads helper.
 
@@ -296,7 +377,7 @@ uv run python wfc/scripts/github/pr_threads.py resolve PRRT_... \
   --message "Fixed in abc1234: removed .decode() from text=True subprocess error path"
 ```
 
-### Step 8: REPORT
+### Step 9: REPORT
 
 Display a final summary:
 
@@ -305,6 +386,11 @@ Display a final summary:
 
 **PR:** #{number} — {title}
 **Branch:** {headRefName}
+
+### Conflicts Resolved (if any)
+- N files resolved (--ours: M, manual: K)
+- Unique logic cherry-picked from {baseRefName}: [list or "none"]
+- Merge commit: {sha}
 
 ### Fixed (N comments)
 - {file}:{line} — {brief fix description}
@@ -335,7 +421,7 @@ Pushed to {headRefName}. PR updated.
 
 ### Typical Flow
 ```
-wfc-build → Push PR → Reviewers comment → /wfc-pr-comments → Push fixes → Merge
+wfc-build → Push PR → Reviewers comment → /wfc-pr-comments → Resolve conflicts (if any) → Push fixes → Merge
 ```
 
 ## Philosophy
