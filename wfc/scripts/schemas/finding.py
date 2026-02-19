@@ -16,20 +16,42 @@ REQUIRED_FINDING_KEYS = frozenset({"file", "line_start", "category", "severity",
 
 
 try:
-    from pydantic import BaseModel, ConfigDict, Field
+    from pydantic import BaseModel, ConfigDict, field_validator
 
     class FindingSchema(BaseModel):
-        """Pydantic v2 model for a single reviewer finding."""
+        """Pydantic v2 model for a single reviewer finding.
+
+        Uses field_validator with clamping (not Field(ge/le) rejection) to
+        match stdlib fallback behavior: out-of-range values are clamped, not
+        rejected, ensuring both backends produce identical output.
+        """
 
         file: str
-        line_start: int = Field(ge=0)
+        line_start: int
         category: str
-        severity: float = Field(ge=0.0, le=10.0)
+        severity: float
         description: str
         line_end: int | None = None
-        confidence: float = Field(ge=0.0, le=100.0, default=0.0)
+        confidence: float = 0.0
         remediation: str | None = None
         model_config = ConfigDict(extra="allow", coerce_numbers_to_str=False)
+
+        @field_validator("line_start")
+        @classmethod
+        def clamp_line_start(cls, v: int) -> int:
+            if v < 0:
+                raise ValueError("line_start must be >= 0")
+            return v
+
+        @field_validator("severity")
+        @classmethod
+        def clamp_severity(cls, v: float) -> float:
+            return max(0.0, min(10.0, v))
+
+        @field_validator("confidence")
+        @classmethod
+        def clamp_confidence(cls, v: float) -> float:
+            return max(0.0, min(100.0, v))
 
     _HAS_PYDANTIC = True
 

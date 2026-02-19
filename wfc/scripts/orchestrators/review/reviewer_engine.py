@@ -287,7 +287,7 @@ class ReviewerEngine:
         """
         findings: list[dict] = []
 
-        MAX_RESPONSE_LEN = 500_000
+        MAX_RESPONSE_LEN = 50_000
         if len(response) > MAX_RESPONSE_LEN:
             response = response[:MAX_RESPONSE_LEN]
 
@@ -348,7 +348,10 @@ class ReviewerEngine:
         if not findings:
             return 10.0
 
-        max_severity = max(float(f.get("severity", 1)) for f in findings)
+        try:
+            max_severity = max(float(f.get("severity", 1)) for f in findings)
+        except (ValueError, TypeError):
+            max_severity = 1.0
         return max(0.0, 10.0 - max_severity)
 
     def _extract_summary(self, findings: list[dict], response: str, reviewer_id: str) -> str:
@@ -361,7 +364,14 @@ class ReviewerEngine:
             return f"{reviewer_id.title()} review: no issues found."
 
         count = len(findings)
-        high_sev = sum(1 for f in findings if float(f.get("severity", 0)) >= 7)
+
+        def _safe_severity(f: dict) -> float:
+            try:
+                return float(f.get("severity", 0))
+            except (ValueError, TypeError):
+                return 0.0
+
+        high_sev = sum(1 for f in findings if _safe_severity(f) >= 7)
         if high_sev:
             return f"{reviewer_id.title()} review: {count} finding(s), {high_sev} high severity."
         return f"{reviewer_id.title()} review: {count} finding(s)."

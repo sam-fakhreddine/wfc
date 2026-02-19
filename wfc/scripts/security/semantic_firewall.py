@@ -199,9 +199,12 @@ def _store_hardened_embedding(
         logger.debug("Failed to store hardened embedding", exc_info=True)
 
 
+_MAX_INPUT_SIZE = 1_000_000
+
+
 def _parse_input() -> str | None:
     """Read stdin, parse JSON, extract prompt text. Returns None to fail-open."""
-    raw = sys.stdin.read()
+    raw = sys.stdin.read(_MAX_INPUT_SIZE)
     if not raw or not raw.strip():
         return None
     try:
