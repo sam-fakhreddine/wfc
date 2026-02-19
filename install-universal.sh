@@ -700,6 +700,21 @@ if [ "$STRATEGY" = "symlink" ]; then
 
     echo "  • Found $SKILLS_FOUND WFC skills"
 
+    # Prune stale skills no longer in repo
+    if [ -d "$WFC_ROOT/skills" ]; then
+        PRUNED=0
+        for installed in "$WFC_ROOT/skills"/wfc-*; do
+            [ -d "$installed" ] || continue
+            skill_name=$(basename "$installed")
+            if [ ! -d "$SCRIPT_DIR/wfc/skills/$skill_name" ]; then
+                echo "    ├─ pruning stale: $skill_name"
+                rm -rf "$installed"
+                PRUNED=$((PRUNED + 1))
+            fi
+        done
+        [ $PRUNED -gt 0 ] && echo "  • Pruned $PRUNED stale skill(s)"
+    fi
+
     # Copy reviewers (5 fixed specialist reviewers)
     if [ -d "$SCRIPT_DIR/wfc/references/reviewers" ]; then
         echo "  • Installing reviewers..."
@@ -763,6 +778,19 @@ else
     fi
 
     echo "  • Found $SKILLS_FOUND WFC skills"
+
+    # Prune stale skills no longer in repo
+    PRUNED=0
+    for installed in "$WFC_ROOT"/wfc-*; do
+        [ -d "$installed" ] || continue
+        skill_name=$(basename "$installed")
+        if [ ! -d "$SCRIPT_DIR/wfc/skills/$skill_name" ]; then
+            echo "    ├─ pruning stale: $skill_name"
+            rm -rf "$installed"
+            PRUNED=$((PRUNED + 1))
+        fi
+    done
+    [ $PRUNED -gt 0 ] && echo "  • Pruned $PRUNED stale skill(s)"
 
     # Copy reviewers (5 fixed specialist reviewers)
     if [ -d "$SCRIPT_DIR/wfc/references/reviewers" ]; then
@@ -851,6 +879,17 @@ if [ "$STRATEGY" = "symlink" ]; then
         [ -d "$WFC_ROOT/templates" ] && ln -sf "$WFC_ROOT/templates" "$target/templates"
 
         echo "  └─ Shared resources (personas, hooks, templates)"
+
+        # Prune stale wfc-* symlinks/dirs in platform dir
+        for installed in "$platform_path"/wfc-*; do
+            [ -e "$installed" ] || [ -L "$installed" ] || continue
+            skill_name=$(basename "$installed")
+            if [ ! -d "$WFC_ROOT/skills/$skill_name" ]; then
+                echo "  ├─ pruning stale: $skill_name"
+                rm -rf "$installed"
+            fi
+        done
+
         echo ""
     done
 fi
