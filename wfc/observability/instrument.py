@@ -30,12 +30,12 @@ def emit_event(
             return
 
         bus = get_bus()
-        config = _get_session_id()
+        session_id = _get_session_id()
         bus.emit(
             ObservabilityEvent(
                 event_type=event_type,
                 source=source,
-                session_id=config,
+                session_id=session_id,
                 payload=payload or {},
                 level=level,
             )
