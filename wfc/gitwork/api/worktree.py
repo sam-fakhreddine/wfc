@@ -140,6 +140,8 @@ class WorktreeOperations:
                 ["git", "worktree", "add", str(worktree_path), "-b", branch_name, base_ref],
                 check=True,
                 capture_output=True,
+                text=True,
+                timeout=60,
             )
             return {
                 "success": True,
@@ -151,7 +153,7 @@ class WorktreeOperations:
         except subprocess.CalledProcessError as e:
             return {
                 "success": False,
-                "message": f"Failed to create worktree: {e.stderr.decode() if e.stderr else str(e)}",
+                "message": f"Failed to create worktree: {e.stderr if e.stderr else str(e)}",
             }
 
     def delete(self, task_id: str, force: bool = False) -> Dict:

@@ -177,7 +177,7 @@ jobs:
         python3 << 'EOF'
         from pathlib import Path
 
-        reviewers_dir = Path('wfc/reviewers')
+        reviewers_dir = Path('wfc/references/reviewers')
         expected = ['security', 'correctness', 'performance', 'maintainability', 'reliability']
         errors = []
 
