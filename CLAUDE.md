@@ -18,11 +18,13 @@ wfc validate                     # Validate skills (after install)
 ```
 
 **NEVER use**:
+
 - ❌ `python -m pytest`
 - ❌ `pip install`
 - ❌ `python script.py`
 
 **ALWAYS use**:
+
 - ✅ `uv run pytest`
 - ✅ `uv pip install`
 - ✅ `uv run python`
@@ -44,11 +46,13 @@ wfc validate                     # Validate skills (after install)
 ```
 
 **Use when:**
+
 - Feature scope is clear, you trust the pipeline
 - Want zero human intervention between steps
 - Well-understood codebase patterns
 
 **What happens:**
+
 1. Plan (quick interview → TASKS.md)
 2. Deepen (parallel research enrichment)
 3. Implement (parallel agents, TDD, quality gates)
@@ -65,11 +69,13 @@ wfc validate                     # Validate skills (after install)
 ```
 
 **Use when:**
+
 - Single feature, clear scope
 - Want to iterate quickly
 - "Just build this and ship"
 
 **What happens:**
+
 1. Quick adaptive interview (3-5 questions)
 2. Orchestrator assesses complexity (1 agent or N agents)
 3. Subagent(s) implement via TDD in isolated worktrees
@@ -104,6 +110,7 @@ wfc validate                     # Validate skills (after install)
 ```
 
 **Use when:**
+
 - Large feature with multiple tasks
 - Complex dependencies
 - Need formal properties (SAFETY, LIVENESS, etc.)
@@ -127,6 +134,7 @@ wfc validate                     # Validate skills (after install)
 ```
 
 **What happens:**
+
 - Plan generator creates initial TASKS.md with values alignment
 - Validate skill performs 7-dimension critique (complexity, risk, customer value, etc.)
 - Plan is revised based on feedback
@@ -134,16 +142,19 @@ wfc validate                     # Validate skills (after install)
 - Final plan includes immutable audit trail showing validation was performed
 
 **Governance Documents:**
+
 - `wfc/references/TEAMCHARTER.md` - Values governance (human-readable)
 - `wfc/references/teamcharter_values.json` - Machine-readable values schema
 
 **Bypass (not recommended):**
+
 ```bash
 # Skip validation (creates audit trail entry)
 wfc plan --skip-validation
 ```
 
 **Why TEAMCHARTER validation:**
+
 - Prevents over-engineering through complexity budgets
 - Ensures customer focus through dedicated interview questions
 - Tracks Say:Do ratio (estimated vs. actual complexity)
@@ -175,6 +186,7 @@ WFC autonomous loop:
 ```
 
 **What Changed (v3.0):**
+
 - NEW: `develop` is the default integration branch (not `main`)
 - NEW: Agent branches use `claude/` prefix and auto-merge to develop
 - NEW: Release candidates (rc/vX.Y.Z) soak 24h before promotion to main
@@ -184,6 +196,7 @@ WFC autonomous loop:
 - UNCHANGED: User controls final releases (via RC promotion)
 
 **Why Autonomous Branching:**
+
 - Agents ship features autonomously (weekends, nights)
 - develop absorbs risk (main stays stable)
 - RC soak period catches integration issues
@@ -257,6 +270,7 @@ git push origin main  # Push when ready
 ### Absolute Rules
 
 **DO:**
+
 - ✅ Use `/wfc-build` for single features
 - ✅ Use `/wfc-plan` + `/wfc-implement` for complex work
 - ✅ Use `/wfc-review` for all code reviews
@@ -265,6 +279,7 @@ git push origin main  # Push when ready
 - ✅ Use legacy mode if needed: config `"merge.strategy": "direct"`
 
 **DON'T:**
+
 - ❌ Implement features manually without WFC
 - ❌ Skip quality checks
 - ❌ Skip consensus review
@@ -407,6 +422,13 @@ make benchmark        # Token usage benchmarks (proves 99% reduction)
 # Pre-commit
 make pre-commit       # Install pre-commit hooks
 
+# act (Local CI)
+make act-pull         # First-run: pull Docker images (~5-15 min)
+make act-fast         # Run lint + validate locally (~2 min)
+make act-check        # Run full CI gate locally (~10 min)
+make pr               # Create PR (runs act-fast gate first)
+WFC_SKIP_ACT=1 make pr  # Emergency bypass
+
 # WFC Commands
 wfc implement                    # Multi-agent parallel implementation
 wfc implement --dry-run          # Show plan without executing
@@ -440,17 +462,20 @@ wfc implement --dry-run
 ### Features
 
 **Core** (Phase 1):
+
 - ✅ **Universal Quality Gate** (Trunk.io - 100+ tools for all languages)
 - ✅ **Complete TDD Workflow** (RED-GREEN-REFACTOR)
 - ✅ **Merge Engine with Rollback** (main always passing)
 - ✅ **CLI Interface** (dry-run, agent control, progress display)
 
 **Intelligence** (Phase 2):
+
 - ✅ **Confidence Checking** (≥90% proceed, 70-89% ask, <70% stop)
 - ✅ **Memory System** (ReflexionMemory - learn from past mistakes)
 - ✅ **Token Budgets** (S=200, M=1K, L=2.5K, XL=5K tokens)
 
 **Polish** (Phase 3):
+
 - ✅ **PROJECT_INDEX.json** (machine-readable structure)
 - ✅ **make doctor** (comprehensive health checks)
 - ✅ **Integration Tests** (>80% coverage, 22 tests)
@@ -463,6 +488,7 @@ Orchestrator → N Agents (parallel) → Quality Gate → Review → Merge → I
 ```
 
 **Workflow per Agent**:
+
 1. UNDERSTAND (confidence check, memory search)
 2. TEST_FIRST (RED phase - tests fail)
 3. IMPLEMENT (GREEN phase - tests pass)
@@ -517,6 +543,7 @@ ReviewOrchestrator (orchestrator.py)
 ```
 
 **5 Reviewers** (`wfc/references/reviewers/{name}/PROMPT.md + KNOWLEDGE.md`):
+
 - **Security**: OWASP/CWE taxonomy, hostile threat modeling
 - **Correctness**: Edge cases, contract verification, type safety
 - **Performance**: Big-O analysis, N+1 detection, memory profiling
@@ -528,6 +555,7 @@ ReviewOrchestrator (orchestrator.py)
 **Formula**: `CS = (0.5 * R_bar) + (0.3 * R_bar * (k/n)) + (0.2 * R_max)`
 
 Where:
+
 - `R_i = (severity * confidence) / 10` per deduplicated finding
 - `R_bar` = mean of all R_i values
 - `k` = total reviewer agreements (sum of duplicate counts)
@@ -535,6 +563,7 @@ Where:
 - `R_max` = max(R_i) across all findings
 
 **Decision Tiers**:
+
 - Informational: CS < 4.0 (log only)
 - Moderate: 4.0 ≤ CS < 7.0 (inline comment)
 - Important: 7.0 ≤ CS < 9.0 (block merge)
@@ -560,6 +589,7 @@ Where:
 ### Agent Skills Compliance
 
 All 28 WFC skills are Agent Skills compliant:
+
 - Valid frontmatter (only: name, description, license)
 - Hyphenated names (wfc-review, not wfc-review)
 - Comprehensive descriptions
@@ -571,32 +601,38 @@ All 28 WFC skills are Agent Skills compliant:
 ## 🚀 WFC Philosophy
 
 ### ELEGANT
+
 - Simplest solution wins
 - No over-engineering
 - Clear, readable code
 
 ### MULTI-TIER
+
 - Logic separated from presentation
 - Reviewers (logic) vs CLI (presentation)
 - Progressive disclosure (load on demand)
 
 ### PARALLEL
+
 - True concurrent execution
 - Independent subagents
 - No context bleeding
 
 ### PROGRESSIVE
+
 - Load only what's needed when needed
 - SKILL.md first (< 500 lines)
 - References on demand
 - Scripts when executed
 
 ### TOKEN-AWARE
+
 - Every token counts
 - Measure with benchmarks
 - 99% reduction target
 
 ### COMPLIANT
+
 - Agent Skills spec enforced
 - Validated with skills-ref
 - XML prompts work
@@ -604,36 +640,42 @@ All 28 WFC skills are Agent Skills compliant:
 ## ⚠️ Absolute Rules
 
 ### Token Management
+
 - **NEVER** send full file content to reviewers
 - **ALWAYS** use file reference architecture
 - **ALWAYS** measure token usage with `make benchmark`
 - **NEVER** exceed token budgets without justification
 
 ### Agent Skills Compliance
+
 - **NEVER** use colons in skill names (use hyphens: `wfc-review` not `wfc-review`)
 - **NEVER** include invalid frontmatter fields (`user-invocable`, `disable-model-invocation`, `argument-hint`)
 - **ALWAYS** validate with skills-ref before commit (`make validate`)
 - **ALWAYS** generate valid XML prompts
 
 ### Code Quality
+
 - **ALWAYS** run `make format` before commit
 - **ALWAYS** run `make check-all` before PR
 - **NEVER** commit failing tests
 - **NEVER** skip pre-commit hooks
 
 ### Development Workflow
+
 - **ALWAYS** use UV for Python operations
 - **ALWAYS** use Make for common tasks
 - **NEVER** bypass pre-commit validation
 - **ALWAYS** update tests when changing code
 
 ### Workspace Isolation
+
 - **NEVER** provision worktrees with bare `git worktree add` — route through `worktree-manager.sh`
 - **ALWAYS** invoke the controller: `bash wfc/gitwork/scripts/worktree-manager.sh create <name>`
 - **WHY**: Bare git skips env bootstrap, .gitignore registration, and config propagation
 - **ALWAYS** tear down idle workspaces when done: `worktree-manager.sh cleanup`
 
 ### Knowledge Capture
+
 - **ALWAYS** invoke `/wfc-compound` after resolving non-trivial problems
 - **NEVER** let solutions that took >15 minutes go undocumented
 - **ALWAYS** show before/after code and prevention guidance
@@ -641,16 +683,19 @@ All 28 WFC skills are Agent Skills compliant:
 ## 📊 Key Metrics
 
 **Review System**:
+
 - 5 fixed specialist reviewers (replaced 56-persona selection system)
 - CS algorithm with mathematical consensus scoring
 - Minority Protection Rule for security/reliability findings
 - Finding deduplication via SHA-256 fingerprinting
 
 **Test Coverage**:
+
 - Full suite: 830+ tests passing
 - Review system: ~200 tests (engine, fingerprint, CS, CLI, E2E, benchmark)
 
 **Agent Skills Compliance**:
+
 - Valid skills: 28/28 (100%)
 - XML generation: 28/28 (100%)
 
