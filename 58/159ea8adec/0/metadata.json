@@ -1,0 +1,32 @@
+{
+  "cli_version": "0.4.2",
+  "checkpoint_id": "58159ea8adec",
+  "session_id": "ce9b467e-c414-447f-b9f2-fe807be3000f",
+  "strategy": "manual-commit",
+  "created_at": "2026-02-19T02:58:44.752808Z",
+  "branch": "claude/integrate-develop-to-main",
+  "checkpoints_count": 1,
+  "files_touched": [
+    ".pre-commit-config.yaml"
+  ],
+  "agent": "Claude Code",
+  "transcript_identifier_at_start": "6e35362b-f93a-4993-b9e8-6a832705ea53",
+  "checkpoint_transcript_start": 2183,
+  "transcript_lines_at_start": 2183,
+  "token_usage": {
+    "input_tokens": 19,
+    "cache_creation_tokens": 7359,
+    "cache_read_tokens": 2505719,
+    "output_tokens": 230,
+    "api_call_count": 17
+  },
+  "initial_attribution": {
+    "calculated_at": "2026-02-19T02:58:44.568648Z",
+    "agent_lines": 0,
+    "human_added": 199,
+    "human_modified": 2,
+    "human_removed": 0,
+    "total_committed": 199,
+    "agent_percentage": 0
+  }
+}
