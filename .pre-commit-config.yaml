@@ -23,7 +23,7 @@ repos:
 
   # Secret detection (CRITICAL for security)
   - repo: https://github.com/Yelp/detect-secrets
-    rev: v1.4.0
+    rev: v1.5.0
     hooks:
       - id: detect-secrets
         args:
@@ -80,5 +80,5 @@ repos:
         args: ['--severity=warning']
 
 # Global settings
-default_stages: [commit]
+default_stages: [pre-commit]
 fail_fast: false
