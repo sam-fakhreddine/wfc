@@ -46,6 +46,7 @@ WFC is a **production-mature** multi-agent orchestration framework with 830+ tes
 2. Compares against a curated attack signature vector DB
 3. Routes high-similarity prompts to a deterministic Refusal Agent
 4. Preserves WFC's existing tool-level hook as a **second defense layer**
+5. **Scope: ALL prompts** (not just external/untrusted — defense-in-depth on every input)
 
 **Files to create**:
 - `wfc/scripts/security/semantic_firewall.py`
@@ -195,11 +196,13 @@ These are well-structured but **not validated at construction time**. A `Dedupli
 
 **WFC Strength to Preserve**: The ELEGANT philosophy of using dataclasses over Pydantic is deliberate — it avoids Pydantic's import overhead, keeps the dependency graph minimal, and matches WFC's "simplest solution wins" ethos. For **internal** data structures, this is appropriate.
 
-**Recommendation**: **SELECTIVE IMPLEMENTATION**:
-1. Add Pydantic models **only at LLM output boundaries** (where subagent responses are parsed into findings)
+**Recommendation**: **SELECTIVE IMPLEMENTATION** *(Pydantic v2 — per human lead decision)*:
+1. Add Pydantic **v2** models **only at LLM output boundaries** (where subagent responses are parsed into findings)
 2. Keep internal dataclasses as-is (they're correct and performant)
-3. Create `wfc/scripts/schemas/` with Pydantic models for: `ReviewerOutput`, `AgentOutput`, `DocumentationPayload`
+3. Create `wfc/scripts/schemas/` with Pydantic v2 models for: `ReviewerOutput`, `AgentOutput`, `DocumentationPayload`
 4. Wire validation into `ReviewerEngine.parse_results()` and `ExecutionEngine._collect_report()`
+
+**Why Pydantic v2**: Actively maintained (v1 is EOL), 5-50x faster validation via Rust core, better error messages, native `model_validate_json()` for direct JSON parsing without intermediate dicts, and `TypeAdapter` for validating non-model types. The performance gains align with WFC's token-aware philosophy.
 
 ---
 
@@ -240,7 +243,7 @@ These are well-structured but **not validated at construction time**. A `Dedupli
 | **A2A** | Decentralized peer-to-peer via agent.json cards | Not implemented — centralized orchestrator model |
 | **Discovery** | `/.well-known/agent.json` | No agent discovery mechanism |
 
-**Verdict**: `NOT APPLICABLE` (with caveat)
+**Verdict**: `NOT APPLICABLE` → `SHELVED` *(per human lead decision)*
 
 **Justification**:
 WFC is designed as a **Claude Code extension**, not a standalone multi-agent platform. Its agents are spawned via Claude Code's `Task` tool, which handles:
@@ -253,12 +256,7 @@ Adding MCP/A2A would introduce:
 - Network overhead (HTTP/SSE vs. in-process Task tool)
 - Complexity without clear benefit for the current use case
 
-**However**: If WFC ever needs to coordinate with **external agent frameworks** (e.g., LangGraph, CrewAI, AutoGen), MCP/A2A becomes necessary.
-
-**Recommendation**: **DEFER** to a future phase. If needed:
-1. Create `wfc/protocols/agent_card.py` with A2A `agent.json` template (Module A)
-2. Expose WFC's review orchestrator as an MCP server
-3. Keep internal communication via Task tool (performance-critical path)
+**Recommendation**: **SHELVED**. Not deferred — removed from the roadmap entirely. The Claude Code Task tool is the right abstraction for WFC's execution model. If cross-framework coordination ever becomes a real requirement, it can be re-evaluated as a standalone initiative outside this migration.
 
 ---
 
@@ -285,7 +283,13 @@ Adding MCP/A2A would introduce:
 2. For **untrusted code execution** (if WFC ever evaluates user-submitted code), add WASM sandbox:
    - `wfc/scripts/security/wasm_sandbox.py` wrapping Pyodide
    - Zero network access, ephemeral filesystem, timeout enforcement
-3. **Immediately**: Change DevContainer firewall default from `audit` to `enforce`. Audit mode provides no security.
+3. **Firewall: Hybrid Audit + Enforced Blocklist** *(revised per human lead decision)*:
+   - Keep `FIREWALL_MODE=audit` as default — continue info-gathering to understand traffic patterns
+   - **Add a low-reputation blocklist that IS enforced** even in audit mode (publicly available threat feeds)
+   - This "meet in the middle" approach gathers intelligence while blocking known-bad destinations
+   - Blocklist sources: public IP/domain reputation lists (e.g., abuse.ch, Spamhaus DROP, Emerging Threats)
+   - Implementation: `init-firewall.sh` gets a `--blocklist` flag that loads and enforces regardless of mode
+   - Graduate to full `enforce` mode once audit data informs a confident allowlist
 
 ---
 
@@ -431,8 +435,8 @@ The white paper's approach of **LLM-generating compensating transactions** intro
 | 3.1 | State | Context Compression | Token budgets + monitoring, no compression | `PARTIAL` | **Enhance** |
 | 3.2 | State | Strict Schema Adherence | Dataclasses (no runtime validation) | `PARTIAL` | **Selective Pydantic at LLM boundaries** |
 | 3.3 | State | Self-Correction Loops | No schema-driven re-prompting | `NOT IMPLEMENTED` | **Implement** (AgenticValidator) |
-| 4.1 | Protocol | MCP / A2A Standardization | Claude Code Task tool (native) | `NOT APPLICABLE` | **Defer** |
-| 4.2 | Protocol | WASM Execution Sandbox | Git worktrees (not security boundary) | `NOT IMPLEMENTED` | **Selective** (only if untrusted code) |
+| 4.1 | Protocol | MCP / A2A Standardization | Claude Code Task tool (native) | `SHELVED` | **Shelved** (removed from roadmap) |
+| 4.2 | Protocol | WASM Execution Sandbox + Firewall | Git worktrees + audit firewall | `NOT IMPLEMENTED` | **Selective** (WASM if untrusted code; hybrid firewall: audit + enforced blocklist) |
 | 5.1 | Exception | TRAIL Taxonomy | Severity only, no type classification | `PARTIAL` | **Enhance** (add FailureType) |
 | 5.2 | Exception | SagaLLM Rollbacks | Deterministic git revert (no LLM risk) | `WFC SUPERIOR` | **Retain** |
 | 5.3 | Exception | Rollback Validation | Git revert = mathematically correct | `WFC SUPERIOR` | **Retain** |
@@ -457,8 +461,10 @@ The white paper's approach of **LLM-generating compensating transactions** intro
 7. **Observation Masking** (3.1) — Useful for long sessions, but WFC's session model is short-lived.
 
 ### Tier 4: Deferred (Phase 4)
-8. **MCP/A2A** (4.1) — Only if cross-framework coordination is needed.
-9. **WASM Sandbox** (4.2) — Only if WFC evaluates untrusted code.
+8. **WASM Sandbox** (4.2) — Only if WFC evaluates untrusted code.
+9. **Firewall Blocklist** (4.2) — Add enforced low-reputation blocklist to DevContainer firewall (can run in parallel with Tiers 1-3).
+
+*Shelved (removed from roadmap)*: MCP/A2A (4.1) — no action planned.
 
 ---
 
@@ -481,13 +487,28 @@ These implementations **must not be modified** during migration:
 
 ---
 
-## Gate: Human Lead Approval Required
+## Decision Log — Human Lead Approvals
 
-**This deviation map requires human lead approval before proceeding to Phase 1 implementation.**
+**Gate**: PASSED (2026-02-19)
+**Approver**: Human Lead (sam-fakhreddine)
 
-Questions for the human lead:
-1. Do you agree with the 4 "WFC SUPERIOR" verdicts? Any you want re-evaluated?
-2. Is the Tier 1-4 priority ordering correct for your roadmap?
-3. Should Phase 4.1 (MCP/A2A) be deferred or pulled into an earlier tier?
-4. Is there a preference for Pydantic v1 or v2 for the schema boundary work?
-5. Should the semantic firewall operate on ALL prompts or only on external/untrusted inputs?
+| # | Question | Decision | Impact |
+|---|----------|----------|--------|
+| 1 | WFC SUPERIOR verdicts (4 total) | **Approved as-is** | No re-evaluation needed. All 4 retained: Hierarchical Supervisor (2.1), Fan-Out Arbitration (2.2), SagaLLM Rollbacks (5.2), Rollback Validation (5.3) |
+| 2 | Tier 1-4 priority ordering | **Confirmed** | Implementation proceeds Tier 1 → 2 → 3 → 4 as documented |
+| 3 | MCP/A2A (Phase 4.1) timing | **Shelved entirely** | Removed from roadmap. Not deferred — shelved. Revisit only if cross-framework coordination becomes a concrete requirement |
+| 4 | Pydantic version for schema work | **Pydantic v2** | "Choose the best, most maintainable." v2 selected: actively maintained, Rust-core perf, v1 is EOL |
+| 5 | Semantic firewall scope | **ALL prompts** | "All prompts, why not." Defense-in-depth — no trusted/untrusted distinction |
+
+### Additional Decision: Firewall Strategy (Section 4.2)
+
+**Original recommendation**: Switch DevContainer firewall from audit to enforce immediately.
+
+**Revised decision**: **Hybrid approach** — keep audit mode for info-gathering, but add an enforced low-reputation blocklist sourced from public threat feeds. "Meet in the middle." Graduate to full enforce mode once audit data informs a confident allowlist.
+
+---
+
+## Status
+
+**Phase 0 (Deviation Map)**: COMPLETE — approved by human lead.
+**Next**: Proceed to Tier 1 implementation (Semantic Firewall + AgenticValidator + Refusal Agent).
