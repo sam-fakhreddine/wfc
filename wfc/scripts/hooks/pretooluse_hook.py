@@ -77,8 +77,23 @@ def _run() -> None:
     security_result = security_check(input_data)
 
     if security_result.get("decision") == "block":
-        print(security_result["reason"], file=sys.stderr)
-        sys.exit(2)
+        try:
+            from wfc.scripts.security.refusal_agent import emit_and_exit
+
+            reason = security_result["reason"]
+            pattern_id = ""
+            if "[" in reason and "]" in reason:
+                pattern_id = reason[reason.index("[") + 1 : reason.index("]")]
+            emit_and_exit(
+                reason=reason,
+                pattern_id=pattern_id,
+                tool_name=input_data.get("tool_name", ""),
+            )
+        except SystemExit:
+            raise
+        except Exception:
+            print(security_result["reason"], file=sys.stderr)
+            sys.exit(2)
 
     if security_result.get("decision") == "warn":
         print(security_result["reason"], file=sys.stderr)
@@ -86,8 +101,23 @@ def _run() -> None:
     rule_result = rule_evaluate(input_data)
 
     if rule_result.get("decision") == "block":
-        print(rule_result["reason"], file=sys.stderr)
-        sys.exit(2)
+        try:
+            from wfc.scripts.security.refusal_agent import emit_and_exit
+
+            reason = rule_result["reason"]
+            pattern_id = ""
+            if "[" in reason and "]" in reason:
+                pattern_id = reason[reason.index("[") + 1 : reason.index("]")]
+            emit_and_exit(
+                reason=reason,
+                pattern_id=pattern_id,
+                tool_name=input_data.get("tool_name", ""),
+            )
+        except SystemExit:
+            raise
+        except Exception:
+            print(rule_result["reason"], file=sys.stderr)
+            sys.exit(2)
 
     if rule_result.get("decision") == "warn":
         print(rule_result["reason"], file=sys.stderr)

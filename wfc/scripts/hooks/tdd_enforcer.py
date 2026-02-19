@@ -50,6 +50,16 @@ EXCLUDED_EXTENSIONS = [
     ".gif",
 ]
 
+EXCLUDED_FILENAMES = [
+    "__init__.py",
+    "__main__.py",
+    "conftest.py",
+    "setup.py",
+    "manage.py",
+    "wsgi.py",
+    "asgi.py",
+]
+
 EXCLUDED_DIRS = [
     "/cdk/",
     "/infra/",
@@ -75,13 +85,16 @@ EXCLUDED_DIRS = [
 
 
 def should_skip(file_path: str) -> bool:
-    """Check if file should be skipped based on extension or directory."""
+    """Check if file should be skipped based on extension, filename, or directory."""
     path = Path(file_path)
 
     if path.suffix in EXCLUDED_EXTENSIONS:
         return True
 
     if path.name in EXCLUDED_EXTENSIONS:
+        return True
+
+    if path.name in EXCLUDED_FILENAMES:
         return True
 
     for excluded_dir in EXCLUDED_DIRS:

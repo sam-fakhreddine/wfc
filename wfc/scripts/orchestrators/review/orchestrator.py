@@ -154,6 +154,47 @@ class ReviewOrchestrator:
         _start_time = time.monotonic()
         reviewer_results = self.engine.parse_results(task_responses)
 
+        try:
+            from .agentic_validator import AgenticValidator
+
+            _av = AgenticValidator()
+            retry_specs: list[dict] = []
+            for result in reviewer_results:
+                response_text = ""
+                for tr in task_responses:
+                    if tr.get("reviewer_id") == result.reviewer_id:
+                        response_text = tr.get("response", "")
+                        break
+                spec = _av.check(
+                    reviewer_id=result.reviewer_id,
+                    response=response_text,
+                    findings=result.findings,
+                )
+                if spec is not None:
+                    retry_specs.append(spec)
+                    try:
+                        from wfc.observability.instrument import emit_event, incr
+
+                        incr("review.parse_failure", labels={"reviewer": result.reviewer_id})
+                        emit_event(
+                            "review.parse_failure_detected",
+                            source="orchestrator",
+                            payload={
+                                "task_id": request.task_id,
+                                "reviewer_id": result.reviewer_id,
+                                "retry_reason": spec["retry_reason"],
+                            },
+                            level="warning",
+                        )
+                    except Exception:
+                        pass
+            self._last_retry_specs = retry_specs
+        except Exception:
+            logger.exception(
+                "AgenticValidator integration failed -- continuing with original results (fail-open)"
+            )
+            self._last_retry_specs = []
+
         all_findings: list[dict] = []
         for result in reviewer_results:
             for finding in result.findings:

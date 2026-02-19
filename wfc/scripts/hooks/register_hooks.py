@@ -17,6 +17,17 @@ import sys
 from pathlib import Path
 
 WFC_HOOKS = {
+    "UserPromptSubmit": [
+        {
+            "matcher": "",
+            "hooks": [
+                {
+                    "type": "command",
+                    "command": "python ~/.wfc/scripts/security/semantic_firewall.py",
+                },
+            ],
+        },
+    ],
     "PostToolUse": [
         {
             "matcher": "Write|Edit",
@@ -43,14 +54,14 @@ WFC_HOOKS = {
     ],
 }
 
-WFC_MARKER = "~/.wfc/scripts/hooks/"
+WFC_MARKERS = ("~/.wfc/scripts/hooks/", "wfc/scripts/security/", "~/.wfc/scripts/security/")
 
 
 def is_wfc_hook_entry(entry: dict) -> bool:
     """Check if a hook entry belongs to WFC."""
     for hook in entry.get("hooks", []):
         cmd = hook.get("command", "")
-        if WFC_MARKER in cmd:
+        if any(marker in cmd for marker in WFC_MARKERS):
             return True
     return False
 
