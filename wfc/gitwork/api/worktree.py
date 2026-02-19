@@ -20,7 +20,6 @@ from .validators import has_path_traversal, is_flag_injection
 _SCRIPT_DIR = Path(__file__).parent.parent / "scripts"
 _MANAGER_SCRIPT = _SCRIPT_DIR / "worktree-manager.sh"
 
-# Unsafe git ref characters: ~, ^, :, whitespace, null/control bytes
 _UNSAFE_REF_RE = re.compile(r"[~^:\s\x00-\x1f]")
 
 
@@ -95,7 +94,6 @@ class WorktreeOperations:
         root = _repo_root()
         if root:
             return Path(root) / self.worktree_dir / f"wfc-{task_id}"
-        # Fall back to relative path if git command fails
         return Path(self.worktree_dir) / f"wfc-{task_id}"
 
     def create(self, task_id: str, base_ref: str = "develop") -> Dict:
@@ -140,6 +138,8 @@ class WorktreeOperations:
                 ["git", "worktree", "add", str(worktree_path), "-b", branch_name, base_ref],
                 check=True,
                 capture_output=True,
+                text=True,
+                timeout=60,
             )
             return {
                 "success": True,
@@ -151,7 +151,7 @@ class WorktreeOperations:
         except subprocess.CalledProcessError as e:
             return {
                 "success": False,
-                "message": f"Failed to create worktree: {e.stderr.decode() if e.stderr else str(e)}",
+                "message": f"Failed to create worktree: {e.stderr if e.stderr else str(e)}",
             }
 
     def delete(self, task_id: str, force: bool = False) -> Dict:

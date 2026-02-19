@@ -166,7 +166,7 @@ def reset() -> None:
             try:
                 _provider_registry.close_all()
             except Exception:
-                pass
+                logger.debug("Failed to close provider registry during reset", exc_info=True)
         if _registry:
             _registry.reset()
         _initialized = False
@@ -179,4 +179,4 @@ def reset() -> None:
 
             _reset_session_cache()
         except Exception:
-            pass
+            logger.debug("Failed to reset session cache", exc_info=True)
