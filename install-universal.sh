@@ -641,14 +641,14 @@ tagline=$WFC_TAGLINE
 EOF
     echo -e "${GREEN}✓${RESET} Saved branding mode: ${WFC_MODE}"
 else
-    echo -e "${GREEN}✓${RESET} Preserving existing branding: ${WFC_MODE:-nsfw} (settings kept)"
+    echo -e "${GREEN}✓${RESET} Branding preserved: ${WFC_MODE:-nsfw}"
 fi
 
 # Copy WFC files
 if [ "${KEEP_SETTINGS:-false}" = true ]; then
     echo -e "${BOLD}📦 Refreshing WFC application files...${RESET}"
-    echo -e "   ${YELLOW}Preserving:${RESET} branding config, user rules"
-    echo -e "   ${GREEN}Refreshing:${RESET} skills, hooks, reviewers, templates"
+    echo -e "   ${YELLOW}Preserving:${RESET} .wfc_branding, .wfc/rules/ (user customizations)"
+    echo -e "   ${GREEN}Refreshing:${RESET} wfc/skills/, wfc/scripts/hooks/, references/reviewers/, templates/"
 else
     echo -e "${BOLD}📦 Installing WFC...${RESET}"
 fi
@@ -668,30 +668,30 @@ if [ "$STRATEGY" = "symlink" ]; then
     SKILLS_FOUND=0
 
     if [ -d "$SCRIPT_DIR/wfc/skills" ]; then
-        if [ "$REMOTE_INSTALL" = false ]; then
-            # Local install: symlink to repo so branch changes are immediately reflected
-            for skill_dir in "$SCRIPT_DIR/wfc/skills"/wfc-*; do
-                if [ -d "$skill_dir" ]; then
-                    skill_name=$(basename "$skill_dir")
-                    [ -L "$WFC_ROOT/skills/$skill_name" ] && rm "$WFC_ROOT/skills/$skill_name"
-                    [ -d "$WFC_ROOT/skills/$skill_name" ] && rm -rf "$WFC_ROOT/skills/$skill_name"
-                    ln -sf "$skill_dir" "$WFC_ROOT/skills/$skill_name"
-                    SKILLS_FOUND=$((SKILLS_FOUND + 1))
+        for skill_dir in "$SCRIPT_DIR/wfc/skills"/wfc-*; do
+            if [ -d "$skill_dir" ]; then
+                skill_name=$(basename "$skill_dir")
+                target="$WFC_ROOT/skills/$skill_name"
+                # Remove existing copy or symlink before (re)installing
+                [ -L "$target" ] && rm "$target"
+                [ -d "$target" ] && rm -rf "$target"
+                if [ "$REMOTE_INSTALL" = false ]; then
+                    ln -sf "$skill_dir" "$target"
+                else
+                    cp -r "$skill_dir" "$WFC_ROOT/skills/"
                 fi
-            done
+                SKILLS_FOUND=$((SKILLS_FOUND + 1))
+            fi
+        done
+        if [ "$SKILLS_FOUND" -eq 0 ]; then
+            echo -e "  ${YELLOW}⚠${RESET}  No skills found in $SCRIPT_DIR/wfc/skills"
+        elif [ "$REMOTE_INSTALL" = false ]; then
             echo -e "  ${GREEN}✓${RESET} $SKILLS_FOUND skills linked from repo (auto-updates on branch change)"
         else
-            # Remote install: copy since there is no persistent repo to symlink to
-            for skill_dir in "$SCRIPT_DIR/wfc/skills"/wfc-*; do
-                if [ -d "$skill_dir" ]; then
-                    skill_name=$(basename "$skill_dir")
-                    [ -d "$WFC_ROOT/skills/$skill_name" ] && rm -rf "$WFC_ROOT/skills/$skill_name"
-                    cp -r "$skill_dir" "$WFC_ROOT/skills/"
-                    SKILLS_FOUND=$((SKILLS_FOUND + 1))
-                fi
-            done
             echo -e "  ${GREEN}✓${RESET} $SKILLS_FOUND skills installed"
         fi
+    else
+        echo -e "  ${YELLOW}⚠${RESET}  Skills source not found: $SCRIPT_DIR/wfc/skills"
     fi
 
     # Reviewers, hooks, templates
