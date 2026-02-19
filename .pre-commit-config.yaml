@@ -80,5 +80,5 @@ repos:
         args: ['--severity=warning']
 
 # Global settings
-default_stages: [commit]
+default_stages: [pre-commit]
 fail_fast: false

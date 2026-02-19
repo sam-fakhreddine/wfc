@@ -22,7 +22,7 @@ class FileProvider(ObservabilityProvider):
 
     def __init__(self, output_dir: str, session_id: str):
         self._output_dir = Path(output_dir)
-        safe_id = session_id.replace("/", "_").replace("\\", "_").replace("..", "_")
+        safe_id = Path(session_id.replace("\\", "/")).name or "default"
         self._session_id = safe_id
         self._buffer: list[str] = []
         self._file_path: Path | None = None

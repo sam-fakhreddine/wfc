@@ -112,10 +112,12 @@ RESET="\033[0m"
 # REMOTE INSTALL: If running via curl pipe, clone repo first
 # ============================================================================
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" 2>/dev/null )" 2>/dev/null && pwd 2>/dev/null )" || SCRIPT_DIR=""
+# shellcheck disable=SC2034
 REMOTE_INSTALL=false
 
 if [ -z "$SCRIPT_DIR" ] || [ ! -d "$SCRIPT_DIR/wfc/skills" ]; then
     # Running via curl pipe or from outside repo - clone to /tmp
+    # shellcheck disable=SC2034
     REMOTE_INSTALL=true
     CLONE_DIR="/tmp/wfc-install-$$"
 
@@ -132,7 +134,7 @@ if [ -z "$SCRIPT_DIR" ] || [ ! -d "$SCRIPT_DIR/wfc/skills" ]; then
     echo ""
 
     # Cleanup on exit
-    trap "rm -rf $CLONE_DIR" EXIT
+    trap 'rm -rf $CLONE_DIR' EXIT
 fi
 
 # ============================================================================
@@ -280,6 +282,7 @@ if [ "$EXISTING_INSTALL" = true ]; then
 fi
 
 # Branding mode selection (skip if keeping settings and not changing)
+# shellcheck disable=SC2034  # WFC_ACRONYM reserved for external use by sourcing scripts
 if [ "${KEEP_SETTINGS:-false}" = false ] || [ "${CHANGE_BRANDING:-false}" = true ]; then
     if [ "$CI_MODE" = true ]; then
         # CI mode: default to NSFW
@@ -466,6 +469,7 @@ echo -e "${BOLD}🎯 Where should WFC be installed?${RESET}"
 echo ""
 
 MENU_OPTIONS=()
+# shellcheck disable=SC2034
 MENU_PLATFORMS=()
 MENU_INDEX=1
 
@@ -492,6 +496,7 @@ done
 if [ $DETECTED_COUNT -gt 1 ]; then
     echo -e "${MENU_INDEX}) ${BOLD}All detected platforms${RESET} (recommended - uses symlinks)"
     MENU_OPTIONS[$MENU_INDEX]="all"
+    # shellcheck disable=SC2034
     ALL_OPTION_INDEX=$MENU_INDEX
     MENU_INDEX=$((MENU_INDEX + 1))
 fi
@@ -703,8 +708,8 @@ if [ "$STRATEGY" = "symlink" ]; then
     # Copy reviewers (5 fixed specialist reviewers)
     if [ -d "$SCRIPT_DIR/wfc/references/reviewers" ]; then
         echo "  • Installing reviewers..."
-        mkdir -p "$WFC_ROOT/reviewers"
-        cp -r "$SCRIPT_DIR/wfc/references/reviewers"/* "$WFC_ROOT/reviewers/"
+        mkdir -p "$WFC_ROOT/references/reviewers"
+        cp -r "$SCRIPT_DIR/wfc/references/reviewers"/* "$WFC_ROOT/references/reviewers/"
     fi
 
     # Copy hooks infrastructure

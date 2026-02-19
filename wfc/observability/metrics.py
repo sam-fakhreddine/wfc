@@ -7,7 +7,6 @@ Thread-safe. Zero dependencies. Lazy-initialized.
 
 from __future__ import annotations
 
-import statistics
 import threading
 import time
 from contextlib import contextmanager
@@ -139,12 +138,12 @@ class Histogram:
             return 0
 
         values.sort()
-        if len(values) < 2:
-            return values[0]
-
-        quantiles = statistics.quantiles(values, n=100)
-        idx = max(0, min(int(p) - 1, len(quantiles) - 1))
-        return quantiles[idx]
+        # Index-based linear interpolation — works for any sample size >= 1
+        k = (len(values) - 1) * p / 100.0
+        lo = int(k)
+        hi = min(lo + 1, len(values) - 1)
+        frac = k - lo
+        return values[lo] * (1.0 - frac) + values[hi] * frac
 
     def _snapshot(self) -> dict[str, Any]:
         with self._lock:
@@ -163,12 +162,17 @@ class Histogram:
             }
 
         all_values.sort()
-        if len(all_values) < 2:
-            p50 = p99 = all_values[0]
-        else:
-            quantiles = statistics.quantiles(all_values, n=100)
-            p50 = quantiles[max(0, min(49, len(quantiles) - 1))]
-            p99 = quantiles[max(0, min(98, len(quantiles) - 1))]
+        # Index-based linear interpolation — works for any sample size >= 1
+
+        def _percentile(vals: list, p: float) -> float:
+            k = (len(vals) - 1) * p / 100.0
+            lo = int(k)
+            hi = min(lo + 1, len(vals) - 1)
+            frac = k - lo
+            return vals[lo] * (1.0 - frac) + vals[hi] * frac
+
+        p50 = _percentile(all_values, 50)
+        p99 = _percentile(all_values, 99)
 
         return {
             "name": self.name,

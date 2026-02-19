@@ -3,8 +3,6 @@
 from __future__ import annotations
 
 import json
-import os
-from pathlib import Path
 from unittest.mock import MagicMock
 
 import pytest
@@ -164,6 +162,27 @@ class TestFileProvider:
 
         files = list(tmp_path.glob("*.jsonl"))
         assert len(files) == 1
+
+    @pytest.mark.parametrize(
+        "malicious_id",
+        [
+            "../etc/passwd",
+            "..\\windows\\system32",
+            ".../bypass",
+            "../../secret",
+            "valid/../../escape",
+        ],
+    )
+    def test_session_id_path_traversal_safe(self, tmp_path, malicious_id):
+        p = FileProvider(output_dir=str(tmp_path), session_id=malicious_id)
+        p.on_event(_make_event())
+        p.flush()
+
+        files = list(tmp_path.glob("*.jsonl"))
+        assert len(files) == 1
+        assert files[0].resolve().parent == tmp_path.resolve()
+        assert "/" not in p._session_id
+        assert "\\" not in p._session_id
 
 
 class TestConsoleProvider:

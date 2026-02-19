@@ -1,10 +1,10 @@
 name: CI
 
-on:
+"on":
   push:
-    branches: [ main, develop, 'rc/**' ]
+    branches: [main, develop, 'rc/**']
   pull_request:
-    branches: [ main, develop ]
+    branches: [main, develop]
 
 jobs:
   lint:
@@ -98,7 +98,7 @@ jobs:
           python3 << 'EOF'
           from pathlib import Path
 
-          reviewers_dir = Path('wfc/reviewers')
+          reviewers_dir = Path('wfc/references/reviewers')
           expected = ['security', 'correctness', 'performance', 'maintainability', 'reliability']
           errors = []
 
@@ -183,7 +183,7 @@ jobs:
           fi
 
           # Check 5 fixed reviewers installed
-          reviewer_count=$(ls -d ~/.claude/skills/wfc/reviewers/*/PROMPT.md 2>/dev/null | wc -l)
+          reviewer_count=$(ls -d ~/.claude/skills/wfc/references/reviewers/*/PROMPT.md 2>/dev/null | wc -l)
           if [ "$reviewer_count" -lt 5 ]; then
               echo "❌ Reviewer library incomplete (found $reviewer_count, expected 5)"
               exit 1
