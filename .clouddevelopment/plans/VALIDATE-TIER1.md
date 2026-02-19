@@ -165,43 +165,119 @@ With an overall score of 7.4/10, this is a solid approach that can move forward 
 
 ---
 
+## Resolved Questions (Post-Deliberation)
+
+### RESOLVED: Firewall Integration Point — `UserPromptSubmit` Hook
+
+A 5-person architectural team (Security Architect, Performance Engineer, Systems Integrator, Product Owner, DevOps) deliberated on 4 options. **Consensus: `UserPromptSubmit` hook (Option B).**
+
+| Option | Votes | Result |
+|--------|-------|--------|
+| A: Extend PreToolUse | 2 support, 1 oppose, 2 neutral | Rejected — fires after reasoning, misses non-tool turns |
+| **B: UserPromptSubmit** | **2 strong support, 2 support, 1 neutral** | **Winner** |
+| C: PostToolUse output | 1 support, 2 oppose, 2 neutral | Rejected — cannot block, tool already ran |
+| D: Hybrid (B+C) | 1 strong support, 2 oppose, 2 neutral | Deferred — C goes to Tier 2 |
+
+**Why UserPromptSubmit wins:**
+- Only option satisfying "ALL prompts" — fires before Claude reasons on input
+- Pre-reasoning check aligned with white paper mandate
+- Already exists as a first-class Claude Code hook type (no new hook types)
+- Runs once per user turn (not N times per tool call) — best amortized latency
+- stdin protocol sends `{"prompt": "..."}` — exactly what the firewall needs
+
+**Implementation:**
+```json
+// .claude/settings.json — add under existing UserPromptSubmit
+{
+  "type": "command",
+  "command": "uv run python wfc/scripts/security/semantic_firewall.py"
+}
+```
+
+**Dissent (recorded):** Security Architect advocates adding PostToolUse output scanning in Tier 2 for indirect injection (poisoned file contents, web responses). UserPromptSubmit only checks direct user input. This limitation must be documented.
+
+---
+
+### RESOLVED: Latency Budget — 500ms is extremely generous
+
+Benchmark analysis confirms **12-21ms typical latency** (500ms budget = 96% headroom):
+
+| Scenario | Latency | Budget Used |
+|----------|---------|-------------|
+| SentenceTransformer warm + ChromaDB (200 sigs) | 12-21ms | 4% |
+| TF-IDF fallback + JSON (200 sigs) | 4.5-12ms | 2% |
+| Cold start (first call, one-time) | 282-556ms | 56-111% |
+
+**Decision:** Keep 500ms budget as-is. Cold start is one-time and tolerable. Warm operation is 25x under budget. Add lazy model loading in `SessionStart` to eliminate cold start from user-facing latency.
+
+---
+
+### RESOLVED: Signature Freshness — Hybrid update strategy with open-source feeds
+
+**Primary seed datasets (both MIT licensed):**
+
+| Dataset | Size | Source | Why |
+|---------|------|--------|-----|
+| HackAPrompt | 600K+ prompts | EMNLP 2023, 2,800 human participants | Highest diversity, 29 technique taxonomy |
+| JailbreakBench | 200 verified attacks | NeurIPS 2024, used by Google Gemini | Highest signal-to-noise, actively maintained |
+
+**Supplementary:** verazuo/jailbreak_llms (1,405 in-the-wild, MIT), deepset/prompt-injections (662 curated, Apache 2.0), Vigil YARA rules.
+
+**Update strategy — 3-tier hybrid:**
+1. **Versioned with releases** (primary): Ship curated `signatures/` directory (~2,000-5,000 pre-embedded sigs)
+2. **`wfc signatures update`** (optional CLI): Pull latest JailbreakBench artifacts + HuggingFace delta
+3. **Self-hardening** (runtime): Store embeddings of detected injections; future similar prompts caught automatically
+
+**Freshness policy:** Emit warning event if signature DB is >30 days old. `manifest.json` tracks version, source URLs, last-updated timestamp.
+
+**Critical finding:** All production firewalls are regularly bypassed (emoji smuggling: 100% bypass rate). WFC must layer regex + embedding + self-hardening. Document that the firewall is probabilistic, not a guarantee.
+
+---
+
 ## Adjustments Required Before Proceeding
 
 ### Must Address (blocking)
 
-1. **Clarify firewall integration point**: Is this a new pre-prompt hook type, or does it piggyback on PreToolUse? The "all prompts" scope needs a concrete entry point in the hook chain. This is an architectural decision, not an implementation detail.
+1. ~~**Clarify firewall integration point**~~ **RESOLVED**: `UserPromptSubmit` hook. See above.
 
-2. **Make Pydantic optional**: WFC's zero-hard-dependency property is a feature, not an accident. `pydantic>=2.0` should be an optional extra, with graceful degradation to dict-based validation if not installed.
+2. **Pydantic deferred to Tier 2**: Per human lead decision. Tier 1 uses dict-based validation with retry. WFC's zero-hard-dependency property preserved.
 
 ### Should Address (recommended)
 
 3. **Phase Tier 1 into 1a/1b/1c**: AgenticValidator first (quick, high yield), Refusal Agent second (small), Semantic Firewall last (research-heavy). Each sub-phase is independently shippable.
 
-4. **Define signature freshness policy**: How are attack signatures updated? Ship with releases? External feed? Manual curation? Without this, the vector DB becomes stale.
+4. ~~**Define signature freshness policy**~~ **RESOLVED**: Hybrid 3-tier strategy. See above.
 
-5. **Set latency budget**: Firewall must not add >500ms to any operation. Fail-open on timeout. Benchmark before and after.
+5. ~~**Set latency budget**~~ **RESOLVED**: 500ms confirmed adequate (12-21ms typical). See above.
 
 ### Nice to Have (non-blocking)
 
-6. **Start with TF-IDF for firewall**: Use the existing `TfidfEmbeddings` fallback instead of requiring sentence-transformers. Simpler, faster, zero extra dependencies. Upgrade to neural embeddings when data shows it's needed.
+6. ~~**Start with TF-IDF for firewall**~~ **REJECTED by human lead**: "Let's be WFC." Full embedding-based approach.
 
-7. **Document limitations**: The semantic firewall is probabilistic. It reduces risk, it doesn't eliminate it. Set expectations in the architecture docs.
+7. **Document limitations**: The semantic firewall is probabilistic. PostToolUse output scanning (indirect injection) is a Tier 2 commitment. Set expectations in architecture docs.
 
 ---
 
 ## Final Recommendation
 
-**PROCEED WITH ADJUSTMENTS.** The Tier 1 plan addresses real gaps (security filtering, parse failure recovery, structured refusals) with a sound architectural approach (fail-open, selective Pydantic, RAG reuse). The two blocking adjustments — clarifying the firewall integration point and making Pydantic optional — are straightforward to resolve. The phasing recommendation (1a/1b/1c) reduces risk and delivers value incrementally.
+**PROCEED.** All three blocking questions are now resolved:
+1. Integration point: `UserPromptSubmit` hook (pre-reasoning, no new hook types)
+2. Latency: 500ms budget confirmed adequate (12-21ms typical operation)
+3. Signatures: MIT-licensed open-source feeds (HackAPrompt + JailbreakBench) with hybrid update strategy
+
+Remaining adjustments (Tier 1a/1b/1c phasing, limitation documentation) are non-blocking and can be addressed during implementation planning.
+
+**Revised Verdict: PROCEED (7.8/10)** — blocking concerns resolved, scope clarified.
 
 **Score Breakdown:**
 
-| Dimension | Score | Weight |
-|-----------|-------|--------|
-| Need | 9.0 | High |
-| Simplicity | 6.5 | High |
-| Scope | 7.5 | Medium |
-| Trade-offs | 7.0 | Medium |
-| Failure Modes | 7.0 | Medium |
-| Blast Radius | 8.5 | High |
-| Timeline | 7.0 | Medium |
-| **Weighted Average** | **7.4** | |
+| Dimension | Original | Revised | Change |
+|-----------|----------|---------|--------|
+| Need | 9.0 | 9.0 | — |
+| Simplicity | 6.5 | 7.0 | Pydantic deferred, integration point clear |
+| Scope | 7.5 | 8.0 | UserPromptSubmit = no new hook types |
+| Trade-offs | 7.0 | 7.5 | Zero-dep preserved, latency confirmed |
+| Failure Modes | 7.0 | 8.0 | Signature freshness strategy defined |
+| Blast Radius | 8.5 | 8.5 | — |
+| Timeline | 7.0 | 7.5 | Phasing reduces risk |
+| **Weighted Average** | **7.4** | **7.8** | **+0.4** |
