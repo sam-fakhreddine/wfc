@@ -68,3 +68,6 @@ entire/checkpoints/
 # DevContainer local files
 .devcontainer/.env
 .devcontainer/docker-compose.override.yml
+
+# act local secrets (prevent accidental commit)
+.act.secrets
