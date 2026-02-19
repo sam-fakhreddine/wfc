@@ -4,7 +4,6 @@ WFC Build - Build Orchestrator
 SOLID: Single Responsibility - Orchestrates interview → assessment → implementation flow
 """
 
-from pathlib import Path
 from typing import Optional, Dict, Any
 from datetime import datetime
 from .interview import QuickInterview, InterviewResult
@@ -29,11 +28,7 @@ class BuildOrchestrator:
         self.interviewer = QuickInterview()
         self.assessor = ComplexityAssessor()
 
-    def execute(
-        self,
-        feature_hint: Optional[str] = None,
-        dry_run: bool = False
-    ) -> Dict[str, Any]:
+    def execute(self, feature_hint: Optional[str] = None, dry_run: bool = False) -> Dict[str, Any]:
         """
         Execute wfc-build workflow.
 
@@ -51,7 +46,7 @@ class BuildOrchestrator:
             "complexity": None,
             "implementation": None,
             "metrics": {},
-            "errors": []
+            "errors": [],
         }
 
         try:
@@ -115,9 +110,7 @@ class BuildOrchestrator:
         return result
 
     def _execute_implementation(
-        self,
-        interview: InterviewResult,
-        complexity: ComplexityRating
+        self, interview: InterviewResult, complexity: ComplexityRating
     ) -> Dict[str, Any]:
         """
         Execute implementation via wfc-implement infrastructure.
@@ -140,5 +133,5 @@ class BuildOrchestrator:
             "would_run_quality_gates": True,
             "would_run_consensus_review": True,
             "would_merge_to_main": True,
-            "would_push_to_remote": False  # PROP-003
+            "would_push_to_remote": False,  # PROP-003
         }

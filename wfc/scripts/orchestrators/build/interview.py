@@ -6,12 +6,12 @@ SOLID: Single Responsibility - Only handles interview logic
 
 from dataclasses import dataclass
 from typing import List, Optional
-import re
 
 
 @dataclass
 class InterviewResult:
     """Structured interview output"""
+
     feature_description: str
     scope: str  # "single_file", "few_files", "many_files", "new_module"
     files_affected: List[str]
@@ -80,7 +80,7 @@ class QuickInterview:
             loc_estimate=loc_estimate,
             new_dependencies=new_dependencies,
             constraints=constraints,
-            test_context=test_context
+            test_context=test_context,
         )
 
     def _ask_feature_description(self) -> str:

@@ -5,13 +5,13 @@ SOLID: Single Responsibility - Only assesses complexity from interview results
 """
 
 from dataclasses import dataclass
-from typing import Tuple
 from .interview import InterviewResult
 
 
 @dataclass
 class ComplexityRating:
     """Complexity assessment output"""
+
     rating: str  # "S", "M", "L", "XL"
     agent_count: int  # 1-5
     rationale: str
@@ -57,7 +57,7 @@ class ComplexityAssessor:
             return ComplexityRating(
                 rating="S",
                 agent_count=1,
-                rationale=f"Simple change: {file_count} file(s), ~{loc} LOC, no new dependencies"
+                rationale=f"Simple change: {file_count} file(s), ~{loc} LOC, no new dependencies",
             )
 
         # M: 2-3 files, 50-200 LOC, minor deps, localized impact
@@ -66,7 +66,7 @@ class ComplexityAssessor:
             return ComplexityRating(
                 rating="M",
                 agent_count=agent_count,
-                rationale=f"Medium change: {file_count} file(s), ~{loc} LOC, localized impact"
+                rationale=f"Medium change: {file_count} file(s), ~{loc} LOC, localized impact",
             )
 
         # L: 4-10 files, 200-500 LOC, new module, moderate impact
@@ -75,8 +75,8 @@ class ComplexityAssessor:
             return ComplexityRating(
                 rating="L",
                 agent_count=agent_count,
-                rationale=f"Large change: {file_count} file(s), ~{loc} LOC" +
-                         (", new module" if is_new_module else "")
+                rationale=f"Large change: {file_count} file(s), ~{loc} LOC"
+                + (", new module" if is_new_module else ""),
             )
 
         # XL: >10 files, >500 LOC, major refactor → recommend wfc-plan
@@ -84,5 +84,5 @@ class ComplexityAssessor:
             rating="XL",
             agent_count=5,
             rationale=f"Extra large change: {file_count} file(s), ~{loc} LOC - too complex for quick build",
-            recommendation="This complexity requires formal planning. Use /wfc-plan + /wfc-implement instead."
+            recommendation="This complexity requires formal planning. Use /wfc-plan + /wfc-implement instead.",
         )
