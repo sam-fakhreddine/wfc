@@ -130,9 +130,6 @@ def _matches_event(rule: dict, tool_name: str) -> bool:
     return False
 
 
-_bypass_count = 0
-
-
 def evaluate(
     input_data: dict,
     rules_dir: Optional[Path] = None,
@@ -149,16 +146,45 @@ def evaluate(
         {"decision": "block", "reason": "..."} if a blocking rule matched.
         {"decision": "warn", "reason": "..."} if a warning rule matched.
     """
-    global _bypass_count
     try:
-        return _evaluate_impl(input_data, rules_dir)
+        result = _evaluate_impl(input_data, rules_dir)
+        if result.get("decision"):
+            try:
+                from wfc.observability.instrument import emit_event, incr
+
+                emit_event(
+                    "hook.decision",
+                    source="rule_engine",
+                    payload={
+                        "decision": result["decision"],
+                        "reason": result.get("reason", ""),
+                        "tool_name": input_data.get("tool_name", ""),
+                    },
+                    level="warning" if result["decision"] == "block" else "info",
+                )
+                incr(
+                    "hook.decisions", labels={"hook": "rule_engine", "decision": result["decision"]}
+                )
+            except Exception:
+                pass
+        return result
     except Exception as e:
-        _bypass_count += 1
+        try:
+            from wfc.observability.instrument import emit_event, incr
+
+            incr("hook.bypass_count", labels={"hook": "rule_engine"})
+            emit_event(
+                "hook.bypass",
+                source="rule_engine",
+                payload={"error_type": type(e).__name__},
+                level="warning",
+            )
+        except Exception:
+            pass
         logger.warning(
-            "Hook bypass: rule_engine exception=%s time=%s bypass_count=%d",
+            "Hook bypass: rule_engine exception=%s time=%s",
             type(e).__name__,
             time.strftime("%Y-%m-%dT%H:%M:%S"),
-            _bypass_count,
         )
         return {}
 
