@@ -14,13 +14,20 @@ logger = logging.getLogger(__name__)
 
 
 try:
-    from pydantic import BaseModel
+    from pydantic import BaseModel, field_validator
 
     class ReviewerResponseSchema(BaseModel):
         """Pydantic v2 model for a reviewer task response."""
 
         reviewer_id: str
         response: str = ""
+
+        @field_validator("reviewer_id")
+        @classmethod
+        def check_non_empty(cls, v: str) -> str:
+            if not v.strip():
+                raise ValueError("reviewer_id must be non-empty")
+            return v
 
     _HAS_PYDANTIC = True
 

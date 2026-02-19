@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import math
+
 import pytest
 
 
@@ -170,6 +172,82 @@ class TestValidateFinding:
         }
         assert validate_finding(data) is None
 
+    def test_nan_severity_returns_none(self) -> None:
+        from wfc.scripts.schemas.finding import validate_finding
+
+        data = {
+            "file": "main.py",
+            "line_start": 1,
+            "category": "bug",
+            "severity": float("nan"),
+            "description": "issue",
+        }
+        assert validate_finding(data) is None
+
+    def test_inf_severity_returns_none(self) -> None:
+        from wfc.scripts.schemas.finding import validate_finding
+
+        data = {
+            "file": "main.py",
+            "line_start": 1,
+            "category": "bug",
+            "severity": float("inf"),
+            "description": "issue",
+        }
+        assert validate_finding(data) is None
+
+    def test_nan_confidence_returns_none(self) -> None:
+        from wfc.scripts.schemas.finding import validate_finding
+
+        data = {
+            "file": "main.py",
+            "line_start": 1,
+            "category": "bug",
+            "severity": 5.0,
+            "description": "issue",
+            "confidence": float("nan"),
+        }
+        assert validate_finding(data) is None
+
+    def test_non_string_file_returns_none(self) -> None:
+        from wfc.scripts.schemas.finding import validate_finding
+
+        data = {
+            "file": 123,
+            "line_start": 1,
+            "category": "bug",
+            "severity": 5.0,
+            "description": "issue",
+        }
+        assert validate_finding(data) is None
+
+    def test_non_string_category_returns_none(self) -> None:
+        from wfc.scripts.schemas.finding import validate_finding
+
+        data = {
+            "file": "main.py",
+            "line_start": 1,
+            "category": 42,
+            "severity": 5.0,
+            "description": "issue",
+        }
+        assert validate_finding(data) is None
+
+    def test_line_end_none_excluded_from_output(self) -> None:
+        """When line_end is not provided, it should not appear in output."""
+        from wfc.scripts.schemas.finding import validate_finding
+
+        data = {
+            "file": "main.py",
+            "line_start": 1,
+            "category": "bug",
+            "severity": 5.0,
+            "description": "issue",
+        }
+        result = validate_finding(data)
+        assert result is not None
+        assert "line_end" not in result
+
     def test_never_raises(self) -> None:
         from wfc.scripts.schemas.finding import validate_finding
 
@@ -198,9 +276,12 @@ class TestValidateReviewerResponse:
     def test_empty_reviewer_id_returns_none(self) -> None:
         from wfc.scripts.schemas.reviewer_response import validate_reviewer_response
 
-        result = validate_reviewer_response({"reviewer_id": "", "response": "text"})
-        if result is not None:
-            assert result["reviewer_id"] == ""
+        assert validate_reviewer_response({"reviewer_id": "", "response": "text"}) is None
+
+    def test_whitespace_reviewer_id_returns_none(self) -> None:
+        from wfc.scripts.schemas.reviewer_response import validate_reviewer_response
+
+        assert validate_reviewer_response({"reviewer_id": "   ", "response": "text"}) is None
 
     def test_missing_response_defaults_empty(self) -> None:
         from wfc.scripts.schemas.reviewer_response import validate_reviewer_response
@@ -304,3 +385,40 @@ class TestStdlibFallback:
         original_line_start = data["line_start"]
         _validate_finding_stdlib(data)
         assert data["line_start"] == original_line_start
+
+    def test_nan_severity_returns_none(self) -> None:
+        from wfc.scripts.schemas.finding import _validate_finding_stdlib
+
+        data = {
+            "file": "x.py",
+            "line_start": 1,
+            "category": "bug",
+            "severity": float("nan"),
+            "description": "test",
+        }
+        assert _validate_finding_stdlib(data) is None
+
+    def test_inf_confidence_returns_none(self) -> None:
+        from wfc.scripts.schemas.finding import _validate_finding_stdlib
+
+        data = {
+            "file": "x.py",
+            "line_start": 1,
+            "category": "bug",
+            "severity": 5.0,
+            "description": "test",
+            "confidence": float("inf"),
+        }
+        assert _validate_finding_stdlib(data) is None
+
+    def test_non_string_file_returns_none(self) -> None:
+        from wfc.scripts.schemas.finding import _validate_finding_stdlib
+
+        data = {
+            "file": 999,
+            "line_start": 1,
+            "category": "bug",
+            "severity": 5.0,
+            "description": "test",
+        }
+        assert _validate_finding_stdlib(data) is None

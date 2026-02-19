@@ -200,7 +200,8 @@ class ReviewOrchestrator:
             for finding in result.findings:
                 tagged = dict(finding)
                 tagged["reviewer_id"] = result.reviewer_id
-                tagged.setdefault("line_end", tagged.get("line_start", 0))
+                if tagged.get("line_end") is None:
+                    tagged["line_end"] = tagged.get("line_start", 0)
                 all_findings.append(tagged)
 
         deduped = self.fingerprinter.deduplicate(all_findings)

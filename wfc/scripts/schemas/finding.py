@@ -8,6 +8,7 @@ Invalid findings return None (fail-open — logged and dropped).
 from __future__ import annotations
 
 import logging
+import math
 from typing import Any
 
 logger = logging.getLogger(__name__)
@@ -46,11 +47,15 @@ try:
         @field_validator("severity")
         @classmethod
         def clamp_severity(cls, v: float) -> float:
+            if math.isnan(v) or math.isinf(v):
+                raise ValueError("severity must be finite")
             return max(0.0, min(10.0, v))
 
         @field_validator("confidence")
         @classmethod
         def clamp_confidence(cls, v: float) -> float:
+            if math.isnan(v) or math.isinf(v):
+                raise ValueError("confidence must be finite")
             return max(0.0, min(100.0, v))
 
     _HAS_PYDANTIC = True
@@ -68,9 +73,21 @@ def _validate_finding_stdlib(data: dict[str, Any]) -> dict[str, Any] | None:
         return None
     out = dict(data)
     try:
+        if not isinstance(out["file"], str):
+            return None
+        if not isinstance(out["category"], str):
+            return None
+        if not isinstance(out["description"], str):
+            return None
         out["line_start"] = int(out["line_start"])
-        out["severity"] = max(0.0, min(10.0, float(out["severity"])))
-        out["confidence"] = max(0.0, min(100.0, float(out.get("confidence", 0))))
+        sev = float(out["severity"])
+        if math.isnan(sev) or math.isinf(sev):
+            return None
+        out["severity"] = max(0.0, min(10.0, sev))
+        conf = float(out.get("confidence", 0))
+        if math.isnan(conf) or math.isinf(conf):
+            return None
+        out["confidence"] = max(0.0, min(100.0, conf))
         if out.get("line_end") is not None:
             out["line_end"] = int(out["line_end"])
     except (ValueError, TypeError):
@@ -90,7 +107,7 @@ def validate_finding(data: dict[str, Any]) -> dict[str, Any] | None:
     try:
         if _HAS_PYDANTIC:
             model = FindingSchema.model_validate(data)  # type: ignore[name-defined]
-            return model.model_dump()
+            return model.model_dump(exclude_none=True)
         return _validate_finding_stdlib(data)
     except Exception:
         logger.debug("Finding validation failed for %r", data, exc_info=True)

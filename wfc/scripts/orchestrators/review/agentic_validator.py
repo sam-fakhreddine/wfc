@@ -18,6 +18,15 @@ from wfc.scripts.schemas.finding import REQUIRED_FINDING_KEYS
 logger = logging.getLogger(__name__)
 
 _CORRECTION_MODEL = "claude-haiku-4-5"
+_KNOWN_REVIEWER_IDS = frozenset(
+    {
+        "security",
+        "correctness",
+        "performance",
+        "maintainability",
+        "reliability",
+    }
+)
 
 
 def _sanitize_response(text: str, max_len: int = 2000) -> str:
@@ -113,9 +122,10 @@ class AgenticValidator:
         }
 
     def _build_correction_prompt(self, reviewer_id: str, excerpt: str) -> str:
+        safe_id = reviewer_id if reviewer_id in _KNOWN_REVIEWER_IDS else "unknown"
         return (
             "You are a response parser assistant.\n\n"
-            f"A {reviewer_id} code reviewer produced the following output, but the JSON "
+            f"A {safe_id} code reviewer produced the following output, but the JSON "
             "findings could not be extracted. Please reformat the output as a valid JSON "
             "array of finding objects.\n\n"
             "Each finding MUST have these keys:\n"
