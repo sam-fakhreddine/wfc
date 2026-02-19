@@ -90,7 +90,6 @@ def _load_signatures(provider: Any) -> tuple[list[list[float]], list[dict[str, A
         if not signatures:
             return [], []
 
-        # Filter out malformed entries rather than discarding all
         valid_sigs = [s for s in signatures if s.get("text") and s.get("id")]
         if not valid_sigs:
             return [], []
@@ -190,7 +189,6 @@ def _store_hardened_embedding(
                 "timestamp": time.time(),
             }
         )
-        # Atomic write: write to temp file then replace
         fd, tmp_path = _tempfile.mkstemp(dir=str(_HARDENED_DIR))
         try:
             os.write(fd, json.dumps(entries).encode())
@@ -201,6 +199,124 @@ def _store_hardened_embedding(
         logger.debug("Failed to store hardened embedding", exc_info=True)
 
 
+def _parse_input() -> str | None:
+    """Read stdin, parse JSON, extract prompt text. Returns None to fail-open."""
+    raw = sys.stdin.read()
+    if not raw or not raw.strip():
+        return None
+    try:
+        data = json.loads(raw)
+    except (json.JSONDecodeError, ValueError):
+        return None
+    if not isinstance(data, dict):
+        return None
+    prompt = data.get("prompt", "")
+    if not prompt or not prompt.strip():
+        return None
+    return prompt
+
+
+def _embed_with_timeout(provider: Any, prompt: str, deadline: float) -> list[float] | None:
+    """Embed prompt with remaining-time timeout. Returns None to fail-open."""
+    remaining = deadline - time.monotonic()
+    if remaining <= 0:
+        _emit_metric("firewall.timeout", {"phase": "pre_embedding"})
+        return None
+    try:
+        from concurrent.futures import ThreadPoolExecutor
+        from concurrent.futures import TimeoutError as FuturesTimeoutError
+
+        with ThreadPoolExecutor(max_workers=1) as pool:
+            future = pool.submit(provider.embed_query, prompt)
+            try:
+                result = future.result(timeout=max(0.01, remaining))
+            except FuturesTimeoutError:
+                _emit_metric("firewall.timeout", {"phase": "embed_query"})
+                return None
+    except SystemExit:
+        raise
+    except Exception:
+        _emit_metric("firewall.embed_failure")
+        return None
+    if not isinstance(result, list):
+        _emit_metric("firewall.embed_failure", {"reason": "non_list_return"})
+        return None
+    return result
+
+
+def _score_signatures(
+    prompt_emb: list[float],
+    sig_embs: list[list[float]],
+    deadline: float,
+) -> tuple[float, int] | None:
+    """Find best matching signature by cosine similarity. Returns None on timeout."""
+    max_similarity = 0.0
+    best_match_idx = -1
+    for i, sig_emb in enumerate(sig_embs):
+        sim = _cosine_similarity(prompt_emb, sig_emb)
+        if sim > max_similarity:
+            max_similarity = sim
+            best_match_idx = i
+    if time.monotonic() > deadline:
+        _emit_metric("firewall.timeout", {"phase": "post_comparison"})
+        return None
+    return max_similarity, best_match_idx
+
+
+def _apply_decision(
+    max_sim: float,
+    best_idx: int,
+    sig_metadata: list[dict[str, Any]],
+    prompt: str,
+    prompt_emb: list[float],
+) -> None:
+    """Apply block/warn/pass thresholds. Always calls sys.exit()."""
+    if max_sim >= _DEFAULT_THRESHOLD_BLOCK:
+        matched = sig_metadata[best_idx] if best_idx >= 0 else {}
+        _emit_metric(
+            "firewall.block",
+            {
+                "similarity": round(max_sim, 4),
+                "matched_id": matched.get("id", "unknown"),
+                "category": matched.get("category", "unknown"),
+            },
+        )
+        _store_hardened_embedding(prompt, prompt_emb, max_sim)
+        try:
+            from wfc.scripts.security.refusal_agent import emit_and_exit
+
+            emit_and_exit(
+                reason=f"Semantic firewall: prompt blocked (similarity={max_sim:.3f})",
+                pattern_id=matched.get("id", "semantic-firewall"),
+                suggestion="Rephrase your prompt to avoid patterns similar to known attack signatures.",
+            )
+        except SystemExit:
+            raise
+        except Exception:
+            sys.exit(2)
+
+    elif max_sim >= _DEFAULT_THRESHOLD_WARN:
+        matched = sig_metadata[best_idx] if best_idx >= 0 else {}
+        _emit_metric(
+            "firewall.warning",
+            {
+                "similarity": round(max_sim, 4),
+                "matched_id": matched.get("id", "unknown"),
+                "category": matched.get("category", "unknown"),
+            },
+        )
+        warning_payload = {
+            "warning": True,
+            "reason": f"Semantic firewall: elevated similarity ({max_sim:.3f})",
+            "matched_category": matched.get("category", "unknown"),
+        }
+        print(json.dumps(warning_payload), file=sys.stderr)
+        sys.exit(0)
+
+    else:
+        sys.exit(0)
+
+
 def _run() -> None:
     """Core firewall logic. May call sys.exit(0) or sys.exit(2).
 
@@ -209,20 +325,8 @@ def _run() -> None:
     """
     deadline = time.monotonic() + (_TIMEOUT_MS / 1000.0)
 
-    raw = sys.stdin.read()
-    if not raw or not raw.strip():
-        sys.exit(0)
-
-    try:
-        data = json.loads(raw)
-    except (json.JSONDecodeError, ValueError):
-        sys.exit(0)
-
-    if not isinstance(data, dict):
-        sys.exit(0)
-
-    prompt = data.get("prompt", "")
-    if not prompt or not prompt.strip():
+    prompt = _parse_input()
+    if prompt is None:
         sys.exit(0)
 
     _check_freshness()
@@ -237,92 +341,19 @@ def _run() -> None:
         _emit_metric("firewall.no_signatures")
         sys.exit(0)
 
-    remaining = deadline - time.monotonic()
-    if remaining <= 0:
-        _emit_metric("firewall.timeout", {"phase": "pre_embedding"})
-        sys.exit(0)
-
-    try:
-        from concurrent.futures import ThreadPoolExecutor
-        from concurrent.futures import TimeoutError as FuturesTimeoutError
-
-        with ThreadPoolExecutor(max_workers=1) as pool:
-            future = pool.submit(provider.embed_query, prompt)
-            try:
-                prompt_embedding = future.result(timeout=max(0.01, remaining))
-            except FuturesTimeoutError:
-                _emit_metric("firewall.timeout", {"phase": "embed_query"})
-                sys.exit(0)
-    except SystemExit:
-        raise
-    except Exception:
-        _emit_metric("firewall.embed_failure")
-        sys.exit(0)
-
-    if not isinstance(prompt_embedding, list):
-        _emit_metric("firewall.embed_failure", {"reason": "non_list_return"})
+    prompt_embedding = _embed_with_timeout(provider, prompt, deadline)
+    if prompt_embedding is None:
         sys.exit(0)
 
     if time.monotonic() > deadline:
         _emit_metric("firewall.timeout", {"phase": "pre_comparison"})
         sys.exit(0)
 
-    max_similarity = 0.0
-    best_match_idx = -1
-    for i, sig_emb in enumerate(sig_embeddings):
-        sim = _cosine_similarity(prompt_embedding, sig_emb)
-        if sim > max_similarity:
-            max_similarity = sim
-            best_match_idx = i
-
-    if time.monotonic() > deadline:
-        _emit_metric("firewall.timeout", {"phase": "post_comparison"})
+    scores = _score_signatures(prompt_embedding, sig_embeddings, deadline)
+    if scores is None:
         sys.exit(0)
 
-    if max_similarity >= _DEFAULT_THRESHOLD_BLOCK:
-        matched = sig_metadata[best_match_idx] if best_match_idx >= 0 else {}
-        _emit_metric(
-            "firewall.block",
-            {
-                "similarity": round(max_similarity, 4),
-                "matched_id": matched.get("id", "unknown"),
-                "category": matched.get("category", "unknown"),
-            },
-        )
-        _store_hardened_embedding(prompt, prompt_embedding, max_similarity)
-        try:
-            from wfc.scripts.security.refusal_agent import emit_and_exit
-
-            emit_and_exit(
-                reason=f"Semantic firewall: prompt blocked (similarity={max_similarity:.3f})",
-                pattern_id=matched.get("id", "semantic-firewall"),
-                suggestion="Rephrase your prompt to avoid patterns similar to known attack signatures.",
-            )
-        except SystemExit:
-            raise
-        except Exception:
-            sys.exit(2)
-
-    elif max_similarity >= _DEFAULT_THRESHOLD_WARN:
-        matched = sig_metadata[best_match_idx] if best_match_idx >= 0 else {}
-        _emit_metric(
-            "firewall.warning",
-            {
-                "similarity": round(max_similarity, 4),
-                "matched_id": matched.get("id", "unknown"),
-                "category": matched.get("category", "unknown"),
-            },
-        )
-        warning_payload = {
-            "warning": True,
-            "reason": f"Semantic firewall: elevated similarity ({max_similarity:.3f})",
-            "matched_category": matched.get("category", "unknown"),
-        }
-        print(json.dumps(warning_payload), file=sys.stderr)
-        sys.exit(0)
-
-    else:
-        sys.exit(0)
+    _apply_decision(scores[0], scores[1], sig_metadata, prompt, prompt_embedding)
 
 
 def main() -> None:

@@ -463,17 +463,14 @@ class TestSelfHardening:
 
         hardened_dir = tmp_path / "firewall"
         hardened_dir.mkdir(parents=True, exist_ok=True)
-        # Create a real file and a symlink pointing to it
         real_file = tmp_path / "real.json"
         real_file.write_text(json.dumps([]))
         symlink = hardened_dir / "hardened.json"
         symlink.symlink_to(real_file)
 
         with patch.object(semantic_firewall, "_HARDENED_DIR", hardened_dir):
-            # Should silently skip writing (symlink check)
             _store_hardened_embedding("test prompt", [1, 0, 0], 0.90)
 
-        # Real file should remain unchanged (empty list)
         data = json.loads(real_file.read_text())
         assert data == []
 
@@ -620,8 +617,8 @@ class TestLoadSignatures:
             "version": "1.0.0",
             "signatures": [
                 {"id": "sig-001", "text": "valid signature", "category": "override"},
-                {"id": "sig-002"},  # missing text
-                {"text": "no id here", "category": "test"},  # missing id
+                {"id": "sig-002"},
+                {"text": "no id here", "category": "test"},
             ],
         }
         sig_file.write_text(json.dumps(sig_data))
@@ -656,7 +653,6 @@ class TestLoadSignatures:
             embeddings1, metadata1 = semantic_firewall._load_signatures(mock_provider)
             embeddings2, metadata2 = semantic_firewall._load_signatures(mock_provider)
 
-        # embed() should only be called once due to caching
         mock_provider.embed.assert_called_once()
         assert embeddings1 == embeddings2
         assert metadata1 == metadata2
@@ -708,3 +704,139 @@ class TestModuleConstants:
         from wfc.scripts.security.semantic_firewall import _HARDENED_DIR
 
         assert _HARDENED_DIR == Path.home() / ".wfc" / "firewall"
+
+
+class TestParseInput:
+    """Unit tests for _parse_input helper."""
+
+    def test_empty_stdin(self, monkeypatch):
+        import io
+
+        import wfc.scripts.security.semantic_firewall as sf
+
+        monkeypatch.setattr("sys.stdin", io.StringIO(""))
+        assert sf._parse_input() is None
+
+    def test_whitespace_only_stdin(self, monkeypatch):
+        import io
+
+        import wfc.scripts.security.semantic_firewall as sf
+
+        monkeypatch.setattr("sys.stdin", io.StringIO("   \n"))
+        assert sf._parse_input() is None
+
+    def test_invalid_json(self, monkeypatch):
+        import io
+
+        import wfc.scripts.security.semantic_firewall as sf
+
+        monkeypatch.setattr("sys.stdin", io.StringIO("not json"))
+        assert sf._parse_input() is None
+
+    def test_non_dict_json(self, monkeypatch):
+        import io
+
+        import wfc.scripts.security.semantic_firewall as sf
+
+        monkeypatch.setattr("sys.stdin", io.StringIO("[1,2,3]"))
+        assert sf._parse_input() is None
+
+    def test_missing_prompt_key(self, monkeypatch):
+        import io
+
+        import wfc.scripts.security.semantic_firewall as sf
+
+        monkeypatch.setattr("sys.stdin", io.StringIO('{"other": "value"}'))
+        assert sf._parse_input() is None
+
+    def test_empty_prompt_string(self, monkeypatch):
+        import io
+
+        import wfc.scripts.security.semantic_firewall as sf
+
+        monkeypatch.setattr("sys.stdin", io.StringIO('{"prompt": ""}'))
+        assert sf._parse_input() is None
+
+    def test_valid_prompt(self, monkeypatch):
+        import io
+
+        import wfc.scripts.security.semantic_firewall as sf
+
+        monkeypatch.setattr("sys.stdin", io.StringIO('{"prompt": "hello world"}'))
+        assert sf._parse_input() == "hello world"
+
+
+class TestEmbedWithTimeout:
+    """Unit tests for _embed_with_timeout helper."""
+
+    def test_deadline_already_passed_returns_none(self, monkeypatch):
+        import wfc.scripts.security.semantic_firewall as sf
+
+        monkeypatch.setattr(sf, "_emit_metric", lambda *a, **kw: None)
+        result = sf._embed_with_timeout(None, "test", time.monotonic() - 1)
+        assert result is None
+
+    def test_successful_embed(self, monkeypatch):
+        import wfc.scripts.security.semantic_firewall as sf
+
+        monkeypatch.setattr(sf, "_emit_metric", lambda *a, **kw: None)
+        provider = MagicMock()
+        provider.embed_query.return_value = [0.1, 0.2, 0.3]
+        result = sf._embed_with_timeout(provider, "test", time.monotonic() + 5)
+        assert result == [0.1, 0.2, 0.3]
+
+    def test_non_list_return_yields_none(self, monkeypatch):
+        import wfc.scripts.security.semantic_firewall as sf
+
+        monkeypatch.setattr(sf, "_emit_metric", lambda *a, **kw: None)
+        provider = MagicMock()
+        provider.embed_query.return_value = "not_a_list"
+        result = sf._embed_with_timeout(provider, "test", time.monotonic() + 5)
+        assert result is None
+
+    def test_provider_exception_returns_none(self, monkeypatch):
+        import wfc.scripts.security.semantic_firewall as sf
+
+        monkeypatch.setattr(sf, "_emit_metric", lambda *a, **kw: None)
+        provider = MagicMock()
+        provider.embed_query.side_effect = RuntimeError("connection failed")
+        result = sf._embed_with_timeout(provider, "test", time.monotonic() + 5)
+        assert result is None
+
+
+class TestScoreSignatures:
+    """Unit tests for _score_signatures helper."""
+
+    def test_single_signature_returns_score(self, monkeypatch):
+        import wfc.scripts.security.semantic_firewall as sf
+
+        monkeypatch.setattr(sf, "_emit_metric", lambda *a, **kw: None)
+        monkeypatch.setattr(sf, "_cosine_similarity", lambda a, b: 0.9)
+        result = sf._score_signatures([0.1], [[0.2]], time.monotonic() + 5)
+        assert result == (0.9, 0)
+
+    def test_picks_highest_similarity(self, monkeypatch):
+        import wfc.scripts.security.semantic_firewall as sf
+
+        monkeypatch.setattr(sf, "_emit_metric", lambda *a, **kw: None)
+        scores = [0.3, 0.8, 0.5]
+        call_count = [0]
+
+        def fake_cosine(a, b):
+            idx = call_count[0]
+            call_count[0] += 1
+            return scores[idx]
+
+        monkeypatch.setattr(sf, "_cosine_similarity", fake_cosine)
+        result = sf._score_signatures([0.1], [[0.2], [0.3], [0.4]], time.monotonic() + 5)
+        assert result is not None
+        assert result[0] == pytest.approx(0.8)
+        assert result[1] == 1
+
+    def test_deadline_expired_returns_none(self, monkeypatch):
+        import wfc.scripts.security.semantic_firewall as sf
+
+        monkeypatch.setattr(sf, "_emit_metric", lambda *a, **kw: None)
+        monkeypatch.setattr(sf, "_cosine_similarity", lambda a, b: 0.5)
+        result = sf._score_signatures([0.1], [[0.2]], time.monotonic() - 1)
+        assert result is None

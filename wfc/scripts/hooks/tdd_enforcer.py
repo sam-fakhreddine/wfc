@@ -91,7 +91,7 @@ def should_skip(file_path: str) -> bool:
     if path.suffix in EXCLUDED_EXTENSIONS:
         return True
 
-    if any(file_path.endswith(ext) for ext in EXCLUDED_EXTENSIONS if ext.count('.') > 1):
+    if any(file_path.endswith(ext) for ext in EXCLUDED_EXTENSIONS if ext.count(".") > 1):
         return True
 
     if path.name in EXCLUDED_FILENAMES:
@@ -177,56 +177,57 @@ def _search_test_dirs(test_dirs: list[Path], base_name: str, extensions: list[st
     return False
 
 
-def has_python_test_file(impl_path: str) -> bool:
-    """Check if corresponding Python test file exists."""
-    path = Path(impl_path)
-    module_name = path.stem
+def has_test_file(impl_path: str, language: str) -> bool:
+    """Check if a corresponding test file exists for the given implementation file.
 
-    sibling_names = [f"test_{module_name}.py", f"{module_name}_test.py"]
+    Supports 'python', 'typescript', and 'go' languages.
+    Checks sibling directory first, then standard test directories.
+    """
+    path = Path(impl_path)
+    base_name = path.stem
+
+    if language == "python":
+        sibling_names = [f"test_{base_name}.py", f"{base_name}_test.py"]
+        search_base, search_exts = "", sibling_names
+    elif language == "typescript":
+        if path.name.endswith(".tsx"):
+            ts_base = path.name[:-4]
+            exts = [".test.tsx", ".spec.tsx", ".test.ts", ".spec.ts"]
+        elif path.name.endswith(".ts"):
+            ts_base = path.name[:-3]
+            exts = [".test.ts", ".spec.ts"]
+        else:
+            return False
+        sibling_names = [f"{ts_base}{e}" for e in exts]
+        search_base, search_exts = ts_base, exts
+    elif language == "go":
+        if not path.name.endswith(".go"):
+            return False
+        sibling_names = [f"{base_name}_test.go"]
+        search_base, search_exts = base_name, ["_test.go"]
+    else:
+        return False
+
     for name in sibling_names:
         if (path.parent / name).exists():
             return True
 
-    test_dirs = _find_test_dirs(path.parent)
-    # base_name="" because extensions already contain full filenames (test_module.py)
-    return _search_test_dirs(test_dirs, "", [f"test_{module_name}.py", f"{module_name}_test.py"])
+    return _search_test_dirs(_find_test_dirs(path.parent), search_base, search_exts)
+
+
+def has_python_test_file(impl_path: str) -> bool:
+    """Check if corresponding Python test file exists."""
+    return has_test_file(impl_path, "python")
 
 
 def has_typescript_test_file(impl_path: str) -> bool:
     """Check if corresponding TypeScript test file exists."""
-    path = Path(impl_path)
-
-    if path.name.endswith(".tsx"):
-        base_name = path.name[:-4]
-        extensions = [".test.tsx", ".spec.tsx", ".test.ts", ".spec.ts"]
-    elif path.name.endswith(".ts"):
-        base_name = path.name[:-3]
-        extensions = [".test.ts", ".spec.ts"]
-    else:
-        return False
-
-    for ext in extensions:
-        if (path.parent / f"{base_name}{ext}").exists():
-            return True
-
-    test_dirs = _find_test_dirs(path.parent)
-    return _search_test_dirs(test_dirs, base_name, extensions)
+    return has_test_file(impl_path, "typescript")
 
 
 def has_go_test_file(impl_path: str) -> bool:
     """Check if corresponding Go test file exists."""
-    path = Path(impl_path)
-
-    if not path.name.endswith(".go"):
-        return False
-
-    base_name = path.stem
-
-    if (path.parent / f"{base_name}_test.go").exists():
-        return True
-
-    test_dirs = _find_test_dirs(path.parent)
-    return _search_test_dirs(test_dirs, base_name, ["_test.go"])
+    return has_test_file(impl_path, "go")
 
 
 def _is_import_line(line: str) -> bool:
