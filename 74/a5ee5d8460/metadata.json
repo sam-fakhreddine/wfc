@@ -2,15 +2,24 @@
   "cli_version": "0.4.2",
   "checkpoint_id": "74a5ee5d8460",
   "strategy": "manual-commit",
-  "branch": "claude/add-helper-scripts",
-  "checkpoints_count": 5,
+  "branch": "claude/develop-to-main-1771473189",
+  "checkpoints_count": 3,
   "files_touched": [
     ".development/housekeeping/keep-list.json",
+    ".github/workflows/ci.yml",
+    ".github/workflows/validate.yml",
     ".pre-commit-config.yaml",
     "install-universal.sh",
     "scripts/doctor.py",
     "scripts/housekeeping-git.sh",
-    "scripts/wfc-tools.sh"
+    "scripts/wfc-tools.sh",
+    "tests/test_observability_providers.py",
+    "wfc/gitwork/api/worktree.py",
+    "wfc/observability/__init__.py",
+    "wfc/observability/instrument.py",
+    "wfc/observability/metrics.py",
+    "wfc/observability/providers/file_provider.py",
+    "wfc/scripts/github/pr_threads.py"
   ],
   "sessions": [
     {
@@ -29,10 +38,10 @@
     }
   ],
   "token_usage": {
-    "input_tokens": 100,
-    "cache_creation_tokens": 198675,
-    "cache_read_tokens": 7796436,
-    "output_tokens": 5193,
-    "api_call_count": 87
+    "input_tokens": 161,
+    "cache_creation_tokens": 539110,
+    "cache_read_tokens": 16045131,
+    "output_tokens": 10372,
+    "api_call_count": 135
   }
 }
