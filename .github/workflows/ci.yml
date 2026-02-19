@@ -6,6 +6,9 @@ name: CI
   pull_request:
     branches: [main, develop]
 
+permissions:
+  contents: read
+
 jobs:
   lint:
     name: Lint & Format Check

@@ -138,6 +138,7 @@ class Histogram:
             return 0
 
         values.sort()
+        # Index-based linear interpolation — works for any sample size >= 1
         k = (len(values) - 1) * p / 100.0
         lo = int(k)
         hi = min(lo + 1, len(values) - 1)
@@ -161,6 +162,7 @@ class Histogram:
             }
 
         all_values.sort()
+        # Index-based linear interpolation — works for any sample size >= 1
 
         def _percentile(vals: list, p: float) -> float:
             k = (len(vals) - 1) * p / 100.0

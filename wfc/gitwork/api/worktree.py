@@ -20,6 +20,7 @@ from .validators import has_path_traversal, is_flag_injection
 _SCRIPT_DIR = Path(__file__).parent.parent / "scripts"
 _MANAGER_SCRIPT = _SCRIPT_DIR / "worktree-manager.sh"
 
+# Unsafe git ref characters: ~, ^, :, whitespace, null/control bytes
 _UNSAFE_REF_RE = re.compile(r"[~^:\s\x00-\x1f]")
 
 
@@ -94,6 +95,7 @@ class WorktreeOperations:
         root = _repo_root()
         if root:
             return Path(root) / self.worktree_dir / f"wfc-{task_id}"
+        # Fall back to relative path if git command fails
         return Path(self.worktree_dir) / f"wfc-{task_id}"
 
     def create(self, task_id: str, base_ref: str = "develop") -> Dict:
