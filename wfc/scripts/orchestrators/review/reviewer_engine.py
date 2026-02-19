@@ -277,6 +277,9 @@ class ReviewerEngine:
         - Single JSON object (wrapped into a list)
         - JSON embedded in markdown code blocks
         - Multiple separate JSON objects
+
+        Parsed findings are validated and coerced through the schema layer
+        (Pydantic when available, pure-Python fallback otherwise).
         """
         findings: list[dict] = []
 
@@ -290,8 +293,6 @@ class ReviewerEngine:
                 parsed, _ = json.JSONDecoder().raw_decode(response, first_bracket)
                 if isinstance(parsed, list):
                     findings.extend(item for item in parsed if isinstance(item, dict))
-                    if findings:
-                        return findings
             except json.JSONDecodeError:
                 array_match = re.search(r"\[[\s\S]*\]", response)
                 if array_match:
@@ -299,22 +300,28 @@ class ReviewerEngine:
                         parsed = json.loads(array_match.group())
                         if isinstance(parsed, list):
                             findings.extend(item for item in parsed if isinstance(item, dict))
-                            if findings:
-                                return findings
                     except json.JSONDecodeError:
                         pass
 
-        json_blocks = re.findall(r"```(?:json)?\s*(\{[\s\S]*?\})\s*```", response)
-        if not json_blocks:
-            json_blocks = re.findall(r"(\{[^{}]*\})", response)
+        if not findings:
+            json_blocks = re.findall(r"```(?:json)?\s*(\{[\s\S]*?\})\s*```", response)
+            if not json_blocks:
+                json_blocks = re.findall(r"(\{[^{}]*\})", response)
 
-        for block in json_blocks:
-            try:
-                parsed = json.loads(block)
-                if isinstance(parsed, dict):
-                    findings.append(parsed)
-            except json.JSONDecodeError:
-                continue
+            for block in json_blocks:
+                try:
+                    parsed = json.loads(block)
+                    if isinstance(parsed, dict):
+                        findings.append(parsed)
+                except json.JSONDecodeError:
+                    continue
+
+        try:
+            from wfc.scripts.schemas.llm_output import validate_findings
+
+            findings = validate_findings(findings)
+        except Exception:
+            pass
 
         return findings
 
