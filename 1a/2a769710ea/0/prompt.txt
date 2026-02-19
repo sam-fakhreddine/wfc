@@ -1,0 +1,1079 @@
+ok does WFC have a deep document skiull that can update our README?
+
+---
+
+yes please but not ebook style for the readme, keep it reasonable
+
+---
+
+Base directory for this skill: /Users/samfakhreddine/.claude/skills/docs-architect
+
+## Use this skill when
+
+- Working on docs architect tasks or workflows
+- Needing guidance, best practices, or checklists for docs architect
+
+## Do not use this skill when
+
+- The task is unrelated to docs architect
+- You need a different domain or tool outside this scope
+
+## Instructions
+
+- Clarify goals, constraints, and required inputs.
+- Apply relevant best practices and validate outcomes.
+- Provide actionable steps and verification.
+- If detailed examples are required, open `resources/implementation-playbook.md`.
+
+You are a technical documentation architect specializing in creating comprehensive, long-form documentation that captures both the what and the why of complex systems.
+
+## Core Competencies
+
+1. **Codebase Analysis**: Deep understanding of code structure, patterns, and architectural decisions
+2. **Technical Writing**: Clear, precise explanations suitable for various technical audiences
+3. **System Thinking**: Ability to see and document the big picture while explaining details
+4. **Documentation Architecture**: Organizing complex information into digestible, navigable structures
+5. **Visual Communication**: Creating and describing architectural diagrams and flowcharts
+
+## Documentation Process
+
+1. **Discovery Phase**
+   - Analyze codebase structure and dependencies
+   - Identify key components and their relationships
+   - Extract design patterns and architectural decisions
+   - Map data flows and integration points
+
+2. **Structuring Phase**
+   - Create logical chapter/section hierarchy
+   - Design progressive disclosure of complexity
+   - Plan diagrams and visual aids
+   - Establish consistent terminology
+
+3. **Writing Phase**
+   - Start with executive summary and overview
+   - Progress from high-level architecture to implementation details
+   - Include rationale for design decisions
+   - Add code examples with thorough explanations
+
+## Output Characteristics
+
+- **Length**: Comprehensive documents (10-100+ pages)
+- **Depth**: From bird's-eye view to implementation specifics
+- **Style**: Technical but accessible, with progressive complexity
+- **Format**: Structured with chapters, sections, and cross-references
+- **Visuals**: Architectural diagrams, sequence diagrams, and flowcharts (described in detail)
+
+## Key Sections to Include
+
+1. **Executive Summary**: One-page overview for stakeholders
+2. **Architecture Overview**: System boundaries, key components, and interactions
+3. **Design Decisions**: Rationale behind architectural choices
+4. **Core Components**: Deep dive into each major module/service
+5. **Data Models**: Schema design and data flow documentation
+6. **Integration Points**: APIs, events, and external dependencies
+7. **Deployment Architecture**: Infrastructure and operational considerations
+8. **Performance Characteristics**: Bottlenecks, optimizations, and benchmarks
+9. **Security Model**: Authentication, authorization, and data protection
+10. **Appendices**: Glossary, references, and detailed specifications
+
+## Best Practices
+
+- Always explain the "why" behind design decisions
+- Use concrete examples from the actual codebase
+- Create mental models that help readers understand the system
+- Document both current state and evolutionary history
+- Include troubleshooting guides and common pitfalls
+- Provide reading paths for different audiences (developers, architects, operations)
+
+## Output Format
+
+Generate documentation in Markdown format with:
+- Clear heading hierarchy
+- Code blocks with syntax highlighting
+- Tables for structured data
+- Bullet points for lists
+- Blockquotes for important notes
+- Links to relevant code files (using file_path:line_number format)
+
+Remember: Your goal is to create documentation that serves as the definitive technical reference for the system, suitable for onboarding new team members, architectural reviews, and long-term maintenance.
+
+
+ARGUMENTS: Update README.md for the WFC project. Keep it concise and README-appropriate (not ebook style). The current README has outdated info — it references "56 expert AI agents" but the system now uses 5 fixed specialist reviewers. Analyze the actual codebase to understand current architecture and update the README to accurately reflect what WFC does today.
+
+---
+
+is our folder structure good? i feel like its too much nesting, are we following best practises?
+
+---
+
+do a plan session with a deep dive
+
+---
+
+Base directory for this skill: /Users/samfakhreddine/.claude/skills/wfc-plan
+
+# WFC:PLAN - Adaptive Planning with Formal Properties
+
+Converts requirements into structured implementation plans through adaptive interviewing.
+
+## What It Does
+
+1. **Adaptive Interview** - Asks intelligent questions that adapt based on answers
+2. **Task Generation** - Breaks down requirements into structured TASKS.md with dependencies
+3. **Property Extraction** - Identifies formal properties (SAFETY, LIVENESS, INVARIANT, PERFORMANCE)
+4. **Test Planning** - Creates comprehensive TEST-PLAN.md linked to requirements and properties
+
+## Usage
+
+```bash
+# Default (creates timestamped plan with history)
+/wfc-plan
+# → Generates: plans/plan_oauth2_authentication_20260211_143022/
+#              plans/HISTORY.md
+#              plans/HISTORY.json
+
+# Custom output directory (disables history)
+/wfc-plan path/to/output
+
+# With options (future)
+/wfc-plan --interactive  # Step through interview
+/wfc-plan --from-file requirements.md  # Import requirements
+
+# Skip validation (not recommended)
+/wfc-plan --skip-validation
+```
+
+## Plan History
+
+**Each plan gets a unique timestamped directory.**
+
+### Directory Structure
+
+```
+plans/
+├── HISTORY.md                                    # Human-readable history
+├── HISTORY.json                                  # Machine-readable index
+├── plan_oauth2_authentication_20260211_143022/  # Timestamped plan
+│   ├── TASKS.md
+│   ├── PROPERTIES.md
+│   ├── TEST-PLAN.md
+│   ├── interview-results.json
+│   ├── revision-log.md
+│   └── plan-audit_20260211_143022.json
+├── plan_caching_layer_20260211_150135/
+│   ├── TASKS.md
+│   ├── PROPERTIES.md
+│   ├── TEST-PLAN.md
+│   ├── interview-results.json
+│   ├── revision-log.md
+│   └── plan-audit_20260211_150135.json
+└── plan_user_dashboard_20260212_091523/
+    ├── TASKS.md
+    ├── PROPERTIES.md
+    ├── TEST-PLAN.md
+    ├── interview-results.json
+    ├── revision-log.md
+    └── plan-audit_20260212_091523.json
+```
+
+### History File
+
+**plans/HISTORY.md** contains a searchable record:
+
+```markdown
+# Plan History
+
+**Total Plans:** 3
+
+---
+
+## plan_user_dashboard_20260212_091523
+- **Created:** 2026-02-12T09:15:23
+- **Goal:** Build user analytics dashboard
+- **Context:** Product team needs visibility into user behavior
+- **Directory:** `plans/plan_user_dashboard_20260212_091523`
+- **Tasks:** 7
+- **Properties:** 4
+- **Tests:** 15
+- **Validated:** yes (score: 8.7)
+
+## plan_caching_layer_20260211_150135
+- **Created:** 2026-02-11T15:01:35
+- **Goal:** Implement caching layer for API
+- **Context:** Reduce database load and improve response times
+- **Directory:** `plans/plan_caching_layer_20260211_150135`
+- **Tasks:** 3
+- **Properties:** 2
+- **Tests:** 8
+- **Validated:** skipped
+```
+
+### Benefits
+
+- **Version control** - Never lose old plans
+- **Searchable** - Find plans by goal or date
+- **Traceable** - See evolution of project planning
+- **Reference** - Compare approaches across time
+
+## Architecture Design Phase
+
+After the interview, WFC generates 2-3 architecture approaches:
+
+### Option 1: Minimal Changes
+- Smallest diff, maximum code reuse
+- Lowest risk, fastest to implement
+- Best for simple features or hotfixes
+
+### Option 2: Clean Architecture
+- Proper abstractions, maintainability-first
+- Best long-term design
+- Higher initial effort
+
+### Option 3: Pragmatic Balance
+- Speed + quality tradeoff
+- Addresses key concerns without over-engineering
+- Best for most features
+
+The approaches are saved to `ARCHITECTURE-OPTIONS.md` for reference.
+
+## Interview Process
+
+The adaptive interview gathers:
+
+### Core Understanding
+- What are you building? (goal)
+- Why are you building it? (context)
+- Who will use it? (users)
+
+### Requirements
+- Core features (must-have)
+- Nice-to-have features
+- Technical constraints
+- Performance requirements
+- Security requirements
+
+### Technical Details
+- Technology stack
+- Existing codebase or new project
+- Testing approach
+- Coverage targets
+
+### Formal Properties
+- Safety properties (what must never happen)
+- Liveness properties (what must eventually happen)
+- Invariants (what must always be true)
+- Performance properties (time/resource bounds)
+
+## Outputs
+
+### 1. TASKS.md
+Structured implementation tasks with:
+- Unique IDs (TASK-001, TASK-002, ...)
+- Complexity ratings (S, M, L, XL)
+- Dependency graph (DAG)
+- Properties to satisfy
+- Files likely affected
+- Acceptance criteria
+
+Example:
+```markdown
+## TASK-001: Setup project structure
+- **Complexity**: S
+- **Dependencies**: []
+- **Properties**: []
+- **Files**: README.md, pyproject.toml
+- **Description**: Create initial project structure
+- **Acceptance Criteria**:
+  - [ ] Project structure follows best practices
+  - [ ] Dependencies documented
+```
+
+### 2. PROPERTIES.md
+Formal properties with:
+- Type (SAFETY, LIVENESS, INVARIANT, PERFORMANCE)
+- Formal statement
+- Rationale
+- Priority
+- Suggested observables
+
+Example:
+```markdown
+## PROP-001: SAFETY
+- **Statement**: Unauthenticated user must never access protected endpoints
+- **Rationale**: Security: prevent unauthorized data access
+- **Priority**: critical
+- **Observables**: auth_failures, unauthorized_access_attempts
+```
+
+### 3. TEST-PLAN.md
+Test strategy and cases:
+- Testing approach (unit, integration, e2e)
+- Coverage targets
+- Specific test cases linked to tasks and properties
+- Test steps and expected outcomes
+
+Example:
+```markdown
+### TEST-001: Verify SAFETY property
+- **Type**: integration
+- **Related Task**: TASK-003
+- **Related Property**: PROP-001
+- **Description**: Test that unauthenticated users cannot access protected endpoints
+- **Steps**:
+  1. Attempt access without authentication
+  2. Verify 401 response
+- **Expected**: Access denied
+```
+
+## Architecture
+
+### MULTI-TIER Design
+```
+┌─────────────────────────────┐
+│  PRESENTATION (cli.py)      │  User interaction, output formatting
+└──────────────┬──────────────┘
+               │
+┌──────────────▼──────────────┐
+│  LOGIC (orchestrator.py)    │  Interview → Generate → Save
+│  - interview.py             │
+│  - tasks_generator.py       │
+│  - properties_generator.py  │
+│  - test_plan_generator.py   │
+└──────────────┬──────────────┘
+               │
+┌──────────────▼──────────────┐
+│  DATA (filesystem)          │  Save markdown and JSON
+└─────────────────────────────┘
+```
+
+## Integration with WFC
+
+### Produces (consumed by wfc-implement)
+- `plan/TASKS.md` → Task orchestration
+- `plan/PROPERTIES.md` → TDD test requirements
+- `plan/TEST-PLAN.md` → Test strategy
+
+### Consumes (future)
+- `wfc-architecture` for architecture analysis
+- `wfc-security` for threat model properties
+
+## Configuration
+
+```json
+{
+  "plan": {
+    "output_dir": "./plan",
+    "interview_mode": "adaptive",
+    "task_complexity_model": "auto",
+    "generate_diagram": true
+  }
+}
+```
+
+## What to Do
+
+1. **If `Restructure the WFC repository folder layout to fix identified issues: (1) remove duplicate wfc-tools/ vs wfc_tools/ gitwork implementations, (2) rename wfc/scripts/skills/ to wfc/scripts/orchestrators/ to remove naming confusion with wfc/skills/, (3) flatten gitwork nesting from 5 levels to 3, (4) consider moving wfc/reviewers/ to a cleaner location. Deep dive analysis required — this touches many import paths and the install script.` contains `--skip-validation`**, set `skip_validation = true` and remove the flag from arguments
+2. **If `Restructure the WFC repository folder layout to fix identified issues: (1) remove duplicate wfc-tools/ vs wfc_tools/ gitwork implementations, (2) rename wfc/scripts/skills/ to wfc/scripts/orchestrators/ to remove naming confusion with wfc/skills/, (3) flatten gitwork nesting from 5 levels to 3, (4) consider moving wfc/reviewers/ to a cleaner location. Deep dive analysis required — this touches many import paths and the install script.` is provided** (after flag removal), use it as output directory
+3. **If no arguments**, use `./plan` as default output directory
+4. **Run adaptive interview** using `AdaptiveInterviewer`
+5. **Generate all files** using orchestrator (TASKS.md, PROPERTIES.md, TEST-PLAN.md)
+6. **Run Plan Validation Pipeline** (unless `--skip-validation` was set)
+7. **Display results** showing file paths and summary
+8. **Record telemetry** for all operations
+
+## Plan Validation Pipeline
+
+After generating the draft plan (TASKS.md, PROPERTIES.md, TEST-PLAN.md), run a mandatory validation pipeline to ensure plan quality. This pipeline can only be bypassed with the `--skip-validation` flag.
+
+### Pipeline Overview
+
+```
+Draft Plan → SHA-256 Hash → Validate Gate → Revise → Review Gate (loop until 8.5+) → Final Plan
+```
+
+### Step 1: Record Original Hash
+
+Compute a SHA-256 hash of the draft plan content (concatenation of TASKS.md + PROPERTIES.md + TEST-PLAN.md in that order). This is the `original_hash` used for the audit trail.
+
+```python
+import hashlib
+content = tasks_md + properties_md + test_plan_md
+original_hash = hashlib.sha256(content.encode()).hexdigest()
+```
+
+### Step 2: Validate Gate
+
+Invoke `/wfc-validate` on the generated draft plan. All plan content **must** be delimited with XML tags per PROP-009 prompt injection defense:
+
+```
+/wfc-validate
+<plan-content>
+[Full content of TASKS.md, PROPERTIES.md, TEST-PLAN.md concatenated]
+</plan-content>
+```
+
+This produces a `VALIDATE.md` output with scored recommendations categorized as Must-Do, Should-Do, or informational.
+
+### Step 3: Revision Mechanism
+
+After validation produces its analysis, read the VALIDATE.md output and apply revisions:
+
+1. **Must-Do** recommendations: Apply every Must-Do change to the draft TASKS.md and/or PROPERTIES.md. These are non-negotiable improvements identified by the analysis.
+2. **Should-Do** recommendations: Apply if low-effort (can be done in under 5 minutes). Otherwise, note as deferred with a reason.
+3. **Deferred** items: Record in revision log for future consideration.
+
+Write a `revision-log.md` in the plan directory documenting what changed and why:
+
+```markdown
+# Revision Log
+
+## Original Plan Hash
+`<original_hash>` (SHA-256)
+
+## Validate Score
+<score>/10
+
+## Revisions Applied
+
+### Must-Do
+
+1. **<change title>** - <description of change>
+   - Source: Validate recommendation #N
+   - File changed: TASKS.md | PROPERTIES.md | TEST-PLAN.md
+
+### Should-Do
+
+1. **<change title>** - <description>
+   - Source: Validate recommendation #N
+   - Status: Applied (low effort) | Deferred (high effort)
+
+### Deferred
+
+1. **<item>** - <reason for deferral>
+   - Source: Validate recommendation #N
+   - Reason: <explanation>
+
+## Review Gate Results
+
+| Round | Score | Action |
+|-------|-------|--------|
+| 1     | X.X   | Applied N findings |
+| 2     | X.X   | Passed threshold |
+
+## Final Plan Hash
+`<final_hash>` (SHA-256)
+```
+
+### Step 4: Review Gate
+
+Invoke `/wfc-review` on the revised plan using architecture and quality personas. Plan content **must** be delimited with XML tags per PROP-009 prompt injection defense:
+
+```
+/wfc-review
+<plan-content>
+[Full content of revised TASKS.md, PROPERTIES.md, TEST-PLAN.md]
+</plan-content>
+```
+
+**Review Loop**: If the weighted consensus score is below 8.5/10, apply the review findings to the plan and re-invoke `/wfc-review`. Repeat until the score reaches 8.5 or higher. This threshold is the standard -- it is not optional.
+
+### Step 5: Audit Trail
+
+After the review gate passes (or validation is skipped), write a `plan-audit.json` file (timestamped) in the plan directory. The filename includes a timestamp for immutability (e.g., `plan-audit_20260215_103000.json`).
+
+**Required schema for plan-audit_YYYYMMDD_HHMMSS.json:**
+
+```json
+{
+  "hash_algorithm": "sha256",
+  "original_hash": "<64-char hex SHA-256 of draft plan>",
+  "validate_score": 7.8,
+  "revision_count": 2,
+  "review_score": 8.7,
+  "final_hash": "<64-char hex SHA-256 of final plan>",
+  "timestamp": "2026-02-15T10:30:00Z",
+  "validated": true,
+  "skipped": false
+}
+```
+
+Field definitions:
+- `hash_algorithm`: Always `"sha256"`
+- `original_hash`: SHA-256 hash of the draft plan before any revisions
+- `validate_score`: Numeric score from the validation analysis
+- `revision_count`: Total number of revision rounds applied (validation revisions + review loop rounds)
+- `review_score`: Final weighted consensus score from wfc-review (numeric, e.g. 8.7)
+- `final_hash`: SHA-256 hash of the plan after all revisions are complete
+- `timestamp`: ISO 8601 timestamp of when validation completed
+- `validated`: `true` if the final review_score >= 8.5, `false` otherwise
+- `skipped`: `true` if `--skip-validation` was used, `false` otherwise
+
+### Step 6: History Update
+
+Update HISTORY.md to record whether the plan was validated or skipped. Add a `- **Validated:** yes (score: X.X)` or `- **Validated:** skipped` entry to the plan's history record.
+
+### Skip Validation Flag
+
+If `--skip-validation` is passed as an argument:
+
+1. Skip Steps 2-4 entirely (no Validate Gate, no Review Gate, no revision)
+2. Still compute SHA-256 hashes (original_hash = final_hash since no changes were made)
+3. Write `plan-audit_YYYYMMDD_HHMMSS.json` with `"skipped": true` and `"validated": false`
+4. Do not generate `revision-log.md` (no revisions occurred)
+5. Record `- **Validated:** skipped` in HISTORY.md
+
+### Validation Pipeline Summary
+
+| Step | Action | Output |
+|------|--------|--------|
+| 1 | SHA-256 hash of draft plan | `original_hash` |
+| 2 | `/wfc-validate` with `<plan-content>` XML tags (PROP-009) | VALIDATE.md |
+| 3 | Apply Must-Do + low-effort Should-Do revisions | revision-log.md, updated plan files |
+| 4 | `/wfc-review` with `<plan-content>` XML tags (PROP-009), loop until >= 8.5 | Review consensus |
+| 5 | Write plan-audit_YYYYMMDD_HHMMSS.json with all fields | plan-audit_YYYYMMDD_HHMMSS.json |
+| 6 | Update HISTORY.md with validation status | HISTORY.md entry |
+
+## Example Flow
+
+```
+User runs: /wfc-plan
+
+[ADAPTIVE INTERVIEW]
+Q: What are you trying to build?
+A: REST API for user management
+
+Q: What are the core features?
+A: User CRUD, authentication, role-based access
+
+Q: Security requirements?
+A: JWT tokens, role-based authorization
+
+[GENERATION]
+Created TASKS.md (5 tasks)
+Created PROPERTIES.md (3 properties: 1 SAFETY, 2 INVARIANT)
+Created TEST-PLAN.md (12 test cases)
+
+[PLAN VALIDATION PIPELINE]
+SHA-256 hash recorded: a1b2c3...
+Validate Gate: 7.8/10
+  - Applied 2 Must-Do revisions
+  - Applied 1 Should-Do revision (low effort)
+  - Deferred 1 suggestion
+Review Gate round 1: 8.1/10 - applying 2 findings
+Review Gate round 2: 8.7/10 - PASSED
+Wrote revision-log.md
+Wrote plan-audit_YYYYMMDD_HHMMSS.json
+
+[OUTPUT]
+plans/plan_rest_api_20260215_103000/
+  - TASKS.md
+  - PROPERTIES.md
+  - TEST-PLAN.md
+  - interview-results.json
+  - revision-log.md
+  - plan-audit_20260215_103000.json
+
+Next: Run `/wfc-implement plans/plan_rest_api_20260215_103000/TASKS.md`
+```
+
+## Philosophy
+
+**ELEGANT**: Simple interview questions, clear task breakdown
+**MULTI-TIER**: Clean separation of presentation, logic, and data
+**PARALLEL**: Can generate all three files concurrently (future optimization)
+
+---
+
+<task-notification>
+<task-id>a7831ac</task-id>
+<status>completed</status>
+<summary>Agent "Deep dive WFC import analysis" completed</summary>
+<result>Perfect! Now I have all the information I need. Let me create a comprehensive final report:
+
+## WFC Comprehensive Import/Dependency Analysis
+
+Based on a thorough analysis of the codebase, here are my findings:
+
+### 1. **Which gitwork is actually used: `wfc_tools` (underscore) is the canonical version**
+
+**Evidence:**
+- **Only `wfc_tools` is imported in production code**: 54 imports of `wfc.wfc_tools` found across the codebase
+- **Zero imports of `wfc-tools`** (hyphen version)
+- **CLAUDE.md canonical reference**: Lines 632 and 674-675 explicitly reference `wfc_tools`:
+  ```
+  bash wfc/wfc_tools/gitwork/scripts/worktree-manager.sh create <name>
+  **Worktree Manager**: `wfc/wfc_tools/gitwork/scripts/worktree-manager.sh`
+  **Worktree API**: `wfc/wfc_tools/gitwork/api/worktree.py`
+  ```
+
+**Directory comparison:**
+- `wfc_tools` (underscore): **22 files** - Complete, production-ready implementation
+  - Has: `pr.py`, `worktree.py`, `validators.py`, worktree-manager.sh script
+  - Structure: `/wfc/wfc_tools/gitwork/api/{pr.py, validators.py, worktree.py}, /hooks/, /scripts/`
+  
+- `wfc-tools` (hyphen): **14 files** - Older/incomplete version
+  - Missing: `pr.py` (critical), worktree-manager.sh script
+  - Has older modules: `branch.py`, `commit.py`, `history.py`, `merge.py`, `rollback.py`, `semver.py`
+  - Structure: `/wfc/wfc-tools/gitwork/api/{branch.py, commit.py, history.py, hooks.py, merge.py, rollback.py, semver.py, validators.py}`
+
+**Actual import locations:**
+- `merge_engine.py` (line 356): `from wfc.wfc_tools.gitwork.api.pr import get_pr_operations`
+- All tests import from `wfc.wfc_tools`: `test_hooks.py`, `test_worktree.py`, `test_hooks_security.py`
+
+**Install script reference:**
+- `install-universal.sh` doesn't explicitly copy wfc_tools (it's installed as part of the main wfc package via `uv pip install -e ".[all]"`)
+
+---
+
+### 2. **All imports of wfc/scripts/skills/ (26 files using this)**
+
+**Files importing from `wfc.scripts.skills`:**
+
+**Test files (22 test files):**
+1. `/Users/samfakhreddine/repos/wfc/tests/test_ast_analyzer.py` - `from wfc.scripts.skills.review.ast_analyzer`
+2. `/Users/samfakhreddine/repos/wfc/tests/test_build_complexity.py` - `from wfc.scripts.skills.build.complexity_assessor`
+3. `/Users/samfakhreddine/repos/wfc/tests/test_build_integration.py` - `from wfc.scripts.skills.build.orchestrator`
+4. `/Users/samfakhreddine/repos/wfc/tests/test_build_interview.py` - `from wfc.scripts.skills.build.interview`
+5. `/Users/samfakhreddine/repos/wfc/tests/test_build_orchestrator.py` - `from wfc.scripts.skills.build.orchestrator`
+6. `/Users/samfakhreddine/repos/wfc/tests/test_consensus_score.py` - `from wfc.scripts.skills.review.consensus_score`
+7. `/Users/samfakhreddine/repos/wfc/tests/test_doc_auditor.py` - `from wfc.scripts.skills.review.doc_auditor`
+8. `/Users/samfakhreddine/repos/wfc/tests/test_e2e_review.py` - Multiple imports from `wfc.scripts.skills.review.*`
+9. `/Users/samfakhreddine/repos/wfc/tests/test_emergency_bypass.py` - `from wfc.scripts.skills.review.emergency_bypass`
+10. `/Users/samfakhreddine/repos/wfc/tests/test_finding_validator.py` - `from wfc.scripts.skills.review.finding_validator`
+11. `/Users/samfakhreddine/repos/wfc/tests/test_fingerprint.py` - `from wfc.scripts.skills.review.fingerprint`
+12. `/Users/samfakhreddine/repos/wfc/tests/test_model_router.py` - `from wfc.scripts.skills.review.model_router`
+13. `/Users/samfakhreddine/repos/wfc/tests/test_orchestrator_integration.py` - `from wfc.scripts.skills.review.consensus_score`
+14. `/Users/samfakhreddine/repos/wfc/tests/test_persona_deletion.py` - `from wfc.scripts.skills.review.orchestrator`
+15. `/Users/samfakhreddine/repos/wfc/tests/test_plugin_integration.py` - `from wfc.scripts.skills.review.agents`
+16. `/Users/samfakhreddine/repos/wfc/tests/test_retriever.py` - `from wfc.scripts.skills.review.reviewer_loader`
+17. `/Users/samfakhreddine/repos/wfc/tests/test_review_cli.py` - `from wfc.scripts.skills.review.cli`
+18. `/Users/samfakhreddine/repos/wfc/tests/test_reviewer_engine.py` - `from wfc.scripts.skills.review.reviewer_engine`
+19. `/Users/samfakhreddine/repos/wfc/tests/test_vibe_detector.py` - `from wfc.scripts.skills.vibe.detector`
+20. `/Users/samfakhreddine/repos/wfc/tests/test_vibe_session.py` - `from wfc.scripts.skills.vibe.session`
+21. `/Users/samfakhreddine/repos/wfc/tests/test_vibe_summarizer.py` - `from wfc.scripts.skills.vibe.detector`
+22. `/Users/samfakhreddine/repos/wfc/tests/test_vibe_transitions.py` - `from wfc.scripts.skills.vibe.detector`
+
+**Production files (4 files):**
+1. `/Users/samfakhreddine/repos/wfc/wfc/scripts/skills/review/cli.py` (line 19): `from wfc.scripts.skills.review.orchestrator import ReviewOrchestrator, ReviewRequest, ReviewResult`
+2. `/Users/samfakhreddine/repos/wfc/wfc/scripts/skills/review/consensus_score.py` (line 23): `from wfc.scripts.skills.review.fingerprint import DeduplicatedFinding`
+3. `/Users/samfakhreddine/repos/wfc/wfc/scripts/skills/review/emergency_bypass.py` (line 17): `from wfc.scripts.skills.review.consensus_score import ConsensusScoreResult`
+4. `/Users/samfakhreddine/repos/wfc/wfc/scripts/skills/review/finding_validator.py` (line 46): `from wfc.scripts.skills.review.fingerprint import DeduplicatedFinding`
+
+**Three skill directories are heavily imported:**
+- `wfc.scripts.skills.review.*` - 20+ test files + 4 production files (consensus, CLI, validation, auditing)
+- `wfc.scripts.skills.build.*` - 5 test files (orchestrator, interview, complexity assessment)
+- `wfc.scripts.skills.vibe.*` - 4 test files (detector, summarizer, transitions, session)
+
+---
+
+### 3. **All imports of wfc/scripts/orchestrators** 
+
+There is no single `orchestrators` directory. Instead, orchestrators are distributed:
+
+**Review Orchestrator:**
+- File: `/Users/samfakhreddine/repos/wfc/wfc/scripts/skills/review/orchestrator.py`
+- Imports in 8 files: `test_doc_auditor.py`, `test_e2e_review.py`, `test_orchestrator_integration.py`, `test_persona_deletion.py`, `test_plugin_integration.py`, `cli.py`
+- Sample import: `from wfc.scripts.skills.review.orchestrator import ReviewOrchestrator, ReviewRequest, ReviewResult` (cli.py:19)
+
+**Build Orchestrator:**
+- File: `/Users/samfakhreddine/repos/wfc/wfc/scripts/skills/build/orchestrator.py`
+- Imports in 3 test files: `test_build_integration.py`, `test_build_orchestrator.py`
+- Sample import: `from wfc.scripts.skills.build.orchestrator import BuildOrchestrator`
+
+**Vibe Session/Orchestration:**
+- Files: `session.py`, `detector.py`, `transitions.py`
+- Distributed across `/wfc/wfc/scripts/skills/vibe/`
+
+---
+
+### 4. **wfc/reviewers/ loading mechanism (file path, not Python import)**
+
+**Loader file:** `/Users/samfakhreddine/repos/wfc/wfc/scripts/skills/review/reviewer_loader.py`
+
+**How it resolves paths (lines 109-121):**
+```python
+def __init__(self, reviewers_dir: Path | None = None):
+    if reviewers_dir is not None:
+        self.reviewers_dir = Path(reviewers_dir)
+    else:
+        project_root = Path(__file__).resolve().parent.parent.parent.parent  # Resolves to /wfc/
+        self.reviewers_dir = project_root / "reviewers"  # Results in /wfc/reviewers/
+```
+
+**Runtime loading (lines 169-181):**
+```python
+reviewer_dir = self.reviewers_dir / reviewer_id  # e.g., /wfc/reviewers/security/
+prompt_path = reviewer_dir / "PROMPT.md"
+knowledge_path = reviewer_dir / "KNOWLEDGE.md"
+prompt = prompt_path.read_text(encoding="utf-8")  # Read from filesystem
+knowledge = knowledge_path.read_text(encoding="utf-8")
+```
+
+**Key point:** Reviewers are loaded **at runtime from disk** using `Path.read_text()`, NOT via Python imports. The 5 reviewer IDs are hardcoded (line 19-25):
+- security, correctness, performance, maintainability, reliability
+
+---
+
+### 5. **wfc/wfc_tools/ vs wfc/wfc-tools/ - File differences**
+
+**wfc_tools (underscore - PRODUCTION):**
+```
+wfc/wfc_tools/
+├── __init__.py
+├── gitwork/
+│   ├── __init__.py
+│   ├── config.py (imports wfc.shared.file_io)
+│   ├── hooks/
+│   │   ├── __init__.py
+│   │   ├── commit_msg.py
+│   │   ├── installer.py
+│   │   ├── pre_commit.py
+│   │   └── pre_push.py
+│   ├── api/
+│   │   ├── __init__.py
+│   │   ├── pr.py (12.9 KB) ⭐ PRODUCTION
+│   │   ├── validators.py (1.9 KB)
+│   │   └── worktree.py (10.2 KB) ⭐ PRODUCTION
+│   └── scripts/
+│       └── worktree-manager.sh ⭐ PRODUCTION
+```
+
+**wfc-tools (hyphen - LEGACY/INCOMPLETE):**
+```
+wfc/wfc-tools/
+├── __init__.py
+├── gitwork/
+│   ├── __init__.py
+│   ├── config.py (imports wfc.shared.file_io)
+│   ├── api/
+│   │   ├── __init__.py
+│   │   ├── branch.py (6.6 KB) - OLD
+│   │   ├── commit.py (5.6 KB) - OLD
+│   │   ├── history.py (2.8 KB) - OLD
+│   │   ├── hooks.py (3.1 KB) - OLD
+│   │   ├── merge.py (3.2 KB) - OLD
+│   │   ├── rollback.py (2.3 KB) - OLD
+│   │   ├── semver.py (3.0 KB) - OLD
+│   │   └── validators.py (1.9 KB)
+│   └── router.py
+```
+
+**Critical difference:** `pr.py` and `worktree.py` only exist in `wfc_tools`. The `wfc-tools` directory has older git operation modules that are NOT used.
+
+---
+
+### 6. **install-universal.sh and install.sh references**
+
+**Key installation path (lines 659-707, 730-786):**
+
+The installer handles two strategies:
+
+**Symlink strategy (multi-platform):**
+```bash
+# Line 654-655: Install to ~/.wfc/skills first
+mkdir -p "$WFC_ROOT/skills"
+cp -r "$SCRIPT_DIR/wfc/skills"/wfc-* "$WFC_ROOT/skills/"
+
+# Line 703-707: Copy reviewers (referenced but NOT symlinked)
+cp -r "$SCRIPT_DIR/wfc/reviewers"/* "$WFC_ROOT/reviewers/"
+
+# Line 711-714: Copy hooks infrastructure
+cp -r "$SCRIPT_DIR/wfc/scripts/hooks"/* "$WFC_ROOT/scripts/hooks/"
+```
+
+**Direct strategy (single platform):**
+```bash
+# Line 737-747: Install skills DIRECTLY to platform skills directory
+cp -r "$skill_dir" "$target"
+
+# Line 770-771: For nested structure
+cp -r "$SCRIPT_DIR/wfc/reviewers"/* "$WFC_ROOT/wfc/reviewers/"
+```
+
+**Python path reference:**
+- Line 213: `from wfc_implement.orchestrator import WFCOrchestrator`
+- The install script references `wfc/skills` not Python imports
+
+---
+
+### 7. **Test file imports (46 test files)**
+
+**Import patterns across test files:**
+
+All test imports use the canonical `wfc.scripts.skills` path:
+
+```python
+# test_e2e_review.py (lines 15-26)
+from wfc.scripts.skills.review.cli import (...)
+from wfc.scripts.skills.review.consensus_score import ConsensusScore, ConsensusScoreResult
+from wfc.scripts.skills.review.emergency_bypass import EmergencyBypass
+from wfc.scripts.skills.review.fingerprint import Fingerprinter
+from wfc.scripts.skills.review.orchestrator import ReviewOrchestrator, ReviewRequest
+from wfc.scripts.skills.review.reviewer_engine import ReviewerEngine
+from wfc.scripts.skills.review.reviewer_loader import ReviewerConfig
+
+# test_build_integration.py
+from wfc.scripts.skills.build.orchestrator import BuildOrchestrator
+
+# test_vibe_transitions.py
+from wfc.scripts.skills.vibe.detector import ScopeDetector
+from wfc.scripts.skills.vibe.summarizer import Message
+from wfc.scripts.skills.vibe.transitions import (...)
+```
+
+**No test imports from wfc.wfc_tools directly** (tests use test doubles instead, except for hook tests):
+- `test_hooks.py` (line 15): `from wfc.wfc_tools.gitwork.hooks import commit_msg, pre_commit, pre_push`
+- `test_worktree.py` (line 9): `from wfc.wfc_tools.gitwork.api.worktree import (...)`
+
+---
+
+### 8. **pyproject.toml entry points**
+
+**Single CLI entry point (line 16-17):**
+```toml
+[project.scripts]
+wfc = "wfc.cli:main"
+```
+
+**What it imports (wfc/cli.py lines 213-216):**
+```python
+from wfc_implement.orchestrator import WFCOrchestrator
+from wfc.shared.config import WFCConfig
+from wfc.skills import wfc_implement  # noqa: F401 — activates PEP 562 bridge
+```
+
+**Note:** The CLI uses `wfc_implement` (the installed skill namespace), not `wfc.scripts.skills.wfc_implement`.
+
+---
+
+## Summary Table
+
+| Aspect | Finding |
+|--------|---------|
+| **Active gitwork version** | `wfc_tools` (underscore) - 54 imports |
+| **Legacy gitwork version** | `wfc-tools` (hyphen) - 0 imports, incomplete |
+| **Canonical CLAUDE.md reference** | `wfc_tools/gitwork/scripts/worktree-manager.sh` (lines 632, 674-675) |
+| **Scripts/skills imports** | 26 files import from `wfc.scripts.skills.*` (22 tests + 4 production) |
+| **Key directories** | review/ (20+ files), build/ (5+ files), vibe/ (4+ files) |
+| **Reviewers loading** | Runtime file I/O via `Path.read_text()` NOT Python imports |
+| **Entry point** | `wfc = "wfc.cli:main"` → imports `wfc_implement` namespace |
+| **Install strategy** | Two paths: symlink (multi-platform) and direct (single platform) |
+
+**Critical finding:** The `wfc-tools` (hyphen) directory appears to be **legacy code that's no longer used**. All active code references `wfc_tools` (underscore). The hyphenated version should likely be removed or archived.</result>
+<usage>total_tokens: 66353
+tool_uses: 36
+duration_ms: 94185</usage>
+</task-notification>
+Full transcript available at: /private/tmp/claude-501/-Users-samfakhreddine-repos-wfc/tasks/a7831ac.output
+
+---
+
+Base directory for this skill: /Users/samfakhreddine/.claude/skills/wfc-validate
+
+# WFC:VALIDATE - Thoughtful Advisor
+
+The experienced staff engineer who asks "is this the right approach?" before we commit.
+
+## What It Does
+
+Analyzes any WFC artifact (plan, architecture, idea) across 7 dimensions:
+
+1. **Do We Even Need This?** - Real problem vs hypothetical
+2. **Is This the Simplest Approach?** - Avoid over-engineering
+3. **Is the Scope Right?** - Not too much, not too little
+4. **What Are We Trading Off?** - Opportunity cost, maintenance burden
+5. **Have We Seen This Fail Before?** - Anti-patterns, known failure modes
+6. **What's the Blast Radius?** - Risk assessment, rollback plan
+7. **Is the Timeline Realistic?** - Hidden dependencies, prototype first?
+
+Returns balanced assessment with verdict: PROCEED, PROCEED WITH ADJUSTMENTS, RECONSIDER, or DON'T PROCEED.
+
+## Usage
+
+```bash
+# Analyze current plan
+/wfc-validate
+
+# Analyze a freeform idea
+/wfc-validate "rewrite auth system in Rust"
+
+# Analyze specific artifact
+/wfc-validate --plan
+/wfc-validate --architecture
+/wfc-validate --task TASK-005
+```
+
+## Output: VALIDATE.md
+
+```markdown
+# Validation Analysis
+
+## Subject: Rewrite auth system in Rust
+## Verdict: 🟡 PROCEED WITH ADJUSTMENTS
+## Overall Score: 7.5/10
+
+---
+
+## Executive Summary
+
+Overall, this approach shows 12 clear strengths and 8 areas for consideration.
+
+The strongest aspects are: Blast Radius, Need, Simplicity.
+
+Key considerations: Opportunity cost of other features, Integration risks, Consider using existing library.
+
+With an overall score of 7.5/10, this is a solid approach that can move forward with attention to the identified concerns.
+
+---
+
+## Dimension Analysis
+
+### Do We Even Need This? — Score: 8/10
+
+**Strengths:**
+- Addresses clear user need
+- Backed by data/metrics
+
+**Concerns:**
+- Consider if existing solution could be improved instead
+
+**Recommendation:** Need is justified, but validate assumptions
+
+[... 6 more dimensions ...]
+
+---
+
+## Simpler Alternatives
+
+- Start with a simpler MVP and iterate based on feedback
+- Consider using existing solution (e.g., off-the-shelf library)
+- Phase the implementation - deliver core value first
+
+---
+
+## Final Recommendation
+
+Proceed, but address these key concerns first: Opportunity cost of other features; Integration risks may extend timeline; Consider using existing library
+```
+
+## Tone
+
+**Discerning but constructive. Honest but not harsh.**
+
+Not a naysayer - wants us to succeed with the best approach. Highlights both strengths and concerns. Suggests simpler alternatives when appropriate.
+
+## Verdict Logic
+
+- **🟢 PROCEED**: Overall score >= 8.5/10, no critical concerns
+- **🟡 PROCEED WITH ADJUSTMENTS**: Score 7.0-8.4, address concerns first
+- **🟠 RECONSIDER**: Score 5.0-6.9, explore alternatives
+- **🔴 DON'T PROCEED**: Score < 5.0 or any dimension <= 4/10
+
+## Integration with WFC
+
+### Can Analyze
+- `wfc-plan` outputs (TASKS.md, PROPERTIES.md)
+- `wfc-architecture` outputs (ARCHITECTURE.md)
+- `wfc-security` outputs (THREAT-MODEL.md)
+- Freeform ideas (text input)
+
+### Produces
+- VALIDATE.md report
+- Simpler alternatives
+- Final recommendation
+
+## Philosophy
+
+**ELEGANT**: Simple 7-dimension framework, clear logic
+**MULTI-TIER**: Analysis (logic) separated from presentation
+**PARALLEL**: Can analyze multiple artifacts concurrently
+
+
+ARGUMENTS: the  .development/plans/plan_repo_restructure_20260218/ the plan
+
+---
+
+# /sc:save - Session Context Persistence
+
+## Triggers
+- Session completion and project context persistence needs
+- Cross-session memory management and checkpoint creation requests
+- Project understanding preservation and discovery archival scenarios
+- Session lifecycle management and progress tracking requirements
+
+## Usage
+```
+/sc:save [--type session|learnings|context|all] [--summarize] [--checkpoint]
+```
+
+## Behavioral Flow
+1. **Analyze**: Examine session progress and identify discoveries worth preserving
+2. **Persist**: Save session context and learnings using Serena MCP memory management
+3. **Checkpoint**: Create recovery points for complex sessions and progress tracking
+4. **Validate**: Ensure session data integrity and cross-session compatibility
+5. **Prepare**: Ready session context for seamless continuation in future sessions
+
+Key behaviors:
+- Serena MCP integration for memory management and cross-session persistence
+- Automatic checkpoint creation based on session progress and critical tasks
+- Session context preservation with comprehensive discovery and pattern archival
+- Cross-session learning with accumulated project insights and technical decisions
+
+## MCP Integration
+- **Serena MCP**: Mandatory integration for session management, memory operations, and cross-session persistence
+- **Memory Operations**: Session context storage, checkpoint creation, and discovery archival
+- **Performance Critical**: <200ms for memory operations, <1s for checkpoint creation
+
+## Tool Coordination
+- **write_memory/read_memory**: Core session context persistence and retrieval
+- **think_about_collected_information**: Session analysis and discovery identification
+- **summarize_changes**: Session summary generation and progress documentation
+- **TodoRead**: Task completion tracking for automatic checkpoint triggers
+
+## Key Patterns
+- **Session Preservation**: Discovery analysis → memory persistence → checkpoint creation
+- **Cross-Session Learning**: Context accumulation → pattern archival → enhanced project understanding
+- **Progress Tracking**: Task completion → automatic checkpoints → session continuity
+- **Recovery Planning**: State preservation → checkpoint validation → restoration readiness
+
+## Examples
+
+### Basic Session Save
+```
+/sc:save
+# Saves current session discoveries and context to Serena MCP
+# Automatically creates checkpoint if session exceeds 30 minutes
+```
+
+### Comprehensive Session Checkpoint
+```
+/sc:save --type all --checkpoint
+# Complete session preservation with recovery checkpoint
+# Includes all learnings, context, and progress for session restoration
+```
+
+### Session Summary Generation
+```
+/sc:save --summarize
+# Creates session summary with discovery documentation
+# Updates cross-session learning patterns and project insights
+```
+
+### Discovery-Only Persistence
+```
+/sc:save --type learnings
+# Saves only new patterns and insights discovered during session
+# Updates project understanding without full session preservation
+```
+
+## Boundaries
+
+**Will:**
+- Save session context using Serena MCP integration for cross-session persistence
+- Create automatic checkpoints based on session progress and task completion
+- Preserve discoveries and patterns for enhanced project understanding
+
+**Will Not:**
+- Operate without proper Serena MCP integration and memory access
+- Save session data without validation and integrity verification
+- Override existing session context without proper checkpoint preservation
