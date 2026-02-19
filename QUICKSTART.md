@@ -33,7 +33,9 @@ See [Ultra-Minimal Results](ULTRA_MINIMAL_RESULTS.md) for performance details.
 ## ✨ Recent Enhancements (Week 1-3)
 
 ### Extended Thinking Budgets (4-5x Increase)
+
 WFC agents now have significantly larger thinking budgets appropriate for the 200k context window:
+
 - **S** (Simple): 2,000 tokens (was 500) - 1% of context
 - **M** (Medium): 5,000 tokens (was 1,000) - 2.5% of context
 - **L** (Large): 10,000 tokens (was 2,500) - 5% of context
@@ -42,6 +44,7 @@ WFC agents now have significantly larger thinking budgets appropriate for the 20
 **Result**: 30-50% reduction in truncated thinking, better reasoning on complex tasks.
 
 ### Retry Threshold Improvement
+
 - **Old**: Escalate to UNLIMITED thinking after 1 retry
 - **New**: Escalate to UNLIMITED thinking after 3 retries
 - **Maximum**: Hard limit of 4 total retries before task abandonment
@@ -49,7 +52,9 @@ WFC agents now have significantly larger thinking budgets appropriate for the 20
 **Result**: Agents get more learning opportunities before escalation.
 
 ### Systematic Debugging Integration
+
 Agents now follow a rigorous 4-phase debugging methodology:
+
 1. **Root Cause Investigation** (REQUIRED) - No fixes without understanding
 2. **Pattern Analysis** - Compare with working code
 3. **Hypothesis Testing** - Scientific method, one change at a time
@@ -58,7 +63,9 @@ Agents now follow a rigorous 4-phase debugging methodology:
 **Result**: 50-70% reduction in debugging time, near-zero new bugs introduced.
 
 ### Code Review Checklist
+
 Reviewers now follow a systematic 6-step checklist:
+
 1. Understand Context
 2. Review Functionality
 3. Review Code Quality
@@ -69,7 +76,9 @@ Reviewers now follow a systematic 6-step checklist:
 **Result**: 30-40% more issues caught vs ad-hoc review.
 
 ### Automatic Metrics Collection
+
 Every WFC task automatically logs metrics locally:
+
 ```bash
 # View aggregate metrics
 python3 wfc/cli/metrics.py
@@ -124,6 +133,7 @@ WFC will:
 WFC uses Claude Code's [Task tool](https://code.claude.com/docs/en/sub-agents) for true independent execution:
 
 **Review Workflow (`/wfc-review`)**:
+
 ```
 /wfc-review
     ↓
@@ -137,6 +147,7 @@ Synthesize Consensus → Generate Report
 ```
 
 **Implementation Workflow (`/wfc-implement`)**:
+
 ```
 /wfc-implement
     ↓
@@ -154,6 +165,7 @@ Route to Review → Merge → Integration Tests → Main Branch
 **Critical Principle**: Orchestrator NEVER implements code, ONLY coordinates subagents.
 
 Each subagent runs in its own subprocess with:
+
 - Isolated git worktree
 - Independent context window
 - No visibility into other agents' work until synthesis
@@ -283,34 +295,40 @@ WFC includes 19 skills:
 
 1. **Restart Claude Code** - Skills are loaded at startup
 2. **Check installation**:
+
    ```bash
    ls ~/.claude/skills/ | grep wfc
    ```
+
    You should see `wfc-review`, `wfc-plan`, etc.
 
 3. **Verify flattening**:
+
    ```bash
    ls ~/.claude/skills/wfc-review/SKILL.md
    ```
+
    Should exist (not nested in `skills/` subdirectory)
 
 ### Auto-Trigger Not Working?
 
 Make sure skill descriptions are loaded:
+
 ```bash
 head -5 ~/.claude/skills/wfc-review/SKILL.md
 ```
 
 Should show updated description with trigger phrases.
 
-### Reviews Not Using Personas?
+### Reviews Not Running All 5 Reviewers?
 
-Check persona library installation:
+Check that reviewer prompts are accessible:
+
 ```bash
-ls ~/.claude/skills/wfc/personas/panels/
+ls ~/.claude/skills/wfc-review/
 ```
 
-Should show 9 panels with JSON files.
+Should show the SKILL.md and associated files. If reviewers are skipped, it may be because the change has low complexity (Tier 1 — only 2 reviewers run for small S-complexity changes). See [docs/concepts/REVIEW_SYSTEM.md](docs/concepts/REVIEW_SYSTEM.md) for conditional tier activation.
 
 ## Security
 
@@ -320,14 +338,13 @@ See [docs/security/OWASP_LLM_TOP10_MITIGATIONS.md](docs/security/OWASP_LLM_TOP10
 
 ## Next Steps
 
-- **Explore personas**: See [PERSONAS.md](docs/quality/PERSONAS.md) for complete library
-- **Customize**: Add your own personas to `~/.claude/skills/wfc/personas/custom/`
-- **Integrate**: Add `CLAUDE.md` to your projects for automatic WFC usage
+- **Review system**: See [docs/concepts/REVIEW_SYSTEM.md](docs/concepts/REVIEW_SYSTEM.md) for how the 5-reviewer system works
+- **Integrate**: Add `CLAUDE.md` to your projects — see [docs/quickstart/CONFIGURE.md](docs/quickstart/CONFIGURE.md)
 - **Extend**: Use `/wfc-newskill` to create custom workflows
 
 ## Get Help
 
-- **Documentation**: [README.md](README.md), [ARCHITECTURE.md](docs/architecture/ARCHITECTURE.md)
+- **Documentation**: [docs/README.md](docs/README.md), [docs/architecture/ARCHITECTURE.md](docs/architecture/ARCHITECTURE.md)
 - **Issues**: GitHub Issues
 - **Examples**: [docs/examples/](docs/examples/)
 

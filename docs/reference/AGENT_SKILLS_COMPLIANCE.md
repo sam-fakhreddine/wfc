@@ -1,14 +1,15 @@
 # Agent Skills Compliance
 
-**Status**: ✅ COMPLETE (2026-02-10)
+**Status**: ✅ COMPLETE (2026-02-18 — updated to 30 skills)
 
-All WFC skills now comply with the [Agent Skills specification](https://github.com/anthropics/agentskills).
+All WFC skills comply with the [Agent Skills specification](https://github.com/anthropics/agentskills).
 
 ## What Changed
 
 ### 1. Frontmatter Compliance
 
 **Before** (invalid):
+
 ```yaml
 ---
 name: wfc-consensus-review
@@ -21,6 +22,7 @@ argument-hint: [task_id or path]
 ```
 
 **After** (valid):
+
 ```yaml
 ---
 name: wfc-review
@@ -30,6 +32,7 @@ license: MIT
 ```
 
 **Valid fields** (per Agent Skills spec):
+
 - `name` - Skill identifier (letters, digits, hyphens only)
 - `description` - Comprehensive description with triggers and use cases
 - `license` - License identifier (e.g., MIT)
@@ -38,6 +41,7 @@ license: MIT
 - `metadata` - Optional metadata object
 
 **Removed fields** (not in spec):
+
 - ❌ `user-invocable`
 - ❌ `disable-model-invocation`
 - ❌ `argument-hint`
@@ -48,6 +52,7 @@ license: MIT
 **After**: `wfc-review` (hyphens only)
 
 All skill names updated:
+
 - `wfc-consensus-review` → `wfc-review`
 - `wfc-plan` → `wfc-plan`
 - `wfc-implement` → `wfc-implement`
@@ -57,6 +62,7 @@ All skill names updated:
 ### 3. Comprehensive Descriptions
 
 All descriptions now include:
+
 1. What it does (1-2 sentences)
 2. Natural language triggers (2-4 phrases)
 3. Explicit slash command (e.g., `/wfc-review`)
@@ -64,9 +70,10 @@ All descriptions now include:
 5. Not for (2-3 anti-use cases)
 
 Example:
+
 ```
-Multi-agent consensus code review using specialized expert personas.
-Automatically selects 5 relevant experts from 56 reviewers.
+Five-agent consensus code review using fixed specialist reviewers.
+Runs Security, Correctness, Performance, Maintainability, and Reliability reviewers.
 Use when user requests code review, PR analysis, security assessment.
 Triggers on "review this code", "check for security issues", or explicit /wfc-review.
 Ideal for feature implementations, refactoring, API changes.
@@ -75,7 +82,7 @@ Not for typo fixes, documentation-only changes.
 
 ## Validation Results
 
-All 19 WFC skills validated with `skills-ref`:
+All 30 WFC skills validated with `skills-ref`:
 
 ```bash
 cd /Users/samfakhreddine/repos/agentskills/skills-ref
@@ -87,23 +94,37 @@ for skill in ~/.claude/skills/wfc-*; do
 done
 ```
 
-**Results**:
+**Results** (30 skills, verified 2026-02-18):
+
+- ✅ wfc-agentic
 - ✅ wfc-architecture
+- ✅ wfc-ba
 - ✅ wfc-build
+- ✅ wfc-code-standards
+- ✅ wfc-compound
+- ✅ wfc-deepen
+- ✅ wfc-export
+- ✅ wfc-gh-debug
+- ✅ wfc-housekeeping
 - ✅ wfc-implement
 - ✅ wfc-init
-- ✅ wfc-validate
+- ✅ wfc-isthissmart
+- ✅ wfc-lfg
 - ✅ wfc-newskill
 - ✅ wfc-observe
 - ✅ wfc-plan
 - ✅ wfc-playground
+- ✅ wfc-pr-comments
+- ✅ wfc-python
 - ✅ wfc-retro
 - ✅ wfc-review
 - ✅ wfc-rules
 - ✅ wfc-safeclaude
 - ✅ wfc-safeguard
 - ✅ wfc-security
+- ✅ wfc-sync
 - ✅ wfc-test
+- ✅ wfc-validate
 - ✅ wfc-vibe
 
 ## XML Prompt Generation
@@ -115,6 +136,7 @@ skills-ref to-prompt ~/.claude/skills/wfc-review/
 ```
 
 **Output**:
+
 ```xml
 <available_skills>
 <skill>
@@ -200,9 +222,10 @@ This keeps initial context small (~2-3k tokens) while providing deep knowledge w
 
 ## Files Modified
 
-### All WFC Skills (17 total)
+### All WFC Skills (30 total)
 
 Updated frontmatter in:
+
 - `~/.claude/skills/wfc-architecture/SKILL.md`
 - `~/.claude/skills/wfc-build/SKILL.md`
 - `~/.claude/skills/wfc-implement/SKILL.md`
@@ -224,6 +247,7 @@ Updated frontmatter in:
 ### wfc-newskill References (new)
 
 Created template and validation docs:
+
 - `~/.claude/skills/wfc-newskill/references/SKILL_TEMPLATE.md`
 - `~/.claude/skills/wfc-newskill/references/VALIDATION_WORKFLOW.md`
 
@@ -259,6 +283,7 @@ done
 ## Philosophy
 
 **WORLD FUCKING CLASS**:
+
 - ✅ ELEGANT: Simple, clear, effective
 - ✅ MULTI-TIER: Logic separated from presentation
 - ✅ PARALLEL: True concurrent execution
@@ -268,7 +293,7 @@ done
 
 ## References
 
-- **Agent Skills repo**: https://github.com/anthropics/agentskills
+- **Agent Skills repo**: <https://github.com/anthropics/agentskills>
 - **skills-ref tool**: `/Users/samfakhreddine/repos/agentskills/skills-ref`
 - **WFC library**: `/Users/samfakhreddine/repos/wfc`
 - **Installed skills**: `~/.claude/skills/wfc-*`

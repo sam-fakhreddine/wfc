@@ -97,6 +97,7 @@ WFC is a production-grade multi-agent consensus review system with 20 skills, 5 
 | FR-1.9 | Metrics are **lazy-initialized** — no overhead if not used | Importing the metrics module alone does not create timers or counters |
 
 **Source Grounding:**
+
 - `reviewer_engine.py:103` already computes `token_count = len(prompt) // 4` — this becomes a metric
 - `orchestrator.py:140-142` — dedup + CS calculation are prime candidates for timing
 - `pretooluse_hook.py:39` — `_bypass_count` is already an ad-hoc counter; replace with proper metric
@@ -118,6 +119,7 @@ WFC is a production-grade multi-agent consensus review system with 20 skills, 5 
 | FR-2.9 | Event bus supports **filtering** by event type pattern | `bus.subscribe("hook.decision", handler, filter={"decision": "block"})` |
 
 **Source Grounding:**
+
 - `orchestrator.py:102-108` (prepare_review) — emit `review.started`
 - `orchestrator.py:110-152` (finalize_review) — emit `review.scored`, `review.completed`
 - `pretooluse_hook.py:72-94` — emit `hook.decision` with block/warn/pass
@@ -427,6 +429,7 @@ The following must ALL be true before Loki Mode is merged:
 ## 10. Phased Delivery Plan (Recommended)
 
 ### Phase 1: Foundation (Core Metrics + Events + Providers)
+
 - `wfc/observability/metrics.py` — Counter, Gauge, Histogram, Timer, Registry
 - `wfc/observability/events.py` — EventBus, ObservabilityEvent, subscribe/emit
 - `wfc/observability/providers/` — ABC, NullProvider, InMemoryProvider, FileProvider, ConsoleProvider
@@ -435,6 +438,7 @@ The following must ALL be true before Loki Mode is merged:
 - **Deliverable:** Metrics and events work internally; FileProvider writes JSON-lines
 
 ### Phase 2: Instrumentation (Wire Into Existing Systems)
+
 - Instrument `ReviewOrchestrator` (6 review lifecycle events + timing metrics)
 - Instrument `pretooluse_hook.py` (4 hook events + replace `_bypass_count`)
 - Instrument `DriftDetector` (3 knowledge events + drift gauges)
@@ -443,6 +447,7 @@ The following must ALL be true before Loki Mode is merged:
 - **Deliverable:** All 13 instrumentation points (FR-8) active
 
 ### Phase 3: CLI + Dashboard
+
 - `wfc metrics` / `wfc metrics --format=table` CLI commands
 - `wfc observe` live event tailing with filter support
 - `wfc dashboard` terminal TUI (Rich/Textual) with graceful fallback
@@ -451,6 +456,7 @@ The following must ALL be true before Loki Mode is merged:
 - **Deliverable:** Full operator experience; `wfc dashboard` and `wfc report` functional
 
 ### Phase 4: Polish + Documentation
+
 - Performance benchmarking and optimization
 - Provider documentation (how to write a custom provider)
 - Update CLAUDE.md with observability commands

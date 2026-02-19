@@ -98,6 +98,7 @@ def prepare_spec_check(self, request: ReviewRequest, task_spec: str) -> dict:
 ```
 
 The spec compliance reviewer checks:
+
 1. All required features from the spec are present in the diff
 2. No scope creep (no features added beyond what was asked)
 3. Edge cases mentioned in the spec are handled

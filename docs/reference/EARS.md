@@ -5,6 +5,7 @@
 ## What is EARS?
 
 EARS provides five structured templates for writing requirements that are:
+
 - **Unambiguous** - Clear trigger/action relationships
 - **Testable** - Easy to derive test cases from
 - **Complete** - Forces specification of conditions
@@ -15,9 +16,11 @@ Developed by Rolls-Royce and Airbus for safety-critical systems.
 ## The 5 EARS Templates
 
 ### 1. Ubiquitous (Always Active)
+
 ```
 The <system> shall <action>
 ```
+
 **Example**: *The authentication system shall encrypt passwords using bcrypt*
 
 **Use when**: Requirement applies universally, no conditions
@@ -25,9 +28,11 @@ The <system> shall <action>
 ---
 
 ### 2. Event-Driven (Triggered by Event)
+
 ```
 WHEN <trigger>, the <system> shall <action>
 ```
+
 **Example**: *WHEN user clicks login button, the system shall validate credentials*
 
 **Use when**: Action occurs in response to specific event
@@ -35,9 +40,11 @@ WHEN <trigger>, the <system> shall <action>
 ---
 
 ### 3. State-Driven (Depends on State)
+
 ```
 WHILE <state>, the <system> shall <action>
 ```
+
 **Example**: *WHILE session is active, the system shall refresh tokens every 15 minutes*
 
 **Use when**: Action continues while condition holds
@@ -45,9 +52,11 @@ WHILE <state>, the <system> shall <action>
 ---
 
 ### 4. Optional Feature (Conditional Capability)
+
 ```
 WHERE <feature>, the <system> shall <action>
 ```
+
 **Example**: *WHERE 2FA is enabled, the system shall require OTP verification*
 
 **Use when**: Feature is optional/configurable
@@ -55,9 +64,11 @@ WHERE <feature>, the <system> shall <action>
 ---
 
 ### 5. Unwanted Behavior (Constraints/Prevention)
+
 ```
 IF <condition>, THEN the <system> shall <action>
 ```
+
 **Example**: *IF login fails 3 times, THEN the system shall lock the account*
 
 **Use when**: Preventing unwanted behavior or enforcing constraints
@@ -88,6 +99,7 @@ When you run `/wfc-plan`, EARS format is automatically applied to:
 ## Example: OAuth2 Feature
 
 ### Natural Language Requirement
+
 ```
 "Add OAuth2 login with JWT tokens and refresh token rotation"
 ```
@@ -95,6 +107,7 @@ When you run `/wfc-plan`, EARS format is automatically applied to:
 ### Generated EARS Requirements
 
 #### TASKS.md
+
 ```markdown
 ## TASK-002: Implement OAuth2 authentication
 
@@ -109,6 +122,7 @@ When you run `/wfc-plan`, EARS format is automatically applied to:
 ```
 
 #### PROPERTIES.md
+
 ```markdown
 ## PROP-001: SAFETY
 
@@ -120,6 +134,7 @@ When you run `/wfc-plan`, EARS format is automatically applied to:
 ```
 
 #### TEST-PLAN.md
+
 ```markdown
 ### TEST-002: Verify OAuth2 token validation
 
@@ -141,16 +156,19 @@ When you run `/wfc-plan`, EARS format is automatically applied to:
 ## Benefits
 
 ### For Developers
+
 - **Clear requirements** - No ambiguity about when/how features work
 - **Easier testing** - Test cases derive naturally from EARS format
 - **Better coverage** - EARS forces you to think about conditions
 
 ### For Reviewers
+
 - **Consistent format** - All requirements follow same structure
 - **Testability** - Can verify each requirement independently
 - **Completeness** - Missing conditions become obvious
 
 ### For WFC Agents
+
 - **Automated test generation** - EARS → test steps mapping is deterministic
 - **Property verification** - Clear pass/fail criteria from EARS statements
 - **Implementation guidance** - EARS requirements guide TDD workflow
@@ -243,7 +261,7 @@ criteria = generate_acceptance_criteria_ears(
 
 - [EARS Official Guide](https://alistairmavin.com/ears/) - Alistair Mavin (creator)
 - [NASA Systems Engineering Handbook](https://www.nasa.gov/seh/) - Requirements best practices
-- [WFC Planning Documentation](../architecture/PLANNING.md) - How WFC uses EARS
+- [WFC Planning Documentation](../archive/PLANNING_V1.md) - How WFC used EARS (v1.0 reference)
 
 ---
 

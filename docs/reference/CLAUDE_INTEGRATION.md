@@ -32,7 +32,9 @@ For any significant code change (>50 lines, new features, security-sensitive cod
 
 1. **Use WFC consensus review**:
    ```
+
    /wfc-consensus-review TASK-{id}
+
    ```
 
 2. **WFC will automatically**:
@@ -68,7 +70,9 @@ For any significant code change (>50 lines, new features, security-sensitive cod
 For specialized reviews, manually select personas:
 
 ```
+
 /wfc-consensus-review TASK-{id} --personas APPSEC_SPECIALIST,DB_ARCHITECT_SQL,BACKEND_PYTHON_SENIOR
+
 ```
 
 ### Review Quality Standards
@@ -146,7 +150,9 @@ All PRs must pass WFC consensus review with:
 
 Reviewers should run:
 ```
+
 /wfc-consensus-review PR-{number}
+
 ```
 
 Before approving any PR.
@@ -162,7 +168,9 @@ For teams, standardize WFC usage:
 ### Step 1: Developer Self-Review
 Before submitting PR, run:
 ```
+
 /wfc-consensus-review TASK-{id}
+
 ```
 
 Address any issues with score <8.0
@@ -176,7 +184,9 @@ Senior engineer reviews:
 ### Step 3: Final WFC Check
 Before merge, final consensus review:
 ```
+
 /wfc-consensus-review PR-{number}
+
 ```
 
 Must achieve ≥8.5/10 for production deployment.
@@ -231,7 +241,9 @@ Review properties: SECURITY, SAFETY, COMPLIANCE, RELIABILITY
 
 Before submitting PR, run WFC self-review:
 ```
+
 /wfc-consensus-review FEATURE-{name}
+
 ```
 
 This helps catch issues early and speeds up maintainer review.
@@ -260,6 +272,7 @@ After setting up CLAUDE.md, verify Claude uses WFC:
 ### Claude doesn't use WFC automatically
 
 **Fix**: Make CLAUDE.md instructions more explicit:
+
 ```markdown
 IMPORTANT: For all code reviews, you MUST use:
 /wfc-consensus-review TASK-{id}
@@ -270,6 +283,7 @@ Do not review code manually. Always use WFC for multi-perspective analysis.
 ### WFC selects wrong personas
 
 **Fix**: Add tech stack and properties context:
+
 ```markdown
 ## Tech Stack
 - Python, FastAPI, PostgreSQL
@@ -282,6 +296,7 @@ Do not review code manually. Always use WFC for multi-perspective analysis.
 ### Scores are too strict
 
 **Fix**: Calibrate thresholds:
+
 ```markdown
 ## Review Standards
 - ≥7.0: Acceptable for experimental features
@@ -299,4 +314,4 @@ Do not review code manually. Always use WFC for multi-perspective analysis.
 
 ---
 
-**Next Steps**: See [examples/](examples/) for real-world CLAUDE.md configurations.
+**Next Steps**: See [examples/](../examples/) for real-world CLAUDE.md configurations.
