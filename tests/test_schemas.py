@@ -75,8 +75,8 @@ class TestValidateFinding:
             "description": "issue",
         }
         result = validate_finding(data)
-        if result is not None:
-            assert result["severity"] <= 10.0
+        assert result is not None
+        assert result["severity"] == 10.0
 
     def test_severity_clamped_to_0(self) -> None:
         from wfc.scripts.schemas.finding import validate_finding
@@ -89,8 +89,38 @@ class TestValidateFinding:
             "description": "issue",
         }
         result = validate_finding(data)
-        if result is not None:
-            assert result["severity"] >= 0.0
+        assert result is not None
+        assert result["severity"] == 0.0
+
+    def test_severity_boundary_slightly_above_10(self) -> None:
+        """Severity=10.001 must be clamped to 10.0, not rejected."""
+        from wfc.scripts.schemas.finding import validate_finding
+
+        data = {
+            "file": "main.py",
+            "line_start": 1,
+            "category": "bug",
+            "severity": 10.001,
+            "description": "issue",
+        }
+        result = validate_finding(data)
+        assert result is not None, "Out-of-range severity should be clamped, not dropped"
+        assert result["severity"] == pytest.approx(10.0)
+
+    def test_severity_boundary_slightly_below_0(self) -> None:
+        """Severity=-0.001 must be clamped to 0.0, not rejected."""
+        from wfc.scripts.schemas.finding import validate_finding
+
+        data = {
+            "file": "main.py",
+            "line_start": 1,
+            "category": "bug",
+            "severity": -0.001,
+            "description": "issue",
+        }
+        result = validate_finding(data)
+        assert result is not None, "Out-of-range severity should be clamped, not dropped"
+        assert result["severity"] == pytest.approx(0.0)
 
     def test_extra_fields_preserved(self) -> None:
         from wfc.scripts.schemas.finding import validate_finding
