@@ -1,10 +1,13 @@
 name: CI
 
-on:
+"on":
   push:
-    branches: [ main, develop, 'rc/**' ]
+    branches: [main, develop, 'rc/**']
   pull_request:
-    branches: [ main, develop ]
+    branches: [main, develop]
+
+permissions:
+  contents: read
 
 jobs:
   lint:

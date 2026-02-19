@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-import threading
-from pathlib import Path
 from unittest.mock import MagicMock
 
 import pytest
@@ -62,9 +60,7 @@ class TestEdgeCases:
         from wfc.observability.events import EventBus
 
         bus = EventBus()
-        bus.emit(ObservabilityEvent(
-            event_type="test", source="test", session_id="s", payload={}
-        ))
+        bus.emit(ObservabilityEvent(event_type="test", source="test", session_id="s", payload={}))
 
     def test_missing_config_falls_back_silently(self, tmp_path, monkeypatch):
         """Missing config file falls back to defaults without errors."""
@@ -95,9 +91,7 @@ class TestEdgeCases:
         p1 = FileProvider(output_dir=str(tmp_path), session_id="session-A")
         p2 = FileProvider(output_dir=str(tmp_path), session_id="session-B")
 
-        event = ObservabilityEvent(
-            event_type="test", source="test", session_id="s", payload={}
-        )
+        event = ObservabilityEvent(event_type="test", source="test", session_id="s", payload={})
         p1.on_event(event)
         p2.on_event(event)
         p1.flush()
@@ -126,6 +120,7 @@ class TestBackwardCompatibility:
         from wfc.scripts.orchestrators.review.orchestrator import ReviewOrchestrator
 
         import inspect
+
         sig = inspect.signature(ReviewOrchestrator.__init__)
         params = list(sig.parameters.keys())
         assert "self" in params
@@ -136,6 +131,7 @@ class TestBackwardCompatibility:
         from wfc.scripts.orchestrators.review.orchestrator import ReviewOrchestrator
 
         import inspect
+
         sig = inspect.signature(ReviewOrchestrator.prepare_review)
         params = list(sig.parameters.keys())
         assert params == ["self", "request"]
@@ -144,6 +140,7 @@ class TestBackwardCompatibility:
         from wfc.scripts.orchestrators.review.orchestrator import ReviewOrchestrator
 
         import inspect
+
         sig = inspect.signature(ReviewOrchestrator.finalize_review)
         params = list(sig.parameters.keys())
         assert params == ["self", "request", "task_responses", "output_dir", "skip_validation"]
@@ -152,6 +149,7 @@ class TestBackwardCompatibility:
         from wfc.scripts.hooks.security_hook import check
 
         import inspect
+
         sig = inspect.signature(check)
         params = list(sig.parameters.keys())
         assert params == ["input_data", "state"]
@@ -160,6 +158,7 @@ class TestBackwardCompatibility:
         from wfc.scripts.hooks.rule_engine import evaluate
 
         import inspect
+
         sig = inspect.signature(evaluate)
         params = list(sig.parameters.keys())
         assert params == ["input_data", "rules_dir"]
@@ -168,6 +167,7 @@ class TestBackwardCompatibility:
         from wfc.scripts.knowledge.drift_detector import DriftDetector
 
         import inspect
+
         sig = inspect.signature(DriftDetector.analyze)
         params = list(sig.parameters.keys())
         assert params == ["self"]

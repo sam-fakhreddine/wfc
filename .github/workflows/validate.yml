@@ -1,10 +1,13 @@
 name: Validate WFC Skills
 
-on:
+"on":
   push:
-    branches: [ main, develop, 'rc/**' ]
+    branches: [main, develop, 'rc/**']
   pull_request:
-    branches: [ main, develop ]
+    branches: [main, develop]
+
+permissions:
+  contents: read
 
 jobs:
   test:
@@ -12,187 +15,191 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-    - name: Set up Python
-      uses: actions/setup-python@v5
-      with:
-        python-version: '3.12'
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
 
-    - name: Install uv
-      run: |
-        curl -LsSf https://astral.sh/uv/install.sh | sh
-        echo "$HOME/.cargo/bin" >> $GITHUB_PATH
+      - name: Install uv
+        run: |
+          curl -LsSf https://astral.sh/uv/install.sh | sh
+          echo "$HOME/.cargo/bin" >> $GITHUB_PATH
 
-    - name: Install dependencies
-      run: |
-        uv venv
-        source .venv/bin/activate
-        uv pip install -e ".[dev,tokens]"
+      - name: Install dependencies
+        run: |
+          uv venv
+          source .venv/bin/activate
+          uv pip install -e ".[dev,tokens]"
 
-    - name: Install WFC skills
-      run: |
-        chmod +x install.sh
-        ./install.sh --ci
+      - name: Install WFC skills
+        run: |
+          chmod +x install.sh
+          ./install.sh --ci
 
-    - name: Run tests
-      run: |
-        source .venv/bin/activate
-        pytest -v --ignore=tests/test_installer_docker.py
+      - name: Run tests
+        run: |
+          source .venv/bin/activate
+          pytest -v --ignore=tests/test_installer_docker.py
 
-    - name: Check formatting
-      run: |
-        source .venv/bin/activate
-        black --check wfc/
+      - name: Check formatting
+        run: |
+          source .venv/bin/activate
+          black --check wfc/
 
-    - name: Run linter
-      run: |
-        source .venv/bin/activate
-        ruff check wfc/
+      - name: Run linter
+        run: |
+          source .venv/bin/activate
+          ruff check wfc/
 
   validate-skills:
     name: Validate Agent Skills Compliance
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-    - name: Set up Python
-      uses: actions/setup-python@v5
-      with:
-        python-version: '3.12'
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
 
-    - name: Install WFC skills
-      run: |
-        chmod +x install.sh
-        ./install.sh --ci
+      - name: Install WFC skills
+        run: |
+          chmod +x install.sh
+          ./install.sh --ci
 
-    - name: Install validation dependencies
-      run: pip install pyyaml
+      - name: Install validation dependencies
+        run: pip install pyyaml
 
-    # Validates SKILL.md per Agent Skills spec (https://github.com/anthropics/skills)
-    # Checks: YAML frontmatter (name, description), skill body content, naming convention,
-    # and XML prompt rendering. Note: the original `skills-ref` validator from
-    # anthropics/agentskills is not publicly available; this implements equivalent checks
-    # based on the Agent Skills spec at https://agentskills.io/specification.
-    - name: Validate all WFC skills
-      run: |
-        python3 << 'PYEOF'
-        import yaml
-        import os
-        import sys
-        import xml.etree.ElementTree as ET
+      # Validates SKILL.md per Agent Skills spec (https://github.com/anthropics/skills)
+      # Checks: YAML frontmatter (name, description), skill body content, naming convention,
+      # and XML prompt rendering. Note: the original `skills-ref` validator from
+      # anthropics/agentskills is not publicly available; this implements equivalent checks
+      # based on the Agent Skills spec at https://agentskills.io/specification.
+      - name: Validate all WFC skills
+        run: |
+          python3 << 'PYEOF'
+          import yaml
+          import os
+          import sys
+          import xml.etree.ElementTree as ET
 
-        skills_dir = os.path.expanduser("~/.claude/skills")
-        failed = False
-        validated = 0
+          skills_dir = os.path.expanduser("~/.claude/skills")
+          failed = False
+          validated = 0
 
-        for entry in sorted(os.listdir(skills_dir)):
-            if not entry.startswith("wfc-"):
-                continue
-            skill_dir = os.path.join(skills_dir, entry)
-            if not os.path.isdir(skill_dir):
-                continue
+          for entry in sorted(os.listdir(skills_dir)):
+              if not entry.startswith("wfc-"):
+                  continue
+              skill_dir = os.path.join(skills_dir, entry)
+              if not os.path.isdir(skill_dir):
+                  continue
 
-            skill_md = os.path.join(skill_dir, "SKILL.md")
-            if not os.path.exists(skill_md):
-                print(f"❌ {entry}: missing SKILL.md")
-                failed = True
-                continue
+              skill_md = os.path.join(skill_dir, "SKILL.md")
+              if not os.path.exists(skill_md):
+                  print(f"❌ {entry}: missing SKILL.md")
+                  failed = True
+                  continue
 
-            with open(skill_md) as f:
-                content = f.read()
+              with open(skill_md) as f:
+                  content = f.read()
 
-            # Check YAML frontmatter
-            if not content.startswith("---"):
-                print(f"❌ {entry}: SKILL.md missing YAML frontmatter")
-                failed = True
-                continue
+              # Check YAML frontmatter
+              if not content.startswith("---"):
+                  print(f"❌ {entry}: SKILL.md missing YAML frontmatter")
+                  failed = True
+                  continue
 
-            parts = content.split("---", 2)
-            if len(parts) < 3:
-                print(f"❌ {entry}: SKILL.md has malformed frontmatter")
-                failed = True
-                continue
+              parts = content.split("---", 2)
+              if len(parts) < 3:
+                  print(f"❌ {entry}: SKILL.md has malformed frontmatter")
+                  failed = True
+                  continue
 
-            try:
-                meta = yaml.safe_load(parts[1])
-            except yaml.YAMLError as e:
-                print(f"❌ {entry}: invalid YAML frontmatter: {e}")
-                failed = True
-                continue
+              try:
+                  meta = yaml.safe_load(parts[1])
+              except yaml.YAMLError as e:
+                  print(f"❌ {entry}: invalid YAML frontmatter: {e}")
+                  failed = True
+                  continue
 
-            # Validate required fields per Agent Skills spec
-            if not meta or not isinstance(meta, dict):
-                print(f"❌ {entry}: empty frontmatter")
-                failed = True
-                continue
+              # Validate required fields per Agent Skills spec
+              if not meta or not isinstance(meta, dict):
+                  print(f"❌ {entry}: empty frontmatter")
+                  failed = True
+                  continue
 
-            missing = [f for f in ["name", "description"] if f not in meta]
-            if missing:
-                print(f"❌ {entry}: missing required fields: {missing}")
-                failed = True
-                continue
+              missing = [f for f in ["name", "description"] if f not in meta]
+              if missing:
+                  print(f"❌ {entry}: missing required fields: {missing}")
+                  failed = True
+                  continue
 
-            # Validate naming convention (lowercase, hyphens)
-            name = meta["name"]
-            if name != name.lower() or " " in name:
-                print(f"❌ {entry}: name '{name}' must be lowercase with hyphens")
-                failed = True
-                continue
+              # Validate naming convention (lowercase, hyphens)
+              name = meta["name"]
+              if name != name.lower() or " " in name:
+                  print(f"❌ {entry}: name '{name}' must be lowercase with hyphens")
+                  failed = True
+                  continue
 
-            # Validate skill body has meaningful content
-            body = parts[2].strip()
-            if len(body) < 50:
-                print(f"❌ {entry}: SKILL.md body too short ({len(body)} chars)")
-                failed = True
-                continue
+              # Validate skill body has meaningful content
+              body = parts[2].strip()
+              if len(body) < 50:
+                  print(f"❌ {entry}: SKILL.md body too short ({len(body)} chars)")
+                  failed = True
+                  continue
 
-            # Validate XML prompt rendering
-            try:
-                xml_str = f"<skill><name>{name}</name><description>{meta['description']}</description><content>{body[:200]}</content></skill>"
-                ET.fromstring(xml_str)
-            except ET.ParseError as e:
-                print(f"⚠️  {entry}: XML prompt rendering warning: {e}")
+              # Validate XML prompt rendering
+              try:
+                  xml_str = (
+                      f"<skill><name>{name}</name>"
+                      f"<description>{meta['description']}</description>"
+                      f"<content>{body[:200]}</content></skill>"
+                  )
+                  ET.fromstring(xml_str)
+              except ET.ParseError as e:
+                  print(f"⚠️  {entry}: XML prompt rendering warning: {e}")
 
-            validated += 1
-            print(f"✅ {entry}: valid (name={name})")
+              validated += 1
+              print(f"✅ {entry}: valid (name={name})")
 
-        if failed:
-            print(f"\n❌ Some skills failed validation")
-            sys.exit(1)
-        else:
-            print(f"\n✅ All {validated} WFC skills validated")
-        PYEOF
+          if failed:
+              print(f"\n❌ Some skills failed validation")
+              sys.exit(1)
+          else:
+              print(f"\n✅ All {validated} WFC skills validated")
+          PYEOF
 
   reviewer-check:
     name: Validate Reviewer Structure
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-    - name: Check reviewer files
-      run: |
-        python3 << 'EOF'
-        from pathlib import Path
+      - name: Check reviewer files
+        run: |
+          python3 << 'EOF'
+          from pathlib import Path
 
-        reviewers_dir = Path('wfc/references/reviewers')
-        expected = ['security', 'correctness', 'performance', 'maintainability', 'reliability']
-        errors = []
+          reviewers_dir = Path('wfc/references/reviewers')
+          expected = ['security', 'correctness', 'performance', 'maintainability', 'reliability']
+          errors = []
 
-        for name in expected:
-            prompt = reviewers_dir / name / 'PROMPT.md'
-            if not prompt.exists():
-                errors.append(f"Missing: {prompt}")
-            elif len(prompt.read_text()) < 100:
-                errors.append(f"Too short: {prompt}")
+          for name in expected:
+              prompt = reviewers_dir / name / 'PROMPT.md'
+              if not prompt.exists():
+                  errors.append(f"Missing: {prompt}")
+              elif len(prompt.read_text()) < 100:
+                  errors.append(f"Too short: {prompt}")
 
-        if errors:
-            print("❌ Reviewer errors:")
-            for e in errors:
-                print(f"  - {e}")
-            exit(1)
-        else:
-            print(f"✅ All {len(expected)} reviewers present and valid")
-        EOF
+          if errors:
+              print("❌ Reviewer errors:")
+              for e in errors:
+                  print(f"  - {e}")
+              exit(1)
+          else:
+              print(f"✅ All {len(expected)} reviewers present and valid")
+          EOF
