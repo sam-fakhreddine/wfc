@@ -23,20 +23,20 @@ WFC_HOOKS = {
             "hooks": [
                 {
                     "type": "command",
-                    "command": "python ~/.wfc/scripts/hooks/file_checker.py",
+                    "command": "python3 ~/.wfc/scripts/hooks/file_checker.py",
                 },
                 {
                     "type": "command",
-                    "command": "python ~/.wfc/scripts/hooks/tdd_enforcer.py",
+                    "command": "python3 ~/.wfc/scripts/hooks/tdd_enforcer.py",
                 },
             ],
         },
         {
-            "matcher": "Read|Write|Edit|Bash|Task|Skill|Grep|Glob",
+            "matcher": "Read|Write|Edit|Bash|Skill|Grep|Glob",
             "hooks": [
                 {
                     "type": "command",
-                    "command": "python ~/.wfc/scripts/hooks/context_monitor.py",
+                    "command": "python3 ~/.wfc/scripts/hooks/context_monitor.py",
                 },
             ],
         },
