@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+
 from wfc.observability.config import ObservabilityConfig
 
 
