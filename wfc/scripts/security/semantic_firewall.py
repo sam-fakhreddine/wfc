@@ -22,7 +22,6 @@ import logging
 import math
 import os
 import sys
-import tempfile
 import time
 from pathlib import Path
 from typing import Any
@@ -30,6 +29,7 @@ from typing import Any
 logger = logging.getLogger("wfc.security.semantic_firewall")
 
 _SIGNATURES_DIR: Path = Path(__file__).parent / "signatures"
+_HARDENED_DIR: Path = Path.home() / ".wfc" / "firewall"
 _DEFAULT_THRESHOLD_BLOCK: float = 0.85
 _DEFAULT_THRESHOLD_WARN: float = 0.70
 _TIMEOUT_MS: int = 500
@@ -74,8 +74,12 @@ def _get_provider() -> Any:
 def _load_signatures(provider: Any) -> tuple[list[list[float]], list[dict[str, Any]]]:
     """Load and embed attack signatures from seed_signatures.json.
 
+    Caches results in module-level globals on first successful load.
     Returns (embeddings, metadata) tuples. On any error returns ([], []).
     """
+    global _signature_embeddings, _signature_metadata
+    if _signature_embeddings is not None:
+        return _signature_embeddings, _signature_metadata
     try:
         sig_path = _SIGNATURES_DIR / "seed_signatures.json"
         if not sig_path.exists():
@@ -86,11 +90,18 @@ def _load_signatures(provider: Any) -> tuple[list[list[float]], list[dict[str, A
         if not signatures:
             return [], []
 
-        texts = [sig["text"] for sig in signatures]
+        # Filter out malformed entries rather than discarding all
+        valid_sigs = [s for s in signatures if s.get("text") and s.get("id")]
+        if not valid_sigs:
+            return [], []
+
+        texts = [sig["text"] for sig in valid_sigs]
         embeddings = provider.embed(texts)
         metadata = [
-            {"id": sig["id"], "category": sig.get("category", "unknown")} for sig in signatures
+            {"id": sig["id"], "category": sig.get("category", "unknown")} for sig in valid_sigs
         ]
+        _signature_embeddings = embeddings
+        _signature_metadata = metadata
         return embeddings, metadata
     except Exception:
         logger.debug("Failed to load signatures", exc_info=True)
@@ -147,15 +158,19 @@ def _store_hardened_embedding(
 
     - Deduplicates by SHA-256 hash of prompt text
     - Caps stored entries at _HARDENED_CAP (100)
-    - Writes to /tmp/wfc-firewall-hardened-{ppid}.json
+    - Writes atomically to ~/.wfc/firewall/hardened.json
     - Never raises.
     """
     try:
+        import tempfile as _tempfile
+
         prompt_hash = hashlib.sha256(prompt_text.encode()).hexdigest()
-        hardened_path = Path(tempfile.gettempdir()) / f"wfc-firewall-hardened-{os.getppid()}.json"
+        _HARDENED_DIR.mkdir(parents=True, exist_ok=True)
+        _HARDENED_DIR.chmod(0o700)
+        hardened_path = _HARDENED_DIR / "hardened.json"
 
         entries: list[dict[str, Any]] = []
-        if hardened_path.exists():
+        if hardened_path.exists() and not hardened_path.is_symlink():
             try:
                 entries = json.loads(hardened_path.read_text())
             except Exception:
@@ -175,7 +190,13 @@ def _store_hardened_embedding(
                 "timestamp": time.time(),
             }
         )
-        hardened_path.write_text(json.dumps(entries))
+        # Atomic write: write to temp file then replace
+        fd, tmp_path = _tempfile.mkstemp(dir=str(_HARDENED_DIR))
+        try:
+            os.write(fd, json.dumps(entries).encode())
+        finally:
+            os.close(fd)
+        os.replace(tmp_path, str(hardened_path))
     except Exception:
         logger.debug("Failed to store hardened embedding", exc_info=True)
 
@@ -186,6 +207,8 @@ def _run() -> None:
     Raises SystemExit on all code paths. Exceptions propagate to main()
     which catches them for fail-open.
     """
+    deadline = time.monotonic() + (_TIMEOUT_MS / 1000.0)
+
     raw = sys.stdin.read()
     if not raw or not raw.strip():
         sys.exit(0)
@@ -202,8 +225,6 @@ def _run() -> None:
     if not prompt or not prompt.strip():
         sys.exit(0)
 
-    deadline = time.monotonic() + (_TIMEOUT_MS / 1000.0)
-
     _check_freshness()
 
     provider = _get_provider()
@@ -216,7 +237,31 @@ def _run() -> None:
         _emit_metric("firewall.no_signatures")
         sys.exit(0)
 
-    prompt_embedding = provider.embed_query(prompt)
+    remaining = deadline - time.monotonic()
+    if remaining <= 0:
+        _emit_metric("firewall.timeout", {"phase": "pre_embedding"})
+        sys.exit(0)
+
+    try:
+        from concurrent.futures import ThreadPoolExecutor
+        from concurrent.futures import TimeoutError as FuturesTimeoutError
+
+        with ThreadPoolExecutor(max_workers=1) as pool:
+            future = pool.submit(provider.embed_query, prompt)
+            try:
+                prompt_embedding = future.result(timeout=max(0.01, remaining))
+            except FuturesTimeoutError:
+                _emit_metric("firewall.timeout", {"phase": "embed_query"})
+                sys.exit(0)
+    except SystemExit:
+        raise
+    except Exception:
+        _emit_metric("firewall.embed_failure")
+        sys.exit(0)
+
+    if not isinstance(prompt_embedding, list):
+        _emit_metric("firewall.embed_failure", {"reason": "non_list_return"})
+        sys.exit(0)
 
     if time.monotonic() > deadline:
         _emit_metric("firewall.timeout", {"phase": "pre_comparison"})

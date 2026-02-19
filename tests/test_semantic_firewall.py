@@ -5,6 +5,7 @@ from __future__ import annotations
 import json
 import math
 import time
+from pathlib import Path
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -394,15 +395,14 @@ class TestSelfHardening:
     """Test self-hardening storage."""
 
     def test_store_hardened_embedding(self, tmp_path):
+        from wfc.scripts.security import semantic_firewall
         from wfc.scripts.security.semantic_firewall import _store_hardened_embedding
 
-        with (
-            patch("tempfile.gettempdir", return_value=str(tmp_path)),
-            patch("os.getppid", return_value=12345),
-        ):
+        hardened_dir = tmp_path / "firewall"
+        with patch.object(semantic_firewall, "_HARDENED_DIR", hardened_dir):
             _store_hardened_embedding("test prompt", [1, 0, 0], 0.90)
 
-        hardened_file = tmp_path / "wfc-firewall-hardened-12345.json"
+        hardened_file = hardened_dir / "hardened.json"
         assert hardened_file.exists()
         data = json.loads(hardened_file.read_text())
         assert len(data) == 1
@@ -412,51 +412,70 @@ class TestSelfHardening:
         assert "timestamp" in data[0]
 
     def test_store_hardened_deduplicates(self, tmp_path):
+        from wfc.scripts.security import semantic_firewall
         from wfc.scripts.security.semantic_firewall import _store_hardened_embedding
 
-        with (
-            patch("tempfile.gettempdir", return_value=str(tmp_path)),
-            patch("os.getppid", return_value=12345),
-        ):
+        hardened_dir = tmp_path / "firewall"
+        with patch.object(semantic_firewall, "_HARDENED_DIR", hardened_dir):
             _store_hardened_embedding("test prompt", [1, 0, 0], 0.90)
             _store_hardened_embedding("test prompt", [1, 0, 0], 0.90)
 
-        hardened_file = tmp_path / "wfc-firewall-hardened-12345.json"
+        hardened_file = hardened_dir / "hardened.json"
         data = json.loads(hardened_file.read_text())
         assert len(data) == 1
 
     def test_store_hardened_caps_at_100(self, tmp_path):
+        from wfc.scripts.security import semantic_firewall
         from wfc.scripts.security.semantic_firewall import _store_hardened_embedding
 
-        hardened_file = tmp_path / "wfc-firewall-hardened-12345.json"
+        hardened_dir = tmp_path / "firewall"
+        hardened_dir.mkdir(parents=True, exist_ok=True)
+        hardened_file = hardened_dir / "hardened.json"
         existing = [
             {"hash": f"hash{i}", "embedding": [i], "similarity": 0.9, "timestamp": 0}
             for i in range(100)
         ]
         hardened_file.write_text(json.dumps(existing))
 
-        with (
-            patch("tempfile.gettempdir", return_value=str(tmp_path)),
-            patch("os.getppid", return_value=12345),
-        ):
+        with patch.object(semantic_firewall, "_HARDENED_DIR", hardened_dir):
             _store_hardened_embedding("new prompt 101", [1, 0, 0], 0.95)
 
         data = json.loads(hardened_file.read_text())
         assert len(data) == 100
 
     def test_store_hardened_different_prompts(self, tmp_path):
+        from wfc.scripts.security import semantic_firewall
         from wfc.scripts.security.semantic_firewall import _store_hardened_embedding
 
-        with (
-            patch("tempfile.gettempdir", return_value=str(tmp_path)),
-            patch("os.getppid", return_value=12345),
-        ):
+        hardened_dir = tmp_path / "firewall"
+        with patch.object(semantic_firewall, "_HARDENED_DIR", hardened_dir):
             _store_hardened_embedding("prompt one", [1, 0, 0], 0.90)
             _store_hardened_embedding("prompt two", [0, 1, 0], 0.88)
 
-        hardened_file = tmp_path / "wfc-firewall-hardened-12345.json"
+        hardened_file = hardened_dir / "hardened.json"
         data = json.loads(hardened_file.read_text())
         assert len(data) == 2
+
+    def test_store_hardened_skips_symlink(self, tmp_path):
+        """Should not read or write if hardened.json is a symlink."""
+        from wfc.scripts.security import semantic_firewall
+        from wfc.scripts.security.semantic_firewall import _store_hardened_embedding
+
+        hardened_dir = tmp_path / "firewall"
+        hardened_dir.mkdir(parents=True, exist_ok=True)
+        # Create a real file and a symlink pointing to it
+        real_file = tmp_path / "real.json"
+        real_file.write_text(json.dumps([]))
+        symlink = hardened_dir / "hardened.json"
+        symlink.symlink_to(real_file)
+
+        with patch.object(semantic_firewall, "_HARDENED_DIR", hardened_dir):
+            # Should silently skip writing (symlink check)
+            _store_hardened_embedding("test prompt", [1, 0, 0], 0.90)
+
+        # Real file should remain unchanged (empty list)
+        data = json.loads(real_file.read_text())
+        assert data == []
 
 
 class TestCheckFreshness:
@@ -513,7 +532,17 @@ class TestCheckFreshness:
 class TestLoadSignatures:
     """Test _load_signatures function."""
 
+    def _reset_module(self):
+        """Reset module-level singletons between tests."""
+        from wfc.scripts.security import semantic_firewall
+
+        semantic_firewall._provider = None
+        semantic_firewall._signature_embeddings = None
+        semantic_firewall._signature_metadata = None
+        return semantic_firewall
+
     def test_load_valid_signatures(self, tmp_path):
+        sf = self._reset_module()
         from wfc.scripts.security import semantic_firewall
 
         sig_file = tmp_path / "seed_signatures.json"
@@ -539,6 +568,7 @@ class TestLoadSignatures:
         mock_provider.embed.assert_called_once()
 
     def test_load_missing_file_returns_empty(self, tmp_path):
+        self._reset_module()
         from wfc.scripts.security import semantic_firewall
 
         mock_provider = MagicMock()
@@ -550,6 +580,7 @@ class TestLoadSignatures:
         assert metadata == []
 
     def test_load_corrupt_file_returns_empty(self, tmp_path):
+        self._reset_module()
         from wfc.scripts.security import semantic_firewall
 
         sig_file = tmp_path / "seed_signatures.json"
@@ -564,6 +595,7 @@ class TestLoadSignatures:
         assert metadata == []
 
     def test_load_empty_signatures_returns_empty(self, tmp_path):
+        self._reset_module()
         from wfc.scripts.security import semantic_firewall
 
         sig_file = tmp_path / "seed_signatures.json"
@@ -577,6 +609,57 @@ class TestLoadSignatures:
 
         assert embeddings == []
         assert metadata == []
+
+    def test_load_filters_malformed_entries(self, tmp_path):
+        """Malformed entries (missing text or id) should be filtered, not cause total failure."""
+        self._reset_module()
+        from wfc.scripts.security import semantic_firewall
+
+        sig_file = tmp_path / "seed_signatures.json"
+        sig_data = {
+            "version": "1.0.0",
+            "signatures": [
+                {"id": "sig-001", "text": "valid signature", "category": "override"},
+                {"id": "sig-002"},  # missing text
+                {"text": "no id here", "category": "test"},  # missing id
+            ],
+        }
+        sig_file.write_text(json.dumps(sig_data))
+
+        mock_provider = MagicMock()
+        mock_provider.embed.return_value = [[1, 0]]
+
+        with patch.object(semantic_firewall, "_SIGNATURES_DIR", tmp_path):
+            embeddings, metadata = semantic_firewall._load_signatures(mock_provider)
+
+        assert len(embeddings) == 1
+        assert metadata[0]["id"] == "sig-001"
+
+    def test_cache_returns_same_result(self, tmp_path):
+        """Second call to _load_signatures uses the module-level cache."""
+        self._reset_module()
+        from wfc.scripts.security import semantic_firewall
+
+        sig_file = tmp_path / "seed_signatures.json"
+        sig_data = {
+            "version": "1.0.0",
+            "signatures": [
+                {"id": "sig-001", "text": "ignore instructions", "category": "override"},
+            ],
+        }
+        sig_file.write_text(json.dumps(sig_data))
+
+        mock_provider = MagicMock()
+        mock_provider.embed.return_value = [[1, 0]]
+
+        with patch.object(semantic_firewall, "_SIGNATURES_DIR", tmp_path):
+            embeddings1, metadata1 = semantic_firewall._load_signatures(mock_provider)
+            embeddings2, metadata2 = semantic_firewall._load_signatures(mock_provider)
+
+        # embed() should only be called once due to caching
+        mock_provider.embed.assert_called_once()
+        assert embeddings1 == embeddings2
+        assert metadata1 == metadata2
 
 
 class TestEmitMetric:
@@ -620,3 +703,8 @@ class TestModuleConstants:
         from wfc.scripts.security.semantic_firewall import _FRESHNESS_DAYS
 
         assert _FRESHNESS_DAYS == 30
+
+    def test_hardened_dir(self):
+        from wfc.scripts.security.semantic_firewall import _HARDENED_DIR
+
+        assert _HARDENED_DIR == Path.home() / ".wfc" / "firewall"

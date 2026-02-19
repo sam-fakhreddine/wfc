@@ -91,7 +91,7 @@ def should_skip(file_path: str) -> bool:
     if path.suffix in EXCLUDED_EXTENSIONS:
         return True
 
-    if path.name in EXCLUDED_EXTENSIONS:
+    if any(file_path.endswith(ext) for ext in EXCLUDED_EXTENSIONS if ext.count('.') > 1):
         return True
 
     if path.name in EXCLUDED_FILENAMES:
@@ -188,6 +188,7 @@ def has_python_test_file(impl_path: str) -> bool:
             return True
 
     test_dirs = _find_test_dirs(path.parent)
+    # base_name="" because extensions already contain full filenames (test_module.py)
     return _search_test_dirs(test_dirs, "", [f"test_{module_name}.py", f"{module_name}_test.py"])
 
 
