@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Esports Data Pipeline</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Russo+One&family=Chakra+Petch:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+
+  :root{
+    --primary:#7C3AED;
+    --secondary:#A78BFA;
+    --cta:#F43F5E;
+    --bg:#0F0F23;
+    --text:#E2E8F0;
+    --border:#4C1D95;
+    --card-bg:rgba(255,255,255,0.03);
+    --card-border:rgba(124,58,237,0.3);
+    --card-glow:rgba(124,58,237,0.1);
+    --heading-font:'Russo One',sans-serif;
+    --body-font:'Chakra Petch',sans-serif;
+  }
+
+  @media(prefers-color-scheme:light){
+    :root{
+      --bg:#F0F0F8;
+      --text:#1E1B4B;
+      --card-bg:rgba(124,58,237,0.06);
+      --card-border:rgba(124,58,237,0.25);
+      --card-glow:rgba(124,58,237,0.08);
+      --border:#7C3AED;
+    }
+  }
+
+  html{font-size:16px;scroll-behavior:smooth}
+  body{
+    background:var(--bg);
+    color:var(--text);
+    font-family:var(--body-font);
+    line-height:1.6;
+    min-height:100vh;
+    padding:2rem 1rem;
+    overflow-x:hidden;
+  }
+
+  .container{max-width:1200px;margin:0 auto}
+
+  h1{
+    font-family:var(--heading-font);
+    font-size:clamp(1.6rem,4vw,2.4rem);
+    text-align:center;
+    margin-bottom:.5rem;
+    background:linear-gradient(135deg,var(--primary),var(--cta));
+    -webkit-background-clip:text;
+    -webkit-text-fill-color:transparent;
+    background-clip:text;
+  }
+
+  .subtitle{
+    text-align:center;
+    color:var(--secondary);
+    font-size:.95rem;
+    margin-bottom:2rem;
+    font-weight:500;
+    letter-spacing:.5px;
+  }
+
+  .diagram-wrapper{
+    background:var(--card-bg);
+    backdrop-filter:blur(12px);
+    -webkit-backdrop-filter:blur(12px);
+    border:1px solid var(--card-border);
+    border-radius:16px;
+    padding:2rem;
+    box-shadow:0 0 20px var(--card-glow),inset 0 1px 0 rgba(255,255,255,0.05);
+    overflow:auto;
+    position:relative;
+  }
+
+  .diagram-inner{
+    min-width:fit-content;
+    transform-origin:top left;
+    transition:transform .3s ease;
+  }
+
+  .zoom-controls{
+    display:flex;gap:.5rem;
+    justify-content:center;
+    margin-bottom:1rem;
+  }
+  .zoom-btn{
+    background:var(--card-bg);
+    backdrop-filter:blur(12px);
+    -webkit-backdrop-filter:blur(12px);
+    border:1px solid var(--card-border);
+    color:var(--text);
+    font-family:var(--body-font);
+    font-size:.85rem;
+    font-weight:600;
+    padding:.45rem .9rem;
+    border-radius:8px;
+    cursor:pointer;
+    transition:all .2s ease;
+    box-shadow:0 0 10px var(--card-glow);
+  }
+  .zoom-btn:hover{
+    background:rgba(124,58,237,0.15);
+    box-shadow:0 0 20px var(--card-glow);
+  }
+  .zoom-level{
+    display:flex;align-items:center;
+    font-size:.8rem;color:var(--secondary);
+    min-width:3.5rem;justify-content:center;
+  }
+
+  .mermaid{text-align:center}
+
+  /* Stats row */
+  .stats-row{
+    display:grid;
+    grid-template-columns:repeat(4,1fr);
+    gap:.75rem;
+    margin-top:1.5rem;
+  }
+  @media(max-width:800px){
+    .stats-row{grid-template-columns:repeat(2,1fr)}
+  }
+  @media(max-width:450px){
+    .stats-row{grid-template-columns:1fr}
+  }
+  .stat-card{
+    background:var(--card-bg);
+    backdrop-filter:blur(12px);
+    -webkit-backdrop-filter:blur(12px);
+    border:1px solid var(--card-border);
+    border-radius:10px;
+    padding:.9rem;
+    text-align:center;
+    box-shadow:0 0 15px var(--card-glow),inset 0 1px 0 rgba(255,255,255,0.05);
+  }
+  .stat-value{
+    font-family:var(--heading-font);
+    font-size:1.4rem;
+    color:var(--primary);
+    display:block;
+  }
+  .stat-value.rose{color:var(--cta)}
+  .stat-label{
+    font-size:.72rem;
+    color:var(--secondary);
+    text-transform:uppercase;
+    letter-spacing:1px;
+    margin-top:.2rem;
+  }
+
+  .fade-up{
+    opacity:0;transform:translateY(24px);
+    animation:fadeUp .6s ease forwards;
+  }
+  @keyframes fadeUp{to{opacity:1;transform:translateY(0)}}
+  .delay-1{animation-delay:.1s}
+  .delay-2{animation-delay:.2s}
+  .delay-3{animation-delay:.35s}
+  .delay-4{animation-delay:.5s}
+
+  @media(prefers-reduced-motion:reduce){
+    .fade-up{opacity:1;transform:none;animation:none}
+  }
+
+  .footer{
+    text-align:center;margin-top:2rem;
+    font-size:.75rem;color:var(--secondary);opacity:.6;
+  }
+</style>
+</head>
+<body>
+<div class="container">
+  <h1 class="fade-up">Esports Data Pipeline</h1>
+  <p class="subtitle fade-up delay-1">End-to-end data flow from game servers to fan experiences</p>
+
+  <div class="zoom-controls fade-up delay-2">
+    <button class="zoom-btn" onclick="zoomOut()">&#8722; Zoom</button>
+    <span class="zoom-level" id="zoomLevel">100%</span>
+    <button class="zoom-btn" onclick="zoomIn()">&#43; Zoom</button>
+    <button class="zoom-btn" onclick="zoomReset()">Reset</button>
+  </div>
+
+  <div class="diagram-wrapper fade-up delay-3">
+    <div class="diagram-inner" id="diagramInner">
+      <div class="mermaid">
+graph LR
+    GS["🖥️ Game Servers"]:::source
+    EI["📥 Event Ingestion<br/><small>Kafka Connect</small>"]:::process
+    SP["⚙️ Stream Processing<br/><small>Flink / Spark</small>"]:::process
+    RTA["⚡ Real-Time Analytics<br/><small>ClickHouse</small>"]:::analytics
+    DW["🗄️ Data Warehouse<br/><small>Snowflake</small>"]:::storage
+    BI["📊 Business Intelligence<br/><small>Tableau / Looker</small>"]:::output
+    FD["📱 Fan Dashboard<br/><small>WebSocket + React</small>"]:::output
+    ACM["🛡️ Anti-Cheat ML<br/><small>TensorFlow Serving</small>"]:::security
+    MQ["👨‍⚖️ Moderation Queue<br/><small>Admin Dashboard</small>"]:::output
+    PP["👤 Player Profiles<br/><small>PostgreSQL</small>"]:::storage
+    VS["🎬 VOD Storage<br/><small>S3 + CDN</small>"]:::storage
+    LC["🏅 Leaderboard Cache<br/><small>Redis Sorted Sets</small>"]:::storage
+    FE["🎲 Fantasy Engine<br/><small>Scoring Service</small>"]:::output
+
+    GS -->|"match events<br/>(protobuf)"| EI
+    EI -->|"raw events<br/>(Kafka topics)"| SP
+    SP -->|"enriched events<br/>(real-time)"| RTA
+    SP -->|"batch events<br/>(hourly micro-batch)"| DW
+    SP -->|"player actions<br/>(action vectors)"| ACM
+    RTA -->|"live stats<br/>(sub-second)"| FD
+    DW -->|"historical trends<br/>(daily ETL)"| BI
+    ACM -->|"risk scores<br/>(0.0-1.0)"| MQ
+
+    PP -.->|"player context<br/>(enrichment)"| SP
+    GS -->|"replay data<br/>(demo files)"| VS
+    RTA -->|"ranking updates<br/>(ELO delta)"| LC
+    RTA -->|"live player stats"| FE
+    DW -->|"season aggregates"| FE
+
+    classDef source fill:#1a0a2a,stroke:#F43F5E,stroke-width:2px,color:#F43F5E,font-family:Chakra Petch
+    classDef process fill:#1a1a3e,stroke:#7C3AED,stroke-width:2px,color:#E2E8F0,font-family:Chakra Petch
+    classDef analytics fill:#1a1a3e,stroke:#A78BFA,stroke-width:2px,color:#A78BFA,font-family:Chakra Petch
+    classDef storage fill:#0a1a2a,stroke:#4C1D95,stroke-width:2px,color:#A78BFA,font-family:Chakra Petch
+    classDef output fill:#0a2a1a,stroke:#10B981,stroke-width:2px,color:#10B981,font-family:Chakra Petch
+    classDef security fill:#2a0a0a,stroke:#F43F5E,stroke-width:2px,color:#F43F5E,font-family:Chakra Petch
+
+    linkStyle default stroke:#7C3AED,stroke-width:1.5px
+    linkStyle 8 stroke:#4C1D95,stroke-width:1.5px,stroke-dasharray:5
+      </div>
+    </div>
+  </div>
+
+  <div class="stats-row fade-up delay-4">
+    <div class="stat-card">
+      <span class="stat-value">2M+</span>
+      <div class="stat-label">Events / Second</div>
+    </div>
+    <div class="stat-card">
+      <span class="stat-value rose">&lt;100ms</span>
+      <div class="stat-label">End-to-End Latency</div>
+    </div>
+    <div class="stat-card">
+      <span class="stat-value">50TB</span>
+      <div class="stat-label">Daily Ingestion</div>
+    </div>
+    <div class="stat-card">
+      <span class="stat-value rose">99.99%</span>
+      <div class="stat-label">Pipeline Uptime</div>
+    </div>
+  </div>
+
+  <div class="footer fade-up delay-4">Esports Data Pipeline &mdash; Neon Dashboard</div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+<script>
+  const isDark = window.matchMedia('(prefers-color-scheme: dark)').matches || !window.matchMedia('(prefers-color-scheme: light)').matches;
+
+  mermaid.initialize({
+    startOnLoad: true,
+    theme: 'base',
+    themeVariables: {
+      darkMode: isDark,
+      background: isDark ? '#0F0F23' : '#F0F0F8',
+      primaryColor: '#1a1a3e',
+      primaryTextColor: '#E2E8F0',
+      primaryBorderColor: '#7C3AED',
+      lineColor: '#7C3AED',
+      secondaryColor: '#1a1a3e',
+      tertiaryColor: '#1a1a3e',
+      edgeLabelBackground: isDark ? '#0F0F23' : '#F0F0F8',
+      fontSize: '13px',
+      fontFamily: 'Chakra Petch, sans-serif',
+      clusterBkg: 'transparent',
+      clusterBorder: '#4C1D95',
+      nodeTextColor: '#E2E8F0'
+    },
+    flowchart: {
+      htmlLabels: true,
+      curve: 'basis',
+      padding: 15,
+      nodeSpacing: 50,
+      rankSpacing: 70
+    }
+  });
+
+  let currentZoom = 1;
+  const inner = document.getElementById('diagramInner');
+  function setZoom(z) {
+    currentZoom = Math.max(0.3, Math.min(2, z));
+    inner.style.transform = 'scale(' + currentZoom + ')';
+    document.getElementById('zoomLevel').textContent = Math.round(currentZoom * 100) + '%';
+  }
+  function zoomIn() { setZoom(currentZoom + 0.1); }
+  function zoomOut() { setZoom(currentZoom - 0.1); }
+  function zoomReset() { setZoom(1); }
+</script>
+</body>
+</html>

@@ -1,0 +1,505 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DATUM Feature Landscape</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600;700&family=Fira+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --primary: #1E40AF;
+    --secondary: #3B82F6;
+    --cta: #F59E0B;
+    --bg: #F8FAFC;
+    --text: #1E3A8A;
+    --border: #DBEAFE;
+    --surface: #FFFFFF;
+    --surface-alt: #EFF6FF;
+    --grid-color: rgba(30, 64, 175, 0.06);
+    --grid-color-strong: rgba(30, 64, 175, 0.1);
+    --shadow: 0 1px 3px rgba(30, 58, 138, 0.08), 0 4px 12px rgba(30, 58, 138, 0.04);
+    --shadow-lg: 0 4px 12px rgba(30, 58, 138, 0.1), 0 12px 32px rgba(30, 58, 138, 0.06);
+    --code-bg: #F1F5F9;
+    --muted: #64748B;
+    --success: #059669;
+    --danger: #DC2626;
+    --warning: #D97706;
+    --purple: #7C3AED;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --primary: #3B82F6;
+      --secondary: #60A5FA;
+      --cta: #FBBF24;
+      --bg: #0B1120;
+      --text: #DBEAFE;
+      --border: #1E3A5F;
+      --surface: #111827;
+      --surface-alt: #1A2332;
+      --grid-color: rgba(59, 130, 246, 0.06);
+      --grid-color-strong: rgba(59, 130, 246, 0.12);
+      --shadow: 0 1px 3px rgba(0, 0, 0, 0.3), 0 4px 12px rgba(0, 0, 0, 0.2);
+      --shadow-lg: 0 4px 12px rgba(0, 0, 0, 0.4), 0 12px 32px rgba(0, 0, 0, 0.3);
+      --code-bg: #1E293B;
+      --muted: #94A3B8;
+      --success: #34D399;
+      --danger: #F87171;
+      --warning: #FBBF24;
+      --purple: #A78BFA;
+    }
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Fira Sans', sans-serif;
+    background-color: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    overflow-x: hidden;
+    background-image:
+      linear-gradient(var(--grid-color) 1px, transparent 1px),
+      linear-gradient(90deg, var(--grid-color) 1px, transparent 1px),
+      linear-gradient(var(--grid-color-strong) 1px, transparent 1px),
+      linear-gradient(90deg, var(--grid-color-strong) 1px, transparent 1px);
+    background-size: 20px 20px, 20px 20px, 100px 100px, 100px 100px;
+    background-position: center center;
+  }
+
+  .page-container {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 2rem 1.5rem;
+  }
+
+  /* Header */
+  .page-header {
+    text-align: center;
+    margin-bottom: 2rem;
+    opacity: 0;
+    transform: translateY(20px);
+    animation: fadeUp 0.6s ease-out forwards;
+  }
+
+  .page-header .badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 9999px;
+    padding: 0.35rem 1rem;
+    font-family: 'Fira Code', monospace;
+    font-size: 0.75rem;
+    color: var(--secondary);
+    margin-bottom: 1rem;
+    letter-spacing: 0.05em;
+  }
+
+  .page-header .badge::before {
+    content: '';
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--cta);
+    animation: pulse-dot 2s ease-in-out infinite;
+  }
+
+  .page-header h1 {
+    font-family: 'Fira Sans', sans-serif;
+    font-size: clamp(1.5rem, 4vw, 2.25rem);
+    font-weight: 700;
+    color: var(--primary);
+    margin-bottom: 0.5rem;
+    letter-spacing: -0.02em;
+  }
+
+  .page-header .subtitle {
+    font-size: 0.95rem;
+    color: var(--muted);
+    max-width: 600px;
+    margin: 0 auto;
+    line-height: 1.6;
+  }
+
+  /* KPI summary */
+  .kpi-row {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    gap: 1rem;
+    margin-bottom: 2rem;
+    opacity: 0;
+    transform: translateY(20px);
+    animation: fadeUp 0.6s ease-out 0.1s forwards;
+  }
+
+  .kpi-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 1rem 1.25rem;
+    text-align: center;
+    box-shadow: var(--shadow);
+  }
+
+  .kpi-card .kpi-value {
+    font-family: 'Fira Code', monospace;
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--primary);
+  }
+
+  .kpi-card .kpi-label {
+    font-size: 0.75rem;
+    color: var(--muted);
+    margin-top: 0.25rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+
+  /* Diagram container */
+  .diagram-wrapper {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    box-shadow: var(--shadow-lg);
+    overflow: hidden;
+    opacity: 0;
+    transform: translateY(20px);
+    animation: fadeUp 0.6s ease-out 0.2s forwards;
+  }
+
+  .diagram-toolbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.75rem 1.25rem;
+    border-bottom: 1px solid var(--border);
+    background: var(--surface-alt);
+  }
+
+  .diagram-toolbar .label {
+    font-family: 'Fira Code', monospace;
+    font-size: 0.75rem;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+  }
+
+  .zoom-controls {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  .zoom-controls button {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    color: var(--text);
+    font-family: 'Fira Code', monospace;
+    font-size: 0.85rem;
+    font-weight: 600;
+    transition: all 0.15s ease;
+  }
+
+  .zoom-controls button:hover {
+    background: var(--primary);
+    color: #fff;
+    border-color: var(--primary);
+  }
+
+  .zoom-controls .zoom-level {
+    font-family: 'Fira Code', monospace;
+    font-size: 0.75rem;
+    color: var(--muted);
+    min-width: 40px;
+    text-align: center;
+  }
+
+  .diagram-content {
+    padding: 2rem;
+    overflow: auto;
+    display: flex;
+    justify-content: center;
+    min-height: 500px;
+  }
+
+  .diagram-content .mermaid {
+    transition: transform 0.2s ease;
+    transform-origin: center center;
+  }
+
+  /* Legend */
+  .legend-section {
+    margin-top: 1.5rem;
+    opacity: 0;
+    transform: translateY(20px);
+    animation: fadeUp 0.6s ease-out 0.35s forwards;
+  }
+
+  .legend-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 1.25rem 1.5rem;
+    box-shadow: var(--shadow);
+  }
+
+  .legend-card h3 {
+    font-family: 'Fira Code', monospace;
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--muted);
+    margin-bottom: 1rem;
+  }
+
+  .legend-items {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem 2rem;
+  }
+
+  .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.85rem;
+    color: var(--text);
+  }
+
+  .legend-swatch {
+    width: 14px;
+    height: 14px;
+    border-radius: 4px;
+    flex-shrink: 0;
+    border: 1px solid var(--border);
+  }
+
+  .legend-swatch.ingestion { background: var(--secondary); }
+  .legend-swatch.processing { background: var(--cta); }
+  .legend-swatch.storage { background: var(--success); }
+  .legend-swatch.query { background: var(--purple); }
+  .legend-swatch.governance { background: var(--danger); }
+  .legend-swatch.observability { background: var(--primary); }
+
+  /* Footer */
+  .page-footer {
+    text-align: center;
+    margin-top: 2rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid var(--border);
+    opacity: 0;
+    transform: translateY(20px);
+    animation: fadeUp 0.6s ease-out 0.5s forwards;
+  }
+
+  .page-footer p {
+    font-family: 'Fira Code', monospace;
+    font-size: 0.7rem;
+    color: var(--muted);
+    letter-spacing: 0.05em;
+  }
+
+  /* Animations */
+  @keyframes fadeUp {
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  @keyframes pulse-dot {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.4; }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .page-header,
+    .kpi-row,
+    .diagram-wrapper,
+    .legend-section,
+    .page-footer {
+      opacity: 1;
+      transform: none;
+      animation: none;
+    }
+    .page-header .badge::before {
+      animation: none;
+    }
+  }
+
+  @media (max-width: 768px) {
+    .page-container { padding: 1rem; }
+    .diagram-content { padding: 1rem; }
+    .legend-items { flex-direction: column; gap: 0.5rem; }
+    .kpi-row { grid-template-columns: repeat(2, 1fr); }
+  }
+</style>
+</head>
+<body>
+<div class="page-container">
+  <header class="page-header">
+    <div class="badge">DATUM // MIND MAP</div>
+    <h1>Feature Landscape</h1>
+    <p class="subtitle">Complete feature map of the DATUM platform across six core capability domains: Ingestion, Processing, Storage, Query, Governance, and Observability.</p>
+  </header>
+
+  <div class="kpi-row">
+    <div class="kpi-card">
+      <div class="kpi-value">6</div>
+      <div class="kpi-label">Core Domains</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-value">30</div>
+      <div class="kpi-label">Features</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-value">200+</div>
+      <div class="kpi-label">Connectors</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-value">v3.0</div>
+      <div class="kpi-label">Current Release</div>
+    </div>
+  </div>
+
+  <div class="diagram-wrapper">
+    <div class="diagram-toolbar">
+      <span class="label">mindmap // Feature Landscape</span>
+      <div class="zoom-controls">
+        <button onclick="zoomOut()" title="Zoom Out">&minus;</button>
+        <span class="zoom-level" id="zoomLevel">100%</span>
+        <button onclick="zoomIn()" title="Zoom In">+</button>
+        <button onclick="zoomReset()" title="Reset Zoom">R</button>
+      </div>
+    </div>
+    <div class="diagram-content" id="diagramContent">
+      <pre class="mermaid" id="mermaidDiagram">
+mindmap
+  root((DATUM))
+    Ingestion
+      Batch Import
+      Stream Processing
+      CDC Capture
+      API Connectors
+      File Upload
+    Processing
+      Schema Detection
+      Data Transformation
+      Quality Validation
+      Deduplication
+      Enrichment
+    Storage
+      Data Lake
+      Data Warehouse
+      Metadata Catalog
+      Time-Series Store
+    Query
+      SQL Engine
+      GraphQL API
+      Full-Text Search
+      Federated Queries
+    Governance
+      Access Control
+      Data Lineage
+      Audit Logging
+      PII Detection
+      Compliance Reports
+    Observability
+      Pipeline Monitoring
+      Query Analytics
+      Cost Tracking
+      Alerting
+      SLA Dashboard
+      </pre>
+    </div>
+  </div>
+
+  <div class="legend-section">
+    <div class="legend-card">
+      <h3>Domain Legend</h3>
+      <div class="legend-items">
+        <div class="legend-item"><span class="legend-swatch ingestion"></span> Ingestion (5 features)</div>
+        <div class="legend-item"><span class="legend-swatch processing"></span> Processing (5 features)</div>
+        <div class="legend-item"><span class="legend-swatch storage"></span> Storage (4 features)</div>
+        <div class="legend-item"><span class="legend-swatch query"></span> Query (4 features)</div>
+        <div class="legend-item"><span class="legend-swatch governance"></span> Governance (5 features)</div>
+        <div class="legend-item"><span class="legend-swatch observability"></span> Observability (5 features)</div>
+      </div>
+    </div>
+  </div>
+
+  <footer class="page-footer">
+    <p>DATUM Platform // Feature Landscape // 6 Domains, 30 Capabilities</p>
+  </footer>
+</div>
+
+<script type="importmap">
+{
+  "imports": {
+    "mermaid": "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs"
+  }
+}
+</script>
+<script type="module">
+  import mermaid from 'mermaid';
+
+  const isDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+
+  mermaid.initialize({
+    startOnLoad: true,
+    theme: 'base',
+    themeVariables: {
+      primaryColor: isDark ? '#1E3A5F' : '#DBEAFE',
+      primaryTextColor: isDark ? '#DBEAFE' : '#1E3A8A',
+      primaryBorderColor: isDark ? '#3B82F6' : '#1E40AF',
+      lineColor: isDark ? '#60A5FA' : '#3B82F6',
+      secondaryColor: isDark ? '#1A2332' : '#EFF6FF',
+      tertiaryColor: isDark ? '#111827' : '#F8FAFC',
+      fontFamily: 'Fira Sans, sans-serif',
+      fontSize: '14px'
+    },
+    securityLevel: 'loose'
+  });
+
+  // Zoom functionality
+  let currentZoom = 1;
+  const zoomStep = 0.15;
+  const minZoom = 0.3;
+  const maxZoom = 2.5;
+
+  window.zoomIn = function() {
+    currentZoom = Math.min(maxZoom, currentZoom + zoomStep);
+    applyZoom();
+  };
+  window.zoomOut = function() {
+    currentZoom = Math.max(minZoom, currentZoom - zoomStep);
+    applyZoom();
+  };
+  window.zoomReset = function() {
+    currentZoom = 1;
+    applyZoom();
+  };
+
+  function applyZoom() {
+    const el = document.getElementById('mermaidDiagram');
+    if (el) {
+      el.style.transform = `scale(${currentZoom})`;
+    }
+    document.getElementById('zoomLevel').textContent = Math.round(currentZoom * 100) + '%';
+  }
+
+  window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => {
+    location.reload();
+  });
+</script>
+</body>
+</html>

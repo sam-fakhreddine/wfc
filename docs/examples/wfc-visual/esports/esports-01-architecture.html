@@ -1,0 +1,458 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Esports Platform Architecture</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Russo+One&family=Chakra+Petch:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+
+  :root{
+    --primary:#7C3AED;
+    --secondary:#A78BFA;
+    --cta:#F43F5E;
+    --bg:#0F0F23;
+    --text:#E2E8F0;
+    --border:#4C1D95;
+    --card-bg:rgba(255,255,255,0.03);
+    --card-border:rgba(124,58,237,0.3);
+    --card-glow:rgba(124,58,237,0.1);
+    --heading-font:'Russo One',sans-serif;
+    --body-font:'Chakra Petch',sans-serif;
+  }
+
+  @media(prefers-color-scheme:light){
+    :root{
+      --bg:#F0F0F8;
+      --text:#1E1B4B;
+      --card-bg:rgba(124,58,237,0.06);
+      --card-border:rgba(124,58,237,0.25);
+      --card-glow:rgba(124,58,237,0.08);
+      --border:#7C3AED;
+    }
+  }
+
+  html{font-size:16px;scroll-behavior:smooth}
+  body{
+    background:var(--bg);
+    color:var(--text);
+    font-family:var(--body-font);
+    line-height:1.6;
+    min-height:100vh;
+    padding:2rem 1rem;
+    overflow-x:hidden;
+  }
+
+  .container{max-width:1200px;margin:0 auto}
+
+  h1{
+    font-family:var(--heading-font);
+    font-size:clamp(1.6rem,4vw,2.4rem);
+    text-align:center;
+    margin-bottom:.5rem;
+    background:linear-gradient(135deg,var(--primary),var(--cta));
+    -webkit-background-clip:text;
+    -webkit-text-fill-color:transparent;
+    background-clip:text;
+  }
+
+  .subtitle{
+    text-align:center;
+    color:var(--secondary);
+    font-size:.95rem;
+    margin-bottom:2.5rem;
+    font-weight:500;
+    letter-spacing:.5px;
+  }
+
+  /* Layers */
+  .layer{margin-bottom:.5rem}
+  .layer-label{
+    font-family:var(--heading-font);
+    font-size:.85rem;
+    text-transform:uppercase;
+    letter-spacing:2px;
+    color:var(--secondary);
+    margin-bottom:.75rem;
+    padding-left:.25rem;
+  }
+
+  .cards{
+    display:grid;
+    gap:.75rem;
+  }
+  .cards-4{grid-template-columns:repeat(4,1fr)}
+  .cards-5{grid-template-columns:repeat(5,1fr)}
+  .cards-3{grid-template-columns:repeat(3,1fr)}
+
+  @media(max-width:900px){
+    .cards-4,.cards-5{grid-template-columns:repeat(2,1fr)}
+    .cards-3{grid-template-columns:1fr}
+  }
+  @media(max-width:500px){
+    .cards-4,.cards-5,.cards-3{grid-template-columns:1fr}
+  }
+
+  .card{
+    background:var(--card-bg);
+    backdrop-filter:blur(12px);
+    -webkit-backdrop-filter:blur(12px);
+    border:1px solid var(--card-border);
+    border-radius:12px;
+    padding:1.1rem 1rem;
+    box-shadow:0 0 20px var(--card-glow),inset 0 1px 0 rgba(255,255,255,0.05);
+    transition:transform .25s ease,box-shadow .25s ease;
+  }
+  .card:hover{
+    transform:translateY(-3px);
+    box-shadow:0 0 35px var(--card-glow),0 8px 25px rgba(0,0,0,0.3),inset 0 1px 0 rgba(255,255,255,0.08);
+  }
+
+  .card-icon{font-size:1.5rem;margin-bottom:.4rem;display:block}
+  .card-title{
+    font-family:var(--heading-font);
+    font-size:.85rem;
+    margin-bottom:.35rem;
+    color:var(--text);
+  }
+  .card-items{
+    list-style:none;
+    font-size:.78rem;
+    color:var(--secondary);
+    line-height:1.7;
+  }
+  .card-items li::before{
+    content:'';
+    display:inline-block;
+    width:5px;height:5px;
+    background:var(--primary);
+    border-radius:50%;
+    margin-right:6px;
+    vertical-align:middle;
+  }
+
+  /* Hero glow card */
+  .card.hero{
+    border-color:rgba(244,63,94,0.4);
+    box-shadow:0 0 30px rgba(244,63,94,0.15),0 0 60px rgba(124,58,237,0.08),inset 0 1px 0 rgba(255,255,255,0.08);
+  }
+  .card.hero .card-title{color:var(--cta)}
+
+  /* Live pulse */
+  .live-badge{
+    display:inline-flex;align-items:center;gap:5px;
+    font-size:.65rem;font-weight:700;
+    color:var(--cta);text-transform:uppercase;
+    letter-spacing:1px;
+  }
+  .live-dot{
+    width:7px;height:7px;border-radius:50%;
+    background:var(--cta);
+    animation:pulse 1.5s ease-in-out infinite;
+  }
+  @keyframes pulse{
+    0%,100%{opacity:1;box-shadow:0 0 0 0 rgba(244,63,94,0.6)}
+    50%{opacity:.7;box-shadow:0 0 0 6px rgba(244,63,94,0)}
+  }
+
+  /* Flow arrows */
+  .flow-arrow{
+    display:flex;justify-content:center;align-items:center;
+    padding:.6rem 0;
+    color:var(--primary);
+    font-size:1.3rem;
+    position:relative;
+  }
+  .flow-arrow::before{
+    content:'';
+    position:absolute;
+    width:2px;height:100%;
+    background:linear-gradient(180deg,transparent,var(--primary),transparent);
+    opacity:.4;
+  }
+  .arrow-icon{
+    position:relative;z-index:1;
+    background:var(--bg);
+    padding:0 .5rem;
+    filter:drop-shadow(0 0 8px var(--card-glow));
+  }
+
+  /* Output section */
+  .output-section .card{border-top:2px solid;}
+  .output-section .fan{border-top-color:var(--cta)}
+  .output-section .broadcast{border-top-color:var(--primary)}
+  .output-section .admin{border-top-color:var(--secondary)}
+
+  /* fadeUp animation */
+  .fade-up{
+    opacity:0;
+    transform:translateY(24px);
+    animation:fadeUp .6s ease forwards;
+  }
+  @keyframes fadeUp{
+    to{opacity:1;transform:translateY(0)}
+  }
+  .delay-1{animation-delay:.1s}
+  .delay-2{animation-delay:.2s}
+  .delay-3{animation-delay:.3s}
+  .delay-4{animation-delay:.4s}
+  .delay-5{animation-delay:.5s}
+  .delay-6{animation-delay:.6s}
+  .delay-7{animation-delay:.7s}
+  .delay-8{animation-delay:.8s}
+  .delay-9{animation-delay:.9s}
+  .delay-10{animation-delay:1s}
+  .delay-11{animation-delay:1.1s}
+
+  @media(prefers-reduced-motion:reduce){
+    .fade-up{
+      opacity:1;
+      transform:none;
+      animation:none;
+    }
+    .live-dot{animation:none;opacity:1}
+  }
+
+  /* footer */
+  .footer{
+    text-align:center;
+    margin-top:2.5rem;
+    font-size:.75rem;
+    color:var(--secondary);
+    opacity:.6;
+  }
+</style>
+</head>
+<body>
+<div class="container">
+  <h1 class="fade-up">Esports Platform Architecture</h1>
+  <p class="subtitle fade-up delay-1">Real-time competitive gaming infrastructure</p>
+
+  <!-- INPUT LAYER -->
+  <div class="layer fade-up delay-2">
+    <div class="layer-label"><span class="live-badge"><span class="live-dot"></span> Live</span> Input Layer</div>
+    <div class="cards cards-4">
+      <div class="card hero">
+        <span class="card-icon">🎮</span>
+        <div class="card-title">Game Clients</div>
+        <ul class="card-items">
+          <li>PC / Console / Mobile</li>
+          <li>Anti-cheat SDK</li>
+          <li>Telemetry hooks</li>
+        </ul>
+      </div>
+      <div class="card hero">
+        <span class="card-icon">🏆</span>
+        <div class="card-title">Tournament APIs</div>
+        <ul class="card-items">
+          <li>Bracket management</li>
+          <li>Team registration</li>
+          <li>Seeding data</li>
+        </ul>
+      </div>
+      <div class="card hero">
+        <span class="card-icon">📡</span>
+        <div class="card-title">Broadcast Feeds</div>
+        <ul class="card-items">
+          <li>RTMP streams</li>
+          <li>Observer clients</li>
+          <li>Camera controls</li>
+        </ul>
+      </div>
+      <div class="card hero">
+        <span class="card-icon">💬</span>
+        <div class="card-title">Social Media</div>
+        <ul class="card-items">
+          <li>Twitter/X feeds</li>
+          <li>Discord webhooks</li>
+          <li>Community polls</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <div class="flow-arrow fade-up delay-3"><span class="arrow-icon">&#9660;</span></div>
+
+  <!-- EVENT PROCESSING -->
+  <div class="layer fade-up delay-4">
+    <div class="layer-label">Event Processing</div>
+    <div class="cards cards-4">
+      <div class="card">
+        <span class="card-icon">📨</span>
+        <div class="card-title">Match Event Bus</div>
+        <ul class="card-items">
+          <li>Apache Kafka</li>
+          <li>Event sourcing</li>
+          <li>Partitioned by match</li>
+        </ul>
+      </div>
+      <div class="card">
+        <span class="card-icon">⚡</span>
+        <div class="card-title">Real-Time Stats</div>
+        <ul class="card-items">
+          <li>Sub-second updates</li>
+          <li>Rolling aggregations</li>
+          <li>WebSocket push</li>
+        </ul>
+      </div>
+      <div class="card">
+        <span class="card-icon">🛡️</span>
+        <div class="card-title">Anti-Cheat Validator</div>
+        <ul class="card-items">
+          <li>ML inference pipeline</li>
+          <li>Behavioral analysis</li>
+          <li>Replay verification</li>
+        </ul>
+      </div>
+      <div class="card">
+        <span class="card-icon">🔄</span>
+        <div class="card-title">Replay Processor</div>
+        <ul class="card-items">
+          <li>Demo parsing</li>
+          <li>Highlight detection</li>
+          <li>VOD generation</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <div class="flow-arrow fade-up delay-5"><span class="arrow-icon">&#9660;</span></div>
+
+  <!-- CORE SERVICES -->
+  <div class="layer fade-up delay-6">
+    <div class="layer-label">Core Services</div>
+    <div class="cards cards-5">
+      <div class="card">
+        <span class="card-icon">👤</span>
+        <div class="card-title">Player Service</div>
+        <ul class="card-items">
+          <li>Profile management</li>
+          <li>Auth / SSO</li>
+        </ul>
+      </div>
+      <div class="card">
+        <span class="card-icon">👥</span>
+        <div class="card-title">Team Service</div>
+        <ul class="card-items">
+          <li>Roster management</li>
+          <li>Org structure</li>
+        </ul>
+      </div>
+      <div class="card">
+        <span class="card-icon">🏟️</span>
+        <div class="card-title">Tournament Engine</div>
+        <ul class="card-items">
+          <li>Bracket formats</li>
+          <li>Swiss / DE / RR</li>
+        </ul>
+      </div>
+      <div class="card">
+        <span class="card-icon">🎯</span>
+        <div class="card-title">Matchmaking</div>
+        <ul class="card-items">
+          <li>Skill-based MM</li>
+          <li>Queue management</li>
+        </ul>
+      </div>
+      <div class="card">
+        <span class="card-icon">📊</span>
+        <div class="card-title">Ranking System</div>
+        <ul class="card-items">
+          <li>ELO / Glicko-2</li>
+          <li>Seasonal resets</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <div class="flow-arrow fade-up delay-7"><span class="arrow-icon">&#9660;</span></div>
+
+  <!-- DATA LAYER -->
+  <div class="layer fade-up delay-8">
+    <div class="layer-label">Data Layer</div>
+    <div class="cards cards-4">
+      <div class="card">
+        <span class="card-icon">🗄️</span>
+        <div class="card-title">Player Profiles</div>
+        <ul class="card-items">
+          <li>PostgreSQL</li>
+          <li>JSONB extensions</li>
+          <li>Full-text search</li>
+        </ul>
+      </div>
+      <div class="card">
+        <span class="card-icon">📈</span>
+        <div class="card-title">Match History</div>
+        <ul class="card-items">
+          <li>TimescaleDB</li>
+          <li>Time-series optimized</li>
+          <li>Continuous aggregates</li>
+        </ul>
+      </div>
+      <div class="card">
+        <span class="card-icon">🏅</span>
+        <div class="card-title">Leaderboards</div>
+        <ul class="card-items">
+          <li>Redis Sorted Sets</li>
+          <li>Sub-ms lookups</li>
+          <li>Regional sharding</li>
+        </ul>
+      </div>
+      <div class="card">
+        <span class="card-icon">🎬</span>
+        <div class="card-title">VODs &amp; Replays</div>
+        <ul class="card-items">
+          <li>S3 / CDN</li>
+          <li>Adaptive bitrate</li>
+          <li>Thumbnail gen</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <div class="flow-arrow fade-up delay-9"><span class="arrow-icon">&#9660;</span></div>
+
+  <!-- OUTPUT -->
+  <div class="layer output-section fade-up delay-10">
+    <div class="layer-label">Output Channels</div>
+    <div class="cards cards-3">
+      <div class="card fan">
+        <span class="card-icon">🎉</span>
+        <div class="card-title">Fan Experience</div>
+        <ul class="card-items">
+          <li>Live Scores &amp; Tickers</li>
+          <li>Match Predictions</li>
+          <li>Fantasy Esports</li>
+          <li>Watch Parties</li>
+        </ul>
+      </div>
+      <div class="card broadcast">
+        <span class="card-icon">📺</span>
+        <div class="card-title">Broadcast</div>
+        <ul class="card-items">
+          <li>OBS Integration</li>
+          <li>Overlay API</li>
+          <li>Stream Analytics</li>
+          <li>Multi-POV</li>
+        </ul>
+      </div>
+      <div class="card admin">
+        <span class="card-icon">⚙️</span>
+        <div class="card-title">Admin</div>
+        <ul class="card-items">
+          <li>Tournament Ops</li>
+          <li>Anti-Cheat Dashboard</li>
+          <li>Revenue &amp; Sponsorship</li>
+          <li>Player Conduct</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <div class="footer fade-up delay-11">Esports Platform Architecture &mdash; Neon Dashboard</div>
+</div>
+</body>
+</html>

@@ -4,62 +4,98 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>WFC Concept Map</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #0f172a; --surface: #1e293b; --border: #334155;
+    --text: #e2e8f0; --dim: #94a3b8; --accent: #3b82f6;
+    --accent-hover: #2563eb;
+    --font-body: 'Space Grotesk', system-ui, sans-serif;
+    --font-mono: 'JetBrains Mono', 'SF Mono', Consolas, monospace;
+  }
+
+  @media (prefers-color-scheme: light) {
+    :root {
+      --bg: #f1f5f9; --surface: #ffffff; --border: #e2e8f0;
+      --text: #1e293b; --dim: #64748b; --accent: #2563eb;
+      --accent-hover: #1d4ed8;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+      animation-duration: 0.01ms !important;
+      transition-duration: 0.01ms !important;
+    }
+  }
+
   body {
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-    background: #1a1a2e; color: #e0e0e0; height: 100vh;
-    display: grid; grid-template-columns: 1fr 240px; grid-template-rows: auto 1fr;
+    font-family: var(--font-body);
+    background: var(--bg); color: var(--text); height: 100vh;
+    display: grid; grid-template-columns: 1fr 260px; grid-template-rows: auto 1fr;
   }
   .toolbar {
-    grid-column: 1 / 3; background: #16213e; padding: 10px 20px;
+    grid-column: 1 / 3; background: var(--surface); padding: 10px 20px;
     display: flex; align-items: center; gap: 12px;
-    border-bottom: 1px solid #0f3460;
+    border-bottom: 1px solid var(--border);
   }
-  .toolbar h2 { color: #e94560; font-size: 16px; margin-right: 8px; }
+  .toolbar h2 { color: var(--accent); font-size: 16px; margin-right: 8px; font-weight: 600; }
   .toolbar button {
-    padding: 6px 14px; background: #0f3460; color: #e0e0e0;
-    border: 1px solid #1a1a4e; border-radius: 6px; cursor: pointer; font-size: 12px;
+    padding: 6px 14px; background: var(--bg); color: var(--text);
+    border: 1px solid var(--border); border-radius: 6px; cursor: pointer;
+    font-size: 11px; font-family: var(--font-mono); transition: background 0.15s;
   }
-  .toolbar button:hover { background: #1a3a6e; }
-  .toolbar button.active { background: #e94560; border-color: #e94560; }
-  .toolbar .sep { width: 1px; height: 24px; background: #0f3460; }
+  .toolbar button:hover { background: var(--border); }
+  .toolbar button.active { background: var(--accent); border-color: var(--accent); color: #fff; }
+  .toolbar .sep { width: 1px; height: 24px; background: var(--border); }
   canvas {
-    display: block; cursor: crosshair; background: #1a1a2e;
+    display: block; cursor: crosshair; background: var(--bg);
   }
   .panel {
-    background: #16213e; padding: 16px; overflow-y: auto;
-    border-left: 1px solid #0f3460;
+    background: var(--surface); padding: 16px; overflow-y: auto;
+    border-left: 1px solid var(--border);
   }
-  .panel h3 { font-size: 14px; color: #e94560; margin-bottom: 12px; }
+  .panel h3 { font-size: 13px; color: var(--accent); margin-bottom: 12px; font-weight: 600; }
   .panel label {
-    display: block; font-size: 11px; color: #a0a0b0;
-    text-transform: uppercase; letter-spacing: 0.5px; margin: 10px 0 4px;
+    display: block; font-size: 10px; color: var(--dim);
+    text-transform: uppercase; letter-spacing: 1.2px; margin: 10px 0 4px;
+    font-family: var(--font-mono); font-weight: 600;
   }
   .panel input[type="text"] {
-    width: 100%; padding: 6px 10px; background: #0f3460;
-    border: 1px solid #1a1a4e; border-radius: 4px; color: #e0e0e0; font-size: 13px;
+    width: 100%; padding: 6px 10px; background: var(--bg);
+    border: 1px solid var(--border); border-radius: 4px; color: var(--text);
+    font-size: 13px; font-family: var(--font-body);
   }
   .panel select {
-    width: 100%; padding: 6px 10px; background: #0f3460;
-    border: 1px solid #1a1a4e; border-radius: 4px; color: #e0e0e0; font-size: 13px;
+    width: 100%; padding: 6px 10px; background: var(--bg);
+    border: 1px solid var(--border); border-radius: 4px; color: var(--text);
+    font-size: 13px; font-family: var(--font-body);
   }
   .node-list { margin-top: 16px; }
   .node-item {
     padding: 6px 10px; margin-bottom: 4px; border-radius: 4px;
     font-size: 12px; cursor: pointer; display: flex;
-    align-items: center; gap: 8px;
+    align-items: center; gap: 8px; transition: background 0.15s;
   }
-  .node-item:hover { background: #0f3460; }
+  .node-item:hover { background: var(--border); }
   .node-dot {
     width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0;
   }
   .node-item .del {
-    margin-left: auto; color: #ff6b6b; cursor: pointer;
-    font-size: 14px; opacity: 0.5;
+    margin-left: auto; color: #f87171; cursor: pointer;
+    font-size: 14px; opacity: 0.5; transition: opacity 0.15s;
   }
   .node-item .del:hover { opacity: 1; }
-  .help { font-size: 11px; color: #5a5a7a; margin-top: 16px; line-height: 1.5; }
+  .help { font-size: 11px; color: var(--dim); margin-top: 16px; line-height: 1.5; font-family: var(--font-mono); }
+
+  @media (max-width: 768px) {
+    body { grid-template-columns: 1fr; }
+    .panel { border-left: none; border-top: 1px solid var(--border); max-height: 250px; }
+  }
 </style>
 </head>
 <body>
@@ -82,10 +118,10 @@
   <input type="text" id="nodeLabel" placeholder="Node name" value="">
   <label>Category</label>
   <select id="nodeCategory">
-    <option value="core" style="color:#e94560">Core</option>
-    <option value="feature" style="color:#7ec8e3">Feature</option>
-    <option value="external" style="color:#ffd700">External</option>
-    <option value="data" style="color:#50fa7b">Data</option>
+    <option value="core" style="color:#3b82f6">Core</option>
+    <option value="feature" style="color:#06b6d4">Feature</option>
+    <option value="external" style="color:#f59e0b">External</option>
+    <option value="data" style="color:#22c55e">Data</option>
   </select>
 
   <h3 style="margin-top:20px">Nodes</h3>
@@ -110,8 +146,8 @@
   let dragOffset = { x: 0, y: 0 };
 
   const COLORS = {
-    core: '#e94560', feature: '#7ec8e3',
-    external: '#ffd700', data: '#50fa7b'
+    core: '#3b82f6', feature: '#06b6d4',
+    external: '#f59e0b', data: '#22c55e'
   };
   const NODE_R = 30;
 

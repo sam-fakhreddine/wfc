@@ -1,0 +1,684 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DATUM vs. Competitors</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600;700&family=Fira+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --primary: #1E40AF;
+    --secondary: #3B82F6;
+    --cta: #F59E0B;
+    --bg: #F8FAFC;
+    --text: #1E3A8A;
+    --border: #DBEAFE;
+    --surface: #FFFFFF;
+    --surface-alt: #EFF6FF;
+    --grid-color: rgba(30, 64, 175, 0.06);
+    --grid-color-strong: rgba(30, 64, 175, 0.1);
+    --shadow: 0 1px 3px rgba(30, 58, 138, 0.08), 0 4px 12px rgba(30, 58, 138, 0.04);
+    --shadow-lg: 0 4px 12px rgba(30, 58, 138, 0.1), 0 12px 32px rgba(30, 58, 138, 0.06);
+    --muted: #64748B;
+    --success: #059669;
+    --success-bg: #D1FAE5;
+    --success-border: #A7F3D0;
+    --danger: #DC2626;
+    --danger-bg: #FEE2E2;
+    --danger-border: #FECACA;
+    --warning: #D97706;
+    --warning-bg: #FEF3C7;
+    --warning-border: #FDE68A;
+    --row-hover: rgba(59, 130, 246, 0.04);
+    --row-alt: rgba(30, 64, 175, 0.02);
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --primary: #3B82F6;
+      --secondary: #60A5FA;
+      --cta: #FBBF24;
+      --bg: #0B1120;
+      --text: #DBEAFE;
+      --border: #1E3A5F;
+      --surface: #111827;
+      --surface-alt: #1A2332;
+      --grid-color: rgba(59, 130, 246, 0.06);
+      --grid-color-strong: rgba(59, 130, 246, 0.12);
+      --shadow: 0 1px 3px rgba(0, 0, 0, 0.3), 0 4px 12px rgba(0, 0, 0, 0.2);
+      --shadow-lg: 0 4px 12px rgba(0, 0, 0, 0.4), 0 12px 32px rgba(0, 0, 0, 0.3);
+      --muted: #94A3B8;
+      --success: #34D399;
+      --success-bg: #064E3B;
+      --success-border: #065F46;
+      --danger: #F87171;
+      --danger-bg: #7F1D1D;
+      --danger-border: #991B1B;
+      --warning: #FBBF24;
+      --warning-bg: #78350F;
+      --warning-border: #92400E;
+      --row-hover: rgba(59, 130, 246, 0.08);
+      --row-alt: rgba(59, 130, 246, 0.03);
+    }
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Fira Sans', sans-serif;
+    background-color: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    overflow-x: hidden;
+    background-image:
+      linear-gradient(var(--grid-color) 1px, transparent 1px),
+      linear-gradient(90deg, var(--grid-color) 1px, transparent 1px),
+      linear-gradient(var(--grid-color-strong) 1px, transparent 1px),
+      linear-gradient(90deg, var(--grid-color-strong) 1px, transparent 1px);
+    background-size: 20px 20px, 20px 20px, 100px 100px, 100px 100px;
+    background-position: center center;
+  }
+
+  .page-container {
+    max-width: 1300px;
+    margin: 0 auto;
+    padding: 2rem 1.5rem;
+  }
+
+  /* Header */
+  .page-header {
+    text-align: center;
+    margin-bottom: 2rem;
+    opacity: 0;
+    transform: translateY(20px);
+    animation: fadeUp 0.6s ease-out forwards;
+  }
+
+  .page-header .badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 9999px;
+    padding: 0.35rem 1rem;
+    font-family: 'Fira Code', monospace;
+    font-size: 0.75rem;
+    color: var(--secondary);
+    margin-bottom: 1rem;
+    letter-spacing: 0.05em;
+  }
+
+  .page-header .badge::before {
+    content: '';
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--cta);
+    animation: pulse-dot 2s ease-in-out infinite;
+  }
+
+  .page-header h1 {
+    font-family: 'Fira Sans', sans-serif;
+    font-size: clamp(1.5rem, 4vw, 2.25rem);
+    font-weight: 700;
+    color: var(--primary);
+    margin-bottom: 0.5rem;
+    letter-spacing: -0.02em;
+  }
+
+  .page-header .subtitle {
+    font-size: 0.95rem;
+    color: var(--muted);
+    max-width: 650px;
+    margin: 0 auto;
+    line-height: 1.6;
+  }
+
+  /* KPI Row */
+  .kpi-row {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+    opacity: 0;
+    transform: translateY(20px);
+    animation: fadeUp 0.6s ease-out 0.1s forwards;
+  }
+
+  .kpi-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 1rem 1.25rem;
+    text-align: center;
+    box-shadow: var(--shadow);
+  }
+
+  .kpi-card .kpi-value {
+    font-family: 'Fira Code', monospace;
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--primary);
+  }
+
+  .kpi-card .kpi-value.lead { color: var(--success); }
+  .kpi-card .kpi-value.tied { color: var(--warning); }
+  .kpi-card .kpi-value.behind { color: var(--danger); }
+
+  .kpi-card .kpi-label {
+    font-size: 0.75rem;
+    color: var(--muted);
+    margin-top: 0.25rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+
+  /* Status legend */
+  .status-legend {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 1.5rem;
+    margin-bottom: 1.5rem;
+    opacity: 0;
+    transform: translateY(20px);
+    animation: fadeUp 0.6s ease-out 0.15s forwards;
+  }
+
+  .status-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    font-size: 0.8rem;
+    font-weight: 500;
+  }
+
+  .status-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+  }
+
+  .status-dot.lead { background: var(--success); }
+  .status-dot.tied { background: var(--warning); }
+  .status-dot.behind { background: var(--danger); }
+
+  /* Table wrapper */
+  .table-wrapper {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    box-shadow: var(--shadow-lg);
+    overflow: hidden;
+    opacity: 0;
+    transform: translateY(20px);
+    animation: fadeUp 0.6s ease-out 0.2s forwards;
+  }
+
+  .table-toolbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.75rem 1.25rem;
+    border-bottom: 1px solid var(--border);
+    background: var(--surface-alt);
+  }
+
+  .table-toolbar .label {
+    font-family: 'Fira Code', monospace;
+    font-size: 0.75rem;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+  }
+
+  .table-scroll {
+    overflow-x: auto;
+  }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.875rem;
+  }
+
+  thead {
+    position: sticky;
+    top: 0;
+    z-index: 10;
+  }
+
+  thead th {
+    background: var(--surface-alt);
+    border-bottom: 2px solid var(--border);
+    padding: 0.85rem 1rem;
+    text-align: left;
+    font-family: 'Fira Code', monospace;
+    font-size: 0.7rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--muted);
+    white-space: nowrap;
+  }
+
+  thead th:first-child {
+    min-width: 160px;
+  }
+
+  thead th.datum-col {
+    color: var(--primary);
+    font-weight: 700;
+  }
+
+  tbody tr {
+    border-bottom: 1px solid var(--border);
+    transition: background 0.15s ease;
+  }
+
+  tbody tr:nth-child(even) {
+    background: var(--row-alt);
+  }
+
+  tbody tr:hover {
+    background: var(--row-hover);
+  }
+
+  tbody td {
+    padding: 0.75rem 1rem;
+    vertical-align: top;
+    line-height: 1.5;
+  }
+
+  tbody td:first-child {
+    font-weight: 600;
+    color: var(--primary);
+    font-size: 0.85rem;
+  }
+
+  tbody td.datum-cell {
+    font-weight: 500;
+  }
+
+  /* Status pills in table */
+  .status-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    padding: 0.2rem 0.65rem;
+    border-radius: 9999px;
+    font-size: 0.72rem;
+    font-weight: 600;
+    font-family: 'Fira Code', monospace;
+    white-space: nowrap;
+    letter-spacing: 0.03em;
+  }
+
+  .status-pill.lead {
+    background: var(--success-bg);
+    color: var(--success);
+    border: 1px solid var(--success-border);
+  }
+
+  .status-pill.tied {
+    background: var(--warning-bg);
+    color: var(--warning);
+    border: 1px solid var(--warning-border);
+  }
+
+  .status-pill.behind {
+    background: var(--danger-bg);
+    color: var(--danger);
+    border: 1px solid var(--danger-border);
+  }
+
+  /* Footer row */
+  tfoot td {
+    padding: 0.85rem 1rem;
+    background: var(--surface-alt);
+    border-top: 2px solid var(--border);
+    font-family: 'Fira Code', monospace;
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--muted);
+  }
+
+  tfoot td:first-child {
+    color: var(--primary);
+    font-weight: 700;
+  }
+
+  /* Methodology section */
+  .methodology-section {
+    margin-top: 1.5rem;
+    opacity: 0;
+    transform: translateY(20px);
+    animation: fadeUp 0.6s ease-out 0.35s forwards;
+  }
+
+  .methodology-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    box-shadow: var(--shadow);
+    overflow: hidden;
+  }
+
+  .methodology-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 1rem 1.25rem;
+    cursor: pointer;
+    user-select: none;
+    transition: background 0.15s ease;
+  }
+
+  .methodology-header:hover {
+    background: var(--surface-alt);
+  }
+
+  .methodology-header h3 {
+    font-family: 'Fira Code', monospace;
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--muted);
+  }
+
+  .methodology-header .chevron {
+    font-size: 0.75rem;
+    color: var(--muted);
+    transition: transform 0.2s ease;
+    font-family: 'Fira Code', monospace;
+  }
+
+  .methodology-header.open .chevron {
+    transform: rotate(180deg);
+  }
+
+  .methodology-body {
+    display: none;
+    padding: 0 1.25rem 1.25rem;
+  }
+
+  .methodology-body.open {
+    display: block;
+  }
+
+  .methodology-body p {
+    font-size: 0.85rem;
+    line-height: 1.7;
+    color: var(--muted);
+    margin-bottom: 0.75rem;
+  }
+
+  .methodology-body ul {
+    padding-left: 1.25rem;
+    margin-bottom: 0.75rem;
+  }
+
+  .methodology-body li {
+    font-size: 0.85rem;
+    line-height: 1.7;
+    color: var(--muted);
+    margin-bottom: 0.25rem;
+  }
+
+  .methodology-body strong {
+    color: var(--text);
+  }
+
+  /* Footer */
+  .page-footer {
+    text-align: center;
+    margin-top: 2rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid var(--border);
+    opacity: 0;
+    transform: translateY(20px);
+    animation: fadeUp 0.6s ease-out 0.45s forwards;
+  }
+
+  .page-footer p {
+    font-family: 'Fira Code', monospace;
+    font-size: 0.7rem;
+    color: var(--muted);
+    letter-spacing: 0.05em;
+  }
+
+  /* Animations */
+  @keyframes fadeUp {
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  @keyframes pulse-dot {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.4; }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .page-header,
+    .kpi-row,
+    .status-legend,
+    .table-wrapper,
+    .methodology-section,
+    .page-footer {
+      opacity: 1;
+      transform: none;
+      animation: none;
+    }
+    .page-header .badge::before {
+      animation: none;
+    }
+  }
+
+  @media (max-width: 768px) {
+    .page-container { padding: 1rem; }
+    .kpi-row { grid-template-columns: repeat(2, 1fr); }
+    .status-legend { flex-wrap: wrap; gap: 0.75rem; }
+    table { font-size: 0.78rem; }
+    thead th, tbody td, tfoot td { padding: 0.6rem 0.5rem; }
+  }
+
+  @media (max-width: 480px) {
+    .kpi-row { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+<div class="page-container">
+  <header class="page-header">
+    <div class="badge">DATUM // COMPETITIVE ANALYSIS</div>
+    <h1>DATUM vs. Competitors</h1>
+    <p class="subtitle">Head-to-head comparison across 10 critical data platform categories. Evaluated against Snowflake, Databricks, and Google BigQuery.</p>
+  </header>
+
+  <div class="kpi-row">
+    <div class="kpi-card">
+      <div class="kpi-value">10</div>
+      <div class="kpi-label">Categories Compared</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-value lead">7</div>
+      <div class="kpi-label">DATUM Leads</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-value tied">1</div>
+      <div class="kpi-label">Tied</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-value behind">2</div>
+      <div class="kpi-label">Behind</div>
+    </div>
+  </div>
+
+  <div class="status-legend">
+    <span class="status-badge"><span class="status-dot lead"></span> Lead</span>
+    <span class="status-badge"><span class="status-dot tied"></span> Tied</span>
+    <span class="status-badge"><span class="status-dot behind"></span> Behind</span>
+  </div>
+
+  <div class="table-wrapper">
+    <div class="table-toolbar">
+      <span class="label">Comparison Matrix // 10 Categories x 4 Platforms</span>
+      <span class="label">2026 Q1 Data</span>
+    </div>
+    <div class="table-scroll">
+      <table>
+        <thead>
+          <tr>
+            <th>Category</th>
+            <th class="datum-col">DATUM</th>
+            <th>Snowflake</th>
+            <th>Databricks</th>
+            <th>BigQuery</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Real-Time Ingestion</td>
+            <td class="datum-cell">Sub-second CDC + Kafka native</td>
+            <td>Snowpipe (minutes latency)</td>
+            <td>Structured Streaming</td>
+            <td>Pub/Sub (seconds latency)</td>
+            <td><span class="status-pill lead">Lead</span></td>
+          </tr>
+          <tr>
+            <td>Query Performance</td>
+            <td class="datum-cell">Adaptive optimizer, result cache</td>
+            <td>Warehouse auto-scale</td>
+            <td>Photon engine</td>
+            <td>Slots-based scaling</td>
+            <td><span class="status-pill tied">Tied</span></td>
+          </tr>
+          <tr>
+            <td>Data Governance</td>
+            <td class="datum-cell">Built-in lineage + PII detection</td>
+            <td>Limited native governance</td>
+            <td>Unity Catalog</td>
+            <td>Data Catalog</td>
+            <td><span class="status-pill lead">Lead</span></td>
+          </tr>
+          <tr>
+            <td>Pricing Model</td>
+            <td class="datum-cell">Usage-based, no idle costs</td>
+            <td>Credit-based (expensive idle)</td>
+            <td>DBU-based</td>
+            <td>Slot-based (predictable)</td>
+            <td><span class="status-pill lead">Lead</span></td>
+          </tr>
+          <tr>
+            <td>Open Formats</td>
+            <td class="datum-cell">Iceberg + Parquet native</td>
+            <td>Proprietary + Iceberg</td>
+            <td>Delta Lake + Parquet</td>
+            <td>Capacitor (proprietary)</td>
+            <td><span class="status-pill lead">Lead</span></td>
+          </tr>
+          <tr>
+            <td>ML Integration</td>
+            <td class="datum-cell">Native feature store + MLflow</td>
+            <td>Snowpark ML</td>
+            <td>MLflow + notebooks</td>
+            <td>Vertex AI integration</td>
+            <td><span class="status-pill behind">Behind</span></td>
+          </tr>
+          <tr>
+            <td>Multi-Cloud</td>
+            <td class="datum-cell">AWS, GCP, Azure native</td>
+            <td>Multi-cloud</td>
+            <td>Multi-cloud</td>
+            <td>GCP-first</td>
+            <td><span class="status-pill lead">Lead</span></td>
+          </tr>
+          <tr>
+            <td>Schema Evolution</td>
+            <td class="datum-cell">Auto-detect + backward compat</td>
+            <td>Managed schema</td>
+            <td>Schema enforcement</td>
+            <td>Auto-detect</td>
+            <td><span class="status-pill lead">Lead</span></td>
+          </tr>
+          <tr>
+            <td>Developer Experience</td>
+            <td class="datum-cell">CLI + SDK + GraphQL + SQL</td>
+            <td>SQL-first</td>
+            <td>Notebook-first</td>
+            <td>SQL + API</td>
+            <td><span class="status-pill lead">Lead</span></td>
+          </tr>
+          <tr>
+            <td>Ecosystem</td>
+            <td class="datum-cell">200+ connectors</td>
+            <td>400+ (Partner Connect)</td>
+            <td>600+ (Partner Connect)</td>
+            <td>150+ (native)</td>
+            <td><span class="status-pill behind">Behind</span></td>
+          </tr>
+        </tbody>
+        <tfoot>
+          <tr>
+            <td>Summary</td>
+            <td>7 Lead / 1 Tied / 2 Behind</td>
+            <td>Mature ecosystem</td>
+            <td>Strong ML/AI</td>
+            <td>GCP-native strength</td>
+            <td></td>
+          </tr>
+        </tfoot>
+      </table>
+    </div>
+  </div>
+
+  <div class="methodology-section">
+    <div class="methodology-card">
+      <div class="methodology-header" id="methodologyToggle" onclick="toggleMethodology()">
+        <h3>Methodology &amp; Scoring Criteria</h3>
+        <span class="chevron">&#9660;</span>
+      </div>
+      <div class="methodology-body" id="methodologyBody">
+        <p>This comparison was conducted in Q1 2026 using publicly available documentation, benchmark results, and hands-on evaluation across all four platforms.</p>
+        <p><strong>Scoring methodology:</strong></p>
+        <ul>
+          <li><strong>Lead</strong> -- DATUM demonstrates a clear, measurable advantage in capability, performance, or value.</li>
+          <li><strong>Tied</strong> -- All platforms offer comparable capabilities with no significant differentiator.</li>
+          <li><strong>Behind</strong> -- One or more competitors offer materially better capabilities in this category.</li>
+        </ul>
+        <p><strong>Evaluation dimensions per category:</strong></p>
+        <ul>
+          <li><strong>Feature completeness</strong> -- Does the platform natively support the full capability without third-party add-ons?</li>
+          <li><strong>Performance</strong> -- Measured throughput, latency, and scalability under standardized workloads.</li>
+          <li><strong>Developer experience</strong> -- API design, documentation quality, SDK availability, and time-to-first-query.</li>
+          <li><strong>Total cost of ownership</strong> -- Licensing, compute, storage, and operational costs at scale.</li>
+          <li><strong>Ecosystem maturity</strong> -- Number of integrations, community size, and third-party tool support.</li>
+        </ul>
+        <p><strong>Notable caveats:</strong></p>
+        <ul>
+          <li>ML Integration score reflects Databricks' deeper notebook-first ML workflow and Vertex AI's tight GCP integration. DATUM's feature store is competitive but newer.</li>
+          <li>Ecosystem score reflects connector count. DATUM's connector quality and reliability score higher in independent reviews, but raw count is lower.</li>
+          <li>Multi-Cloud "Lead" reflects DATUM's consistent API across all three clouds versus competitors' cloud-specific feature gaps.</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <footer class="page-footer">
+    <p>DATUM Platform // Competitive Analysis // Q1 2026 // 10 Categories Evaluated</p>
+  </footer>
+</div>
+
+<script>
+  function toggleMethodology() {
+    const header = document.getElementById('methodologyToggle');
+    const body = document.getElementById('methodologyBody');
+    header.classList.toggle('open');
+    body.classList.toggle('open');
+  }
+</script>
+</body>
+</html>

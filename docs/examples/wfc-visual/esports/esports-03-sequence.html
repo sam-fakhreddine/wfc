@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Esports Live Match Event Flow</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Russo+One&family=Chakra+Petch:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+
+  :root{
+    --primary:#7C3AED;
+    --secondary:#A78BFA;
+    --cta:#F43F5E;
+    --bg:#0F0F23;
+    --text:#E2E8F0;
+    --border:#4C1D95;
+    --card-bg:rgba(255,255,255,0.03);
+    --card-border:rgba(124,58,237,0.3);
+    --card-glow:rgba(124,58,237,0.1);
+    --heading-font:'Russo One',sans-serif;
+    --body-font:'Chakra Petch',sans-serif;
+  }
+
+  @media(prefers-color-scheme:light){
+    :root{
+      --bg:#F0F0F8;
+      --text:#1E1B4B;
+      --card-bg:rgba(124,58,237,0.06);
+      --card-border:rgba(124,58,237,0.25);
+      --card-glow:rgba(124,58,237,0.08);
+      --border:#7C3AED;
+    }
+  }
+
+  html{font-size:16px;scroll-behavior:smooth}
+  body{
+    background:var(--bg);
+    color:var(--text);
+    font-family:var(--body-font);
+    line-height:1.6;
+    min-height:100vh;
+    padding:2rem 1rem;
+    overflow-x:hidden;
+  }
+
+  .container{max-width:1200px;margin:0 auto}
+
+  h1{
+    font-family:var(--heading-font);
+    font-size:clamp(1.6rem,4vw,2.4rem);
+    text-align:center;
+    margin-bottom:.5rem;
+    background:linear-gradient(135deg,var(--primary),var(--cta));
+    -webkit-background-clip:text;
+    -webkit-text-fill-color:transparent;
+    background-clip:text;
+  }
+
+  .subtitle{
+    text-align:center;
+    color:var(--secondary);
+    font-size:.95rem;
+    margin-bottom:2rem;
+    font-weight:500;
+    letter-spacing:.5px;
+  }
+
+  .diagram-wrapper{
+    background:var(--card-bg);
+    backdrop-filter:blur(12px);
+    -webkit-backdrop-filter:blur(12px);
+    border:1px solid var(--card-border);
+    border-radius:16px;
+    padding:2rem;
+    box-shadow:0 0 20px var(--card-glow),inset 0 1px 0 rgba(255,255,255,0.05);
+    overflow:auto;
+    position:relative;
+  }
+
+  .diagram-inner{
+    min-width:fit-content;
+    transform-origin:top left;
+    transition:transform .3s ease;
+  }
+
+  .zoom-controls{
+    display:flex;gap:.5rem;
+    justify-content:center;
+    margin-bottom:1rem;
+  }
+  .zoom-btn{
+    background:var(--card-bg);
+    backdrop-filter:blur(12px);
+    -webkit-backdrop-filter:blur(12px);
+    border:1px solid var(--card-border);
+    color:var(--text);
+    font-family:var(--body-font);
+    font-size:.85rem;
+    font-weight:600;
+    padding:.45rem .9rem;
+    border-radius:8px;
+    cursor:pointer;
+    transition:all .2s ease;
+    box-shadow:0 0 10px var(--card-glow);
+  }
+  .zoom-btn:hover{
+    background:rgba(124,58,237,0.15);
+    box-shadow:0 0 20px var(--card-glow);
+  }
+  .zoom-level{
+    display:flex;align-items:center;
+    font-size:.8rem;color:var(--secondary);
+    min-width:3.5rem;justify-content:center;
+  }
+
+  .mermaid{text-align:center}
+
+  /* Info cards below diagram */
+  .info-row{
+    display:grid;
+    grid-template-columns:repeat(3,1fr);
+    gap:.75rem;
+    margin-top:1.5rem;
+  }
+  @media(max-width:700px){
+    .info-row{grid-template-columns:1fr}
+  }
+  .info-card{
+    background:var(--card-bg);
+    backdrop-filter:blur(12px);
+    -webkit-backdrop-filter:blur(12px);
+    border:1px solid var(--card-border);
+    border-radius:10px;
+    padding:1rem;
+    box-shadow:0 0 15px var(--card-glow),inset 0 1px 0 rgba(255,255,255,0.05);
+  }
+  .info-card h3{
+    font-family:var(--heading-font);
+    font-size:.8rem;
+    color:var(--primary);
+    margin-bottom:.4rem;
+  }
+  .info-card p{
+    font-size:.78rem;
+    color:var(--secondary);
+    line-height:1.5;
+  }
+
+  /* Live indicator */
+  .live-indicator{
+    display:inline-flex;align-items:center;gap:6px;
+    font-size:.7rem;font-weight:700;color:var(--cta);
+    text-transform:uppercase;letter-spacing:1.5px;
+    margin-bottom:1rem;
+    justify-content:center;
+    width:100%;
+  }
+  .live-pulse{
+    width:8px;height:8px;border-radius:50%;
+    background:var(--cta);
+    animation:livePulse 1.5s ease-in-out infinite;
+  }
+  @keyframes livePulse{
+    0%,100%{box-shadow:0 0 0 0 rgba(244,63,94,0.5)}
+    50%{box-shadow:0 0 0 8px rgba(244,63,94,0)}
+  }
+
+  .fade-up{
+    opacity:0;transform:translateY(24px);
+    animation:fadeUp .6s ease forwards;
+  }
+  @keyframes fadeUp{to{opacity:1;transform:translateY(0)}}
+  .delay-1{animation-delay:.1s}
+  .delay-2{animation-delay:.2s}
+  .delay-3{animation-delay:.35s}
+  .delay-4{animation-delay:.5s}
+
+  @media(prefers-reduced-motion:reduce){
+    .fade-up{opacity:1;transform:none;animation:none}
+    .live-pulse{animation:none;opacity:1}
+  }
+
+  .footer{
+    text-align:center;margin-top:2rem;
+    font-size:.75rem;color:var(--secondary);opacity:.6;
+  }
+</style>
+</head>
+<body>
+<div class="container">
+  <h1 class="fade-up">Esports Live Match Event Flow</h1>
+  <p class="subtitle fade-up delay-1">Real-time event propagation during competitive matches</p>
+
+  <div class="zoom-controls fade-up delay-2">
+    <button class="zoom-btn" onclick="zoomOut()">&#8722; Zoom</button>
+    <span class="zoom-level" id="zoomLevel">100%</span>
+    <button class="zoom-btn" onclick="zoomIn()">&#43; Zoom</button>
+    <button class="zoom-btn" onclick="zoomReset()">Reset</button>
+  </div>
+
+  <div class="diagram-wrapper fade-up delay-3">
+    <div class="live-indicator"><span class="live-pulse"></span> Live Match Events</div>
+    <div class="diagram-inner" id="diagramInner">
+      <div class="mermaid">
+sequenceDiagram
+    participant GC as 🎮 Game Client
+    participant GS as 🖥️ Game Server
+    participant EB as 📨 Event Bus
+    participant SE as ⚡ Stats Engine
+    participant AC as 🛡️ Anti-Cheat
+    participant BC as 📺 Broadcast
+    participant FE as 📱 Fan App
+
+    GC->>GS: Player action (kill, objective, ability)
+    activate GS
+    GS->>GS: Validate game state
+    GS->>EB: Publish match event
+    deactivate GS
+
+    par Fan Experience Pipeline
+        EB->>SE: Update player stats
+        activate SE
+        SE->>FE: Push live score update (WebSocket)
+        deactivate SE
+        activate FE
+        FE->>FE: Render scoreboard + kill feed
+        deactivate FE
+    and Broadcast Pipeline
+        EB->>BC: Stream event overlay data
+        activate BC
+        BC->>BC: Update broadcast graphics + replay
+        deactivate BC
+    and Anti-Cheat Pipeline
+        EB->>AC: Analyze action pattern
+        activate AC
+        AC->>AC: ML model inference (< 50ms)
+        alt Suspicious Activity Detected
+            AC->>GS: Flag for review (async)
+            Note over AC,GS: Match continues normally.<br/>Flagged for post-match review.
+        else Clean
+            AC->>AC: Log confidence score
+        end
+        deactivate AC
+    end
+
+    GS->>GC: Authoritative game state update
+    Note over GC,FE: End-to-end latency target: < 100ms
+      </div>
+    </div>
+  </div>
+
+  <div class="info-row fade-up delay-4">
+    <div class="info-card">
+      <h3>Fan Experience</h3>
+      <p>Sub-second score updates via WebSocket push. Kill feeds, economy trackers, and map state streamed to millions of concurrent viewers.</p>
+    </div>
+    <div class="info-card">
+      <h3>Broadcast Pipeline</h3>
+      <p>Overlay API feeds OBS/vMix with real-time stats, player cams, and automated replay triggers on highlight events.</p>
+    </div>
+    <div class="info-card">
+      <h3>Anti-Cheat</h3>
+      <p>ML inference under 50ms per action. Behavioral analysis runs in parallel without impacting game server tick rate.</p>
+    </div>
+  </div>
+
+  <div class="footer fade-up delay-4">Esports Live Match Event Flow &mdash; Neon Dashboard</div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+<script>
+  const isDark = window.matchMedia('(prefers-color-scheme: dark)').matches || !window.matchMedia('(prefers-color-scheme: light)').matches;
+
+  mermaid.initialize({
+    startOnLoad: true,
+    theme: 'base',
+    themeVariables: {
+      darkMode: isDark,
+      background: isDark ? '#0F0F23' : '#F0F0F8',
+      primaryColor: '#1a1a3e',
+      primaryTextColor: '#E2E8F0',
+      primaryBorderColor: '#7C3AED',
+      lineColor: '#7C3AED',
+      signalColor: '#A78BFA',
+      signalTextColor: '#E2E8F0',
+      labelTextColor: '#E2E8F0',
+      actorBkg: '#1a1a3e',
+      actorBorder: '#7C3AED',
+      actorTextColor: '#E2E8F0',
+      activationBkgColor: '#2d1b69',
+      activationBorderColor: '#A78BFA',
+      noteBkgColor: '#1a0a2a',
+      noteBorderColor: '#F43F5E',
+      noteTextColor: '#E2E8F0',
+      loopTextColor: '#A78BFA',
+      altSectionBkgColor: 'rgba(124,58,237,0.05)',
+      altSectionColor: '#E2E8F0',
+      sequenceNumberColor: '#0F0F23',
+      fontSize: '13px',
+      fontFamily: 'Chakra Petch, sans-serif'
+    },
+    sequence: {
+      diagramMarginX: 20,
+      diagramMarginY: 10,
+      actorMargin: 60,
+      width: 180,
+      height: 50,
+      boxMargin: 10,
+      boxTextMargin: 5,
+      noteMargin: 10,
+      messageMargin: 40,
+      mirrorActors: false,
+      showSequenceNumbers: true
+    }
+  });
+
+  let currentZoom = 1;
+  const inner = document.getElementById('diagramInner');
+  function setZoom(z) {
+    currentZoom = Math.max(0.3, Math.min(2, z));
+    inner.style.transform = 'scale(' + currentZoom + ')';
+    document.getElementById('zoomLevel').textContent = Math.round(currentZoom * 100) + '%';
+  }
+  function zoomIn() { setZoom(currentZoom + 0.1); }
+  function zoomOut() { setZoom(currentZoom - 0.1); }
+  function zoomReset() { setZoom(1); }
+</script>
+</body>
+</html>
