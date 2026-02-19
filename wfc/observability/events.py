@@ -19,7 +19,8 @@ logger = logging.getLogger(__name__)
 class EventReceiver(Protocol):
     """Protocol for anything that can receive events (providers)."""
 
-    def on_event(self, event: ObservabilityEvent) -> None: ...
+    def on_event(self, event: ObservabilityEvent) -> None:
+        ...
 
 
 @dataclass

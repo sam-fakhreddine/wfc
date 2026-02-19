@@ -2,8 +2,8 @@
 
 ## Patterns Found
 
-- [2026-02-16] WFC uses @lru_cache extensively for expensive operations: regex compilation in _util.py (maxsize=256), pattern loading in security_hook.py (maxsize=1), and model resolution -- verify cache sizes are appropriate for the working set (Source: initial-seed)
-- [2026-02-16] The security hook compiles and caches regex patterns via compile_regex() with a 256-entry LRU cache -- pattern files are loaded once and cached with _load_patterns(maxsize=1) (Source: initial-seed)
+- [2026-02-16] WFC uses @lru_cache extensively for expensive operations: regex compilation in_util.py (maxsize=256), pattern loading in security_hook.py (maxsize=1), and model resolution -- verify cache sizes are appropriate for the working set (Source: initial-seed)
+- [2026-02-16] The security hook compiles and caches regex patterns via compile_regex() with a 256-entry LRU cache -- pattern files are loaded once and cached with_load_patterns(maxsize=1) (Source: initial-seed)
 - [2026-02-16] PersonaRegistry builds multiple in-memory indexes (by_tag, by_tech_stack, by_panel, by_complexity, by_property) at initialization for O(1) lookup during persona selection (Source: initial-seed)
 - [2026-02-16] Token budget allocation reserves 92% of the total budget (138k of 150k tokens) for actual code files, with only 1k for system prompts -- this aggressive allocation is key to the 99% token reduction claim (Source: initial-seed)
 - [2026-02-16] subprocess calls in _checkers/python.py run ruff twice (once for --fix, once for format) then again for lint checking -- this is three ruff invocations per Python file save (Source: initial-seed)

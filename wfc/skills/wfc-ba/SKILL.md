@@ -77,6 +77,7 @@ Q: What WON'T this do? (explicit scope exclusion)
 ```
 
 For each MUST requirement:
+
 ```
 Q: How would you verify this works? (acceptance criterion)
 Q: What's the performance expectation? (bounds)
@@ -270,12 +271,14 @@ User: /wfc-ba "add rate limiting"
 
 ## Integration with WFC
 
-### Upstream (feeds into):
+### Upstream (feeds into)
+
 - **wfc-validate** — BA document is validated for quality (next step in pipeline)
 - **wfc-plan** — After validation, BA feeds into structured planning
 - **wfc-build** — Quick mode BA can feed directly into build for small features
 
-### Downstream (consumes from):
+### Downstream (consumes from)
+
 - **Codebase** — Reads existing code to understand current state
 - **Web** — Searches for prior art and competitive analysis
 - **User** — Interactive interview
@@ -350,7 +353,8 @@ If the planner would ask "but what about X?" — X is missing from the BA.
 
 ## When to Use
 
-### Use /wfc-ba when:
+### Use /wfc-ba when
+
 - Starting a new feature and requirements are unclear
 - Multiple stakeholders have different expectations
 - The feature touches multiple systems or modules
@@ -358,7 +362,8 @@ If the planner would ask "but what about X?" — X is missing from the BA.
 - Previous implementation attempts failed (need to understand why)
 - The feature has security, performance, or compliance implications
 
-### Skip BA when:
+### Skip BA when
+
 - Bug fix with clear reproduction steps
 - Single-file change with obvious scope
 - Refactoring with no behavior change

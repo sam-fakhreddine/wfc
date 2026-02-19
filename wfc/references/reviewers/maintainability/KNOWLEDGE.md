@@ -29,5 +29,5 @@
 
 - [2026-02-16] WFC is organized as: wfc/ (main package), wfc/scripts/ (executable code), wfc/references/ (progressive disclosure docs), wfc/assets/ (templates), tests/ (test suite), docs/ (documentation by topic) (Source: initial-seed)
 - [2026-02-16] Skills are installed to ~/.claude/skills/wfc-*/ and follow Agent Skills compliance: valid frontmatter (name, description, license only), hyphenated names, XML prompt generation (Source: initial-seed)
-- [2026-02-16] The hook infrastructure separates concerns: pretooluse_hook.py is the dispatcher, security_hook.py handles pattern matching, rule_engine.py handles user rules, _util.py provides shared utilities (Source: initial-seed)
+- [2026-02-16] The hook infrastructure separates concerns: pretooluse_hook.py is the dispatcher, security_hook.py handles pattern matching, rule_engine.py handles user rules,_util.py provides shared utilities (Source: initial-seed)
 - [2026-02-16] The persona system separates orchestration (persona_orchestrator.py selects who reviews) from execution (persona_executor.py prepares what they review) from prompting (ultra_minimal_prompts.py defines how they review) (Source: initial-seed)

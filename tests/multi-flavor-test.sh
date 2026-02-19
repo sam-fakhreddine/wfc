@@ -41,7 +41,7 @@ log() {
 create_dockerfile() {
     local flavor=$1
     local dockerfile="$RESULT_DIR/Dockerfile.$flavor"
-    
+
     cat > "$dockerfile" << EOD
 # Dockerfile for $flavor
 FROM $flavor
@@ -143,14 +143,14 @@ test_flavor() {
     local container_name="${CONTAINER_NAME_PREFIX}${flavor//[:.]/-}"
     local dockerfile="$RESULT_DIR/Dockerfile.$flavor"
     local log_file="$RESULT_DIR/${flavor//[:.]/-}.log"
-    
+
     log "${YELLOW}Testing $flavor...${NC}"
     echo "=== Testing $flavor ===" > "$log_file"
-    
+
     # Create Dockerfile
     log "  Creating Dockerfile..."
     create_dockerfile "$flavor"
-    
+
     # Build Docker image
     log "  Building Docker image..."
     if ! docker build -f "$dockerfile" -t "$container_name" . 2>> "$log_file"; then
@@ -159,7 +159,7 @@ test_flavor() {
         log "${RED}  ❌ Docker build failed for $flavor${NC}"
         return 1
     fi
-    
+
     # Run container
     log "  Running container..."
     if ! docker run --rm "$container_name" >> "$log_file" 2>&1; then
@@ -168,19 +168,19 @@ test_flavor() {
         log "${RED}  ❌ Container execution failed for $flavor${NC}"
         return 1
     fi
-    
+
     # Extract verification results from log
     local skill_count
     skill_count=$(grep -A1 "📊 Skills installed:" "$log_file" | tail -1 | tr -d '\r')
-    
+
     # Extract skill list from log
     local skill_list
     skill_list=$(grep -A10 "📋 Installed skills:" "$log_file" | tail +2 | sed '/^=== END VERIFICATION ===/,$d')
-    
+
     RESULTS["$flavor"]="PASS"
     ERROR_MSGS["$flavor"]=""
     log "${GREEN}  ✅ $flavor passed! (Skills installed: ${skill_count:-0})${NC}"
-    
+
     # Add skill details to log
     echo "=== Skill Details ===" >> "$log_file"
     echo "$skill_list" >> "$log_file" 2>/dev/null || echo "No skills found" >> "$log_file"
@@ -190,10 +190,10 @@ test_flavor() {
 generate_summary() {
     log "\n${YELLOW}=== TEST SUMMARY ===${NC}"
     log "Total flavors tested: ${#FLAVORS[@]}"
-    
+
     local pass_count=0
     local fail_count=0
-    
+
     for flavor in "${FLAVORS[@]}"; do
         if [[ "${RESULTS[$flavor]}" == "PASS" ]]; then
             log "${GREEN}✅ $flavor - PASS${NC}"
@@ -206,11 +206,11 @@ generate_summary() {
             ((fail_count++))
         fi
     done
-    
+
     log "\n${YELLOW}Results:${NC}"
     log "Passed: $pass_count/${#FLAVORS[@]}"
     log "Failed: $fail_count/${#FLAVORS[@]}"
-    
+
     if [[ $fail_count -eq 0 ]]; then
         log "${GREEN}🎉 All flavors passed!${NC}"
         return 0
@@ -242,25 +242,25 @@ main() {
     log "Results directory: $RESULT_DIR"
     log "Time: $(date)"
     log ""
-    
+
     # Initialize results
     for flavor in "${FLAVORS[@]}"; do
         RESULTS["$flavor"]=""
         ERROR_MSGS["$flavor"]=""
     done
-    
+
     # Test each flavor
     for flavor in "${FLAVORS[@]}"; do
         test_flavor "$flavor"
         log ""  # Add spacing between tests
     done
-    
+
     # Generate summary
     generate_summary
-    
+
     # Clean up
     cleanup
-    
+
     # Show individual test logs
     log "\n${YELLOW}Individual test logs:${NC}"
     for flavor in "${FLAVORS[@]}"; do

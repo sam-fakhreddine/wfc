@@ -38,41 +38,50 @@ personas/
 ## The 9 Panels (21 Personas)
 
 ### Panel 1: Engineering (4 personas)
+
 - **BACKEND_PYTHON_SENIOR**: Python, FastAPI, async patterns
 - **BACKEND_GO_SENIOR**: Go, concurrency, microservices, gRPC
 - **FRONTEND_REACT_EXPERT**: React, TypeScript, state management
 - **MOBILE_IOS_EXPERT**: Swift, SwiftUI, iOS frameworks
 
 ### Panel 2: Security (2 personas)
+
 - **APPSEC_SPECIALIST**: OWASP, auth/authz, secure coding
 - **INFRASEC_ENGINEER**: Cloud security, container security, secrets management
 
 ### Panel 3: Architecture (2 personas)
+
 - **SOLUTIONS_ARCHITECT**: System design, cloud architecture, microservices
 - **API_DESIGNER**: REST/GraphQL design, versioning, documentation
 
 ### Panel 4: Quality (2 personas)
+
 - **PERF_TESTER**: Load testing, profiling, benchmarking
 - **TEST_AUTOMATION_EXPERT**: Test frameworks, coverage, automation
 
 ### Panel 5: Data (3 personas)
+
 - **DB_ARCHITECT_SQL**: PostgreSQL, query optimization, schema design
 - **DATA_ENGINEER**: ETL/ELT, Spark, Airflow, data pipelines
 - **ML_ENGINEER**: PyTorch, feature engineering, MLOps
 
 ### Panel 6: Product (1 persona)
+
 - **DX_SPECIALIST**: API design, documentation, developer experience
 
 ### Panel 7: Operations (2 personas)
+
 - **SRE_SPECIALIST**: Observability, incident response, SLOs
 - **PLATFORM_ENGINEER**: Kubernetes, IaC, CI/CD, automation
 
 ### Panel 8: Domain Experts (3 personas)
+
 - **FINTECH_PAYMENTS**: Payment processing, PCI compliance, idempotency
 - **HEALTHCARE_HIPAA**: HIPAA compliance, PHI protection, clinical workflows
 - **ECOMMERCE_EXPERT**: Shopping cart, inventory, order management
 
 ### Panel 9: Specialists (2 personas)
+
 - **ACCESSIBILITY_WCAG**: WCAG 2.2, screen readers, ARIA
 - **PERFORMANCE_OPTIMIZATION_GURU**: Profiling, algorithm optimization, caching
 
@@ -99,6 +108,7 @@ The `PersonaSelector` intelligently chooses personas based on:
 ### 3. Consensus Synthesis
 
 Variable-reviewer consensus with:
+
 - **Relevance-weighted scoring** (not fixed weights)
 - **Consensus detection** (issues mentioned by 3+ reviewers)
 - **Unique insights** (only 1 reviewer caught it)
@@ -174,6 +184,7 @@ context = PersonaSelectionContext(
 1. **Create JSON file** in appropriate panel directory
 2. **Follow schema** (validation automatic)
 3. **Rebuild registry**:
+
    ```bash
    python3 /tmp/generate_registry.py
    ```
@@ -332,6 +343,7 @@ request = ReviewRequest(
 ## Files Modified/Created
 
 ### New Files (96+)
+
 - `personas/` directory structure
 - 3 JSON schemas
 - 21 persona definitions
@@ -340,6 +352,7 @@ request = ReviewRequest(
 - This README
 
 ### Modified Files (3)
+
 - `skills/review/orchestrator.py` - Added persona support
 - `skills/review/consensus.py` - Variable reviewers, relevance weighting
 - `shared/config/wfc_config.py` - Persona configuration

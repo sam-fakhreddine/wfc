@@ -19,11 +19,13 @@ Where `<domain>` is one of: `security`, `correctness`, `performance`, `maintaina
 Recurring code patterns specific to this codebase that the reviewer has learned to watch for.
 
 **Format:**
+
 ```
 - [YYYY-MM-DD] <pattern description> (Source: <review/PR reference>)
 ```
 
 **Example:**
+
 ```
 - [2026-02-16] WFC uses subprocess calls in hook infrastructure -- verify all subprocess inputs are sanitized (Source: initial-seed)
 ```
@@ -33,11 +35,13 @@ Recurring code patterns specific to this codebase that the reviewer has learned 
 Things that look like issues in this domain but are not problems in the context of this specific project. Prevents the reviewer from repeatedly flagging known-safe patterns.
 
 **Format:**
+
 ```
 - [YYYY-MM-DD] <what looks wrong> -> <why it's actually fine> (Source: <reference>)
 ```
 
 **Example:**
+
 ```
 - [2026-02-16] eval() appears in security pattern regex -> it is a string literal inside a JSON pattern definition, not executable code (Source: initial-seed)
 ```
@@ -47,11 +51,13 @@ Things that look like issues in this domain but are not problems in the context 
 High-value catches from past reviews -- findings that prevented real bugs or security issues. This section captures the reviewer's track record and reinforces vigilance for similar patterns.
 
 **Format:**
+
 ```
 - [YYYY-MM-DD] <what was caught> -> <what would have happened> (Source: <reference>)
 ```
 
 **Example:**
+
 ```
 - [2026-02-16] Caught unsanitized user input in subprocess call -> could have allowed command injection (Source: PR-45)
 ```
@@ -61,11 +67,13 @@ High-value catches from past reviews -- findings that prevented real bugs or sec
 Project conventions and architectural decisions that affect this reviewer's domain. These are rules that cannot be inferred from the code alone and must be explicitly documented.
 
 **Format:**
+
 ```
 - [YYYY-MM-DD] <rule description> (Source: <reference>)
 ```
 
 **Example:**
+
 ```
 - [2026-02-16] All Python code must pass ruff and pyright checks before merge (Source: initial-seed)
 ```
@@ -75,11 +83,13 @@ Project conventions and architectural decisions that affect this reviewer's doma
 Key architectural facts relevant to this reviewer's domain. Provides the background knowledge needed to make informed review decisions.
 
 **Format:**
+
 ```
 - [YYYY-MM-DD] <architectural fact> (Source: <reference>)
 ```
 
 **Example:**
+
 ```
 - [2026-02-16] Hook infrastructure uses a two-phase dispatch: security patterns first, then custom rules (Source: initial-seed)
 ```
@@ -103,6 +113,7 @@ Each entry can be parsed with a simple regex:
 ```
 
 Capturing groups:
+
 1. Date (YYYY-MM-DD)
 2. Content (the fact itself)
 3. Source attribution

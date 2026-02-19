@@ -95,6 +95,7 @@ WFC now follows industry-standard GitHub PR workflow:
 ```
 
 **What happens:**
+
 1. Code passes quality checks
 2. Branch pushed to `origin`
 3. Draft PR created on GitHub
@@ -113,6 +114,7 @@ If you prefer local-only workflow (solo projects, no CI/CD):
 ```
 
 **What happens:**
+
 1. Code passes quality checks
 2. Merged to local `main` branch
 3. You manually push when ready: `git push origin main`
@@ -153,6 +155,7 @@ gh auth status
 ```
 
 Should show:
+
 ```
 ✓ Logged in to github.com as <username>
 ✓ Git operations for github.com configured to use ssh protocol.
@@ -271,6 +274,7 @@ wfc hooks uninstall
 ### Hook Behavior
 
 **Soft Enforcement (Default):**
+
 - Hooks **warn** but **don't block**
 - Violations logged to telemetry
 - Developer experience prioritized
@@ -298,6 +302,7 @@ git commit -m "test"
 If you're upgrading from WFC v1.0 (local-only workflow):
 
 **Breaking Changes:**
+
 1. Default workflow changed from `direct` to `pr`
 2. Requires `gh` CLI installed and authenticated
 3. Pushes to remote (previously never pushed)

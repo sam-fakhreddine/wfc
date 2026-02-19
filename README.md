@@ -3,7 +3,7 @@
 > **Ship better code, faster.** 5 specialist reviewers, parallel TDD agents, and real-time security enforcement—all in your IDE.
 
 [![MIT License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
-[![Production Ready](https://img.shields.io/badge/status-production-green.svg)]()
+[![Production Ready](https://img.shields.io/badge/status-production-green.svg)](https://github.com/samfakhreddine/wfc)
 [![Agent Skills](https://img.shields.io/badge/agent%20skills-standard-purple.svg)](https://agentskills.io)
 
 **[Quick Start](#quick-start)** • **[Key Features](#-key-features)** • **[How It Works](#how-it-works)** • **[Installation](#installation)** • **[Documentation](docs/)**
@@ -15,6 +15,7 @@
 **Traditional AI coding assistants give you one perspective.** WFC gives you an entire engineering team.
 
 Instead of writing code alone, you orchestrate specialized AI agents that:
+
 - **Build features in parallel** using TDD workflows in isolated git worktrees
 - **Review your code** from 5 specialist perspectives with mathematical consensus scoring
 - **Catch issues before production** with real-time security hooks and quality gates
@@ -44,12 +45,14 @@ Every review runs 5 fixed specialist reviewers in parallel, then calculates a ma
 | **Reliability** | Error handling, fault tolerance, resource leaks |
 
 **How scoring works:**
+
 - Each finding gets a score: `R_i = (severity × confidence) / 10`
 - Consensus Score: `CS = (0.5 × R̄) + (0.3 × R̄ × k/n) + (0.2 × R_max)`
 - Minority Protection Rule: if Security or Reliability raises a critical finding, CS is elevated regardless of consensus
 - Findings are deduplicated via SHA-256 fingerprinting (±3 lines across reviewers)
 
 **Decision tiers:**
+
 ```
 CS < 4.0   → Informational (log only)
 CS 4-7     → Moderate (inline comment)
@@ -58,6 +61,7 @@ CS ≥ 9.0   → Critical (block + escalate)
 ```
 
 **Example output:**
+
 ```
 ✅ Overall Score: 8.2/10 - APPROVED
 
@@ -79,6 +83,7 @@ Execute multiple tasks simultaneously with isolated TDD agents.
 ```
 
 **How it works:**
+
 - Each agent gets its own git worktree (zero contamination between tasks)
 - Enforced RED → GREEN → REFACTOR workflow
 - Universal quality gates (100+ tools via Trunk.io)
@@ -86,6 +91,7 @@ Execute multiple tasks simultaneously with isolated TDD agents.
 - Consensus review before merging to main
 
 **Real workflow:**
+
 ```
 5 Agents in parallel:
 ├─ Agent 1: Setup auth system      [worktree-1]
@@ -150,18 +156,21 @@ TEST-PLAN.md               Quality Gates                CS ≥ 7.0 to ship
 ```
 
 **Phase 1: Smart Planning**
+
 - Breaks features into tasks with dependency graphs (DAG)
 - Defines formal properties (SAFETY, LIVENESS, PERFORMANCE)
 - Creates comprehensive test strategy
 - Uses EARS format (Rolls-Royce/Airbus requirements methodology)
 
 **Phase 2: Parallel Execution**
+
 - Up to 5 agents work simultaneously in isolated git worktrees
 - Each follows strict TDD: TEST FIRST → IMPLEMENT → REFACTOR
 - Universal quality checks with 100+ tools (Trunk.io)
 - Automatic rollback if quality gates fail
 
 **Phase 3: Expert Consensus**
+
 - 5 specialist reviewers analyze in parallel
 - Consensus Score with Minority Protection Rule
 - Finding deduplication via SHA-256 fingerprinting
@@ -203,6 +212,7 @@ That's it. WFC runs 5 specialist reviewers in parallel and returns findings with
 ```
 
 WFC will:
+
 1. Interview you (3-5 quick questions)
 2. Spawn TDD agents in isolated worktrees
 3. Run quality checks and consensus review
@@ -215,12 +225,14 @@ WFC will:
 ### Use Case 1: PR Reviews with Confidence
 
 **Before WFC:**
+
 ```
 You: "Does this look good?"
 AI: "Yes, looks fine!" ❌ (missed SQL injection)
 ```
 
 **With WFC:**
+
 ```
 You: /wfc-review
 
@@ -259,26 +271,31 @@ WFC automatically: identifies attack vectors, checks OWASP Top 10, validates inp
 ## Developer Benefits
 
 ### ⚡ **Faster Shipping**
+
 - Parallel execution: up to 5 agents work simultaneously
 - Smart planning: break complex features into parallelizable tasks
 - Auto-merge: passing code goes straight to your branch
 
 ### 🛡️ **Better Quality**
+
 - Five-reviewer consensus catches issues single reviewers miss
 - 100+ quality tools run automatically (Trunk.io)
 - TDD enforcement prevents "implement first, test later" technical debt
 
 ### 🔒 **Security Built-In**
+
 - OWASP LLM Top 10 mitigations out of the box
 - Real-time hooks block dangerous operations as you code
 - Security specialist on every review with Minority Protection Rule
 
 ### 🧠 **Learn & Improve**
+
 - RAG-powered knowledge base per reviewer domain
 - Cross-session learning prevents recurring mistakes
 - Detailed feedback explains the "why" behind every issue
 
 ### 🔧 **Framework Agnostic**
+
 - Works with any language or framework
 - Universal quality checker supports Python, JavaScript, Go, Rust, Java, and more
 - Extensible with custom rules (`.wfc/rules/*.md`)
@@ -288,24 +305,28 @@ WFC automatically: identifies attack vectors, checks OWASP Top 10, validates inp
 ## Complete Skill Suite
 
 ### Core Development
+
 - **`wfc-build`** — Quick feature builder with adaptive interview + TDD
 - **`wfc-plan`** — Structured task breakdown with EARS requirements
 - **`wfc-implement`** — Multi-agent parallel TDD execution engine
 - **`wfc-review`** — Five-reviewer consensus code review
 
 ### Quality & Testing
+
 - **`wfc-test`** — Property-based test generation from formal specs
 - **`wfc-security`** — STRIDE threat modeling and security audits
 - **`wfc-architecture`** — C4 diagrams and Architecture Decision Records
 - **`wfc-observe`** — Generate observability from system properties
 
 ### Governance & Safety
+
 - **`wfc-safeguard`** — Real-time security hooks (PreToolUse enforcement)
 - **`wfc-rules`** — Custom code standards enforcement via Markdown rules
 - **`wfc-safeclaude`** — Reduce approval prompts with safe command allowlist
 - **`wfc-validate`** — Critical thinking advisor (7-dimension analysis)
 
 ### Workflow & Productivity
+
 - **`wfc-vibe`** — Natural brainstorming mode with smooth transitions
 - **`wfc-ba`** — Business analysis and requirements gathering
 - **`wfc-retro`** — AI-powered retrospectives with metrics
@@ -330,6 +351,7 @@ cd wfc
 **Supports:** Claude Code • Kiro • OpenCode • Cursor • VS Code • Codex • Antigravity • Goose
 
 The installer:
+
 1. Auto-detects your IDE/platform
 2. Offers branding choice (SFW: "Workflow Champion" or NSFW: "World Fucking Class")
 3. Installs all 26 skills to the correct location
@@ -503,6 +525,7 @@ The installer handles everything automatically—just run `./install.sh`.
 We welcome contributions! See [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
 
 Key areas:
+
 - Improve reviewer prompts and knowledge bases
 - Create custom skills
 - Improve quality checkers
@@ -527,10 +550,6 @@ MIT License — see [LICENSE](LICENSE)
 
 ---
 
-<div align="center">
-
 **Ready to ship better code, faster?**
 
 [Get Started →](QUICKSTART.md) • [Read the Docs →](docs/) • [See Examples →](docs/examples/)
-
-</div>

@@ -3,11 +3,13 @@
 ## The Problem
 
 When spawning persona review agents, each agent receives:
+
 - **System prompt**: Persona identity, expertise, instructions (~3000 tokens)
 - **Code files**: Full file contents (can be 50k+ tokens for large files)
 - **Properties**: Review criteria (~500 tokens)
 
 **Result**: Prompts can easily exceed 150k tokens, causing:
+
 - ❌ Slower response times
 - ❌ Higher costs
 - ❌ Context limit errors
@@ -16,6 +18,7 @@ When spawning persona review agents, each agent receives:
 ## The WFC Solution
 
 ### 1. **Accurate Token Counting**
+
 ```python
 from wfc.personas.token_manager import TokenCounter
 
@@ -26,6 +29,7 @@ tokens = counter.count("your text here")  # Actual tokens, not estimation
 Uses `tiktoken` if available, falls back to estimation if not.
 
 **Install tiktoken** (optional but recommended):
+
 ```bash
 pip install tiktoken
 ```
@@ -33,7 +37,9 @@ pip install tiktoken
 ### 2. **Smart File Condensing**
 
 #### Python Files
+
 Preserves review-critical information:
+
 - ✅ All imports
 - ✅ Class/function signatures
 - ✅ Docstrings and type hints
@@ -41,6 +47,7 @@ Preserves review-critical information:
 - ⚠️ Long function bodies → signature + "... [truncated]"
 
 #### Other Files
+
 - ✅ First 70% of token budget
 - ⚠️ Middle section → "... [N lines truncated] ..."
 - ✅ Last 30% of token budget
@@ -48,6 +55,7 @@ Preserves review-critical information:
 ### 3. **Compressed System Prompts**
 
 **Before** (~3000 tokens):
+
 ```
 You are Alice Chen, a distinguished security architect with...
 [lengthy backstory]
@@ -56,6 +64,7 @@ You are Alice Chen, a distinguished security architect with...
 ```
 
 **After** (~1500 tokens):
+
 ```
 You are Alice Chen, expert code reviewer.
 EXPERTISE: Security (Expert) | Cryptography (Advanced) | Threat Modeling (Expert)
@@ -68,6 +77,7 @@ FOCUS: Security vulnerabilities and attack vectors
 ### 4. **Token Budget Allocation**
 
 Per persona budget (out of 150k context window):
+
 - System prompt: **8k tokens** (5%)
 - Properties: **2k tokens** (1%)
 - Code files: **130k tokens** (87%)
@@ -139,6 +149,7 @@ The executor logs detailed token metrics:
 ```
 
 Each task spec includes:
+
 ```python
 task["token_metrics"] = {
     "total_tokens": 42500,        # Total prompt size
@@ -157,12 +168,14 @@ task["token_metrics"] = {
 ## Best Practices
 
 ### ✅ Do
+
 - Install `tiktoken` for accurate counting
 - Review `token_metrics` to understand token usage
 - Use custom budgets for specialized models
 - Trust the auto-condensing (it preserves critical context)
 
 ### ❌ Don't
+
 - Disable token management unless you have a specific reason
 - Ignore warnings about personas over budget
 - Review 50+ files in a single batch (split into batches)
@@ -171,12 +184,14 @@ task["token_metrics"] = {
 ## Performance Impact
 
 ### Before WFC Token Management
+
 - Average prompt size: **85k tokens/persona**
 - 5 personas × 85k = **425k tokens** sent
 - Review time: ~60s
 - Cost: ~$3.50/review
 
 ### After WFC Token Management
+
 - Average prompt size: **42k tokens/persona** (50% reduction)
 - 5 personas × 42k = **210k tokens** sent (50% reduction)
 - Review time: ~35s (42% faster)

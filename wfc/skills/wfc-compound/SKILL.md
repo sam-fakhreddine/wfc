@@ -34,6 +34,7 @@ Distills solved problems into structured, indexed knowledge that feeds back into
 ## Auto-Trigger Phrases
 
 wfc-compound activates when you say:
+
 - "that worked"
 - "it's fixed"
 - "problem solved"
@@ -65,6 +66,7 @@ wfc-compound activates when you say:
 ### Phase 3: Optional Enhancement (conditional, parallel)
 
 Based on problem type, spawn specialized reviewers:
+
 - `performance_issue` → Performance reviewer
 - `security_issue` → Security reviewer
 - `database_issue` → Data integrity check
@@ -126,6 +128,7 @@ redis_pool = redis.ConnectionPool(
 
 - [Database Connection Limits](../database-issues/connection-limits.md)
 - [API Timeout Configuration](../runtime-errors/api-timeout-config.md)
+
 ```
 
 ## Categories (Auto-Detected)
@@ -158,6 +161,7 @@ redis_pool = redis.ConnectionPool(
 ### Knowledge Lifecycle
 
 ```
+
 Problem Solved → /wfc-compound → docs/solutions/{category}/{file}.md
                                         ↓
                     Indexed by YAML frontmatter (title, tags, module, component)
@@ -167,6 +171,7 @@ Problem Solved → /wfc-compound → docs/solutions/{category}/{file}.md
                     Drift detection (staleness >180 days, contradictions)
                                         ↓
                     Promotion to global knowledge (~/.wfc/knowledge/global/)
+
 ```
 
 ## Configuration

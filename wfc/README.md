@@ -39,6 +39,7 @@ uv pip install -e ".[tokens]"
 ## Usage
 
 See individual skills:
+
 - `/wfc-review` - Consensus code review
 - `/wfc-plan` - Feature planning
 - `/wfc-implement` - Parallel implementation
@@ -46,11 +47,13 @@ See individual skills:
 ## Architecture
 
 **Progressive Disclosure** (Agent Skills pattern):
+
 1. Load SKILL.md (< 500 lines)
 2. Load references/ on demand
 3. Execute scripts/ as needed
 
 **Ultra-Minimal Personas** (315 tokens):
+
 - Identity + focus + tools
 - No verbose backstories
 - Trust the LLM to be expert

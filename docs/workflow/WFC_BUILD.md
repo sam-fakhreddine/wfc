@@ -20,13 +20,15 @@ wfc-build is the "intentional vibe" alternative to the formal wfc-plan + wfc-imp
 
 ## When to Use
 
-### Use wfc-build when:
+### Use wfc-build when
+
 - ✅ Single feature, clear scope
 - ✅ Want fast iteration
 - ✅ "Just build this and ship"
 - ✅ S/M/L complexity (not XL)
 
-### Use wfc-plan + wfc-implement when:
+### Use wfc-plan + wfc-implement when
+
 - ⚠️ Multiple related features
 - ⚠️ Complex dependencies
 - ⚠️ Need formal properties and test plans
@@ -166,46 +168,55 @@ Q: Storage? → Redis
 wfc-build enforces all WFC safety properties:
 
 ### PROP-001: Never Bypass Quality Gates
+
 - **Enforcement:** `enforce_quality_gates: true`
 - **Verification:** 3 test locations
 - **Impact:** CRITICAL
 
 ### PROP-002: Never Skip Consensus Review
+
 - **Enforcement:** `enforce_review: true`
 - **Verification:** 3 test locations
 - **Impact:** CRITICAL
 
 ### PROP-003: Never Auto-Push to Remote
+
 - **Enforcement:** `auto_push: false`
 - **Verification:** 3 test locations
 - **Impact:** CRITICAL
 
 ### PROP-004: Always Complete or Fail Gracefully
+
 - **Enforcement:** Orchestrator error handling
 - **Verification:** Tested
 - **Impact:** HIGH
 
 ### PROP-005: Always Provide Actionable Feedback
+
 - **Enforcement:** Clear error messages
 - **Verification:** Implicit in all tests
 - **Impact:** HIGH
 
 ### PROP-006: Deterministic Complexity Assessment
+
 - **Enforcement:** Algorithm-based (not LLM)
 - **Verification:** 10-iteration test
 - **Impact:** HIGH
 
 ### PROP-007: TDD Workflow Enforced
+
 - **Enforcement:** `enforce_tdd: true`
 - **Verification:** 3 test locations
 - **Impact:** HIGH
 
 ### PROP-008: Interview Completes in <30 Seconds
+
 - **Enforcement:** `interview_timeout_seconds: 30`
 - **Verification:** Tested
 - **Impact:** MEDIUM
 
 ### PROP-009: 50% Faster Than Full Workflow
+
 - **Enforcement:** By design (streamlined interview)
 - **Verification:** Implicit
 - **Impact:** MEDIUM
@@ -238,6 +249,7 @@ tests/
 ### Key Classes
 
 #### QuickInterview
+
 ```python
 class QuickInterview:
     """
@@ -250,6 +262,7 @@ class QuickInterview:
 ```
 
 #### ComplexityAssessor
+
 ```python
 class ComplexityAssessor:
     """
@@ -262,6 +275,7 @@ class ComplexityAssessor:
 ```
 
 #### BuildOrchestrator
+
 ```python
 class BuildOrchestrator:
     """
@@ -284,6 +298,7 @@ class BuildOrchestrator:
 **Execution Time:** <0.1 seconds
 
 **Breakdown:**
+
 - Interview tests: 16 (100% coverage)
 - Complexity tests: 8 (100% coverage)
 - Orchestrator tests: 14 (100% coverage)
@@ -348,11 +363,13 @@ uv run pytest tests/test_build_orchestrator.py -v
 ### 1. Use Descriptive Feature Hints
 
 **Good:**
+
 ```bash
 /wfc-build "Add JWT authentication with Redis session storage"
 ```
 
 **Better:**
+
 ```bash
 # Let interview ask clarifying questions
 /wfc-build
@@ -436,6 +453,7 @@ wfc-build records metrics to WFC telemetry:
 ### Config Loading
 
 wfc-build uses WFCConfig with priority:
+
 1. Project config (`wfc.config.json`)
 2. Global config (`~/.claude/wfc.config.json`)
 3. Defaults
@@ -443,6 +461,7 @@ wfc-build uses WFCConfig with priority:
 ### Quality Integration
 
 Uses same quality checkers as wfc-implement:
+
 - Formatters (black, prettier)
 - Linters (ruff, eslint)
 - Tests (pytest, jest)
@@ -451,6 +470,7 @@ Uses same quality checkers as wfc-implement:
 ### Review Integration
 
 Routes to wfc-review for consensus:
+
 - Same 5-expert panel
 - Same scoring algorithm
 - Same approval threshold (7.0/10)
@@ -472,6 +492,7 @@ Routes to wfc-review for consensus:
 ## Conclusion
 
 wfc-build provides the **"intentional vibe"** workflow for single-feature development:
+
 - **Fast:** 50% faster than full workflow for S/M tasks
 - **Safe:** Same quality, review, and TDD enforcement
 - **Simple:** 3-5 questions, automatic complexity assessment

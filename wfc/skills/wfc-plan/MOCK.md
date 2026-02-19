@@ -5,6 +5,7 @@
 ## What wfc-plan Will Do (Real Implementation)
 
 Adaptive planning that produces:
+
 - `TASKS.md` - Ordered tasks with dependency graph
 - `PROPERTIES.md` - Formal invariants (SAFETY, LIVENESS, INVARIANT, PERFORMANCE)
 - `TEST-PLAN.md` - Test strategy and cases

@@ -234,9 +234,7 @@ def _generate_exceeding_report(
         report_lines.append(
             f"Lines Changed: {lines_changed}/{lines_budget} ({lines_pct:.0f}% of budget)"
         )
-        report_lines.append(
-            f"  ❌ EXCEEDED by {lines_exceeded} lines ({lines_pct - 100:.0f}% over)"
-        )
+        report_lines.append(f"  ❌ EXCEEDED by {lines_exceeded} lines ({lines_pct - 100:.0f}% over)")
     else:
         report_lines.append(
             f"Lines Changed: {lines_changed}/{lines_budget} ({lines_pct:.0f}% of budget)"
@@ -248,9 +246,7 @@ def _generate_exceeding_report(
         report_lines.append(
             f"Files Changed: {files_changed}/{files_budget} ({files_pct:.0f}% of budget)"
         )
-        report_lines.append(
-            f"  ❌ EXCEEDED by {files_exceeded} files ({files_pct - 100:.0f}% over)"
-        )
+        report_lines.append(f"  ❌ EXCEEDED by {files_exceeded} files ({files_pct - 100:.0f}% over)")
     else:
         report_lines.append(
             f"Files Changed: {files_changed}/{files_budget} ({files_pct:.0f}% of budget)"

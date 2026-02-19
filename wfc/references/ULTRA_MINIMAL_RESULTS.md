@@ -3,6 +3,7 @@
 ## The Problem We Solved
 
 **Before**: Persona review prompts were 120,960 chars (~30,000 tokens) each
+
 - Couldn't even run persona reviews
 - Hit context limits immediately
 - Token manager not being used
@@ -22,6 +23,7 @@
 ### What We Removed
 
 ❌ **Removed** (saved 2,800 tokens):
+
 - Lengthy backstories ("Alice is a distinguished security architect with 15 years...")
 - Verbose philosophy paragraphs
 - Redundant examples
@@ -30,6 +32,7 @@
 - Detailed skill descriptions
 
 ✅ **Kept** (200 tokens):
+
 - Core identity (1 line: "You are Alice Chen, expert code reviewer")
 - Top 3 skills
 - One-line focus
@@ -40,6 +43,7 @@
 ### Example: Security Persona
 
 **Before** (3,000 tokens):
+
 ```
 You are Alice Chen, a distinguished security architect with 15 years
 of experience in cryptography, threat modeling, and secure system design.
@@ -64,6 +68,7 @@ Review Dimensions (Weighted):
 ```
 
 **After** (200 tokens):
+
 ```
 You are Alice Chen, Security Architect, expert code reviewer.
 
@@ -95,6 +100,7 @@ Review code. Be specific. Reference files/lines. Suggest fixes.
 With ultra-minimal prompts, we reallocated the token budget:
 
 **Before**:
+
 ```
 System Prompt: 8,000 tokens (5%)
 Properties:    2,000 tokens (1%)
@@ -103,6 +109,7 @@ Response:     10,000 tokens (7%)
 ```
 
 **After**:
+
 ```
 System Prompt:  1,000 tokens (<1%)  ← 87% reduction!
 Properties:     1,000 tokens (<1%)
@@ -115,11 +122,13 @@ Response:      10,000 tokens (7%)
 ### 5-Persona Review
 
 **Before**:
+
 - 5 personas × 30,000 tokens = **150,000 tokens** just for prompts
 - Couldn't even fit in context window
 - Review failed before starting
 
 **After**:
+
 - 5 personas × 200 tokens = **1,000 tokens** for prompts
 - **149,000 tokens saved** (99.3% reduction)
 - More room for actual code review
@@ -128,11 +137,13 @@ Response:      10,000 tokens (7%)
 ### Cost Savings
 
 Assuming $15/M input tokens:
+
 - **Before**: 150k tokens = $2.25 per review
 - **After**: 1k tokens = $0.015 per review
 - **Savings**: $2.235 per review (99.3%)
 
 At 100 reviews/day:
+
 - **Annual savings**: $81,578 🤑
 
 ## Philosophy
@@ -140,6 +151,7 @@ At 100 reviews/day:
 > **"LLMs don't need verbose backstories to act as experts"**
 
 The key insight: Claude doesn't need you to tell it that Alice is a "distinguished security architect with 15 years of experience" to review code from a security perspective. Just tell it:
+
 - Who to be (1 line)
 - What expertise to apply (3 skills)
 - What to look for (1 line focus)
@@ -152,6 +164,7 @@ Everything else is wasted tokens.
 ### File Condensing (Still Important!)
 
 Even with 200-token personas, file contents dominate:
+
 - 11 files × ~300 lines = ~35,000 tokens
 - Still need smart condensing for large codebases
 - FileCondenser preserves critical context
@@ -159,6 +172,7 @@ Even with 200-token personas, file contents dominate:
 ### Combined Approach
 
 **Ultra-Minimal Prompts + Smart Condensing** =
+
 - 200 tokens (persona) + 10,000 tokens (condensed files) = **10,200 tokens total**
 - vs 30,000 tokens (verbose) + 35,000 tokens (full files) = **65,000 tokens**
 - **84% total reduction**
@@ -168,6 +182,7 @@ Even with 200-token personas, file contents dominate:
 ### Token Counting
 
 With tiktoken (accurate):
+
 ```python
 counter = TokenCounter()
 tokens = counter.count(ultra_minimal_prompt)
@@ -243,6 +258,7 @@ python3 -c "from wfc.personas.token_manager import TokenCounter; print('✅ Read
 **Because Claude is smart.**
 
 You don't need to explain in 3,000 tokens what "security review" means. Claude already knows. Just tell it:
+
 1. Act as a security expert (1 line)
 2. Use these skills (3 bullets)
 3. Look for these things (1 line)

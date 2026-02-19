@@ -48,6 +48,7 @@ class ExecutionEngine:
 ```
 
 **Problems:**
+
 - No true parallelism (just threads in same process)
 - Context bleeding between agents
 - Orchestrator doing implementation work
@@ -74,6 +75,7 @@ class ExecutionEngine:
 ```
 
 **Benefits:**
+
 - ✅ True parallelism (separate subprocesses)
 - ✅ Complete isolation (no context bleeding)
 - ✅ Orchestrator only coordinates (never implements)
@@ -258,17 +260,22 @@ ExecutionEngine.execute():
 ## Key Benefits
 
 ### ✅ True Parallelism
+
 Multiple subagents run simultaneously in separate subprocesses, not threads.
 
 ### ✅ Complete Isolation
+
 Each subagent has its own:
+
 - Context window
 - System prompt
 - Worktree (isolated git environment)
 - No visibility into other agents' work
 
 ### ✅ Orchestrator Never Implements
+
 Orchestrator ONLY:
+
 - Reads task definitions
 - Spawns subagents
 - Waits for completion
@@ -276,18 +283,23 @@ Orchestrator ONLY:
 - Coordinates review and merge
 
 Orchestrator NEVER:
+
 - Writes code
 - Runs tests
 - Does implementation work
 
 ### ✅ Automatic Rollback
+
 If integration tests fail after merge, automatic rollback and re-queue.
 
 ### ✅ Dependency Management
+
 Tasks with dependencies wait until blockers complete.
 
 ### ✅ Model Selection
+
 Each subagent can use different model based on task complexity:
+
 - Simple tasks → Haiku (fast, cheap)
 - Complex tasks → Opus (thorough)
 - Balanced → Sonnet
@@ -344,4 +356,4 @@ Each subagent can use different model based on task complexity:
 
 **Critical Principle**: Orchestrator coordinates, NEVER implements.
 
-Based on: https://code.claude.com/docs/en/sub-agents
+Based on: <https://code.claude.com/docs/en/sub-agents>
