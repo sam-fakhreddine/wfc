@@ -13,9 +13,10 @@ from __future__ import annotations
 import logging
 import re
 
+from wfc.scripts.schemas.finding import REQUIRED_FINDING_KEYS
+
 logger = logging.getLogger(__name__)
 
-REQUIRED_FINDING_KEYS = frozenset({"file", "line_start", "category", "severity", "description"})
 _CORRECTION_MODEL = "claude-haiku-4-5"
 
 

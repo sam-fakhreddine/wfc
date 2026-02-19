@@ -31,9 +31,14 @@ dev = [
     "scikit-learn>=1.3.0",
 ]
 
+# Schema validation at LLM boundaries (optional, stdlib fallback available)
+validation = [
+    "pydantic>=2.0",
+]
+
 # All optional features
 all = [
-    "wfc[tokens,dev]",
+    "wfc[tokens,dev,validation]",
 ]
 
 [build-system]

@@ -17,6 +17,9 @@ import re
 from dataclasses import dataclass, field
 from typing import TYPE_CHECKING
 
+from wfc.scripts.schemas.finding import validate_finding
+from wfc.scripts.schemas.reviewer_response import validate_reviewer_response
+
 from .reviewer_loader import ReviewerConfig, ReviewerLoader
 
 if TYPE_CHECKING:
@@ -151,8 +154,12 @@ class ReviewerEngine:
         results: list[ReviewerResult] = []
 
         for item in task_responses:
-            reviewer_id = item.get("reviewer_id", "unknown")
-            response = item.get("response", "")
+            validated_item = validate_reviewer_response(item)
+            if validated_item is None:
+                logger.warning("Skipping invalid task_response: %r", item)
+                continue
+            reviewer_id = validated_item["reviewer_id"]
+            response = validated_item["response"]
             reviewer_name = REVIEWER_NAMES.get(reviewer_id, f"{reviewer_id.title()} Reviewer")
 
             if not response.strip():
@@ -289,7 +296,11 @@ class ReviewerEngine:
             try:
                 parsed, _ = json.JSONDecoder().raw_decode(response, first_bracket)
                 if isinstance(parsed, list):
-                    findings.extend(item for item in parsed if isinstance(item, dict))
+                    for item in parsed:
+                        if isinstance(item, dict):
+                            validated = validate_finding(item)
+                            if validated is not None:
+                                findings.append(validated)
                     if findings:
                         return findings
             except json.JSONDecodeError:
@@ -298,7 +309,11 @@ class ReviewerEngine:
                     try:
                         parsed = json.loads(array_match.group())
                         if isinstance(parsed, list):
-                            findings.extend(item for item in parsed if isinstance(item, dict))
+                            for item in parsed:
+                                if isinstance(item, dict):
+                                    validated = validate_finding(item)
+                                    if validated is not None:
+                                        findings.append(validated)
                             if findings:
                                 return findings
                     except json.JSONDecodeError:
@@ -312,7 +327,9 @@ class ReviewerEngine:
             try:
                 parsed = json.loads(block)
                 if isinstance(parsed, dict):
-                    findings.append(parsed)
+                    validated = validate_finding(parsed)
+                    if validated is not None:
+                        findings.append(validated)
             except json.JSONDecodeError:
                 continue
 

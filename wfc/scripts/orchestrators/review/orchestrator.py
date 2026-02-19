@@ -200,12 +200,7 @@ class ReviewOrchestrator:
             for finding in result.findings:
                 tagged = dict(finding)
                 tagged["reviewer_id"] = result.reviewer_id
-                tagged["line_start"] = int(tagged.get("line_start", 0))
-                tagged["line_end"] = int(tagged.get("line_end", tagged["line_start"]))
-                tagged["severity"] = float(tagged.get("severity", 0))
-                tagged["confidence"] = float(tagged.get("confidence", 0))
-                tagged.setdefault("file", "unknown")
-                tagged.setdefault("category", "general")
+                tagged.setdefault("line_end", tagged.get("line_start", 0))
                 all_findings.append(tagged)
 
         deduped = self.fingerprinter.deduplicate(all_findings)
