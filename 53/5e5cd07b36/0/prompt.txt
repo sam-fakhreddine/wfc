@@ -1,0 +1,1855 @@
+Base directory for this skill: /Users/samfakhreddine/.claude/skills/wfc-plan
+
+# WFC:PLAN - Adaptive Planning with Formal Properties
+
+Converts requirements into structured implementation plans through adaptive interviewing.
+
+## What It Does
+
+1. **Adaptive Interview** - Asks intelligent questions that adapt based on answers
+2. **Task Generation** - Breaks down requirements into structured TASKS.md with dependencies
+3. **Property Extraction** - Identifies formal properties (SAFETY, LIVENESS, INVARIANT, PERFORMANCE)
+4. **Test Planning** - Creates comprehensive TEST-PLAN.md linked to requirements and properties
+
+## Usage
+
+```bash
+# Default (creates timestamped plan with history)
+/wfc-plan
+# → Generates: plans/plan_oauth2_authentication_20260211_143022/
+#              plans/HISTORY.md
+#              plans/HISTORY.json
+
+# Custom output directory (disables history)
+/wfc-plan path/to/output
+
+# With options (future)
+/wfc-plan --interactive  # Step through interview
+/wfc-plan --from-file requirements.md  # Import requirements
+
+# Skip validation (not recommended)
+/wfc-plan --skip-validation
+```
+
+## Plan History
+
+**Each plan gets a unique timestamped directory.**
+
+### Directory Structure
+
+```
+plans/
+├── HISTORY.md                                    # Human-readable history
+├── HISTORY.json                                  # Machine-readable index
+├── plan_oauth2_authentication_20260211_143022/  # Timestamped plan
+│   ├── TASKS.md
+│   ├── PROPERTIES.md
+│   ├── TEST-PLAN.md
+│   ├── interview-results.json
+│   ├── revision-log.md
+│   └── plan-audit_20260211_143022.json
+├── plan_caching_layer_20260211_150135/
+│   ├── TASKS.md
+│   ├── PROPERTIES.md
+│   ├── TEST-PLAN.md
+│   ├── interview-results.json
+│   ├── revision-log.md
+│   └── plan-audit_20260211_150135.json
+└── plan_user_dashboard_20260212_091523/
+    ├── TASKS.md
+    ├── PROPERTIES.md
+    ├── TEST-PLAN.md
+    ├── interview-results.json
+    ├── revision-log.md
+    └── plan-audit_20260212_091523.json
+```
+
+### History File
+
+**plans/HISTORY.md** contains a searchable record:
+
+```markdown
+# Plan History
+
+**Total Plans:** 3
+
+---
+
+## plan_user_dashboard_20260212_091523
+- **Created:** 2026-02-12T09:15:23
+- **Goal:** Build user analytics dashboard
+- **Context:** Product team needs visibility into user behavior
+- **Directory:** `plans/plan_user_dashboard_20260212_091523`
+- **Tasks:** 7
+- **Properties:** 4
+- **Tests:** 15
+- **Validated:** yes (score: 8.7)
+
+## plan_caching_layer_20260211_150135
+- **Created:** 2026-02-11T15:01:35
+- **Goal:** Implement caching layer for API
+- **Context:** Reduce database load and improve response times
+- **Directory:** `plans/plan_caching_layer_20260211_150135`
+- **Tasks:** 3
+- **Properties:** 2
+- **Tests:** 8
+- **Validated:** skipped
+```
+
+### Benefits
+
+- **Version control** - Never lose old plans
+- **Searchable** - Find plans by goal or date
+- **Traceable** - See evolution of project planning
+- **Reference** - Compare approaches across time
+
+## Architecture Design Phase
+
+After the interview, WFC generates 2-3 architecture approaches:
+
+### Option 1: Minimal Changes
+- Smallest diff, maximum code reuse
+- Lowest risk, fastest to implement
+- Best for simple features or hotfixes
+
+### Option 2: Clean Architecture
+- Proper abstractions, maintainability-first
+- Best long-term design
+- Higher initial effort
+
+### Option 3: Pragmatic Balance
+- Speed + quality tradeoff
+- Addresses key concerns without over-engineering
+- Best for most features
+
+The approaches are saved to `ARCHITECTURE-OPTIONS.md` for reference.
+
+## Interview Process
+
+The adaptive interview gathers:
+
+### Core Understanding
+- What are you building? (goal)
+- Why are you building it? (context)
+- Who will use it? (users)
+
+### Requirements
+- Core features (must-have)
+- Nice-to-have features
+- Technical constraints
+- Performance requirements
+- Security requirements
+
+### Technical Details
+- Technology stack
+- Existing codebase or new project
+- Testing approach
+- Coverage targets
+
+### Formal Properties
+- Safety properties (what must never happen)
+- Liveness properties (what must eventually happen)
+- Invariants (what must always be true)
+- Performance properties (time/resource bounds)
+
+## Outputs
+
+### 1. TASKS.md
+Structured implementation tasks with:
+- Unique IDs (TASK-001, TASK-002, ...)
+- Complexity ratings (S, M, L, XL)
+- Dependency graph (DAG)
+- Properties to satisfy
+- Files likely affected
+- Acceptance criteria
+
+Example:
+```markdown
+## TASK-001: Setup project structure
+- **Complexity**: S
+- **Dependencies**: []
+- **Properties**: []
+- **Files**: README.md, pyproject.toml
+- **Description**: Create initial project structure
+- **Acceptance Criteria**:
+  - [ ] Project structure follows best practices
+  - [ ] Dependencies documented
+```
+
+### 2. PROPERTIES.md
+Formal properties with:
+- Type (SAFETY, LIVENESS, INVARIANT, PERFORMANCE)
+- Formal statement
+- Rationale
+- Priority
+- Suggested observables
+
+Example:
+```markdown
+## PROP-001: SAFETY
+- **Statement**: Unauthenticated user must never access protected endpoints
+- **Rationale**: Security: prevent unauthorized data access
+- **Priority**: critical
+- **Observables**: auth_failures, unauthorized_access_attempts
+```
+
+### 3. TEST-PLAN.md
+Test strategy and cases:
+- Testing approach (unit, integration, e2e)
+- Coverage targets
+- Specific test cases linked to tasks and properties
+- Test steps and expected outcomes
+
+Example:
+```markdown
+### TEST-001: Verify SAFETY property
+- **Type**: integration
+- **Related Task**: TASK-003
+- **Related Property**: PROP-001
+- **Description**: Test that unauthenticated users cannot access protected endpoints
+- **Steps**:
+  1. Attempt access without authentication
+  2. Verify 401 response
+- **Expected**: Access denied
+```
+
+## Architecture
+
+### MULTI-TIER Design
+```
+┌─────────────────────────────┐
+│  PRESENTATION (cli.py)      │  User interaction, output formatting
+└──────────────┬──────────────┘
+               │
+┌──────────────▼──────────────┐
+│  LOGIC (orchestrator.py)    │  Interview → Generate → Save
+│  - interview.py             │
+│  - tasks_generator.py       │
+│  - properties_generator.py  │
+│  - test_plan_generator.py   │
+└──────────────┬──────────────┘
+               │
+┌──────────────▼──────────────┐
+│  DATA (filesystem)          │  Save markdown and JSON
+└─────────────────────────────┘
+```
+
+## Living Plan Documents
+
+Plans are living documents that track progress during implementation, not static artifacts.
+
+### YAML Frontmatter
+
+Every TASKS.md includes frontmatter for machine-readable status tracking:
+
+```yaml
+---
+title: OAuth2 Authentication
+status: active          # active | in_progress | completed | abandoned
+created: 2026-02-18T14:30:00Z
+updated: 2026-02-18T16:45:00Z
+tasks_total: 5
+tasks_completed: 0
+complexity: M
+---
+```
+
+### Checkbox Progress
+
+Each acceptance criterion uses markdown checkboxes. wfc-implement updates these as tasks complete:
+
+```markdown
+## TASK-001: Setup project structure
+- **Status**: completed
+- **Acceptance Criteria**:
+  - [x] Project structure follows best practices
+  - [x] Dependencies documented
+
+## TASK-002: Implement JWT auth
+- **Status**: in_progress
+- **Acceptance Criteria**:
+  - [x] Token generation works
+  - [ ] Token refresh implemented
+  - [ ] Rate limiting on auth endpoints
+```
+
+### Status Lifecycle
+
+```
+active → in_progress → completed
+                    ↘ abandoned (with reason)
+```
+
+- **active**: Plan created, not yet started
+- **in_progress**: wfc-implement is executing tasks
+- **completed**: All tasks done, tests passing, PR merged
+- **abandoned**: Scope changed, plan no longer relevant (reason recorded)
+
+### Divergence Tracking
+
+When implementation diverges from the plan, wfc-implement records it:
+
+```markdown
+## Divergence Log
+
+### TASK-003: Redis caching layer
+- **Planned**: Use Redis Cluster with 3 nodes
+- **Actual**: Switched to single Redis instance (sufficient for current scale)
+- **Reason**: Over-engineered for <1000 req/s
+- **Impact**: TASK-004 dependency removed (cluster config no longer needed)
+```
+
+### Knowledge Integration
+
+Plans automatically search `docs/solutions/` (via wfc-compound) during generation:
+
+```markdown
+## TASK-005: Connection pool configuration
+- **Known pitfall**: docs/solutions/performance-issues/redis-pool-exhaustion.md
+  - Size pools relative to worker count, not static
+  - Monitor utilization > 80%
+```
+
+## Integration with WFC
+
+### Produces (consumed by wfc-implement, wfc-deepen, wfc-lfg)
+- `plan/TASKS.md` → Task orchestration (living document)
+- `plan/PROPERTIES.md` → TDD test requirements
+- `plan/TEST-PLAN.md` → Test strategy
+
+### Consumes
+- `docs/solutions/` → Past solutions for pitfall warnings (via wfc-compound)
+- `wfc-architecture` → Architecture analysis
+- `wfc-security` → Threat model properties
+
+## Configuration
+
+```json
+{
+  "plan": {
+    "output_dir": "./plan",
+    "interview_mode": "adaptive",
+    "task_complexity_model": "auto",
+    "generate_diagram": true
+  }
+}
+```
+
+## What to Do
+
+1. **If `our docs folder is woefully out of date` contains `--skip-validation`**, set `skip_validation = true` and remove the flag from arguments
+2. **If `our docs folder is woefully out of date` is provided** (after flag removal), use it as output directory
+3. **If no arguments**, use `./plan` as default output directory
+4. **Run adaptive interview** using `AdaptiveInterviewer`
+5. **Generate all files** using orchestrator (TASKS.md, PROPERTIES.md, TEST-PLAN.md)
+6. **Run Plan Validation Pipeline** (unless `--skip-validation` was set)
+7. **Display results** showing file paths and summary
+8. **Record telemetry** for all operations
+
+## Plan Validation Pipeline
+
+After generating the draft plan (TASKS.md, PROPERTIES.md, TEST-PLAN.md), run a mandatory validation pipeline to ensure plan quality. This pipeline can only be bypassed with the `--skip-validation` flag.
+
+### Pipeline Overview
+
+```
+Draft Plan → SHA-256 Hash → Validate Gate → Revise → Review Gate (loop until 8.5+) → Final Plan
+```
+
+### Step 1: Record Original Hash
+
+Compute a SHA-256 hash of the draft plan content (concatenation of TASKS.md + PROPERTIES.md + TEST-PLAN.md in that order). This is the `original_hash` used for the audit trail.
+
+```python
+import hashlib
+content = tasks_md + properties_md + test_plan_md
+original_hash = hashlib.sha256(content.encode()).hexdigest()
+```
+
+### Step 2: Validate Gate
+
+Invoke `/wfc-validate` on the generated draft plan. All plan content **must** be delimited with XML tags per PROP-009 prompt injection defense:
+
+```
+/wfc-validate
+<plan-content>
+[Full content of TASKS.md, PROPERTIES.md, TEST-PLAN.md concatenated]
+</plan-content>
+```
+
+This produces a `VALIDATE.md` output with scored recommendations categorized as Must-Do, Should-Do, or informational.
+
+### Step 3: Revision Mechanism
+
+After validation produces its analysis, read the VALIDATE.md output and apply revisions:
+
+1. **Must-Do** recommendations: Apply every Must-Do change to the draft TASKS.md and/or PROPERTIES.md. These are non-negotiable improvements identified by the analysis.
+2. **Should-Do** recommendations: Apply if low-effort (can be done in under 5 minutes). Otherwise, note as deferred with a reason.
+3. **Deferred** items: Record in revision log for future consideration.
+
+Write a `revision-log.md` in the plan directory documenting what changed and why:
+
+```markdown
+# Revision Log
+
+## Original Plan Hash
+`<original_hash>` (SHA-256)
+
+## Validate Score
+<score>/10
+
+## Revisions Applied
+
+### Must-Do
+
+1. **<change title>** - <description of change>
+   - Source: Validate recommendation #N
+   - File changed: TASKS.md | PROPERTIES.md | TEST-PLAN.md
+
+### Should-Do
+
+1. **<change title>** - <description>
+   - Source: Validate recommendation #N
+   - Status: Applied (low effort) | Deferred (high effort)
+
+### Deferred
+
+1. **<item>** - <reason for deferral>
+   - Source: Validate recommendation #N
+   - Reason: <explanation>
+
+## Review Gate Results
+
+| Round | Score | Action |
+|-------|-------|--------|
+| 1     | X.X   | Applied N findings |
+| 2     | X.X   | Passed threshold |
+
+## Final Plan Hash
+`<final_hash>` (SHA-256)
+```
+
+### Step 4: Review Gate
+
+Invoke `/wfc-review` on the revised plan using architecture and quality personas. Plan content **must** be delimited with XML tags per PROP-009 prompt injection defense:
+
+```
+/wfc-review
+<plan-content>
+[Full content of revised TASKS.md, PROPERTIES.md, TEST-PLAN.md]
+</plan-content>
+```
+
+**Review Loop**: If the weighted consensus score is below 8.5/10, apply the review findings to the plan and re-invoke `/wfc-review`. Repeat until the score reaches 8.5 or higher. This threshold is the standard -- it is not optional.
+
+### Step 5: Audit Trail
+
+After the review gate passes (or validation is skipped), write a `plan-audit.json` file (timestamped) in the plan directory. The filename includes a timestamp for immutability (e.g., `plan-audit_20260215_103000.json`).
+
+**Required schema for plan-audit_YYYYMMDD_HHMMSS.json:**
+
+```json
+{
+  "hash_algorithm": "sha256",
+  "original_hash": "<64-char hex SHA-256 of draft plan>",
+  "validate_score": 7.8,
+  "revision_count": 2,
+  "review_score": 8.7,
+  "final_hash": "<64-char hex SHA-256 of final plan>",
+  "timestamp": "2026-02-15T10:30:00Z",
+  "validated": true,
+  "skipped": false
+}
+```
+
+Field definitions:
+- `hash_algorithm`: Always `"sha256"`
+- `original_hash`: SHA-256 hash of the draft plan before any revisions
+- `validate_score`: Numeric score from the validation analysis
+- `revision_count`: Total number of revision rounds applied (validation revisions + review loop rounds)
+- `review_score`: Final weighted consensus score from wfc-review (numeric, e.g. 8.7)
+- `final_hash`: SHA-256 hash of the plan after all revisions are complete
+- `timestamp`: ISO 8601 timestamp of when validation completed
+- `validated`: `true` if the final review_score >= 8.5, `false` otherwise
+- `skipped`: `true` if `--skip-validation` was used, `false` otherwise
+
+### Step 6: History Update
+
+Update HISTORY.md to record whether the plan was validated or skipped. Add a `- **Validated:** yes (score: X.X)` or `- **Validated:** skipped` entry to the plan's history record.
+
+### Skip Validation Flag
+
+If `--skip-validation` is passed as an argument:
+
+1. Skip Steps 2-4 entirely (no Validate Gate, no Review Gate, no revision)
+2. Still compute SHA-256 hashes (original_hash = final_hash since no changes were made)
+3. Write `plan-audit_YYYYMMDD_HHMMSS.json` with `"skipped": true` and `"validated": false`
+4. Do not generate `revision-log.md` (no revisions occurred)
+5. Record `- **Validated:** skipped` in HISTORY.md
+
+### Validation Pipeline Summary
+
+| Step | Action | Output |
+|------|--------|--------|
+| 1 | SHA-256 hash of draft plan | `original_hash` |
+| 2 | `/wfc-validate` with `<plan-content>` XML tags (PROP-009) | VALIDATE.md |
+| 3 | Apply Must-Do + low-effort Should-Do revisions | revision-log.md, updated plan files |
+| 4 | `/wfc-review` with `<plan-content>` XML tags (PROP-009), loop until >= 8.5 | Review consensus |
+| 5 | Write plan-audit_YYYYMMDD_HHMMSS.json with all fields | plan-audit_YYYYMMDD_HHMMSS.json |
+| 6 | Update HISTORY.md with validation status | HISTORY.md entry |
+
+## Example Flow
+
+```
+User runs: /wfc-plan
+
+[ADAPTIVE INTERVIEW]
+Q: What are you trying to build?
+A: REST API for user management
+
+Q: What are the core features?
+A: User CRUD, authentication, role-based access
+
+Q: Security requirements?
+A: JWT tokens, role-based authorization
+
+[GENERATION]
+Created TASKS.md (5 tasks)
+Created PROPERTIES.md (3 properties: 1 SAFETY, 2 INVARIANT)
+Created TEST-PLAN.md (12 test cases)
+
+[PLAN VALIDATION PIPELINE]
+SHA-256 hash recorded: a1b2c3...
+Validate Gate: 7.8/10
+  - Applied 2 Must-Do revisions
+  - Applied 1 Should-Do revision (low effort)
+  - Deferred 1 suggestion
+Review Gate round 1: 8.1/10 - applying 2 findings
+Review Gate round 2: 8.7/10 - PASSED
+Wrote revision-log.md
+Wrote plan-audit_YYYYMMDD_HHMMSS.json
+
+[OUTPUT]
+plans/plan_rest_api_20260215_103000/
+  - TASKS.md
+  - PROPERTIES.md
+  - TEST-PLAN.md
+  - interview-results.json
+  - revision-log.md
+  - plan-audit_20260215_103000.json
+
+Next: Run `/wfc-implement plans/plan_rest_api_20260215_103000/TASKS.md`
+```
+
+## Philosophy
+
+**ELEGANT**: Simple interview questions, clear task breakdown
+**MULTI-TIER**: Clean separation of presentation, logic, and data
+**PARALLEL**: Can generate all three files concurrently (future optimization)
+
+---
+
+Base directory for this skill: /Users/samfakhreddine/.claude/skills/wfc-validate
+
+# WFC:VALIDATE - Thoughtful Advisor
+
+The experienced staff engineer who asks "is this the right approach?" before we commit.
+
+## What It Does
+
+Analyzes any WFC artifact (plan, architecture, idea) across 7 dimensions:
+
+1. **Do We Even Need This?** - Real problem vs hypothetical
+2. **Is This the Simplest Approach?** - Avoid over-engineering
+3. **Is the Scope Right?** - Not too much, not too little
+4. **What Are We Trading Off?** - Opportunity cost, maintenance burden
+5. **Have We Seen This Fail Before?** - Anti-patterns, known failure modes
+6. **What's the Blast Radius?** - Risk assessment, rollback plan
+7. **Is the Timeline Realistic?** - Hidden dependencies, prototype first?
+
+Returns balanced assessment with verdict: PROCEED, PROCEED WITH ADJUSTMENTS, RECONSIDER, or DON'T PROCEED.
+
+## Usage
+
+```bash
+# Analyze current plan
+/wfc-validate
+
+# Analyze a freeform idea
+/wfc-validate "rewrite auth system in Rust"
+
+# Analyze specific artifact
+/wfc-validate --plan
+/wfc-validate --architecture
+/wfc-validate --task TASK-005
+```
+
+## Output: VALIDATE.md
+
+```markdown
+# Validation Analysis
+
+## Subject: Rewrite auth system in Rust
+## Verdict: 🟡 PROCEED WITH ADJUSTMENTS
+## Overall Score: 7.5/10
+
+---
+
+## Executive Summary
+
+Overall, this approach shows 12 clear strengths and 8 areas for consideration.
+
+The strongest aspects are: Blast Radius, Need, Simplicity.
+
+Key considerations: Opportunity cost of other features, Integration risks, Consider using existing library.
+
+With an overall score of 7.5/10, this is a solid approach that can move forward with attention to the identified concerns.
+
+---
+
+## Dimension Analysis
+
+### Do We Even Need This? — Score: 8/10
+
+**Strengths:**
+- Addresses clear user need
+- Backed by data/metrics
+
+**Concerns:**
+- Consider if existing solution could be improved instead
+
+**Recommendation:** Need is justified, but validate assumptions
+
+[... 6 more dimensions ...]
+
+---
+
+## Simpler Alternatives
+
+- Start with a simpler MVP and iterate based on feedback
+- Consider using existing solution (e.g., off-the-shelf library)
+- Phase the implementation - deliver core value first
+
+---
+
+## Final Recommendation
+
+Proceed, but address these key concerns first: Opportunity cost of other features; Integration risks may extend timeline; Consider using existing library
+```
+
+## Tone
+
+**Discerning but constructive. Honest but not harsh.**
+
+Not a naysayer - wants us to succeed with the best approach. Highlights both strengths and concerns. Suggests simpler alternatives when appropriate.
+
+## Verdict Logic
+
+- **🟢 PROCEED**: Overall score >= 8.5/10, no critical concerns
+- **🟡 PROCEED WITH ADJUSTMENTS**: Score 7.0-8.4, address concerns first
+- **🟠 RECONSIDER**: Score 5.0-6.9, explore alternatives
+- **🔴 DON'T PROCEED**: Score < 5.0 or any dimension <= 4/10
+
+## Integration with WFC
+
+### Can Analyze
+- `wfc-plan` outputs (TASKS.md, PROPERTIES.md)
+- `wfc-architecture` outputs (ARCHITECTURE.md)
+- `wfc-security` outputs (THREAT-MODEL.md)
+- Freeform ideas (text input)
+
+### Produces
+- VALIDATE.md report
+- Simpler alternatives
+- Final recommendation
+
+## Philosophy
+
+**ELEGANT**: Simple 7-dimension framework, clear logic
+**MULTI-TIER**: Analysis (logic) separated from presentation
+**PARALLEL**: Can analyze multiple artifacts concurrently
+
+
+ARGUMENTS: <plan-content>
+# WFC Documentation Modernization — TASKS.md
+
+## Overview
+
+The `docs/` folder has three classes of problems:
+1. Stale content — references 56-persona system, wrong file paths
+2. Missing coverage — 28 skills with no user-facing docs, devcontainer undocumented, Git v3.0 only in CLAUDE.md
+3. Wrong structure — heavy architecture-internal focus, not user-journey oriented
+
+Target audience: WFC users (developers installing/using WFC in their projects)
+
+Proposed new structure:
+docs/
+├── README.md                  # Navigation hub
+├── quickstart/                # Get started in 10 minutes
+├── skills/                    # One doc per skill (all 28)
+├── workflow/                  # Day-to-day workflows
+├── concepts/                  # System internals
+├── reference/                 # Commands, config, compliance
+├── security/                  # Security patterns
+└── archive/                   # Historical docs
+
+## TASK-001: Audit & Archive Stale Documents (S)
+Move stale/draft docs to docs/archive/. Includes PERSONAS.md (56-persona), 4 draft architecture docs, ARCHITECTURE.md and PLANNING.md.
+
+## TASK-002: Establish New Directory Structure (S, depends: TASK-001)
+Create new directories, rewrite docs/README.md as user-journey navigation hub.
+
+## TASK-003: Write Architecture & Concepts Section (M, depends: TASK-002)
+Create docs/concepts/ with REVIEW_SYSTEM.md, QUALITY_GATES.md, HOOKS.md, KNOWLEDGE_SYSTEM.md. Rewrite ARCHITECTURE.md for v2.0 (5 fixed reviewers, correct paths).
+
+## TASK-004: Write Quickstart Section (M, depends: TASK-002)
+Create docs/quickstart/ with INSTALL.md, FIRST_WORKFLOW.md, CONFIGURE.md.
+
+## TASK-005: Write Skills Reference (Core Skills) (L, depends: TASK-002)
+Write docs for 8 core skills: wfc-build, wfc-plan, wfc-implement, wfc-review, wfc-lfg, wfc-deepen, wfc-compound + skills README.
+
+## TASK-006: Write Skills Reference (Extended Skills) (L, depends: TASK-005)
+Write docs for remaining 18+ skills: wfc-ba, wfc-security, wfc-test, wfc-observe, wfc-architecture, wfc-validate, wfc-export, wfc-agentic, wfc-sync, wfc-retro, wfc-newskill, wfc-safeguard, wfc-rules, wfc-playground, wfc-housekeeping, wfc-init, wfc-pr-comments, wfc-gh-debug.
+
+## TASK-007: Update Workflow Section (M, depends: TASK-002)
+Rewrite GIT_WORKFLOW.md for v3.0. Add DEVCONTAINER.md. Update PR_WORKFLOW.md for develop-first.
+
+## TASK-008: Update Reference Section (S, depends: TASK-005, TASK-006)
+Regenerate REGISTRY.md + REGISTRY.json. Add COMMANDS.md. Update PROJECT_INDEX.json.
+
+## TASK-009: Validate & Cross-Link (S, depends: all)
+Final validation pass: dead links, stale refs, missing cross-links, template compliance.
+
+---
+
+# PROPERTIES.md
+
+## PROP-001: SAFETY — No Outdated Facts in Non-Archive Docs
+No non-archive doc must contain 56-persona refs, old paths (wfc/scripts/skills/, wfc/reviewers/, wfc_tools). Priority: critical.
+
+## PROP-002: LIVENESS — All 28 Skills Have User-Facing Docs
+Every skill in ~/.claude/skills/wfc-*/ must have docs/skills/wfc-{name}.md. Priority: high.
+
+## PROP-003: INVARIANT — Docs Navigable in ≤ 3 Clicks
+Every doc reachable from docs/README.md in ≤ 3 steps. Priority: high.
+
+## PROP-004: INVARIANT — No Dead Links Within docs/
+All internal links resolve to existing files. Priority: high.
+
+## PROP-005: PERFORMANCE — Skill Docs ≤ 750 Words Each
+Each docs/skills/*.md must be ≤ 750 words (alert) / ≤ 1500 words (hard limit). Priority: medium.
+
+---
+
+# TEST-PLAN.md (Summary)
+
+9 test cases covering all 5 properties:
+- TEST-001: grep scan for stale facts (automated)
+- TEST-002: skills coverage diff (automated)
+- TEST-003: link integrity check (automated)
+- TEST-004: navigation depth check (manual)
+- TEST-005: template compliance per skill doc (manual)
+- TEST-006: word count budget (automated)
+- TEST-007: architecture doc accuracy vs codebase (manual)
+- TEST-008: property coverage verification (manual)
+- TEST-009: git workflow v3.0 accuracy (manual)
+</plan-content>
+
+---
+
+<task-notification>
+<task-id>aa80265</task-id>
+<tool-use-id>toolu_01MSPtjfit3sPw4Uf3b73fKc</tool-use-id>
+<status>completed</status>
+<summary>Agent "Explore docs folder structure" completed</summary>
+<result>Excellent! Now I have all the information needed. Let me compile a comprehensive inventory report.
+
+## WFC Documentation Inventory Report
+
+I've conducted a comprehensive analysis of the `/Users/samfakhreddine/repos/wfc/docs/` folder and cross-referenced it with CLAUDE.md. Here's the complete inventory:
+
+---
+
+## 1. ALL FILES AND THEIR PATHS
+
+### Total Count: 35 files across 6 main sections
+
+#### **README.md** (Root Index)
+- **Path**: `/Users/samfakhreddine/repos/wfc/docs/README.md`
+- **Purpose**: Documentation navigator with links to all sections
+- **Status**: Current and accurate
+
+---
+
+### **ARCHITECTURE** (8 files)
+
+| File | Path | Purpose | Status |
+|------|------|---------|--------|
+| ARCHITECTURE.md | `/docs/architecture/ARCHITECTURE.md` | System design covering persona library, orchestrator flow, multi-agent patterns | ⚠️ STALE - references 56 personas (now 5 fixed reviewers) |
+| PLANNING.md | `/docs/architecture/PLANNING.md` | Architecture decisions, design principles, absolute rules | ⚠️ PARTIALLY STALE - some persona references outdated |
+| PROGRESSIVE_DISCLOSURE.md | `/docs/architecture/PROGRESSIVE_DISCLOSURE.md` | Documentation loading hierarchy (progressive pattern) | ✅ Current |
+| REVIEW_V2.md | `/docs/architecture/REVIEW_V2.md` | Five-Agent Consensus Review v2.0 (CURRENT IMPLEMENTATION) | ✅ Current - reflects actual system |
+| BA-KODUS-INSPIRED-ENHANCEMENTS.md | `REDACTED.md` | Competitive analysis vs Kodus AI (Draft) | ⚠️ DRAFT - pending planning workflow |
+| BA-LOKI-MODE.md | `/docs/architecture/BA-LOKI-MODE.md` | Loki Mode dashboard/observability proposal (Draft) | ⚠️ DRAFT - not implemented |
+| LOKI-MODE-ANALYSIS.md | `/docs/architecture/LOKI-MODE-ANALYSIS.md` | Loki Mode deep-dive analysis (Draft) | ⚠️ DRAFT - strategic analysis only |
+| ROADMAP-DASHBOARD-OBSERVABILITY.md | `REDACTED.md` | Dashboard plugin system roadmap (Draft) | ⚠️ DRAFT - future initiative |
+
+---
+
+### **SECURITY** (3 files)
+
+| File | Path | Purpose | Status |
+|------|------|---------|--------|
+| GIT_SAFETY_POLICY.md | `/docs/security/GIT_SAFETY_POLICY.md` | Git workflow v2.0 (GitHub PR integration) | ✅ Current - explains v2.0 shift |
+| HOOKS_AND_TELEMETRY.md | `REDACTED.md` | PreToolUse/PostToolUse hook infrastructure | ✅ Current |
+| OWASP_LLM_TOP10_MITIGATIONS.md | `/docs/security/OWASP_LLM_TOP10_MITIGATIONS.md` | OWASP LLM Top 10 coverage (9/9 mitigations) | ✅ Current |
+
+---
+
+### **WORKFLOW** (6 files)
+
+| File | Path | Purpose | Status |
+|------|------|---------|--------|
+| PR_WORKFLOW.md | `/docs/workflow/PR_WORKFLOW.md` | GitHub PR workflow implementation phases 1-5/6 | ✅ Current |
+| WFC_BUILD.md | `/docs/workflow/WFC_BUILD.md` | Intentional Vibe workflow (quick features) | ✅ Current |
+| WFC_IMPLEMENTATION.md | `/docs/workflow/WFC_IMPLEMENTATION.md` | Multi-agent parallel implementation engine (complete) | ✅ Current |
+| UNIVERSAL_INSTALL.md | `/docs/workflow/UNIVERSAL_INSTALL.md` | Universal installer documentation | ✅ Current |
+| ACT_LOCAL_CI.md | `/docs/workflow/ACT_LOCAL_CI.md` | Local GitHub Actions testing with nektos/act | ✅ Current |
+| AGENTIC_WORKFLOWS.md | `REDACTED.md` | GitHub Agentic Workflows (gh-aw) integration | ✅ Current |
+
+---
+
+### **QUALITY** (3 files)
+
+| File | Path | Purpose | Status |
+|------|------|---------|--------|
+| PERSONAS.md | `/docs/quality/PERSONAS.md` | 56 Expert personas reference (9 panels) | ❌ STALE - System now uses 5 fixed reviewers, not 56 |
+| QUALITY_GATE.md | `/docs/quality/QUALITY_GATE.md` | Pre-review quality checks (Trunk.io) | ✅ Current |
+| QUALITY_SYSTEM.md | `/docs/quality/QUALITY_SYSTEM.md` | Universal quality gates and system architecture | ✅ Current |
+
+---
+
+### **REFERENCE** (7 files + 2 JSON)
+
+| File | Path | Purpose | Status |
+|------|------|---------|--------|
+| AGENT_SKILLS_COMPLIANCE.md | `/docs/reference/AGENT_SKILLS_COMPLIANCE.md` | Agent Skills spec compliance (28/28 validated) | ✅ Current - covers 2026-02-10 update |
+| CLAUDE_INTEGRATION.md | `/docs/reference/CLAUDE_INTEGRATION.md` | How to set up CLAUDE.md for WFC integration | ✅ Current |
+| DOC_REGISTRY_USAGE.md | `/docs/reference/DOC_REGISTRY_USAGE.md` | Progressive doc loading (96.5% token savings) | ✅ Current |
+| EARS.md | `/docs/reference/EARS.md` | EARS requirements notation (5 templates) | ✅ Current |
+| KNOWLEDGE_SCHEMA.md | `/docs/reference/KNOWLEDGE_SCHEMA.md` | KNOWLEDGE.md format for reviewers | ✅ Current - aligns with v2.0 |
+| REGISTRY.md | `/docs/reference/REGISTRY.md` | Documentation registry index (22 docs) | ✅ Current |
+| REGISTRY.json | `/docs/reference/REGISTRY.json` | Machine-readable doc registry | ✅ Current |
+| PROJECT_INDEX.json | `/docs/reference/PROJECT_INDEX.json` | Machine-readable project structure | ✅ Current |
+
+---
+
+### **EXAMPLES** (6 files)
+
+| File | Path | Purpose | Status |
+|------|------|---------|--------|
+| ears_oauth2_example.md | `/docs/examples/ears_oauth2_example.md` | OAuth2 feature using EARS format | ✅ Current |
+| orchestrator_delegation_demo.md | `/docs/examples/orchestrator_delegation_demo.md` | Implementation orchestrator delegation pattern | ✅ Current |
+| task_tool_demo.md | `/docs/examples/task_tool_demo.md` | Task tool integration example | ⚠️ PARTIALLY STALE - references 54 personas (now 5 reviewers) |
+| CLAUDE.md.enterprise | `/docs/examples/CLAUDE.md.enterprise` | Enterprise project CLAUDE.md template | ✅ Current |
+| CLAUDE.md.opensource | `/docs/examples/CLAUDE.md.opensource` | Open source project CLAUDE.md template | ✅ Current |
+| CLAUDE.md.startup | `/docs/examples/CLAUDE.md.startup` | Startup project CLAUDE.md template | ✅ Current |
+
+---
+
+## 2. COMPARISON: CLAUDE.md vs ACTUAL FILES
+
+### Files Mentioned in CLAUDE.md Line 351-354 (wfc/references/)
+
+| Referenced in CLAUDE.md | Actual Status | Location |
+|------------------------|---------------|---------  |
+| `wfc/references/ARCHITECTURE.md` | ❌ MISSING | (Not in wfc/references/; is in docs/architecture/) |
+| `wfc/references/TOKEN_MANAGEMENT.md` | ✅ EXISTS | `/wfc/references/TOKEN_MANAGEMENT.md` |
+| `wfc/references/ULTRA_MINIMAL_RESULTS.md` | ✅ EXISTS | `/wfc/references/ULTRA_MINIMAL_RESULTS.md` |
+| `wfc/references/reviewers/{domain}/PROMPT.md` | ✅ EXISTS (5 domains) | `/wfc/references/reviewers/{security,correctness,performance,maintainability,reliability}/PROMPT.md` |
+| `wfc/references/reviewers/{domain}/KNOWLEDGE.md` | ✅ EXISTS (5 domains) | `/wfc/references/reviewers/{domain}/KNOWLEDGE.md` |
+
+### Root-Level Files Mentioned in CLAUDE.md
+
+| File | Status | Notes |
+|------|--------|-------|
+| PLANNING.md | ✅ EXISTS (but relocated) | In `/docs/architecture/PLANNING.md`, not repo root |
+| CONTRIBUTING.md | ✅ EXISTS | `/CONTRIBUTING.md` at repo root |
+| QUICKSTART.md | ✅ EXISTS | `/QUICKSTART.md` at repo root |
+
+---
+
+## 3. STALE/INCONSISTENT DOCUMENTATION
+
+### CRITICAL ISSUES
+
+#### **docs/quality/PERSONAS.md** - 🚨 SEVERELY STALE
+- **Claims**: 56 personas across 9 panels
+- **Reality**: System uses 5 FIXED specialist reviewers (Security, Correctness, Performance, Maintainability, Reliability)
+- **Last Updated**: Pre-v2.0 rewrite
+- **Impact**: High - misleads users about system architecture
+- **Recommendation**: Archive or completely rewrite to reference v2.0 five-agent system
+
+#### **docs/architecture/ARCHITECTURE.md** - ⚠️ PARTIALLY STALE
+- **Stale Section**: Persona Library (lines 11-45) still describes 56-persona dynamic selection
+- **Current Reality**: Section 2.5 onward describes OLD system from pre-v2.0
+- **Impact**: Medium - critical sections outdated, later sections may be valid
+- **Recommendation**: Rewrite Persona Library section or mark as historical
+
+#### **docs/architecture/PLANNING.md** - ⚠️ PARTIALLY STALE
+- **Stale Sections**: 
+  - Line 14: "56 expert personas" (now 5 fixed reviewers)
+  - Line 36: Persona system diagram (now 5 fixed, not dynamic)
+- **Current Sections**: Vision, absolute rules, token management are accurate
+- **Impact**: Medium - foundational sections accurate but persona references outdated
+- **Recommendation**: Update lines 14, 36 to reflect 5 fixed reviewers
+
+#### **docs/examples/task_tool_demo.md** - ⚠️ PARTIALLY STALE
+- **Stale**: Line 11 claims "54 personas" (should be 5)
+- **Otherwise**: Architecture and Task tool integration patterns valid
+- **Impact**: Low-Medium
+- **Recommendation**: Update persona count, verify against v2.0
+
+### DRAFT/ASPIRATIONAL DOCUMENTS (Not Yet Implemented)
+
+These are strategic analyses, not bugs—they're documented as DRAFT:
+
+| Document | Status | Purpose | Next Steps |
+|----------|--------|---------|-----------|
+| BA-KODUS-INSPIRED-ENHANCEMENTS.md | 📋 DRAFT | Competitive feature analysis vs Kodus AI | Pending WFC planning workflow |
+| BA-LOKI-MODE.md | 📋 DRAFT | Dashboard & observability system proposal | Awaiting plan review |
+| LOKI-MODE-ANALYSIS.md | 📋 DRAFT | Deep-dive on what to adopt from Loki | Strategic document, no implementation yet |
+| ROADMAP-DASHBOARD-OBSERVABILITY.md | 📋 DRAFT | Observable plugin system roadmap | Future initiative |
+
+---
+
+## 4. ACTUAL SYSTEM STATE (Per CLAUDE.md vs MEMORY.md)
+
+### What CLAUDE.md Says (Outdated)
+
+**Line 312-317**: References `wfc/reviewers/` (OLD LOCATION, now `wfc/references/reviewers/`)
+
+**Line 11-36**: Describes 56 personas across 9 panels
+
+### What's Actually Implemented (Per MEMORY.md & REVIEW_V2.md)
+
+**5 FIXED Specialist Reviewers:**
+1. **Security** - OWASP/CWE, injection, hardcoded secrets, auth bypass
+2. **Correctness** - Edge cases, null handling, contract violations
+3. **Performance** - Big-O, N+1 queries, memory leaks
+4. **Maintainability** - SOLID, DRY, coupling/cohesion
+5. **Reliability** - Concurrency, error handling, resource leaks
+
+**Architecture**:
+- `wfc/references/reviewers/{id}/PROMPT.md` - reviewer identity & checklist
+- `wfc/references/reviewers/{id}/KNOWLEDGE.md` - accumulated learnings via RAG
+- `wfc/scripts/orchestrators/review/` - orchestration logic
+- Consensus Score (CS) algorithm with Minority Protection Rule (MPR)
+- SHA-256 fingerprint deduplication
+
+---
+
+## 5. MISSING DOCUMENTATION
+
+### Files Mentioned in CLAUDE.md But No Dedicated Docs
+
+| Topic | Mentioned in CLAUDE.md | Dedicated Docs | Gap |
+|-------|--------|---|---|
+| Repo Restructure (2026-02-18) | ✅ (MEMORY.md) | ❌ | No doc in `/docs/` explaining ~2.0 restructure (wfc-tools → gitwork, etc.) |
+| TokenBudgetManager | ✅ (line 542) | ❌ | No standalone doc; only mentioned in references/ |
+| PreToolUse Hooks | ✅ (line 335) | ⚠️ Brief mention in HOOKS_AND_TELEMETRY.md | More detail needed |
+| Emergency Bypass | ✅ (line 326) | ❌ | Only mentioned in REVIEW_V2.md; deserves standalone doc |
+| Worktree Manager | ✅ (line 374) | ❌ | Only brief mention in CLAUDE.md |
+| Knowledge System (RAG) | ✅ (line 328-333) | ⚠️ Partial (KNOWLEDGE_SCHEMA.md) | Missing full system architecture |
+| Git Workflow v2.0 | ✅ (line 4 in GIT_SAFETY_POLICY.md) | ✅ GIT_SAFETY_POLICY.md | Complete |
+
+---
+
+## 6. DISCREPANCIES BETWEEN CLAUDE.md & ACTUAL STRUCTURE
+
+### Directory Location Mismatch
+
+| CLAUDE.md Says | Actually Located | Impact |
+|---|---|---|
+| `wfc/reviewers/` (line 312) | `wfc/references/reviewers/` | Reviewer loader uses correct path via traversal, but docs incorrect |
+| `wfc/scripts/skills/review/` (line 320) | `wfc/scripts/orchestrators/review/` | Post-restructure name change |
+
+### Person Count Misalignment
+
+| CLAUDE.md Line | Claims | Reality | Since |
+|---|---|---|---|
+| 14 (PLANNING.md) | 56 personas | 5 fixed reviewers | v2.0 (2026-02-10) |
+| 36 (ARCHITECTURE.md intro) | 56 personas | 5 fixed reviewers | v2.0 |
+| 36 (PLANNING.md) | 56 personas | 5 fixed reviewers | v2.0 |
+
+---
+
+## 7. DOCS FILE FRESHNESS ASSESSMENT
+
+### 🟢 CURRENT & ACCURATE (23 files)
+
+Files updated or verified post-v2.0 rewrite:
+- REVIEW_V2.md
+- GIT_SAFETY_POLICY.md
+- PR_WORKFLOW.md
+- WFC_BUILD.md
+- WFC_IMPLEMENTATION.md
+- QUALITY_GATE.md
+- QUALITY_SYSTEM.md
+- AGENT_SKILLS_COMPLIANCE.md
+- CLAUDE_INTEGRATION.md
+- KNOWLEDGE_SCHEMA.md
+- EARS.md
+- PROGRESSIVE_DISCLOSURE.md
+- HOOKS_AND_TELEMETRY.md
+- OWASP_LLM_TOP10_MITIGATIONS.md
+- All 3 CLAUDE.md templates (enterprise/opensource/startup)
+- ACT_LOCAL_CI.md
+- AGENTIC_WORKFLOWS.md
+- UNIVERSAL_INSTALL.md
+- ears_oauth2_example.md
+- orchestrator_delegation_demo.md
+- README.md (docs/)
+- REGISTRY.md
+- KNOWLEDGE_SCHEMA.md
+
+### 🟡 PARTIALLY STALE (4 files)
+
+Sections need updates for v2.0:
+- ARCHITECTURE.md (Persona Library section)
+- PLANNING.md (Lines referencing 56 personas)
+- task_tool_demo.md (Persona count)
+- DOC_REGISTRY_USAGE.md (Registry reference may be outdated)
+
+### 🟠 STALE (1 file)
+
+Entire file invalid:
+- PERSONAS.md (56-persona system, now 5 fixed reviewers)
+
+### 📋 DRAFT/ASPIRATIONAL (4 files)
+
+Strategic documents, not implementation bugs:
+- BA-KODUS-INSPIRED-ENHANCEMENTS.md
+- BA-LOKI-MODE.md
+- LOKI-MODE-ANALYSIS.md
+- ROADMAP-DASHBOARD-OBSERVABILITY.md
+
+---
+
+## 8. RECOMMENDATIONS
+
+### IMMEDIATE (High Priority)
+
+1. **Update CLAUDE.md line 312** - Change `wfc/reviewers/` to `wfc/references/reviewers/`
+2. **Fix PERSONAS.md** - Either archive as historical or completely rewrite to reflect 5-agent system
+3. **Update ARCHITECTURE.md** - Rewrite Persona Library section (lines 11-45) to reflect v2.0
+4. **Update PLANNING.md** - Change lines 14, 36 from "56 personas" to "5 specialist reviewers"
+5. **Update task_tool_demo.md** - Fix persona count from 54 to 5, verify architecture
+
+### SHORT TERM (Medium Priority)
+
+6. **Add v2.0 Migration Guide** - Create `docs/MIGRATION_V1_TO_V2.md` documenting:
+   - Old: 56 dynamic personas → New: 5 fixed reviewers
+   - Old: `wfc/reviewers/` → New: `wfc/references/reviewers/`
+   - Old: `wfc/scripts/skills/` → New: `wfc/scripts/orchestrators/`
+   - Consensus algorithm changes (WeightedConsensus → CS with MPR)
+
+7. **Document Emergency Bypass** - Create `docs/reference/EMERGENCY_BYPASS.md` with:
+   - 24-hour expiry policy
+   - Audit trail format
+   - When to use vs. alternatives
+
+8. **Knowledge System Guide** - Expand `docs/reference/KNOWLEDGE_SCHEMA.md` with:
+   - Knowledge writer workflow
+   - RAG retrieval two-tier pattern
+   - Drift detection and promotion
+
+9. **Update Registry** - Regenerate REGISTRY.json/REGISTRY.md to reflect:
+   - Current 30 docs (vs claimed 22)
+   - Post-v2.0 content
+
+### LONG TERM (Lower Priority)
+
+10. **Implement Loki Mode** - If approved, move ROADMAP-DASHBOARD-OBSERVABILITY.md from draft
+11. **Kodus AI Features** - If approved, move BA-KODUS-INSPIRED-ENHANCEMENTS.md to implementation plan
+12. **Worktree Documentation** - Create dedicated guide for `wfc/gitwork/scripts/worktree-manager.sh`
+
+---
+
+## SUMMARY
+
+**Docs Inventory: 35 files across 6 sections**
+- 🟢 23 files current
+- 🟡 4 files partially stale (persona references)
+- 🟠 1 file stale (PERSONAS.md entire file)
+- 📋 4 files draft/aspirational (not implementation bugs)
+- ⚠️ 3 critical misalignments between CLAUDE.md and actual system
+
+**Severity: Medium** - System works correctly; documentation is outdated. Primary issue is 56-persona references in 5+ docs when system uses 5 fixed reviewers since v2.0 (2026-02-10).</result>
+<usage>total_tokens: 57417
+tool_uses: 49
+duration_ms: 93162</usage>
+</task-notification>
+Full transcript available at: /private/tmp/claude-501/-Users-samfakhreddine-repos-wfc/tasks/aa80265.output
+
+---
+
+Base directory for this skill: /Users/samfakhreddine/.claude/skills/wfc-review
+
+# WFC:CONSENSUS-REVIEW - Five-Agent Consensus Code Review
+
+Five fixed reviewers analyze code and a Consensus Score determines the decision.
+
+## What It Does
+
+1. **Security Reviewer** - Injection, auth/authz, OWASP Top 10
+2. **Correctness Reviewer** - Logic bugs, edge cases, type safety
+3. **Performance Reviewer** - Algorithmic efficiency, N+1 queries, memory
+4. **Maintainability Reviewer** - Readability, naming, SOLID/DRY, complexity
+5. **Reliability Reviewer** - Error handling, fault tolerance, graceful degradation
+6. **Consensus Score (CS)** - Weighted formula with Minority Protection Rule
+
+## Usage
+
+```bash
+# Review specific task
+/wfc-consensus-review TASK-001
+
+# Review files directly
+/wfc-consensus-review path/to/code
+
+# With properties
+/wfc-consensus-review TASK-001 --properties PROP-001,PROP-002
+```
+
+## Two-Phase Workflow
+
+### Phase 1: Prepare Review
+```
+orchestrator.prepare_review(request) -> 5 task specs
+```
+Builds prompts for each reviewer with file list, diff, properties, and knowledge context. Irrelevant reviewers (based on file extensions) are marked for skipping.
+
+### Phase 2: Finalize Review
+```
+orchestrator.finalize_review(request, responses, output_dir) -> ReviewResult
+```
+1. Parse subagent responses into findings
+2. Deduplicate findings across reviewers (SHA-256 fingerprinting with +/-3 line tolerance)
+3. Calculate Consensus Score
+4. Generate markdown report
+
+## Consensus Score (CS) Formula
+
+```
+CS = (0.5 * R_bar) + (0.3 * R_bar * (k/n)) + (0.2 * R_max)
+```
+
+Where:
+- **R_i** = (severity * confidence) / 10 for each deduplicated finding
+- **R_bar** = mean of all R_i values
+- **k** = total reviewer agreements (sum of per-finding reviewer counts)
+- **n** = 5 (total reviewers)
+- **R_max** = max(R_i) across all findings
+
+## Decision Tiers
+
+| Tier | CS Range | Action |
+|------|----------|--------|
+| Informational | CS < 4.0 | Log only, review passes |
+| Moderate | 4.0 <= CS < 7.0 | Inline comment, review passes |
+| Important | 7.0 <= CS < 9.0 | Block merge, review fails |
+| Critical | CS >= 9.0 | Block + escalate, review fails |
+
+## Minority Protection Rule (MPR)
+
+Prevents a single critical finding from being diluted by many clean reviews:
+
+```
+IF R_max >= 8.5 AND k >= 1 AND finding is from security/reliability:
+    CS_final = max(CS, 0.7 * R_max + 2.0)
+```
+
+## Finding Deduplication
+
+Findings from different reviewers pointing to the same issue are merged:
+- **Fingerprint**: SHA-256 of `file:normalized_line:category` (line tolerance +/-3)
+- **Merge**: highest severity wins, all descriptions and remediations preserved
+- **k tracking**: number of reviewers who flagged the same issue (increases CS)
+
+## Output
+
+### Review Report (REVIEW-TASK-XXX.md)
+
+```markdown
+# Review Report: TASK-001
+
+**Status**: PASSED
+**Consensus Score**: CS=3.50 (informational)
+**Reviewers**: 5
+**Findings**: 2
+
+---
+
+## Reviewer Summaries
+
+### PASS: Security Reviewer
+**Score**: 10.0/10
+**Summary**: No security issues found.
+**Findings**: 0
+
+### PASS: Correctness Reviewer
+**Score**: 8.5/10
+**Summary**: Minor edge case.
+**Findings**: 1
+
+...
+
+---
+
+## Findings
+
+### [MODERATE] src/auth.py:45
+**Category**: validation
+**Severity**: 5.0
+**Confidence**: 7.0
+**Reviewers**: correctness, reliability (k=2)
+**R_i**: 3.50
+
+**Description**: Missing input validation on user_id
+
+**Remediation**:
+- Add type check and bounds validation
+
+---
+
+## Summary
+
+CS=3.50 (informational): 2 finding(s), review passed.
+```
+
+## Integration with WFC
+
+### Called By
+- `wfc-implement` - After agent completes TDD workflow
+
+### Consumes
+- Task files (from git worktree)
+- PROPERTIES.md (formal properties to verify)
+- Git diff content
+
+### Produces
+- Review report (REVIEW-{task_id}.md)
+- Consensus Score decision (pass/fail with tier)
+- Deduplicated findings with reviewer agreement counts
+
+## Conditional Reviewer Activation
+
+Reviewers are activated based on change characteristics, not just file extensions. This saves tokens on small changes and adds depth on risky ones.
+
+### Tier 1: Lightweight Review (S complexity, <50 lines changed)
+
+Only 2 reviewers run:
+- **Correctness** (always)
+- **Maintainability** (always)
+
+**Triggers:** Single-file changes, typo fixes, small refactors, config changes.
+
+### Tier 2: Standard Review (M complexity, 50-500 lines changed)
+
+All 5 base reviewers run with relevance gating.
+
+### Tier 3: Deep Review (L/XL complexity, >500 lines or risk signals)
+
+All 5 base reviewers + conditional specialist agents:
+
+| Signal Detected | Additional Agent | What It Checks |
+|----------------|-----------------|----------------|
+| Database migration files | **Schema Drift Detector** | Unrelated schema changes, migration safety |
+| Database migration files | **Data Migration Expert** | ID mappings, swapped values, rollback safety |
+| Auth/security changes | **Auth Deep Dive** | Token handling, session management, RBAC gaps |
+| API endpoint changes | **API Contract Checker** | Breaking changes, versioning, backwards compat |
+| Infrastructure/deploy | **Deploy Verification** | Go/No-Go checklist, rollback plan |
+
+### Relevance Gate (File Extensions)
+
+Each reviewer has domain-specific file extensions. Only relevant reviewers execute:
+
+| Reviewer | Relevant Extensions |
+|----------|-------------------|
+| Security | .py, .js, .ts, .go, .java, .rb, .php, .rs |
+| Correctness | .py, .js, .ts, .go, .java, .rb, .rs, .c, .cpp |
+| Performance | .py, .js, .ts, .go, .java, .rs, .sql |
+| Maintainability | * (always relevant) |
+| Reliability | .py, .js, .ts, .go, .java, .rs |
+
+### Signal Detection Rules
+
+```
+IF files include **/migrations/** OR **/migrate/** OR schema changes:
+    → Activate Schema Drift Detector + Data Migration Expert
+
+IF files include **/auth/** OR **/security/** OR JWT/token/session patterns:
+    → Activate Auth Deep Dive
+
+IF files include **/api/** OR **/routes/** OR **/endpoints/**:
+    → Activate API Contract Checker
+
+IF files include Dockerfile, docker-compose, k8s, terraform, CI configs:
+    → Activate Deploy Verification
+```
+
+### Knowledge Search (Always-On)
+
+Regardless of tier, the review always searches `docs/solutions/` for related past issues via wfc-compound's knowledge base. This surfaces known pitfalls before they become findings.
+
+### Per-Project Configuration
+
+Projects can customize which reviewers run via `wfc-review.local.md`:
+
+```yaml
+---
+review_agents:
+  - security
+  - correctness
+  - performance
+  - maintainability
+  - reliability
+additional_agents:
+  - schema-drift-detector
+tier_overrides:
+  always_deep: true  # Force Tier 3 for all reviews
+---
+
+# Optional: Review Context
+Focus on Rails conventions and N+1 query detection.
+```
+
+## Philosophy
+
+**ELEGANT**: Simple two-phase workflow, deterministic reviewer set
+**MULTI-TIER**: Engine (logic) separated from CLI (presentation)
+**PARALLEL**: 5 reviewers can run concurrently via Task tool
+**TOKEN-AWARE**: Relevance gate skips irrelevant reviewers
+
+
+ARGUMENTS: <plan-content>
+# WFC Documentation Modernization Plan (Post-Validation Revision)
+
+## Goal
+Full rewrite of docs/ for WFC users — accurate, complete, navigable.
+Primary audience: WFC users (developers installing/using WFC in their own projects).
+
+## New docs/ Structure
+docs/
+├── README.md                  # User-journey navigation hub
+├── quickstart/                # INSTALL.md, FIRST_WORKFLOW.md, CONFIGURE.md
+├── skills/                    # README.md + one doc per skill (26 total)
+├── workflow/                  # GIT_WORKFLOW.md (v3.0), DEVCONTAINER.md, LOCAL_CI.md, PR_WORKFLOW.md, UNIVERSAL_INSTALL.md
+├── concepts/                  # REVIEW_SYSTEM.md, QUALITY_GATES.md, HOOKS.md, KNOWLEDGE_SYSTEM.md
+├── reference/                 # COMMANDS.md, REGISTRY.md, REGISTRY.json, AGENT_SKILLS_COMPLIANCE.md, PROJECT_INDEX.json
+├── security/                  # OWASP_LLM_TOP10_MITIGATIONS.md, GIT_SAFETY_POLICY.md, HOOKS_AND_TELEMETRY.md
+├── archive/                   # README.md (redirects) + all archived V1 docs
+└── MAINTENANCE.md             # Staleness prevention policy
+
+## Tasks (10 total)
+
+TASK-001 [S]: Audit & Archive — Move PERSONAS.md, 4 draft architecture docs, ARCHITECTURE.md and PLANNING.md to docs/archive/ with _V1 suffix. Create archive README with redirect table.
+
+TASK-002 [S, depends: 001]: Establish Structure — Create new directories, rewrite docs/README.md as user-journey navigation hub.
+
+TASK-003 [L, depends: 002]: Concepts Section — Create docs/concepts/ (REVIEW_SYSTEM.md, QUALITY_GATES.md, HOOKS.md, KNOWLEDGE_SYSTEM.md). Rewrite ARCHITECTURE.md for v2.0 (5 fixed reviewers, CS algorithm, correct paths).
+
+TASK-004 [M, depends: 002]: Quickstart Section — INSTALL.md (UV commands only), FIRST_WORKFLOW.md (end-to-end example), CONFIGURE.md (CLAUDE.md templates + hooks setup).
+
+TASK-005 [L, depends: 002]: Core Skills (8) — Auto-generate skeletons from SKILL.md, then review/polish: wfc-build, wfc-plan, wfc-implement, wfc-review, wfc-lfg, wfc-deepen, wfc-compound + skills README.md (selection matrix).
+
+TASK-006 [L, depends: 005]: Extended Skills (18) — Same process: wfc-security, wfc-ba, wfc-validate, wfc-test, wfc-observe, wfc-architecture, wfc-export, wfc-agentic, wfc-safeguard, wfc-rules, wfc-sync, wfc-pr-comments, wfc-gh-debug, wfc-playground, wfc-housekeeping, wfc-init, wfc-newskill, wfc-retro.
+
+TASK-007 [M, depends: 002]: Workflow Section — Rewrite GIT_WORKFLOW.md (v3.0 autonomous branching), add DEVCONTAINER.md, update PR_WORKFLOW.md for develop-first.
+
+TASK-008 [S, depends: 005, 006]: Reference Section — Regenerate REGISTRY.md + REGISTRY.json, add COMMANDS.md CLI cheatsheet, update PROJECT_INDEX.json (post-restructure paths).
+
+TASK-009 [S, depends: all]: Validate & Cross-Link — grep for stale facts, dead link check, template compliance, cross-link verification.
+
+TASK-010 [S, depends: 009]: Maintenance Policy — Create docs/MAINTENANCE.md (staleness prevention), complete archive redirect table.
+
+## Properties (6)
+
+PROP-001 [SAFETY, critical]: No non-archive doc may reference 56-persona system, wfc/reviewers/, wfc/scripts/skills/, or wfc_tools. Verified by grep.
+
+PROP-002 [LIVENESS, high]: All 26 installed wfc-* skills must have corresponding docs/skills/wfc-{name}.md. Verified by directory diff.
+
+PROP-003 [INVARIANT, high]: Any doc reachable from docs/README.md in ≤ 3 navigation steps. No orphans.
+
+PROP-004 [INVARIANT, high]: All internal links in docs/ resolve to existing files. Zero dead links.
+
+PROP-005 [PERFORMANCE, medium]: Each docs/skills/*.md ≤ 750 words (alert), ≤ 1500 words (hard limit).
+
+PROP-006 [INVARIANT, high]: Each docs/skills/wfc-{name}.md must not contradict its source ~/.claude/skills/wfc-{name}/SKILL.md. Facts traceable to source.
+
+## Test Plan (9 tests)
+- TEST-001: grep scan for stale facts (automated)
+- TEST-002: skills coverage diff (automated)
+- TEST-003: link integrity check (automated)
+- TEST-004: navigation depth (manual)
+- TEST-005: template compliance per skill doc (manual)
+- TEST-006: word count budget (automated)
+- TEST-007: architecture doc accuracy vs codebase (manual)
+- TEST-008: property coverage (manual)
+- TEST-009: git workflow v3.0 accuracy (manual)
+
+All 6 properties covered by at least one test.
+</plan-content>
+
+---
+
+yes implement with the full fixes. i am going to bed.
+
+---
+
+Base directory for this skill: /Users/samfakhreddine/.claude/skills/wfc-implement
+
+# wfc-implement - Multi-Agent Parallel Implementation Engine
+
+**Core skill #3** - Reads TASKS.md, orchestrates N agents in isolated worktrees, enforces TDD, routes through review, auto-merges, handles rollbacks.
+
+## Status
+
+🚧 **IN DEVELOPMENT**
+
+- ✅ Shared infrastructure (config, telemetry, schemas, utils)
+- ✅ Mock dependencies (wfc-plan, wfc-consensus-review)
+- ✅ Orchestrator logic (task queue, dependency management)
+- 🚧 Agent implementation (TDD workflow)
+- 🚧 Merge engine (rebase, integration tests, rollback)
+- 🚧 Dashboard (WebSocket, Mermaid visualization)
+- 📋 CLI interface
+- 📋 Full integration testing
+
+## Architecture
+
+### MULTI-TIER Design
+
+```
+┌─────────────────────────────┐
+│  PRESENTATION TIER          │  CLI, Dashboard (future: Web UI, API)
+└──────────────┬──────────────┘
+               │
+┌──────────────▼──────────────┐
+│  LOGIC TIER                 │  Orchestrator, Agents, Merge Engine
+│  - orchestrator.py          │  (Pure logic, no UI)
+│  - agent.py                 │
+│  - merge_engine.py          │
+└──────────────┬──────────────┘
+               │
+┌──────────────▼──────────────┐
+│  DATA TIER                  │  Uses shared infrastructure
+│  - WFCTelemetry             │  (Swappable storage)
+│  - Git (worktrees)          │
+└──────────────┬──────────────┘
+               │
+┌──────────────▼──────────────┐
+│  CONFIG TIER                │  WFCConfig
+│  - wfc.config.json          │  (Global/project)
+└─────────────────────────────┘
+```
+
+### PARALLEL Execution
+
+```
+Orchestrator
+    ├── Agent 1 (worktree-1, TASK-001, sonnet)
+    ├── Agent 2 (worktree-2, TASK-002, opus)
+    ├── Agent 3 (worktree-3, TASK-005, sonnet)
+    └── Agent N (worktree-N, TASK-XXX, haiku)
+         ↓ (all work concurrently)
+    Review (sequential per agent)
+         ↓
+    Merge (sequential, one at a time)
+         ↓
+    Integration Tests
+         ↓ (pass/fail)
+    Main Branch (or Rollback)
+```
+
+## Triggers
+
+```bash
+# Default: use TASKS.md in /plan
+/wfc-implement
+
+# Custom tasks file
+/wfc-implement --tasks path/to/TASKS.md
+
+# Override agent count
+/wfc-implement --agents 5
+
+# Override strategy
+/wfc-implement --strategy smart
+
+# Dry run (show plan, don't execute)
+/wfc-implement --dry-run
+```
+
+## Configuration
+
+```json
+{
+  "orchestration": {
+    "agent_strategy": "smart",
+    "max_agents": 5
+  },
+  "worktree": {
+    "directory": ".worktrees",
+    "cleanup_on_success": true
+  },
+  "tdd": {
+    "enforce_test_first": true,
+    "require_all_properties_tested": true
+  },
+  "merge": {
+    "auto_merge": true,
+    "require_rebase": true
+  },
+  "integration_tests": {
+    "command": "pytest",
+    "timeout_seconds": 300,
+    "run_after_every_merge": true
+  },
+  "rollback": {
+    "strategy": "re_queue",
+    "max_rollback_retries": 2
+  },
+  "dashboard": {
+    "enabled": true,
+    "websocket_port": 9876
+  }
+}
+```
+
+## TDD Workflow (Per Agent)
+
+```
+1. UNDERSTAND
+   - Read task definition
+   - Read properties
+   - Read test plan
+   - Read existing code
+
+2. TEST FIRST (RED)
+   - Write tests BEFORE implementation
+   - Tests cover acceptance criteria
+   - Tests cover properties
+   - Run tests → they FAIL
+
+3. IMPLEMENT (GREEN)
+   - Write minimum code to pass tests
+   - Follow ELEGANT principles
+   - Run tests → they PASS
+
+4. REFACTOR
+   - Clean up without changing behavior
+   - Maintain SOLID & DRY
+   - Run tests → still PASS
+
+5. SUBMIT
+   - Commit to worktree branch
+   - Produce agent report
+   - Route to wfc-consensus-review
+```
+
+## Dependencies
+
+- **Consumes**: TASKS.md, PROPERTIES.md, TEST-PLAN.md (from wfc-plan)
+- **Integrates**: wfc-consensus-review (for code review)
+- **Produces**: PR to develop branch, telemetry records, agent reports
+
+## Post-Deploy Validation Plan
+
+After all tasks are implemented and merged, the orchestrator generates a post-deploy validation plan included in the PR body.
+
+### Generation Process
+
+1. Collect all PROPERTIES.md entries for implemented tasks
+2. Map each property to observable metrics:
+   - SAFETY properties → error rate monitors, auth failure alerts
+   - PERFORMANCE properties → latency P95/P99 thresholds, throughput baselines
+   - LIVENESS properties → health check endpoints, heartbeat monitors
+   - INVARIANT properties → data consistency checks, constraint validations
+3. Generate validation plan section for PR body
+
+### Validation Plan Format
+
+```markdown
+## Post-Deploy Monitoring & Validation
+
+### Properties Validated
+| Property | Type | Observable | Threshold |
+|----------|------|-----------|-----------|
+| PROP-001 | SAFETY | auth_failure_rate | < 0.1% |
+| PROP-002 | PERFORMANCE | api_latency_p99 | < 200ms |
+
+### Monitoring Queries
+- `auth_failures{service="api"} / auth_total > 0.001`
+- `histogram_quantile(0.99, api_latency) > 0.2`
+
+### Validation Window
+- Standard changes: 24 hours
+- Data/auth changes: 72 hours
+- Infrastructure changes: 1 week
+
+### Rollback Criteria
+- Any SAFETY property violation triggers immediate rollback
+- PERFORMANCE degradation >20% from baseline triggers investigation
+```
+
+## Philosophy
+
+**ELEGANT**: Simple agent logic, clear orchestration, no over-engineering
+**MULTI-TIER**: Presentation/Logic/Data/Config cleanly separated
+**PARALLEL**: Maximum concurrency where safe (agents, tasks, reviews)
+
+## Git Workflow Policy (PR-First)
+
+WFC creates feature branches, pushes them, and opens GitHub PRs for team review.
+
+```
+WFC workflow:
+  Implement -> Quality -> Review -> Push Branch -> Create GitHub PR to develop
+                                                        |
+                                                  [WFC STOPS HERE]
+                                                        |
+                                      Auto-merge for claude/* branches
+                                      Manual review for feat/* branches
+```
+
+Agent branches (claude/*) auto-merge to develop when CI passes. Human branches require manual review. Release candidates are cut from develop to main on a schedule.
+
+**What WFC does:**
+- Creates feature branches
+- Pushes branches to remote
+- Creates GitHub PRs targeting develop (draft by default)
+
+**What WFC never does:**
+- Push directly to main/master
+- Force push
+- Merge PRs to main (you decide when to cut releases)
+
+**Legacy mode:** Set `"merge.strategy": "direct"` in wfc.config.json for local-only merge.
+
+See [GIT_SAFETY_POLICY.md](../../../docs/security/GIT_SAFETY_POLICY.md) for complete policy.
+
+## Current Implementation Status
+
+### ✅ Done
+- Orchestrator (task queue, dependency management)
+- Shared infrastructure (config, telemetry, schemas, utils)
+- Mock dependencies (wfc-plan, wfc-consensus-review)
+
+### 🚧 In Progress
+- Agent TDD workflow
+- Merge engine with rollback
+- Dashboard
+
+### 📋 TODO
+- CLI interface
+- Full integration tests
+- Performance optimization
+- Real wfc-plan and wfc-consensus-review integration
+
+
+ARGUMENTS: .development/plans/plan_docs_modernization_20260218_120000/TASKS.md
+
+---
+
+<task-notification>
+<task-id>aea3c94</task-id>
+<tool-use-id>toolu_01LnmuoWr9x5RoZLMECYz9Z6</tool-use-id>
+<status>completed</status>
+<summary>Agent "Write docs/quickstart/ section" completed</summary>
+<result>Three files created in `/Users/samfakhreddine/repos/wfc/docs/quickstart/`. Here is a summary of what was built and the key decisions made.
+
+---
+
+## Files Created
+
+### `/Users/samfakhreddine/repos/wfc/docs/quickstart/INSTALL.md` (261 words)
+
+Numbered-step install guide. Covers:
+- Prerequisites with exact install commands (Claude Code, Python 3.12+, UV, GitHub CLI)
+- `uv pip install -e ".[all]"` followed by `wfc validate` — UV-only, no bare `pip`
+- `bash install-universal.sh` to deploy the 30 skills to `~/.claude/skills/wfc-*/`
+- `make doctor` with a realistic green output block showing all 7 checks
+- A table mapping install locations to what landed there
+- Cross-links to the other two quickstart files
+
+### `REDACTED.md` (537 words)
+
+End-to-end `/wfc-build` walkthrough using the "add rate limiting" example. Shows:
+- 4 realistic interview Q&As with concrete answers
+- Worktree dispatch output referencing the actual `claude/` branch prefix and `worktree-manager.sh`
+- TDD RED/GREEN/REFACTOR output with quality gate pass
+- All 5 reviewer names running in parallel with a realistic CS score of 2.1 (informational, no blockers)
+- Actual PR URL format and PR metadata (title, base branch, CS, test count)
+- Explicit "WFC stops here — you merge" statement emphasizing v3.0 policy
+
+### `/Users/samfakhreddine/repos/wfc/docs/quickstart/CONFIGURE.md` (576 words)
+
+Project integration guide. Shows:
+- Template selection table (startup/enterprise/opensource) pointing to `docs/examples/CLAUDE.md.*`
+- Minimal `.claude/settings.json` hooks config with the actual hook commands from the repo (`pretooluse_hook.py`, `file_checker.py`, `tdd_enforcer.py`, `context_monitor.py`) and the correct matcher strings (`Write|Edit`, `Read|Write|Edit|Bash|Skill|Grep|Glob`) matching the live settings file
+- `uv run pre-commit install` + verification command
+- `develop` branch setup with the escape hatch for teams that want to stay on `main`
+- `.wfc/rules/*.md` custom enforcement rules with a concrete example showing pattern/action/message structure
+- `make doctor` as the final verification step</result>
+<usage>total_tokens: 34029
+tool_uses: 21
+duration_ms: 119416</usage>
+</task-notification>
+Full transcript available at: /private/tmp/claude-501/-Users-samfakhreddine-repos-wfc/tasks/aea3c94.output
+
+---
+
+This session is being continued from a previous conversation that ran out of context. The summary below covers the earlier portion of the conversation.
+
+Analysis:
+Let me chronologically analyze this conversation to create a comprehensive summary.
+
+1. The user invoked `/wfc-plan` with argument "our docs folder is woefully out of date"
+2. This triggered the WFC planning workflow - I ran an exploration agent to audit docs/, conducted an adaptive interview with the user, generated TASKS.md/PROPERTIES.md/TEST-PLAN.md, ran the validate gate (wfc-validate), applied revisions, ran the review gate (wfc-review), applied more revisions, and created the final plan-audit.json
+3. The user then said "yes implement with the full fixes. i am going to bed." - approving autonomous implementation
+4. I invoked `/wfc-implement` with the TASKS.md path, which loaded the wfc-implement skill (marked as IN DEVELOPMENT)
+5. Since wfc-implement is partially built, I'm directly executing the tasks myself with parallel background agents
+
+Key technical decisions:
+- Actual skill count: 30 (not 26 or 28 as previously thought) - verified via `ls ~/.claude/skills/ | grep ^wfc-`
+- Skills missing from original plan: wfc-vibe, wfc-safeclaude, wfc-code-standards, wfc-python, wfc-isthissmart
+- TASK-001 (archive) and TASK-002 (structure) done sequentially first
+- TASK-003, 004, 005, 007 parallelized (all depend only on TASK-002)
+- TASK-006 split into 3 parallel batches (a, b, c) for 23 extended skills
+- All 30 skill docs now exist in docs/skills/
+
+Current state of file creation:
+- docs/archive/ created with README.md and 7 archived files
+- docs/quickstart/ created (3 files)
+- docs/concepts/ created (4 files)
+- docs/skills/ created (30 skill docs + README.md)
+- docs/workflow/ updated (GIT_WORKFLOW.md, DEVCONTAINER.md, LOCAL_CI.md, PR_WORKFLOW.md)
+- docs/architecture/ARCHITECTURE.md rewritten (v2.0)
+- docs/README.md rewritten (user-journey navigation)
+- docs/reference/COMMANDS.md created
+- docs/reference/AGENT_SKILLS_COMPLIANCE.md updated (30 skills)
+- docs/reference/PROJECT_INDEX.json updated
+- docs/MAINTENANCE.md created
+- QUICKSTART.md root file fixed (stale persona links)
+- docs/examples/task_tool_demo.md updated (historical notice added)
+- REDACTED.md fixed (wfc_tools → wfc.gitwork)
+
+TASK-009 validation:
+- TEST-001 CLEAN ✅ (docs/ non-archive)
+- TEST-002 MATCH ✅ (all 30 skills documented)
+- Still fixing: CLAUDE.md line 687 (acceptable - mentions old system in past tense), CONTRIBUTING.md (has old persona contribution guide)
+
+Currently working on: fixing CONTRIBUTING.md's stale persona references (line 19: "currently 56 personas across 9 panels")
+
+Background agents still potentially running:
+- a73def8 (skills batch 2)
+- adef325 (skills batch 3)
+- a6f9a07 (missing 2 skill docs: wfc-init, wfc-isthissmart)
+
+Pending: finish CONTRIBUTING.md fix, then do final validation, commit.
+
+Summary:
+1. Primary Request and Intent:
+   - User invoked `/wfc-plan "our docs folder is woefully out of date"` — triggering the full WFC planning workflow
+   - Interview responses: Primary driver = "all of the above" (stale + missing + wrong audience), Primary audience = "WFC users", Structure = "let the plan decide", Scope = "full rewrite", Known gaps = "everything is bad"
+   - User said "yes implement with the full fixes. i am going to bed." — approving autonomous implementation of all review findings with no human checkpoints
+
+2. Key Technical Concepts:
+   - **WFC Planning Pipeline**: adaptive interview → TASKS.md + PROPERTIES.md + TEST-PLAN.md → wfc-validate gate → revision → wfc-review gate (loop until 8.5+) → plan-audit.json
+   - **Validation Pipeline**: SHA-256 hashes of draft/final plan; wfc-validate score 7.6/10; wfc-review score 8.0→8.7/10 (after fixes)
+   - **Actual skill count**: 30 installed (not 26 or 28) — verified via `ls ~/.claude/skills/ | grep ^wfc-`
+   - **5 missing skills** from original plan: wfc-vibe, wfc-safeclaude, wfc-code-standards, wfc-python, wfc-isthissmart
+   - **wfc-implement status**: IN DEVELOPMENT — directly executing tasks with parallel background agents instead
+   - **Parallel task execution**: TASK-001/002 sequential, then TASK-003/004/005/007 in parallel, TASK-006 split into 3 parallel batches (8+8+7 skills), TASK-008/009/010 sequential at end
+   - **New docs structure**: quickstart/, skills/, concepts/, workflow/, architecture/, reference/, security/, examples/, archive/, MAINTENANCE.md
+   - **5 fixed specialist reviewers** (not 56 personas): Security, Correctness, Performance, Maintainability, Reliability
+   - **CS algorithm**: `CS = (0.5 × R̄) + (0.3 × R̄ × k/n) + (0.2 × R_max)` with Minority Protection Rule (R_max ≥ 8.5 → elevate)
+
+3. Files and Code Sections:
+
+   **Plan files** (`.development/plans/plan_docs_modernization_20260218_120000/`):
+   - `TASKS.md` — 10 tasks (S/M/L/XL), dependency graph, parallelization notes, 30 skill count, TASK-010 maintenance
+   - `PROPERTIES.md` — 6 properties (PROP-001 SAFETY, PROP-002 LIVENESS/30 skills, PROP-003 navigable, PROP-004 no dead links, PROP-005 ≤750 words, PROP-006 sourced from SKILL.md)
+   - `TEST-PLAN.md` — 9 tests (TEST-001 grep scan, TEST-002 coverage diff with portability note, TEST-003 link integrity + root files, TEST-004 navigation depth, TEST-005 template compliance, TEST-006 word count, TEST-007 architecture accuracy, TEST-008 property coverage, TEST-009 git v3.0 accuracy)
+   - `plan-audit_20260218_120000.json` — `original_hash: 113a11a1...`, `validate_score: 7.6`, `revision_count: 2`, `review_score: 8.7`, `final_hash: 5156db9e...`, `validated: true`
+   - `revision-log.md` — documents all 5 validate revisions + 6 review revisions applied
+
+   **Archived files** (`docs/archive/`):
+   - `PERSONAS_V1.md` (was docs/quality/PERSONAS.md — 56-persona system)
+   - `ARCHITECTURE_V1.md` (was docs/architecture/ARCHITECTURE.md — pre-v2.0)
+   - `PLANNING_V1.md` (was docs/architecture/PLANNING.md)
+   - 4 draft aspirational docs (BA-KODUS, BA-LOKI-MODE, LOKI-MODE-ANALYSIS, ROADMAP-DASHBOARD)
+   - `README.md` — redirect table mapping old paths to current equivalents, v2.0 change summary
+
+   **New/rewritten docs:**
+   - `docs/README.md` — rewritten as user-journey navigation hub with 7-section index
+   - `docs/architecture/ARCHITECTURE.md` — rewritten for v2.0 (30 skills, 5 reviewers, CS formula, correct paths)
+   - `docs/quickstart/INSTALL.md`, `FIRST_WORKFLOW.md`, `CONFIGURE.md`
+   - `docs/concepts/REVIEW_SYSTEM.md`, `QUALITY_GATES.md`, `HOOKS.md`, `KNOWLEDGE_SYSTEM.md`
+   - `docs/skills/README.md` (selection matrix) + 30 individual skill docs (wfc-agentic through wfc-vibe)
+   - `docs/workflow/GIT_WORKFLOW.md` (v3.0 autonomous branching), `DEVCONTAINER.md`, `LOCAL_CI.md`
+   - `docs/reference/COMMANDS.md` (new CLI cheatsheet), updated `AGENT_SKILLS_COMPLIANCE.md` (30 skills), updated `PROJECT_INDEX.json`
+   - `docs/MAINTENANCE.md` — staleness prevention policy, drift detection script, 5 maintenance operations
+   - `QUICKSTART.md` (root) — fixed stale links (PERSONAS.md → REVIEW_SYSTEM.md)
+   - `docs/examples/task_tool_demo.md` — added v1.0 historical notice
+   - `REDACTED.md` — fixed `wfc.wfc_tools.gitwork` → `wfc.gitwork`
+
+4. Errors and Fixes:
+   - **Write tool error on ARCHITECTURE.md**: "File has not been read yet" — architecture/ARCHITECTURE.md was git-mv'd to archive but a new untracked file existed. Fixed by reading first (confirmed it was already created by TASK-003 agent), then editing for skill count correction (28→30)
+   - **Skill count inconsistency**: Plan originally said 26, CLAUDE.md said 28, actual is 30. Fixed by running `ls ~/.claude/skills/ | grep ^wfc- | sort` which returned 30 skills including wfc-isthissmart (not previously known)
+   - **TASK-006 "18+" imprecision**: Fixed to exactly 18, then expanded to 23 when actual missing skills were identified; TASK-005+006 together cover all 30
+   - **CONTRIBUTING.md stale ref**: Line 19 "currently 56 personas across 9 panels" — being fixed in current work
+   - **CLAUDE.md grep match**: Line 687 says "replaced 56-persona selection system" — this is historical context in past tense, acceptable
+
+5. Problem Solving:
+   - **wfc-implement IN DEVELOPMENT**: Skill is partially built with no complete TDD/agent orchestration. Solved by directly executing all 10 tasks manually with parallel background Task agents
+   - **Parallelizing doc writing**: Tasks 003/004/005/007 all depend only on TASK-002 — launched 4 parallel agents simultaneously. TASK-006 further split into 3 batches of 8/8/7 skills
+   - **Missing skill docs**: After TASK-005 agent completed, `ls docs/skills/` showed wfc-init.md and wfc-isthissmart.md missing — launched separate agent (a6f9a07) to write them
+   - **TEST-001 stale scan**: Initially found `wfc_tools` in HOOKS_AND_TELEMETRY.md — fixed with sed replacement. Re-scan came back CLEAN. Root files still had issues in CLAUDE.md and CONTRIBUTING.md
+
+6. All User Messages:
+   - `/wfc-plan "our docs folder is woefully out of date"` (skill invocation)
+   - Interview answer: "all of the above" with note "all of the above" (primary driver)
+   - Interview answer: "WFC users" (primary audience)
+   - Interview answer: "Let the plan decide" (structure)
+   - Interview answer: "Full rewrite plan" (scope)
+   - Interview answer: "everything is bad" with note "everything is bad" (known gaps)
+   - `yes implement with the full fixes. i am going to bed.` (approve all review fixes + autonomous implementation)
+   - `/wfc-implement .development/plans/plan_docs_modernization_20260218_120000/TASKS.md` (skill invocation)
+
+7. Pending Tasks:
+   - Fix `CONTRIBUTING.md` line 19: "currently 56 personas across 9 panels" → update to reflect v2.0 system or rewrite the "Adding New Personas" section
+   - Verify background agents a73def8 (skills batch 2), adef325 (skills batch 3), a6f9a07 (wfc-init + wfc-isthissmart) all completed successfully
+   - Run TEST-001 final full scan after CONTRIBUTING.md fix
+   - Run TEST-002 final verification (already MATCH ✅ but confirm with all 30 docs)
+   - Complete TASK-009 validation: TEST-003 link integrity, TEST-004 navigation depth check
+   - Commit all changes and create PR to develop branch
+
+8. Current Work:
+   Immediately before the summary request, the work was fixing `CONTRIBUTING.md` which still contains a stale reference. The grep scan showed:
+   ```
+   /Users/samfakhreddine/repos/wfc/CONTRIBUTING.md:19:Check existing personas to avoid duplicates (currently 56 personas across 9 panels):
+   ```
+   Had already read lines 1-40 of CONTRIBUTING.md and confirmed the section titled "Adding New Personas" references the old persona system including paths like `wfc/personas/panels/`.
+
+9. Optional Next Step:
+   Fix the stale reference in CONTRIBUTING.md. The file at line 19 reads:
+   ```
+   Check existing personas to avoid duplicates (currently 56 personas across 9 panels):
+   ```
+   And references `wfc/personas/panels/{panel}/` for creating persona JSON files — the entire "Adding New Personas" section needs to be updated to reflect the v2.0 system (contributing reviewer knowledge to `wfc/references/reviewers/{name}/KNOWLEDGE.md` instead). Then re-run the full TEST-001 scan to confirm ALL CLEAN, verify remaining background agents completed, and proceed to commit + PR.
+
+If you need specific details from before compaction (like exact code snippets, error messages, or content you generated), read the full transcript at: /Users/samfakhreddine/.REDACTED.jsonl
+Please continue the conversation from where we left off without asking the user any further questions. Continue with the last task that you were asked to work on.
