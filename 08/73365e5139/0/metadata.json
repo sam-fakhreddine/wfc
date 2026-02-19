@@ -1,0 +1,35 @@
+{
+  "cli_version": "0.4.2",
+  "checkpoint_id": "0873365e5139",
+  "session_id": "ce9b467e-c414-447f-b9f2-fe807be3000f",
+  "strategy": "manual-commit",
+  "created_at": "2026-02-19T03:07:59.28701Z",
+  "branch": "claude/integrate-develop-to-main",
+  "checkpoints_count": 1,
+  "files_touched": [
+    "tests/test_observability_providers.py",
+    "wfc/observability/providers/file_provider.py",
+    "wfc/scripts/github/gh_helpers.py",
+    "wfc/scripts/github/pr_threads.py"
+  ],
+  "agent": "Claude Code",
+  "transcript_identifier_at_start": "ed61e2be-2e09-4148-b879-e30df8350914",
+  "checkpoint_transcript_start": 2311,
+  "transcript_lines_at_start": 2311,
+  "token_usage": {
+    "input_tokens": 48,
+    "cache_creation_tokens": 84707,
+    "cache_read_tokens": 4197947,
+    "output_tokens": 495,
+    "api_call_count": 35
+  },
+  "initial_attribution": {
+    "calculated_at": "2026-02-19T03:07:59.086278Z",
+    "agent_lines": 0,
+    "human_added": 706,
+    "human_modified": 49,
+    "human_removed": 0,
+    "total_committed": 706,
+    "agent_percentage": 0
+  }
+}
