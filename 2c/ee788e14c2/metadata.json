@@ -1,0 +1,28 @@
+{
+  "cli_version": "0.4.2",
+  "checkpoint_id": "2cee788e14c2",
+  "strategy": "manual-commit",
+  "branch": "claude/enhance-workflow-plugin-c25hS",
+  "checkpoints_count": 2,
+  "files_touched": [
+    ".development/housekeeping/keep-list.json",
+    "tests/test_observability_edge_cases.py",
+    "wfc/scripts/orchestrators/review/orchestrator.py"
+  ],
+  "sessions": [
+    {
+      "metadata": "/2c/ee788e14c2/0/metadata.json",
+      "transcript": "/2c/ee788e14c2/0/full.jsonl",
+      "context": "/2c/ee788e14c2/0/context.md",
+      "content_hash": "/2c/ee788e14c2/0/content_hash.txt",
+      "prompt": "/2c/ee788e14c2/0/prompt.txt"
+    }
+  ],
+  "token_usage": {
+    "input_tokens": 122,
+    "cache_creation_tokens": 216855,
+    "cache_read_tokens": 13633787,
+    "output_tokens": 3752,
+    "api_call_count": 106
+  }
+}
