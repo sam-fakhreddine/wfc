@@ -1,0 +1,24 @@
+{
+  "cli_version": "0.4.5",
+  "checkpoint_id": "41c2b2f630a5",
+  "strategy": "manual-commit",
+  "branch": "claude/formatting-cleanup-and-typo-fixes",
+  "checkpoints_count": 0,
+  "files_touched": null,
+  "sessions": [
+    {
+      "metadata": "/41/c2b2f630a5/0/metadata.json",
+      "transcript": "/41/c2b2f630a5/0/full.jsonl",
+      "context": "/41/c2b2f630a5/0/context.md",
+      "content_hash": "/41/c2b2f630a5/0/content_hash.txt",
+      "prompt": "/41/c2b2f630a5/0/prompt.txt"
+    }
+  ],
+  "token_usage": {
+    "input_tokens": 18,
+    "cache_creation_tokens": 7631,
+    "cache_read_tokens": 1298103,
+    "output_tokens": 114,
+    "api_call_count": 14
+  }
+}
