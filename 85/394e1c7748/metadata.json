@@ -1,0 +1,27 @@
+{
+  "cli_version": "0.4.5",
+  "checkpoint_id": "85394e1c7748",
+  "strategy": "manual-commit",
+  "branch": "claude/fix-installer-hooks-verbosity",
+  "checkpoints_count": 1,
+  "files_touched": [
+    "install-universal.sh",
+    "wfc/scripts/hooks/register_hooks.py"
+  ],
+  "sessions": [
+    {
+      "metadata": "/85/394e1c7748/0/metadata.json",
+      "transcript": "/85/394e1c7748/0/full.jsonl",
+      "context": "/85/394e1c7748/0/context.md",
+      "content_hash": "/85/394e1c7748/0/content_hash.txt",
+      "prompt": "/85/394e1c7748/0/prompt.txt"
+    }
+  ],
+  "token_usage": {
+    "input_tokens": 85,
+    "cache_creation_tokens": 85979,
+    "cache_read_tokens": 5182515,
+    "output_tokens": 1620,
+    "api_call_count": 65
+  }
+}
