@@ -261,7 +261,7 @@
     },
     "tools": {
       "gitwork": {
-        "path": "wfc/wfc-tools/gitwork",
+        "path": "wfc/gitwork",
         "purpose": "Git workflow automation",
         "features": [
           "Branch management",

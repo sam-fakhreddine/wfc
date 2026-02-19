@@ -52,7 +52,7 @@ WFC's current review flow is: `5 Reviewers → Fingerprint Dedup → Consensus S
 
 **MUST HAVE**:
 
-1. **Finding Validator module** (`wfc/scripts/skills/review/finding_validator.py`)
+1. **Finding Validator module** (`wfc/scripts/orchestrators/review/finding_validator.py`)
    - Accepts `list[DeduplicatedFinding]` from Fingerprinter
    - Returns `list[ValidatedFinding]` with validation status and confidence adjustment
    - Runs AFTER deduplication, BEFORE consensus scoring
@@ -103,9 +103,9 @@ WFC's current review flow is: `5 Reviewers → Fingerprint Dedup → Consensus S
 - **Input**: `Fingerprinter.deduplicate()` output → `FindingValidator.validate()`
 - **Output**: `FindingValidator.validate()` → `ConsensusScore.calculate()`
 - **Modified files**:
-  - `wfc/scripts/skills/review/orchestrator.py` (add validation step between dedup and scoring)
-  - `wfc/scripts/skills/review/consensus_score.py` (accept validation weight multiplier)
-  - New: `wfc/scripts/skills/review/finding_validator.py`
+  - `wfc/scripts/orchestrators/review/orchestrator.py` (add validation step between dedup and scoring)
+  - `wfc/scripts/orchestrators/review/consensus_score.py` (accept validation weight multiplier)
+  - New: `wfc/scripts/orchestrators/review/finding_validator.py`
 - **Tests**: `tests/test_finding_validator.py`
 
 #### 3.1.4 Acceptance Criteria
@@ -130,7 +130,7 @@ WFC reviews are purely LLM-based — reviewers receive file content as text and 
 
 **MUST HAVE**:
 
-1. **AST Analyzer module** (`wfc/scripts/skills/review/ast_analyzer.py`)
+1. **AST Analyzer module** (`wfc/scripts/orchestrators/review/ast_analyzer.py`)
    - Accepts a list of file paths
    - Returns structured analysis per file: functions, classes, imports, complexity metrics, call graph
    - Supports Python (via `ast` stdlib), TypeScript/JavaScript (via `tree-sitter-javascript`), Go (via `tree-sitter-go`)
@@ -177,9 +177,9 @@ WFC reviews are purely LLM-based — reviewers receive file content as text and 
 - **Output**: `ASTAnalysis` metadata → `ReviewerEngine.prepare_review_tasks()` (enriched context)
 - **Output**: Structural findings → `Fingerprinter` (as pre-verified findings)
 - **Modified files**:
-  - `wfc/scripts/skills/review/orchestrator.py` (add AST pre-analysis step)
-  - `wfc/scripts/skills/review/reviewer_engine.py` (accept AST metadata in task preparation)
-  - New: `wfc/scripts/skills/review/ast_analyzer.py`
+  - `wfc/scripts/orchestrators/review/orchestrator.py` (add AST pre-analysis step)
+  - `wfc/scripts/orchestrators/review/reviewer_engine.py` (accept AST metadata in task preparation)
+  - New: `wfc/scripts/orchestrators/review/ast_analyzer.py`
 - **Dependencies**: `tree-sitter` (optional, for JS/TS/Go support). Python `ast` is stdlib.
 - **Tests**: `tests/test_ast_analyzer.py`
 
@@ -325,7 +325,7 @@ WFC has zero production telemetry. When a review takes too long, produces bad re
 #### 3.4.3 Integration Points
 
 - **Modified files**:
-  - `wfc/scripts/skills/review/orchestrator.py` (add span instrumentation)
+  - `wfc/scripts/orchestrators/review/orchestrator.py` (add span instrumentation)
   - New: `wfc/scripts/telemetry/__init__.py`
   - New: `wfc/scripts/telemetry/tracing.py`
   - New: `wfc/scripts/telemetry/metrics.py`
@@ -399,10 +399,10 @@ WFC sends all 5 reviewers to the same Claude model. Kodus routes different analy
 #### 3.5.3 Integration Points
 
 - **Modified files**:
-  - `wfc/scripts/skills/review/reviewer_engine.py` (model parameter in task specs)
-  - `wfc/scripts/skills/review/orchestrator.py` (pass model to Task tool)
+  - `wfc/scripts/orchestrators/review/reviewer_engine.py` (model parameter in task specs)
+  - `wfc/scripts/orchestrators/review/orchestrator.py` (pass model to Task tool)
   - New: `wfc/config/model_routing.json`
-  - New: `wfc/scripts/skills/review/model_router.py`
+  - New: `wfc/scripts/orchestrators/review/model_router.py`
 - **Tests**: `tests/test_model_router.py`
 
 #### 3.5.4 Acceptance Criteria

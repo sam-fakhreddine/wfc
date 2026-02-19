@@ -38,7 +38,9 @@ class TestPersonaPythonModulesDeleted:
     def test_wfc_implement_token_manager_preserved(self):
         """wfc/scripts/token_manager.py (wfc-implement) must NOT be deleted."""
         path = REPO_ROOT / "wfc" / "scripts" / "token_manager.py"
-        assert path.exists(), "wfc/scripts/token_manager.py (wfc-implement) was accidentally deleted"
+        assert (
+            path.exists()
+        ), "wfc/scripts/token_manager.py (wfc-implement) was accidentally deleted"
 
 
 class TestPersonaJsonsRemoved:
@@ -81,10 +83,9 @@ class TestNoPersonaImportsInCodebase:
                     if "from wfc.scripts.personas" in line or "import wfc.scripts.personas" in line:
                         violations.append(f"{py_file}:{line_num}: {stripped}")
 
-        assert violations == [], (
-            f"Found {len(violations)} persona import(s) still in codebase:\n"
-            + "\n".join(violations)
-        )
+        assert (
+            violations == []
+        ), f"Found {len(violations)} persona import(s) still in codebase:\n" + "\n".join(violations)
 
     def test_no_persona_test_files(self):
         """Legacy persona test files must be deleted."""
@@ -110,14 +111,14 @@ class TestReviewSystemWorksWithoutPersonas:
 
     def test_review_orchestrator_imports(self):
         """ReviewOrchestrator should import without persona dependencies."""
-        from wfc.scripts.skills.review.orchestrator import ReviewOrchestrator, ReviewRequest
+        from wfc.scripts.orchestrators.review.orchestrator import ReviewOrchestrator, ReviewRequest
 
         assert ReviewOrchestrator is not None
         assert ReviewRequest is not None
 
     def test_review_request_creation(self):
         """ReviewRequest should work without persona fields."""
-        from wfc.scripts.skills.review.orchestrator import ReviewRequest
+        from wfc.scripts.orchestrators.review.orchestrator import ReviewRequest
 
         req = ReviewRequest(
             task_id="TASK-TEST",
@@ -128,7 +129,7 @@ class TestReviewSystemWorksWithoutPersonas:
 
     def test_consensus_score_imports(self):
         """ConsensusScore (new system) should import without persona dependencies."""
-        from wfc.scripts.skills.review.consensus_score import ConsensusScore
+        from wfc.scripts.orchestrators.review.consensus_score import ConsensusScore
 
         assert ConsensusScore is not None
 
@@ -142,12 +143,14 @@ class TestLegacyReviewCodeRetained:
 
     def test_legacy_agents_exists(self):
         """agents.py is retained (still used by plugin integration tests)."""
-        path = REPO_ROOT / "wfc" / "scripts" / "skills" / "review" / "agents.py"
-        assert path.exists(), "agents.py was deleted but is still needed by test_plugin_integration.py"
+        path = REPO_ROOT / "wfc" / "scripts" / "orchestrators" / "review" / "agents.py"
+        assert (
+            path.exists()
+        ), "agents.py was deleted but is still needed by test_plugin_integration.py"
 
     def test_legacy_consensus_exists(self):
         """consensus.py is retained (still used by plugin integration tests)."""
-        path = REPO_ROOT / "wfc" / "scripts" / "skills" / "review" / "consensus.py"
-        assert path.exists(), (
-            "consensus.py was deleted but is still needed by test_plugin_integration.py"
-        )
+        path = REPO_ROOT / "wfc" / "scripts" / "orchestrators" / "review" / "consensus.py"
+        assert (
+            path.exists()
+        ), "consensus.py was deleted but is still needed by test_plugin_integration.py"

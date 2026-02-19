@@ -3,7 +3,6 @@
 Focused on verifying the VALID_HOOKS set covers all standard git hooks.
 For full security tests (install, wrap, manage), see test_hooks_security.py.
 
-NOTE: Uses importlib to load from hyphenated 'wfc-tools' directory.
 """
 
 import importlib.util
@@ -11,7 +10,7 @@ from pathlib import Path
 
 import pytest
 
-_hooks_path = Path(__file__).parent.parent / "wfc" / "wfc-tools" / "gitwork" / "api" / "hooks.py"
+_hooks_path = Path(__file__).parent.parent / "wfc" / "gitwork" / "api" / "hooks.py"
 _spec = importlib.util.spec_from_file_location("hooks", _hooks_path)
 hooks = importlib.util.module_from_spec(_spec)
 _spec.loader.exec_module(hooks)

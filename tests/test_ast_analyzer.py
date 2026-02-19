@@ -2,13 +2,19 @@
 
 TDD: tests written before implementation.
 """
+
 from __future__ import annotations
 
 import textwrap
 
 import pytest
 
-from wfc.scripts.skills.review.ast_analyzer import ASTAnalysis, ASTAnalyzer, ClassInfo, FunctionInfo
+from wfc.scripts.orchestrators.review.ast_analyzer import (
+    ASTAnalysis,
+    ASTAnalyzer,
+    ClassInfo,
+    FunctionInfo,
+)
 
 SIMPLE_FIXTURE = """
 import os
@@ -121,7 +127,6 @@ def bar():
 """
 
 
-
 @pytest.fixture
 def analyzer() -> ASTAnalyzer:
     return ASTAnalyzer()
@@ -129,7 +134,6 @@ def analyzer() -> ASTAnalyzer:
 
 def dedent(src: str) -> str:
     return textwrap.dedent(src).strip()
-
 
 
 class TestAnalyzeContent:
@@ -150,7 +154,6 @@ class TestAnalyzeContent:
     def test_no_parse_error_on_valid_code(self, analyzer: ASTAnalyzer):
         result = analyzer.analyze_content(SIMPLE_FIXTURE)
         assert result.parse_error == ""
-
 
 
 class TestAnalyzeFunctions:
@@ -190,7 +193,6 @@ class TestAnalyzeFunctions:
         result = analyzer.analyze_content(SIMPLE_FIXTURE)
         names = [f.name for f in result.functions]
         assert "__init__" not in names
-
 
 
 class TestAnalyzeClasses:
@@ -234,7 +236,6 @@ class TestAnalyzeClasses:
         assert plain.bases == []
 
 
-
 class TestAnalyzeImports:
     """Import collection."""
 
@@ -255,7 +256,6 @@ class TestAnalyzeImports:
     def test_alias_import_collected(self, analyzer: ASTAnalyzer):
         result = analyzer.analyze_content(ALIAS_IMPORT_FIXTURE)
         assert "operating_system" in result.imports
-
 
 
 class TestUnusedImports:
@@ -290,7 +290,6 @@ class TestUnusedImports:
         assert "operating_system" not in result.unused_imports
 
 
-
 class TestUnreachableCode:
     """Unreachable statement detection."""
 
@@ -314,7 +313,6 @@ class TestUnreachableCode:
         src = "def f():\n    raise ValueError\n    x = 1\n"
         result = analyzer.analyze_content(src)
         assert len(result.unreachable_code) >= 1
-
 
 
 class TestCyclomaticComplexity:
@@ -355,7 +353,6 @@ class TestCyclomaticComplexity:
         assert f.cyclomatic_complexity >= 3
 
 
-
 class TestNestingDepth:
     """Max nesting depth tracking."""
 
@@ -382,7 +379,6 @@ class TestNestingDepth:
     def test_no_deep_nesting_on_flat_code(self, analyzer: ASTAnalyzer):
         result = analyzer.analyze_content(NO_IMPORTS_FIXTURE)
         assert result.deep_nesting_locations == []
-
 
 
 class TestErrorHandling:
@@ -429,7 +425,6 @@ class TestErrorHandling:
         assert isinstance(result, ASTAnalysis)
 
 
-
 class TestAnalyzeFile:
     """File-based analysis using analyze()."""
 
@@ -458,7 +453,6 @@ class TestAnalyzeFile:
         f.write_text("function hello() { return 'hi'; }")
         result = analyzer.analyze(str(f))
         assert isinstance(result, ASTAnalysis)
-
 
 
 class TestDataStructures:
@@ -575,9 +569,15 @@ class TestGenerateFindings:
         findings = analyzer.generate_findings(analysis)
         assert len(findings) > 0
         required = {
-            "file", "line_start", "line_end", "category",
-            "severity", "confidence", "description",
-            "validation_status", "reviewer_id",
+            "file",
+            "line_start",
+            "line_end",
+            "category",
+            "severity",
+            "confidence",
+            "description",
+            "validation_status",
+            "reviewer_id",
         }
         for finding in findings:
             missing = required - finding.keys()
@@ -698,7 +698,10 @@ class TestGenerateFindings:
         findings = analyzer.generate_findings(analysis)
         hc = [f for f in findings if f["category"] == "high-complexity"]
         for finding in hc:
-            assert "complex_func" in finding["description"] or "complexity" in finding["description"].lower()
+            assert (
+                "complex_func" in finding["description"]
+                or "complexity" in finding["description"].lower()
+            )
 
     def test_no_high_complexity_for_simple_function(self, analyzer):
         code = "def f(x):\n    if x:\n        return 1\n    return 0\n"
@@ -751,7 +754,8 @@ class TestGenerateFindings:
         assert not any(f["category"] == "deep-nesting" for f in findings)
 
     def test_findings_compatible_with_fingerprinter(self, analyzer):
-        from wfc.scripts.skills.review.fingerprint import Fingerprinter
+        from wfc.scripts.orchestrators.review.fingerprint import Fingerprinter
+
         analysis = analyzer.analyze_content(_UNUSED_IMPORT_FINDINGS_FIXTURE)
         findings = analyzer.generate_findings(analysis)
         if findings:
@@ -763,7 +767,8 @@ class TestGenerateFindings:
                 pytest.fail(f"Fingerprinter.deduplicate raised: {e}")
 
     def test_empty_analysis_compatible_with_fingerprinter(self, analyzer):
-        from wfc.scripts.skills.review.fingerprint import Fingerprinter
+        from wfc.scripts.orchestrators.review.fingerprint import Fingerprinter
+
         analysis = analyzer.analyze_content("x = 1\n")
         findings = analyzer.generate_findings(analysis)
         assert findings == []

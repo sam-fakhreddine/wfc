@@ -4,7 +4,7 @@ Tests for WFC Vibe Session Management
 Verifies message counting and reminder system (PROP-003)
 """
 
-from wfc.scripts.skills.vibe.session import VibeSession
+from wfc.scripts.orchestrators.vibe.session import VibeSession
 
 
 class TestVibeSession:

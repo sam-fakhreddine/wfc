@@ -16,7 +16,7 @@ WFC provides optional git hooks that warn about workflow violations using **soft
 
 #### 1. pre-commit Hook
 
-**File**: `wfc/wfc-tools/gitwork/hooks/pre_commit.py`
+**File**: `wfc/gitwork/hooks/pre_commit.py`
 
 **Checks**:
 - ⚠️ Warn if committing to protected branches (main/master/develop/production)
@@ -39,7 +39,7 @@ $ git commit -m "test"
 
 #### 2. commit-msg Hook
 
-**File**: `wfc/wfc-tools/gitwork/hooks/commit_msg.py`
+**File**: `wfc/gitwork/hooks/commit_msg.py`
 
 **Checks**:
 - ⚠️ Validate conventional commit format
@@ -73,7 +73,7 @@ $ git commit -m "Added feature"
 
 #### 3. pre-push Hook
 
-**File**: `wfc/wfc-tools/gitwork/hooks/pre_push.py`
+**File**: `wfc/gitwork/hooks/pre_push.py`
 
 **Checks**:
 - ⚠️ Warn if pushing to protected branches
@@ -102,7 +102,7 @@ $ git push origin main
 
 ### Hook Installer
 
-**File**: `wfc/wfc-tools/gitwork/hooks/installer.py`
+**File**: `wfc/gitwork/hooks/installer.py`
 
 **Features**:
 - Non-destructive installation (preserves existing hooks)
@@ -556,11 +556,11 @@ python3 -c "from wfc.shared.telemetry_auto import print_workflow_metrics; print_
 
 | File | Lines | Purpose |
 |------|-------|---------|
-| `wfc/wfc-tools/gitwork/hooks/__init__.py` | 15 | Hook exports |
-| `wfc/wfc-tools/gitwork/hooks/pre_commit.py` | 220 | Pre-commit hook |
-| `wfc/wfc-tools/gitwork/hooks/commit_msg.py` | 140 | Commit-msg hook |
-| `wfc/wfc-tools/gitwork/hooks/pre_push.py` | 150 | Pre-push hook |
-| `wfc/wfc-tools/gitwork/hooks/installer.py` | 350 | Hook installer/manager |
+| `wfc/gitwork/hooks/__init__.py` | 15 | Hook exports |
+| `wfc/gitwork/hooks/pre_commit.py` | 220 | Pre-commit hook |
+| `wfc/gitwork/hooks/commit_msg.py` | 140 | Commit-msg hook |
+| `wfc/gitwork/hooks/pre_push.py` | 150 | Pre-push hook |
+| `wfc/gitwork/hooks/installer.py` | 350 | Hook installer/manager |
 
 **Total**: ~875 lines
 

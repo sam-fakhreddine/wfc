@@ -6,7 +6,7 @@ Verifies wfc-build integrates with WFC config, telemetry, and safety properties
 
 from pathlib import Path
 
-from wfc.scripts.skills.build.orchestrator import BuildOrchestrator
+from wfc.scripts.orchestrators.build.orchestrator import BuildOrchestrator
 from wfc.shared.config.wfc_config import WFCConfig
 
 

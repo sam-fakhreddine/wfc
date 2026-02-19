@@ -1,13 +1,9 @@
-# -*- coding: utf-8 -*-
 """Tests for Git Hooks Security (H-04) - Path Traversal Prevention & Whitelist Validation.
 
 Tests the VALID_HOOKS whitelist and path traversal checks in hooks.py.
 The install() function hardcodes Path(".git/hooks"), so we monkeypatch for
 the success case and test validation logic directly for rejection cases.
 
-NOTE: Uses importlib to load from hyphenated 'wfc-tools' directory.
-Once Track D (TASK-023) consolidates wfc-tools → wfc_tools, switch to
-normal imports: `from wfc.wfc_tools.gitwork.api.hooks import ...`
 """
 
 import importlib.util
@@ -15,13 +11,11 @@ from pathlib import Path
 
 import pytest
 
-# Load hooks module from hyphenated directory via importlib
-_hooks_path = Path(__file__).parent.parent / "wfc" / "wfc-tools" / "gitwork" / "api" / "hooks.py"
+_hooks_path = Path(__file__).parent.parent / "wfc" / "gitwork" / "api" / "hooks.py"
 _spec = importlib.util.spec_from_file_location("hooks", _hooks_path)
 hooks = importlib.util.module_from_spec(_spec)
 _spec.loader.exec_module(hooks)
 
-# Extract what we need
 install = hooks.install
 is_hook_type_valid = hooks.is_hook_type_valid
 has_path_traversal = hooks.has_path_traversal
@@ -104,7 +98,6 @@ class TestInstallValidation:
 
     def test_install_valid_hook_succeeds(self, tmp_path, monkeypatch):
         """Valid hook type should install when filesystem is available."""
-        # monkeypatch.chdir to a temp dir with .git/hooks so install() can write
         git_hooks = tmp_path / ".git" / "hooks"
         git_hooks.mkdir(parents=True)
         monkeypatch.chdir(tmp_path)
@@ -113,7 +106,6 @@ class TestInstallValidation:
         assert result["success"] is True
         assert result["message"] == "Installed pre-commit hook"
 
-        # Verify the file was actually created
         hook_file = git_hooks / "pre-commit"
         assert hook_file.exists()
         assert "echo 'test'" in hook_file.read_text()
@@ -149,7 +141,6 @@ class TestWrapValidation:
         git_hooks = tmp_path / ".git" / "hooks"
         git_hooks.mkdir(parents=True)
 
-        # Create an existing hook
         existing_hook = git_hooks / "pre-commit"
         existing_hook.write_text("#!/bin/bash\necho 'original'")
 
@@ -184,7 +175,6 @@ class TestManage:
         git_hooks = tmp_path / ".git" / "hooks"
         git_hooks.mkdir(parents=True)
 
-        # Create a hook file (not a .sample)
         hook = git_hooks / "pre-commit"
         hook.write_text("#!/bin/bash\necho 'test'")
         hook.chmod(0o755)
@@ -200,7 +190,6 @@ class TestManage:
         git_hooks = tmp_path / ".git" / "hooks"
         git_hooks.mkdir(parents=True)
 
-        # Create a .sample file (should be ignored)
         sample = git_hooks / "pre-commit.sample"
         sample.write_text("#!/bin/bash\necho 'sample'")
 

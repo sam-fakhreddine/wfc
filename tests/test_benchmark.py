@@ -12,7 +12,16 @@ from wfc.scripts.benchmark import BenchmarkSuite, ReviewBenchmark
 
 DATASET_PATH = Path(__file__).parent.parent / "wfc" / "scripts" / "benchmark" / "dataset.json"
 REVIEWER_IDS = {"security", "correctness", "performance", "maintainability", "reliability"}
-REQUIRED_FIELDS = {"id", "name", "description", "code_snippet", "file", "line_start", "expected_findings", "tags"}
+REQUIRED_FIELDS = {
+    "id",
+    "name",
+    "description",
+    "code_snippet",
+    "file",
+    "line_start",
+    "expected_findings",
+    "tags",
+}
 
 
 @pytest.fixture
@@ -23,8 +32,6 @@ def benchmark():
 @pytest.fixture
 def dataset(benchmark):
     return benchmark.load_dataset()
-
-
 
 
 def test_load_dataset(benchmark):
@@ -53,8 +60,6 @@ def test_dataset_covers_all_reviewers(dataset):
             covered.add(ef["reviewer_id"])
     missing = REVIEWER_IDS - covered
     assert not missing, f"Reviewers without test cases: {missing}"
-
-
 
 
 def test_evaluate_true_positive(benchmark):
@@ -137,13 +142,21 @@ def test_evaluate_substring_category_match(benchmark):
     assert result["false_negatives"] == 0
 
 
-
-
 def test_compute_metrics_perfect_score(benchmark):
     """All correct -> F1=1.0."""
     evaluations = [
-        {"reviewer_id": "security", "true_positives": 5, "false_positives": 0, "false_negatives": 0},
-        {"reviewer_id": "correctness", "true_positives": 3, "false_positives": 0, "false_negatives": 0},
+        {
+            "reviewer_id": "security",
+            "true_positives": 5,
+            "false_positives": 0,
+            "false_negatives": 0,
+        },
+        {
+            "reviewer_id": "correctness",
+            "true_positives": 3,
+            "false_positives": 0,
+            "false_negatives": 0,
+        },
     ]
     results = benchmark.compute_metrics(evaluations)
     for r in results:
@@ -155,7 +168,12 @@ def test_compute_metrics_perfect_score(benchmark):
 def test_compute_metrics_zero_score(benchmark):
     """All wrong -> F1=0.0."""
     evaluations = [
-        {"reviewer_id": "security", "true_positives": 0, "false_positives": 5, "false_negatives": 3},
+        {
+            "reviewer_id": "security",
+            "true_positives": 0,
+            "false_positives": 5,
+            "false_negatives": 3,
+        },
     ]
     results = benchmark.compute_metrics(evaluations)
     assert len(results) == 1
@@ -167,7 +185,12 @@ def test_compute_metrics_zero_score(benchmark):
 def test_compute_metrics_mixed(benchmark):
     """Partial match -> correct F1 calculation."""
     evaluations = [
-        {"reviewer_id": "security", "true_positives": 3, "false_positives": 1, "false_negatives": 1},
+        {
+            "reviewer_id": "security",
+            "true_positives": 3,
+            "false_positives": 1,
+            "false_negatives": 1,
+        },
     ]
     results = benchmark.compute_metrics(evaluations)
     r = results[0]
@@ -179,14 +202,17 @@ def test_compute_metrics_mixed(benchmark):
 def test_compute_metrics_precision_only_zero(benchmark):
     """Zero precision but nonzero recall edge case."""
     evaluations = [
-        {"reviewer_id": "performance", "true_positives": 0, "false_positives": 3, "false_negatives": 0},
+        {
+            "reviewer_id": "performance",
+            "true_positives": 0,
+            "false_positives": 3,
+            "false_negatives": 0,
+        },
     ]
     results = benchmark.compute_metrics(evaluations)
     r = results[0]
     assert r.precision == 0.0
     assert r.f1 == 0.0
-
-
 
 
 def test_run_full_suite(benchmark, dataset):

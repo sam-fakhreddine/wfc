@@ -9,8 +9,8 @@ from pathlib import Path
 
 import pytest
 
-from wfc.scripts.skills.review.consensus_score import ConsensusScoreResult
-from wfc.scripts.skills.review.emergency_bypass import BypassRecord, EmergencyBypass
+from wfc.scripts.orchestrators.review.consensus_score import ConsensusScoreResult
+from wfc.scripts.orchestrators.review.emergency_bypass import BypassRecord, EmergencyBypass
 
 
 def _make_cs_result(cs: float = 5.0, tier: str = "Moderate") -> ConsensusScoreResult:
