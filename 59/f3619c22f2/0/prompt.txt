@@ -1,0 +1,2272 @@
+Base directory for this skill: /Users/samfakhreddine/.claude/skills/wfc-implement
+
+# wfc-implement - Multi-Agent Parallel Implementation Engine
+
+**Core skill #3** - Reads TASKS.md, orchestrates N agents in isolated worktrees, enforces TDD, routes through review, auto-merges, handles rollbacks.
+
+## Status
+
+🚧 **IN DEVELOPMENT**
+
+- ✅ Shared infrastructure (config, telemetry, schemas, utils)
+- ✅ Mock dependencies (wfc-plan, wfc-consensus-review)
+- ✅ Orchestrator logic (task queue, dependency management)
+- 🚧 Agent implementation (TDD workflow)
+- 🚧 Merge engine (rebase, integration tests, rollback)
+- 🚧 Dashboard (WebSocket, Mermaid visualization)
+- 📋 CLI interface
+- 📋 Full integration testing
+
+## Architecture
+
+### MULTI-TIER Design
+
+```
+┌─────────────────────────────┐
+│  PRESENTATION TIER          │  CLI, Dashboard (future: Web UI, API)
+└──────────────┬──────────────┘
+               │
+┌──────────────▼──────────────┐
+│  LOGIC TIER                 │  Orchestrator, Agents, Merge Engine
+│  - orchestrator.py          │  (Pure logic, no UI)
+│  - agent.py                 │
+│  - merge_engine.py          │
+└──────────────┬──────────────┘
+               │
+┌──────────────▼──────────────┐
+│  DATA TIER                  │  Uses shared infrastructure
+│  - WFCTelemetry             │  (Swappable storage)
+│  - Git (worktrees)          │
+└──────────────┬──────────────┘
+               │
+┌──────────────▼──────────────┐
+│  CONFIG TIER                │  WFCConfig
+│  - wfc.config.json          │  (Global/project)
+└─────────────────────────────┘
+```
+
+### PARALLEL Execution
+
+```
+Orchestrator
+    ├── Agent 1 (worktree-1, TASK-001, sonnet)
+    ├── Agent 2 (worktree-2, TASK-002, opus)
+    ├── Agent 3 (worktree-3, TASK-005, sonnet)
+    └── Agent N (worktree-N, TASK-XXX, haiku)
+         ↓ (all work concurrently)
+    Review (sequential per agent)
+         ↓
+    Merge (sequential, one at a time)
+         ↓
+    Integration Tests
+         ↓ (pass/fail)
+    Main Branch (or Rollback)
+```
+
+## Triggers
+
+```bash
+# Default: use TASKS.md in /plan
+/wfc-implement
+
+# Custom tasks file
+/wfc-implement --tasks path/to/TASKS.md
+
+# Override agent count
+/wfc-implement --agents 5
+
+# Override strategy
+/wfc-implement --strategy smart
+
+# Dry run (show plan, don't execute)
+/wfc-implement --dry-run
+```
+
+## Configuration
+
+```json
+{
+  "orchestration": {
+    "agent_strategy": "smart",
+    "max_agents": 5
+  },
+  "worktree": {
+    "directory": ".worktrees",
+    "cleanup_on_success": true
+  },
+  "tdd": {
+    "enforce_test_first": true,
+    "require_all_properties_tested": true
+  },
+  "merge": {
+    "auto_merge": true,
+    "require_rebase": true
+  },
+  "integration_tests": {
+    "command": "pytest",
+    "timeout_seconds": 300,
+    "run_after_every_merge": true
+  },
+  "rollback": {
+    "strategy": "re_queue",
+    "max_rollback_retries": 2
+  },
+  "dashboard": {
+    "enabled": true,
+    "websocket_port": 9876
+  }
+}
+```
+
+## TDD Workflow (Per Agent)
+
+```
+1. UNDERSTAND
+   - Read task definition
+   - Read properties
+   - Read test plan
+   - Read existing code
+
+2. TEST FIRST (RED)
+   - Write tests BEFORE implementation
+   - Tests cover acceptance criteria
+   - Tests cover properties
+   - Run tests → they FAIL
+
+3. IMPLEMENT (GREEN)
+   - Write minimum code to pass tests
+   - Follow ELEGANT principles
+   - Run tests → they PASS
+
+4. REFACTOR
+   - Clean up without changing behavior
+   - Maintain SOLID & DRY
+   - Run tests → still PASS
+
+5. SUBMIT
+   - Commit to worktree branch
+   - Produce agent report
+   - Route to wfc-consensus-review
+```
+
+## Dependencies
+
+- **Consumes**: TASKS.md, PROPERTIES.md, TEST-PLAN.md (from wfc-plan)
+- **Integrates**: wfc-consensus-review (for code review)
+- **Produces**: PR to develop branch, telemetry records, agent reports
+
+## Philosophy
+
+**ELEGANT**: Simple agent logic, clear orchestration, no over-engineering
+**MULTI-TIER**: Presentation/Logic/Data/Config cleanly separated
+**PARALLEL**: Maximum concurrency where safe (agents, tasks, reviews)
+
+## Git Workflow Policy (PR-First)
+
+WFC creates feature branches, pushes them, and opens GitHub PRs for team review.
+
+```
+WFC workflow:
+  Implement -> Quality -> Review -> Push Branch -> Create GitHub PR to develop
+                                                        |
+                                                  [WFC STOPS HERE]
+                                                        |
+                                      Auto-merge for claude/* branches
+                                      Manual review for feat/* branches
+```
+
+Agent branches (claude/*) auto-merge to develop when CI passes. Human branches require manual review. Release candidates are cut from develop to main on a schedule.
+
+**What WFC does:**
+- Creates feature branches
+- Pushes branches to remote
+- Creates GitHub PRs targeting develop (draft by default)
+
+**What WFC never does:**
+- Push directly to main/master
+- Force push
+- Merge PRs to main (you decide when to cut releases)
+
+**Legacy mode:** Set `"merge.strategy": "direct"` in wfc.config.json for local-only merge.
+
+See [GIT_SAFETY_POLICY.md](../../../docs/security/GIT_SAFETY_POLICY.md) for complete policy.
+
+## Current Implementation Status
+
+### ✅ Done
+- Orchestrator (task queue, dependency management)
+- Shared infrastructure (config, telemetry, schemas, utils)
+- Mock dependencies (wfc-plan, wfc-consensus-review)
+
+### 🚧 In Progress
+- Agent TDD workflow
+- Merge engine with rollback
+- Dashboard
+
+### 📋 TODO
+- CLI interface
+- Full integration tests
+- Performance optimization
+- Real wfc-plan and wfc-consensus-review integration
+
+
+ARGUMENTS:  .development/plans/plan_repo_restructure_20260218/
+
+---
+
+Base directory for this skill: /Users/samfakhreddine/.claude/skills/wfc-housekeeping
+
+# WFC:HOUSEKEEPING - Project Hygiene & Cleanup
+
+**Keep the codebase World Fucking Class.** Systematic cleanup with safety guardrails.
+
+## What It Does
+
+1. **Scan** - Analyze the codebase for cleanup opportunities across 5 domains
+2. **Report** - Present categorized findings with severity and safety ratings
+3. **Approve** - User reviews and selects which cleanups to apply
+4. **Execute** - Apply cleanups in parallel (safe categories) with test validation
+5. **Verify** - Run full test suite to confirm no regressions
+
+## Usage
+
+```bash
+# Full scan — all 5 domains
+/wfc-housekeeping
+
+# Specific domain
+/wfc-housekeeping branches
+/wfc-housekeeping dead-code
+/wfc-housekeeping imports
+/wfc-housekeeping files
+/wfc-housekeeping dev-artifacts
+
+# With flags
+/wfc-housekeeping --safe          # Only auto-fixable items (no approval needed)
+/wfc-housekeeping --preview       # Scan and report only, don't fix anything
+/wfc-housekeeping --aggressive    # Include borderline items (more approval prompts)
+
+# Target specific path
+/wfc-housekeeping dead-code wfc/scripts/
+```
+
+## The 5 Cleanup Domains
+
+### 1. BRANCHES — Stale Branch Cleanup
+
+**Scans:**
+- Local branches merged into main/develop
+- Local branches with no remote tracking
+- Remote branches merged into main/develop
+- Branches older than 30 days with no recent commits
+
+**Commands to run:**
+
+```bash
+# List merged local branches (excluding main/develop/current)
+git branch --merged main | grep -v -E '^\*|main|develop'
+
+# List merged remote branches
+git branch -r --merged origin/main | grep -v -E 'main|develop|HEAD'
+
+# List local branches with no remote
+git branch -vv | grep ': gone]'
+
+# Show branch age (last commit date)
+git for-each-ref --sort=-committerdate --format='%(refname:short) %(committerdate:relative)' refs/heads/
+```
+
+**Auto-fix:** Delete local merged branches.
+**Approval required:** Delete remote branches, delete unmerged branches.
+
+**Safety:** NEVER delete `main`, `develop`, or the current branch.
+
+### 2. DEAD CODE — Unused Code Detection
+
+**Scans:**
+- Functions/classes with zero references outside their own file
+- Commented-out code blocks (3+ consecutive commented lines)
+- Unreachable code after return/raise/break/continue
+- Empty `except: pass` blocks
+- Unused variables (assigned but never read)
+
+**How to detect:**
+
+For each Python function/class definition found via Grep:
+1. Search the entire codebase for references to that name
+2. Exclude the definition file itself and `__init__.py` re-exports
+3. If zero external references → candidate for removal
+
+```bash
+# Find all function definitions
+uv run ruff check --select F841,F811 .  # Unused variables, redefined
+
+# Find commented-out code blocks
+# Grep for 3+ consecutive lines starting with #(space)(lowercase/import/def/class/if/for/return)
+```
+
+**Auto-fix:** Remove unused imports (ruff --fix), remove empty `except: pass`.
+**Approval required:** Remove functions/classes, remove commented-out code.
+
+**Safety:**
+- NEVER remove code with `# TODO`, `# FIXME`, `# HACK` comments (intentional)
+- NEVER remove `__all__` exports or `__init__.py` re-exports
+- NEVER remove test fixtures/utilities (check `tests/` and `conftest.py` usage)
+- If ANY usage path exists, prompt user
+
+### 3. IMPORTS — Import Optimization
+
+**Scans:**
+- Unused imports
+- Duplicate imports
+- Import ordering (stdlib → third-party → local)
+- Star imports (`from x import *`)
+
+**Commands:**
+
+```bash
+# Ruff handles all of this
+uv run ruff check --select F401,F811,I001,F403 .
+uv run ruff check --select F401,F811,I001,F403 --fix --diff .  # Preview fixes
+```
+
+**Auto-fix:** All import issues (ruff is authoritative here).
+
+### 4. FILES — Orphaned & Redundant Files
+
+**Scans:**
+- `.pyc` files and `__pycache__` directories not in `.gitignore`
+- Empty `__init__.py` files that serve no purpose
+- Duplicate files (same content, different locations)
+- Files not imported/referenced anywhere
+- Temporary files (`.tmp`, `.bak`, `.swp`, `.orig`)
+- Large files that shouldn't be in version control (>1MB)
+
+**Detection:**
+
+```bash
+# Find .pyc and __pycache__ tracked by git
+git ls-files '*.pyc' '__pycache__'
+
+# Find empty files
+find . -name '*.py' -empty -not -path './.git/*'
+
+# Find large files
+find . -size +1M -not -path './.git/*' -not -path './node_modules/*'
+
+# Find temp files
+git ls-files '*.tmp' '*.bak' '*.swp' '*.orig'
+```
+
+**Auto-fix:** Remove `.pyc` files, `__pycache__` dirs, temp files.
+**Approval required:** Remove empty `__init__.py`, orphaned files, large files.
+
+### 5. DEV ARTIFACTS — Development Leftovers
+
+**Scans:**
+- Orphaned worktree directories (`.worktrees/`)
+- Debug print statements (`print(`, `console.log(`, `debugger`)
+- Hardcoded `localhost`/`127.0.0.1` URLs outside of tests
+- `breakpoint()` calls
+- Files with `TODO` or `FIXME` (report only, don't remove)
+
+**Preserved (NEVER clean):**
+- `.development/plans/` — Plan history is valuable project context. Never delete.
+- `.development/summaries/` — Session summaries are kept for reference.
+
+**Detection:**
+
+```bash
+# Orphaned worktrees
+git worktree list --porcelain | grep 'prunable'
+
+# Debug statements in Python files (excluding tests)
+uv run ruff check --select T201,T203 .  # print statements, pdb
+```
+
+**Auto-fix:** Prune orphaned worktrees.
+**Approval required:** Remove debug statements, TODO/FIXME items (report only).
+**Never touch:** `.development/plans/`, `.development/summaries/`.
+
+## Keep List — Persistent Memory
+
+Items the user chose to **keep** in previous runs are stored in `.development/housekeeping/keep-list.json`. This file persists across sessions and is consulted every run.
+
+### Keep List Format
+
+```json
+{
+  "kept_items": [
+    {
+      "item": "entire/checkpoints/v1",
+      "domain": "branches",
+      "reason": "User chose to keep",
+      "kept_on": "2026-02-15",
+      "runs_kept": 1
+    },
+    {
+      "item": "wfc/scripts/old_helper.py",
+      "domain": "dead-code",
+      "reason": "Still referenced in docs",
+      "kept_on": "2026-02-14",
+      "runs_kept": 3
+    }
+  ]
+}
+```
+
+### How It Works
+
+1. **On scan**: After finding cleanup candidates, read `.development/housekeeping/keep-list.json`
+2. **On report**: Items on the keep list get a special marker in the table: `KEPT (2x)` showing how many times they've been kept. These items are **still shown** — the user can always change their mind and delete them.
+3. **On approval**: When the user says "keep" for an item, add/update it in the keep list with today's date and increment `runs_kept`.
+4. **On delete**: When the user deletes a previously-kept item, remove it from the keep list.
+
+### Keep List in Reports
+
+Previously-kept items appear with context so the user remembers why:
+
+```markdown
+### Branches (4 items)
+| # | Item | Severity | Safety | Action |
+|---|------|----------|--------|--------|
+| 1 | feat/old-feature (merged, local) | low | auto-fix | DELETE |
+| 2 | fix/stale-pr (merged, remote) | low | approval | DELETE |
+| 3 | entire/checkpoints/v1 (local) | info | — | KEPT (3x since 2026-02-15) |
+| 4 | claude/experiment (no remote) | medium | approval | DELETE? |
+```
+
+The `KEPT (3x since 2026-02-15)` marker tells the user: "you've seen this 3 times and chosen to keep it each time, first on Feb 15th." This is informational — the user can still override and delete it.
+
+### Managing the Keep List
+
+```bash
+# View what's on the keep list
+/wfc-housekeeping --show-kept
+
+# Clear the keep list (start fresh)
+/wfc-housekeeping --clear-kept
+
+# Remove a specific item from the keep list
+/wfc-housekeeping --forget "entire/checkpoints/v1"
+```
+
+## Workflow
+
+### Step 0: LOAD KEEP LIST
+
+Before scanning, read `.development/housekeeping/keep-list.json` if it exists. If the file doesn't exist, start with an empty keep list.
+
+```bash
+# Check for keep list
+cat .development/housekeeping/keep-list.json 2>/dev/null || echo '{"kept_items": []}'
+```
+
+### Step 1: SCAN
+
+Run all applicable scanners. For each finding, record:
+- **Domain**: branches | dead-code | imports | files | dev-artifacts
+- **Item**: What was found (file path, branch name, function name)
+- **Severity**: critical | high | medium | low | info
+- **Safety**: auto-fix | approval-required
+- **Effort**: Size of change (lines affected)
+- **Keep status**: Check if item is on the keep list
+
+### Step 2: REPORT
+
+Present findings as a categorized table. Items on the keep list are marked with their history:
+
+```markdown
+## Housekeeping Report
+
+### Branches (4 items)
+| # | Item | Severity | Safety | Action |
+|---|------|----------|--------|--------|
+| 1 | feat/old-feature (merged, local) | low | auto-fix | DELETE |
+| 2 | fix/stale-pr (merged, remote) | low | approval | DELETE |
+| 3 | entire/checkpoints/v1 (local) | info | — | KEPT (2x since 2026-02-15) |
+| 4 | claude/experiment (no remote) | medium | approval | DELETE? |
+
+### Dead Code (2 items)
+| # | Item | Severity | Safety | Action |
+|---|------|----------|--------|--------|
+| 5 | wfc/old_module.py:deprecated_func() (0 refs) | medium | approval | REMOVE |
+| 6 | 3 commented-out blocks in scripts/ | low | approval | REMOVE |
+
+### Imports (8 items)
+| # | Item | Severity | Safety | Action |
+|---|------|----------|--------|--------|
+| 7 | 8 unused imports across 5 files | low | auto-fix | FIX |
+
+### Files (1 item)
+| # | Item | Severity | Safety | Action |
+|---|------|----------|--------|--------|
+| 8 | 2 .pyc files tracked by git | low | auto-fix | REMOVE |
+
+### Dev Artifacts (2 items)
+| # | Item | Severity | Safety | Action |
+|---|------|----------|--------|--------|
+| 9 | 2 orphaned worktrees | low | auto-fix | PRUNE |
+| 10 | 14 TODOs across codebase | info | — | REPORT |
+
+---
+
+**Summary:** 10 items found — 4 auto-fix, 4 approval-required, 1 previously kept, 1 info-only
+
+Proceed with cleanup?
+```
+
+### Step 3: APPROVE
+
+Use **AskUserQuestion** to get user approval:
+- "Apply all auto-fixes + approved items?"
+- User can override individual items (e.g., "skip #4, fix #5, delete #3")
+- `--safe` mode: skip this step, only apply auto-fix items
+- `--preview` mode: stop here, don't apply anything
+
+**After approval:**
+- Items the user chose to **keep** → add/update in keep list (increment `runs_kept`, update date)
+- Items the user chose to **delete** that were on the keep list → remove from keep list
+- Write updated keep list to `.development/housekeeping/keep-list.json`
+
+### Step 4: EXECUTE
+
+Apply approved cleanups. Parallelize by domain using Task tool subagents:
+
+- **Branches agent**: Deletes approved branches (local first, then remote)
+- **Code agent**: Removes dead code, fixes imports (runs `uv run ruff check --fix`)
+- **Files agent**: Removes orphaned files, cleans dev artifacts, prunes worktrees
+
+Each agent:
+1. Applies its changes
+2. Runs `uv run pytest` on affected test files
+3. Reports what was changed
+
+### Step 5: VERIFY
+
+After all agents complete:
+
+```bash
+# Run full test suite
+uv run pytest --tb=short -q
+
+# Run linters
+uv run ruff check .
+uv run black --check .
+
+# Verify git status is clean (only expected changes)
+git status
+```
+
+If tests fail → **rollback** the offending change and report which cleanup caused the failure.
+
+### Step 6: REPORT
+
+Display final summary:
+
+```markdown
+## Housekeeping Complete
+
+**Cleaned:** 8 items
+**Skipped:** 2 items
+**Info:** 1 item
+
+### Changes Applied
+- Deleted 3 local merged branches
+- Deleted 1 remote merged branch
+- Fixed 8 unused imports (ruff --fix)
+- Removed 2 .pyc files from tracking
+- Pruned 2 orphaned worktrees
+
+### Skipped
+- entire/checkpoints/v1 — user chose to keep
+- claude/experiment — user chose to keep
+
+### Info (no action taken)
+- 14 TODOs across codebase (run /wfc-housekeeping --type todo for details)
+
+### Verification
+- Tests: 424 passed, 9 failed (pre-existing)
+- Lint: clean
+- Format: clean
+
+No regressions introduced.
+```
+
+## Git Safety
+
+**CRITICAL:** Same rules as all WFC skills.
+
+- NEVER force-push
+- NEVER delete `main` or `develop`
+- NEVER delete the current branch
+- NEVER delete remote branches without explicit user approval
+- NEVER commit cleanup changes without test verification
+- All branch deletions are logged for audit
+
+## Integration with WFC
+
+### Complements
+- `/wfc-retro` — Retro can recommend running housekeeping
+- `/wfc-build` / `/wfc-implement` — Run housekeeping before starting new features
+- `/wfc-pr-comments` — Reviewers may request cleanup
+
+### Produces
+- Clean codebase (fewer files, cleaner imports, no dead branches)
+- Housekeeping report (optional: save to `.development/summaries/`)
+
+### Consumes
+- Git history (branch analysis)
+- Ruff/black (import and lint analysis)
+- Test suite (verification)
+
+## Configuration
+
+```json
+{
+  "housekeeping": {
+    "branch_age_threshold_days": 30,
+    "preserve_dev_plans": true,
+    "preserve_dev_summaries": true,
+    "max_file_size_mb": 1,
+    "auto_fix_imports": true,
+    "auto_prune_worktrees": true,
+    "protected_branches": ["main", "develop"],
+    "excluded_paths": [".git", "node_modules", ".venv"],
+    "report_todos": true
+  }
+}
+```
+
+## Philosophy
+
+**ELEGANT**: Simple scan → report → approve → execute flow
+**MULTI-TIER**: Scanners (logic) separated from reporting (presentation)
+**PARALLEL**: Domain agents run concurrently during execution
+**SAFE**: User approval gate, test verification, rollback on failure
+
+---
+
+Base directory for this skill: /Users/samfakhreddine/.claude/skills/wfc-pr-comments
+
+# WFC:PR-COMMENTS - Intelligent PR Comment Triage & Fix
+
+**Fetch, triage, fix.** Automates addressing PR review comments from humans, Copilot, CodeRabbit, and other reviewers.
+
+## What It Does
+
+1. **Fetch** all PR comments via `gh` CLI
+2. **Triage** each comment against 5 validity criteria
+3. **Present** triage summary to user for approval
+4. **Fix** valid comments in parallel (subagents by category)
+5. **Commit & push** fixes to the PR branch
+
+## Usage
+
+```bash
+# Auto-detect PR from current branch
+/wfc-pr-comments
+
+# Specific PR number
+/wfc-pr-comments 42
+
+# PR URL
+/wfc-pr-comments https://github.com/owner/repo/pull/42
+```
+
+---
+
+## Workflow
+
+Follow these steps exactly in order.
+
+### Step 1: DETECT PR
+
+Determine which PR to work on:
+
+1. If the user provided a PR number or URL as argument, use that.
+2. Otherwise, auto-detect from the current branch:
+
+```bash
+gh pr view --json number,url,headRefName,baseRefName,title
+```
+
+If no PR is found, tell the user and stop.
+
+Display: `PR #N: <title> (<head> -> <base>)`
+
+### Step 2: FETCH UNRESOLVED COMMENTS
+
+Fetch only **unresolved** review comments from the PR. Use GraphQL — the REST API does not expose thread resolution status.
+
+```bash
+# Use the pr_threads helper (preferred — returns thread IDs needed for resolving)
+uv run python wfc/scripts/github/pr_threads.py fetch {owner} {repo} {number} --json
+
+# Or raw GraphQL (note: must include thread `id` for later resolution)
+gh api graphql -f query='
+  query($owner: String!, $repo: String!, $number: Int!) {
+    repository(owner: $owner, name: $repo) {
+      pullRequest(number: $number) {
+        reviewThreads(first: 100) {
+          nodes {
+            id
+            isResolved
+            isOutdated
+            path
+            line
+            startLine
+            diffSide
+            comments(first: 50) {
+              nodes {
+                id
+                body
+                author { login }
+                createdAt
+                path
+                diffHunk
+                originalLine
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+' -f owner='{owner}' -f repo='{repo}' -F number={number}
+```
+
+**Filter:** Only process threads where `isResolved` is `false`. Skip all resolved threads entirely — they have already been addressed.
+
+Optionally also skip threads where `isOutdated` is `true` (the code has changed since the comment was made), but flag these to the user in the triage table.
+
+Extract from each unresolved thread's first comment:
+- `id` — unique identifier
+- `author.login` — who wrote it
+- `body` — comment text
+- `path` — file being commented on
+- `line` / `originalLine` — line number
+- `diffHunk` — surrounding diff context
+- `createdAt` — timestamp
+
+**Deduplication:** If two threads reference the same file + line + substantially identical message, treat them as one.
+
+**Group by file** for display purposes.
+
+If there are zero unresolved comments, tell the user "All review threads are resolved" and stop.
+
+### Step 3: TRIAGE
+
+This is the core intelligence. For each comment, evaluate 5 dimensions and assign a verdict.
+
+**Read each file being commented on** before evaluating (use the Read tool).
+
+#### Dimension 1: ARCHITECTURAL VALIDITY
+
+Does this suggestion align with project patterns?
+- Check existing conventions in the file and codebase
+- Consider CLAUDE.md / PLANNING.md rules
+- A suggestion that contradicts project conventions → lean toward SKIP
+
+#### Dimension 2: SCOPE CHECK
+
+Is this about code in this PR's diff, or asking for unrelated work?
+- Comment about code changed in this PR → in scope
+- Request for unrelated refactoring → out of scope → SKIP
+- Feature request disguised as review comment → SKIP
+
+#### Dimension 3: CORRECTNESS
+
+Is the suggested fix actually correct?
+- Would implementing it introduce bugs?
+- Does it handle edge cases the reviewer may have missed?
+- Is the reviewer wrong about the issue? If so → SKIP with explanation
+
+#### Dimension 4: SEVERITY
+
+- **Critical** (security, data loss, crashes) → always FIX
+- **High** (bugs, logic errors) → FIX
+- **Medium** (code quality, patterns) → FIX if valid
+- **Low** (style, preferences) → FIX if trivial, SKIP if opinionated
+- **Info** (questions, suggestions) → RESPOND only
+
+#### Dimension 5: EFFORT vs VALUE
+
+- **Trivial** (1-2 lines) → always FIX
+- **Medium** (function-level) → FIX if high value
+- **Large** (multi-file refactor) → SKIP, suggest follow-up issue
+
+**Verdict per comment:** `FIX` | `SKIP (reason)` | `RESPOND (reply only)`
+
+### Step 4: PRESENT TRIAGE TO USER
+
+Display a markdown table summarizing the triage:
+
+```
+| # | File | Comment (summary) | Verdict | Reason |
+|---|------|-------------------|---------|--------|
+| 1 | security_hook.py:45 | Add lru_cache to pattern loading | FIX | Valid perf improvement, trivial |
+| 2 | orchestrator.py:120 | Rewrite auth flow | SKIP | Out of scope for this PR |
+| 3 | README.md:8 | Fix typo "teh" → "the" | FIX | Trivial |
+| 4 | consensus.py:30 | Why not use dataclass? | RESPOND | Question, not actionable |
+```
+
+Then show summary counts:
+
+```
+Summary: 8 FIX, 2 SKIP, 1 RESPOND
+
+Proceed with fixes?
+```
+
+**Use AskUserQuestion** to get approval. The user may:
+- Approve as-is
+- Override specific verdicts (e.g., "skip #1, fix #4")
+- Cancel entirely
+
+Apply any user overrides before proceeding.
+
+### Step 5: CATEGORIZE & DELEGATE
+
+Group all `FIX` comments into categories:
+
+| Category | Examples |
+|----------|----------|
+| **Lint** | Unused imports, formatting, naming conventions |
+| **Code Quality** | Caching, error handling, type safety, simplification |
+| **Design** | Architecture changes, API modifications, patterns |
+| **Docs** | Typos, missing docs, outdated comments |
+| **Security** | Vulnerabilities, hardcoded secrets, input validation |
+
+Spawn **1 subagent per category** via the Task tool (run in parallel).
+
+Each subagent receives this prompt:
+
+```
+You are fixing PR review comments in category: {category}
+
+PR: #{number} on branch {headRefName}
+Repository root: {repo_root}
+
+Comments to address:
+{for each comment in this category:}
+---
+File: {path}:{line}
+Comment by {author}: {body}
+Diff context:
+{diff_hunk}
+---
+{end for}
+
+Instructions:
+1. Read each file mentioned above
+2. Apply the fix described in each comment
+3. Verify the fix is correct — do not introduce regressions
+4. Run relevant tests if they exist (use: uv run pytest {test_file} -v)
+5. Run auto-lint on every modified file:
+   - Python files: `uv run ruff check --fix {file}` then `uv run black {file}`
+   - TypeScript/JS files: `npx prettier --write {file}` (if available)
+   - Go files: `gofmt -w {file}` (if available)
+   Report any remaining lint errors that couldn't be auto-fixed.
+6. Do NOT fix anything not in the comment list above
+7. Do NOT make unrelated improvements or refactors
+```
+
+For `RESPOND` comments: Do NOT spawn a subagent. Instead, after fixes are committed, use `gh api` to reply to the comment on GitHub with an explanation.
+
+**Auto-lint gate:** Before committing, run a final format check across all modified files:
+```bash
+uv run black --check wfc/ && uv run ruff check .
+```
+If black would reformat any file, run `uv run black {modified_files}` first. This prevents CI failures from formatting issues.
+
+### Step 6: COMMIT & PUSH
+
+After all fix subagents complete:
+
+1. Check which files were modified: `git status`
+2. Stage all fixed files (by name, not `git add -A`)
+3. Create a single commit:
+
+```
+fix: address N PR review comments
+
+- {file1}: {brief description of fix}
+- {file2}: {brief description of fix}
+...
+
+Addresses comments on PR #{number}
+
+Co-Authored-By: Claude Opus 4.6 <noreply@anthropic.com>
+```
+
+4. Push to the PR branch:
+
+```bash
+git push origin {headRefName}
+```
+
+### Step 7: RESOLVE THREADS
+
+After pushing, reply to and resolve every addressed thread using the pr_threads helper.
+
+Build a JSON manifest of all threads:
+
+```python
+# manifest.json format
+[
+  {
+    "thread_id": "PRRT_...",           # thread node ID (from fetch --json)
+    "message": "Fixed in {commit}: {one-line description of what was done}",
+    "action": "fixed"                  # "fixed", "responded", or "skip"
+  }
+]
+```
+
+- **FIX threads** → `"action": "fixed"`, message describes the exact change made and the commit SHA
+- **RESPOND threads** → `"action": "responded"`, message is the explanation already provided
+- **SKIP threads** → `"action": "skip"`, these are NOT resolved (leave open for human decision)
+
+Run bulk resolution:
+
+```bash
+uv run python wfc/scripts/github/pr_threads.py bulk-resolve {owner} {repo} manifest.json
+```
+
+This posts the reply message to each thread on GitHub, then calls `resolveReviewThread` to mark it resolved.
+
+**Single thread (ad-hoc):**
+```bash
+uv run python wfc/scripts/github/pr_threads.py resolve PRRT_... \
+  --message "Fixed in abc1234: removed .decode() from text=True subprocess error path"
+```
+
+### Step 8: REPORT
+
+Display a final summary:
+
+```
+## PR Comment Fixes Complete
+
+**PR:** #{number} — {title}
+**Branch:** {headRefName}
+
+### Fixed (N comments)
+- {file}:{line} — {brief fix description}
+- ...
+
+### Skipped (N comments)
+- {file}:{line} — {reason}
+- ...
+
+### Responded (N comments)
+- {file}:{line} — {reply summary}
+- ...
+
+Pushed to {headRefName}. PR updated.
+```
+
+---
+
+## Integration with WFC
+
+### Fits After
+- `wfc-build` or `wfc-implement` (which create PRs)
+- Any workflow that pushes a branch and creates a PR
+
+### Complements
+- `wfc-review` — internal review BEFORE creating a PR
+- `wfc-pr-comments` — external feedback AFTER PR is created
+
+### Typical Flow
+```
+wfc-build → Push PR → Reviewers comment → /wfc-pr-comments → Push fixes → Merge
+```
+
+## Philosophy
+
+**ELEGANT:** Single skill replaces manual comment-by-comment triage
+**PARALLEL:** Fix subagents run concurrently by category
+**TOKEN-AWARE:** Only reads files that have comments, not the entire codebase
+**SAFE:** User approval gate before any fixes are applied
+
+---
+
+yeah but there are bigly conflicts, please including cleaning up conflicts aas part of pr-comments
+
+---
+
+This session is being continued from a previous conversation that ran out of context. The summary below covers the earlier portion of the conversation.
+
+Analysis:
+Let me chronologically analyze this conversation:
+
+1. **Session Start**: The user ran `/wfc-implement .development/plans/plan_repo_restructure_20260218/` to execute the repo restructure plan.
+
+2. **wfc-implement execution**: The plan had 7 tasks to restructure the WFC repository layout. Pre-checks were done first (pyproject.toml, knowledge_writer.py, sed gotcha).
+
+3. **TASK-001**: Delete `wfc/wfc-tools/` (hyphen legacy). Found 2 test files using importlib to load from hyphen path. Copied hooks.py to wfc_tools, updated tests, deleted wfc-tools/.
+
+4. **TASK-002**: Flatten `wfc/wfc_tools/gitwork/` → `wfc/gitwork/`. Created new structure, migrated files, updated all imports (53 lines across 3 files), fixed Python-style path refs (`/ "wfc_tools" / "gitwork"` → `/ "gitwork"`).
+
+5. **TASK-003**: Renamed `wfc/scripts/skills/` → `wfc/scripts/orchestrators/`. Used find+sed. Fixed test_persona_deletion.py hardcoded paths.
+
+6. **TASK-004**: Moved `wfc/reviewers/` → `wfc/references/reviewers/`. Updated reviewer_loader.py, knowledge_writer.py, install-universal.sh. Fixed test files with hardcoded reviewer paths.
+
+7. **TASK-005/006/007**: Full test suite validation, docs update, commit and PR #22 created.
+
+8. **wfc-housekeeping**: Scanned all 5 domains, deleted 6 branches (local+remote), fixed 3 import issues in test_worktree.py, updated keep-list.json (removed stale `scripts/skills/` entries, added `scripts/orchestrators/` entries).
+
+9. **wfc-pr-comments**: Ran on PR #22, found zero unresolved review comments. Only a sourcery-ai bot message saying the diff was too large (339 files).
+
+10. **User says "there are bigly conflicts"**: User wants conflicts resolved as part of pr-comments workflow.
+
+11. **Conflict resolution**: PR #22 has merge conflicts with `develop` because `develop` is behind `main`. Started with `git merge origin/develop --no-commit --no-ff` (aborted), then tried rebase (aborted at 33 commits), then `git merge origin/develop`. 43 files conflicted. Resolved by:
+    - Taking our version (`--ours`) for 39 files
+    - Removing ghost file `wfc/scripts/skills/review/orchestrator.py`
+    - Taking our version for 3 SKILL.md files (all had wfc-validate vs wfc-isthissmart rename conflicts)
+    - Found and fixed old import in `tests/test_observability_review_instrumentation.py` and `tests/test_observability_edge_cases.py`
+    - Added Loki Mode observability hooks to `orchestrator.py` (emit_event in prepare_review and finalize_review)
+
+12. **Where we stopped**: After adding the `finalize_review` instrumentation, there was:
+    - A ruff error: unused `import time as _time` → removed it
+    - Still 2 test failures: `test_finalize_review_emits_scored_and_completed` and `test_review_orchestrator_finalize_review_signature`
+    - Fixed the backward compat test (updated expected signature to include `skip_validation`)
+    - NOT YET RUN: final test suite to confirm all passing
+
+The conversation ended mid-conflict-resolution. We need to:
+1. Run tests to confirm they pass
+2. Stage all resolved files and commit the merge
+3. Push to the PR branch
+
+Summary:
+1. Primary Request and Intent:
+   - **Primary**: Execute the WFC repo restructure plan from `.development/plans/plan_repo_restructure_20260218/` via `/wfc-implement`
+   - **Secondary**: Run `/wfc-housekeeping` to clean branches and fix imports
+   - **Tertiary**: Run `/wfc-pr-comments` on PR #22 — user then pointed out "there are bigly conflicts, please including cleaning up conflicts as part of pr-comments"
+   - **Current active task**: Resolve all merge conflicts on PR #22 (`claude/enhance-workflow-plugin-c25hS` → `develop`) so the PR is mergeable
+
+2. Key Technical Concepts:
+   - WFC repo restructure: 4 structural changes (delete legacy `wfc-tools/`, flatten `wfc_tools/gitwork/` → `wfc/gitwork/`, rename `scripts/skills/` → `scripts/orchestrators/`, move `wfc/reviewers/` → `wfc/references/reviewers/`)
+   - macOS sed glob gotcha: `**/*.py` doesn't work without globstar; use `find . -name "*.py" | xargs sed -i ''`
+   - `git merge --ours` strategy for resolving conflicts where our branch (main-based) is more current than develop
+   - Loki Mode (PR #16 to develop) added observability instrumentation to `ReviewOrchestrator` — `emit_event`, `incr`, `observe` wrapped in try/except (fail-open pattern)
+   - `develop` is behind `main` by many commits (Five-Agent Consensus Engine + Wave 2 Kodus AI went to `main` only; Loki Mode went to `develop` only)
+   - Keep-list.json in `.development/housekeeping/keep-list.json` persists branch/file keep decisions across housekeeping sessions
+   - `pyproject.toml` uses `packages = ["wfc"]` with hatch → auto-discovers all subpackages (no changes needed for new `wfc/gitwork/`)
+   - `reviewer_loader.py` uses `Path(__file__).resolve().parent × 4 / "reviewers"` (path traversal) — updated to `/ "references" / "reviewers"`
+   - `knowledge_writer.py` uses `parents[2] / "reviewers"` — updated to `parents[2] / "references" / "reviewers"`
+
+3. Files and Code Sections:
+   - **`wfc/scripts/orchestrators/review/orchestrator.py`** — Added Loki Mode observability hooks (emit_event calls in prepare_review and finalize_review). Critical because merge conflict resolution required adding Loki Mode's instrumentation that wasn't in our main-based version:
+     ```python
+     def prepare_review(self, request: ReviewRequest) -> list[dict]:
+         """Phase 1: Build task specs for the 5 reviewers."""
+         try:
+             from wfc.observability.instrument import emit_event
+             emit_event(
+                 "review.started",
+                 source="orchestrator",
+                 payload={
+                     "task_id": request.task_id,
+                     "file_count": len(request.files),
+                     "reviewer_count": 5,
+                 },
+             )
+         except Exception:
+             pass
+         return self.engine.prepare_review_tasks(...)
+     ```
+     And in `finalize_review` (before return):
+     ```python
+     try:
+         from wfc.observability.instrument import emit_event, incr, observe
+         emit_event("review.scored", source="orchestrator", payload={...})
+         emit_event("review.completed", source="orchestrator", payload={...})
+         incr("review.completed")
+         observe("review.duration", 0.0)
+         observe("review.consensus_score", cs_result.cs)
+     except Exception:
+         pass
+     ```
+
+   - **`tests/test_observability_review_instrumentation.py`** — Loki Mode test file brought in via merge. Had old import path `wfc.scripts.skills.review.orchestrator` → fixed to `wfc.scripts.orchestrators.review.orchestrator`
+
+   - **`tests/test_observability_edge_cases.py`** — Loki Mode test file. Had 4 old import paths fixed. Also had backward compat test asserting `finalize_review` signature = `["self", "request", "task_responses", "output_dir"]` — updated to include `skip_validation`:
+     ```python
+     assert params == ["self", "request", "task_responses", "output_dir", "skip_validation"]
+     ```
+
+   - **`wfc/gitwork/api/hooks.py`** — Migrated from `wfc/wfc-tools/gitwork/api/hooks.py` (was only in hyphen legacy dir, not in canonical `wfc_tools/`)
+
+   - **`wfc/scripts/orchestrators/review/reviewer_loader.py`** — Updated path traversal:
+     ```python
+     project_root = Path(__file__).resolve().parent.parent.parent.parent
+     self.reviewers_dir = project_root / "references" / "reviewers"
+     ```
+
+   - **`wfc/scripts/knowledge/knowledge_writer.py`** — Updated hardcoded path:
+     ```python
+     reviewers_dir = Path(__file__).resolve().parents[2] / "references" / "reviewers"
+     ```
+
+   - **`tests/test_hooks_whitelist.py`** and **`tests/test_hooks_security.py`** — Updated importlib path from `wfc/wfc_tools/gitwork/api/hooks.py` → `wfc/gitwork/api/hooks.py`
+
+   - **`tests/test_worktree.py`** — Updated Python-style paths from `/ "wfc_tools" / "gitwork"` → `/ "gitwork"`, plus ruff import fix (unused `pytest` import removed during housekeeping)
+
+   - **`tests/test_persona_deletion.py`** — Updated hardcoded paths from `wfc/scripts/skills/review/` → `wfc/scripts/orchestrators/review/`
+
+   - **`tests/test_reviewer_engine.py`** and **`tests/test_rag_pipeline.py`** — Updated hardcoded `wfc/reviewers/` → `wfc/references/reviewers/`
+
+   - **`install-universal.sh`** — Updated two reviewer copy blocks:
+     ```bash
+     if [ -d "$SCRIPT_DIR/wfc/references/reviewers" ]; then
+         cp -r "$SCRIPT_DIR/wfc/references/reviewers"/* "$WFC_ROOT/reviewers/"
+     fi
+     ```
+
+   - **`CLAUDE.md`** and **`README.md`** — All path references updated to new structure
+
+   - **`.development/housekeeping/keep-list.json`** — Updated: removed stale `wfc/scripts/skills/__init__.py` entries, added `wfc/scripts/orchestrators/__init__.py` and `wfc/scripts/orchestrators/review/__init__.py`, incremented `runs_kept` for kept branches
+
+   - **`~/.claude/projects/-Users-samfakhreddine-repos-wfc/memory/MEMORY.md`** — Updated all key file paths to new locations (orchestrators, gitwork, references/reviewers)
+
+4. Errors and fixes:
+   - **`wfc-tools/` had a `hooks.py` only in hyphen legacy (not canonical `wfc_tools/`)**: Copied to `wfc/wfc_tools/gitwork/api/hooks.py`, updated test importlib paths, then deleted `wfc-tools/`
+   - **Python-style path refs (`/ "wfc_tools" / "gitwork"`)**: `sed` looking for `/wfc_tools/gitwork/` didn't match — fixed with separate sed targeting the quoted format: `s|"wfc_tools" / "gitwork"|"gitwork"|g`
+   - **`test_persona_deletion.py` hardcoded `scripts/skills/` paths**: Fixed manually with Edit tool
+   - **`test_reviewer_engine.py` and `test_rag_pipeline.py` skipping tests**: Tests were skipping because they checked `wfc/reviewers/` which no longer existed — updated paths
+   - **5 tests skipped after TASK-004** (1117 passed instead of 1122): Found hardcoded `wfc/reviewers/` in test files → fixed → back to 1122
+   - **2 `test_persona_deletion.py` failures after TASK-003**: Hardcoded `wfc/scripts/skills/review/` paths in existence checks → updated to `orchestrators`
+   - **merge conflict with develop**: `develop` is behind `main` by many commits, only has Loki Mode unique. Used `git merge origin/develop`, then `git checkout --ours` for 39 files, `git rm` for ghost file, then manually staged all
+   - **`tests/test_observability_review_instrumentation.py` import error**: Had `wfc.scripts.skills.review.orchestrator` → fixed to `wfc.scripts.orchestrators`
+   - **`tests/test_observability_edge_cases.py` import error + signature mismatch**: Fixed 4 old imports; updated expected signature for `finalize_review` to include `skip_validation`
+   - **Ruff error in orchestrator.py**: `import time as _time` unused → removed it (the duration timing from Loki Mode's version wasn't needed since our version doesn't measure duration in this path)
+   - **TDD enforcer hook warnings**: Fired during edits to `orchestrator.py` — acknowledged as expected (Loki Mode tests already cover it)
+
+5. Problem Solving:
+   - **Repo restructure**: Systematically executed 7 tasks, maintaining 1122 passing tests throughout
+   - **Conflict resolution strategy**: Instead of complex 33-commit rebase, used `git merge origin/develop` then resolved by taking our version (more current) for all conflicts — Loki Mode's unique content (observability instrumentation) was cherry-picked manually into our orchestrator
+   - **Loki Mode integration**: Identified that Loki Mode added fail-open `emit_event`/`incr`/`observe` calls to `ReviewOrchestrator`. Added those same calls to our version's `prepare_review` and `finalize_review` methods
+
+6. All user messages:
+   - `/wfc-implement .development/plans/plan_repo_restructure_20260218/` (via skill invocation)
+   - `/wfc-housekeeping` (via skill invocation)
+   - `/wfc-pr-comments` (via skill invocation)
+   - `"yeah but there are bigly conflicts, please including cleaning up conflicts as part of pr-comments"`
+
+7. Pending Tasks:
+   - **Complete conflict resolution**: Run final test suite to confirm all tests pass after the merge conflict resolution + Loki Mode instrumentation additions
+   - **Stage and commit the merge**: All resolved files need to be staged and a merge commit created
+   - **Push to PR branch**: `git push origin claude/enhance-workflow-plugin-c25hS` to clear the conflict status on PR #22
+
+8. Current Work:
+   Resolving merge conflicts on PR #22 (`claude/enhance-workflow-plugin-c25hS` → `develop`). The merge was initiated with `git merge origin/develop`. All 43 conflicted files were resolved:
+   - 39 files: `git checkout --ours` + `git add`
+   - 1 ghost file (`wfc/scripts/skills/review/orchestrator.py`): `git rm`
+   - 3 SKILL.md files: `git checkout --ours` + `git add`
+   - Loki Mode observability tests (`test_observability_review_instrumentation.py`, `test_observability_edge_cases.py`): fixed old import paths
+   - Added Loki Mode's `emit_event` hooks to `orchestrator.py` `prepare_review` and `finalize_review`
+   - Fixed ruff error (unused `import time as _time`)
+   - Fixed backward compat test signature assertion
+
+   Last edit made: `tests/test_observability_edge_cases.py` line 149 updated from:
+   ```python
+   assert params == ["self", "request", "task_responses", "output_dir"]
+   ```
+   to:
+   ```python
+   assert params == ["self", "request", "task_responses", "output_dir", "skip_validation"]
+   ```
+
+   Tests were NOT re-run after this last fix.
+
+9. Optional Next Step:
+   Run the full test suite to verify all tests pass, then stage remaining files and complete the merge commit and push:
+   ```bash
+   uv run pytest tests/ -q --tb=short --ignore=tests/test_installer_docker.py
+   # Then if passing:
+   git add tests/test_observability_review_instrumentation.py tests/test_observability_edge_cases.py wfc/scripts/orchestrators/review/orchestrator.py
+   git commit --no-edit  # complete the merge commit
+   git push origin claude/enhance-workflow-plugin-c25hS
+   ```
+   This directly continues the conflict resolution task the user requested: *"yeah but there are bigly conflicts, please including cleaning up conflicts as part of pr-comments"*
+
+If you need specific details from before compaction (like exact code snippets, error messages, or content you generated), read the full transcript at: /Users/samfakhreddine/.REDACTED.jsonl
+Please continue the conversation from where we left off without asking the user any further questions. Continue with the last task that you were asked to work on.
+
+---
+
+request copolot review
+
+---
+
+yes please
+
+---
+
+did you update the skill to also solve any PR merge conflicts?
+
+---
+
+yes
+
+---
+
+make sure the codebase is updated since we are working in wfc code
+
+---
+
+any other changes that didnt make it to the repo from the ~ skills folder
+
+---
+
+when our install script refreshes settings, can it also remove any dangling stuff?
+
+---
+
+Base directory for this skill: /Users/samfakhreddine/.claude/skills/wfc-pr-comments
+
+# WFC:PR-COMMENTS - Intelligent PR Comment Triage & Fix
+
+**Fetch, triage, fix.** Automates addressing PR review comments from humans, Copilot, CodeRabbit, and other reviewers.
+
+## What It Does
+
+1. **Detect** the PR and check mergeability
+2. **Resolve** merge conflicts if the PR is blocked (merge base branch, resolve intelligently)
+3. **Fetch** all unresolved review comments via `gh` CLI
+4. **Triage** each comment against 5 validity criteria
+5. **Present** triage summary to user for approval
+6. **Fix** valid comments in parallel (subagents by category)
+7. **Commit & push** fixes to the PR branch
+
+## Usage
+
+```bash
+# Auto-detect PR from current branch
+/wfc-pr-comments
+
+# Specific PR number
+/wfc-pr-comments 42
+
+# PR URL
+/wfc-pr-comments https://github.com/owner/repo/pull/42
+```
+
+---
+
+## Workflow
+
+Follow these steps exactly in order.
+
+### Step 1: DETECT PR
+
+Determine which PR to work on:
+
+1. If the user provided a PR number or URL as argument, use that.
+2. Otherwise, auto-detect from the current branch:
+
+```bash
+gh pr view --json number,url,headRefName,baseRefName,title
+```
+
+If no PR is found, tell the user and stop.
+
+Display: `PR #N: <title> (<head> -> <base>)`
+
+### Step 2: RESOLVE CONFLICTS (if any)
+
+Check whether the PR has merge conflicts:
+
+```bash
+gh pr view {number} --json mergeable,mergeStateStatus
+```
+
+- `mergeable: MERGEABLE` — no conflicts, skip to Step 3
+- `mergeable: CONFLICTING` — resolve before proceeding
+- `mergeable: UNKNOWN` — GitHub is still computing; wait a moment and re-check
+
+**If conflicts exist:**
+
+#### 2a. Fetch and merge the base branch
+
+```bash
+git fetch origin
+git merge origin/{baseRefName} --no-edit
+```
+
+This will leave conflicted files marked with `<<<<<<<` / `=======` / `>>>>>>>` markers. List them:
+
+```bash
+git diff --name-only --diff-filter=U
+```
+
+#### 2b. Classify each conflicted file
+
+For each conflicted file, determine ownership:
+
+| Situation | Resolution |
+|-----------|------------|
+| File only changed on our branch (PR branch) | `git checkout --ours {file}` |
+| File only changed on base branch | `git checkout --theirs {file}` |
+| File changed on both sides | Read both versions, merge manually |
+| File deleted on our branch but modified on base | `git rm {file}` |
+
+**Rule of thumb:** Our branch (the PR) is typically more current — default to `--ours` unless the base branch has unique logic that must be preserved.
+
+#### 2c. Identify unique logic from the base branch
+
+Before taking `--ours` on heavily modified files, diff the two sides to check for unique additions on the base branch that we don't have:
+
+```bash
+git show MERGE_HEAD:{file}   # their version
+git show HEAD:{file}         # our version
+```
+
+If the base branch added new functionality (e.g., new methods, new imports, instrumentation) that our branch lacks, **cherry-pick that logic manually** into our version of the file before taking `--ours`.
+
+#### 2d. Run tests to verify
+
+After resolving all conflicts:
+
+```bash
+uv run pytest tests/ -q --tb=short --ignore=tests/test_installer_docker.py
+```
+
+Fix any test failures caused by the merge (wrong import paths, missing symbols, etc.) before proceeding.
+
+#### 2e. Complete the merge commit
+
+```bash
+git add {all resolved files}
+git commit --no-edit   # uses the auto-generated merge commit message
+git push origin {headRefName}
+```
+
+Report to the user:
+
+```
+Conflicts resolved: N files
+Strategy: --ours for M files, manual merge for K files
+Unique logic cherry-picked from {baseRefName}: [list]
+Tests: X passed
+Merge commit: {sha}
+```
+
+### Step 3: FETCH UNRESOLVED COMMENTS
+
+Fetch only **unresolved** review comments from the PR. Use GraphQL — the REST API does not expose thread resolution status.
+
+```bash
+# Use the pr_threads helper (preferred — returns thread IDs needed for resolving)
+uv run python wfc/scripts/github/pr_threads.py fetch {owner} {repo} {number} --json
+
+# Or raw GraphQL (note: must include thread `id` for later resolution)
+gh api graphql -f query='
+  query($owner: String!, $repo: String!, $number: Int!) {
+    repository(owner: $owner, name: $repo) {
+      pullRequest(number: $number) {
+        reviewThreads(first: 100) {
+          nodes {
+            id
+            isResolved
+            isOutdated
+            path
+            line
+            startLine
+            diffSide
+            comments(first: 50) {
+              nodes {
+                id
+                body
+                author { login }
+                createdAt
+                path
+                diffHunk
+                originalLine
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+' -f owner='{owner}' -f repo='{repo}' -F number={number}
+```
+
+**Filter:** Only process threads where `isResolved` is `false`. Skip all resolved threads entirely — they have already been addressed.
+
+Optionally also skip threads where `isOutdated` is `true` (the code has changed since the comment was made), but flag these to the user in the triage table.
+
+Extract from each unresolved thread's first comment:
+- `id` — unique identifier
+- `author.login` — who wrote it
+- `body` — comment text
+- `path` — file being commented on
+- `line` / `originalLine` — line number
+- `diffHunk` — surrounding diff context
+- `createdAt` — timestamp
+
+**Deduplication:** If two threads reference the same file + line + substantially identical message, treat them as one.
+
+**Group by file** for display purposes.
+
+If there are zero unresolved comments, tell the user "All review threads are resolved" and stop.
+
+### Step 4: TRIAGE
+
+This is the core intelligence. For each comment, evaluate 5 dimensions and assign a verdict.
+
+**Read each file being commented on** before evaluating (use the Read tool).
+
+#### Dimension 1: ARCHITECTURAL VALIDITY
+
+Does this suggestion align with project patterns?
+- Check existing conventions in the file and codebase
+- Consider CLAUDE.md / PLANNING.md rules
+- A suggestion that contradicts project conventions → lean toward SKIP
+
+#### Dimension 2: SCOPE CHECK
+
+Is this about code in this PR's diff, or asking for unrelated work?
+- Comment about code changed in this PR → in scope
+- Request for unrelated refactoring → out of scope → SKIP
+- Feature request disguised as review comment → SKIP
+
+#### Dimension 3: CORRECTNESS
+
+Is the suggested fix actually correct?
+- Would implementing it introduce bugs?
+- Does it handle edge cases the reviewer may have missed?
+- Is the reviewer wrong about the issue? If so → SKIP with explanation
+
+#### Dimension 4: SEVERITY
+
+- **Critical** (security, data loss, crashes) → always FIX
+- **High** (bugs, logic errors) → FIX
+- **Medium** (code quality, patterns) → FIX if valid
+- **Low** (style, preferences) → FIX if trivial, SKIP if opinionated
+- **Info** (questions, suggestions) → RESPOND only
+
+#### Dimension 5: EFFORT vs VALUE
+
+- **Trivial** (1-2 lines) → always FIX
+- **Medium** (function-level) → FIX if high value
+- **Large** (multi-file refactor) → SKIP, suggest follow-up issue
+
+**Verdict per comment:** `FIX` | `SKIP (reason)` | `RESPOND (reply only)`
+
+### Step 5: PRESENT TRIAGE TO USER
+
+Display a markdown table summarizing the triage:
+
+```
+| # | File | Comment (summary) | Verdict | Reason |
+|---|------|-------------------|---------|--------|
+| 1 | security_hook.py:45 | Add lru_cache to pattern loading | FIX | Valid perf improvement, trivial |
+| 2 | orchestrator.py:120 | Rewrite auth flow | SKIP | Out of scope for this PR |
+| 3 | README.md:8 | Fix typo "teh" → "the" | FIX | Trivial |
+| 4 | consensus.py:30 | Why not use dataclass? | RESPOND | Question, not actionable |
+```
+
+Then show summary counts:
+
+```
+Summary: 8 FIX, 2 SKIP, 1 RESPOND
+
+Proceed with fixes?
+```
+
+**Use AskUserQuestion** to get approval. The user may:
+- Approve as-is
+- Override specific verdicts (e.g., "skip #1, fix #4")
+- Cancel entirely
+
+Apply any user overrides before proceeding.
+
+### Step 6: CATEGORIZE & DELEGATE
+
+Group all `FIX` comments into categories:
+
+| Category | Examples |
+|----------|----------|
+| **Lint** | Unused imports, formatting, naming conventions |
+| **Code Quality** | Caching, error handling, type safety, simplification |
+| **Design** | Architecture changes, API modifications, patterns |
+| **Docs** | Typos, missing docs, outdated comments |
+| **Security** | Vulnerabilities, hardcoded secrets, input validation |
+
+Spawn **1 subagent per category** via the Task tool (run in parallel).
+
+Each subagent receives this prompt:
+
+```
+You are fixing PR review comments in category: {category}
+
+PR: #{number} on branch {headRefName}
+Repository root: {repo_root}
+
+Comments to address:
+{for each comment in this category:}
+---
+File: {path}:{line}
+Comment by {author}: {body}
+Diff context:
+{diff_hunk}
+---
+{end for}
+
+Instructions:
+1. Read each file mentioned above
+2. Apply the fix described in each comment
+3. Verify the fix is correct — do not introduce regressions
+4. Run relevant tests if they exist (use: uv run pytest {test_file} -v)
+5. Run auto-lint on every modified file:
+   - Python files: `uv run ruff check --fix {file}` then `uv run black {file}`
+   - TypeScript/JS files: `npx prettier --write {file}` (if available)
+   - Go files: `gofmt -w {file}` (if available)
+   Report any remaining lint errors that couldn't be auto-fixed.
+6. Do NOT fix anything not in the comment list above
+7. Do NOT make unrelated improvements or refactors
+```
+
+For `RESPOND` comments: Do NOT spawn a subagent. Instead, after fixes are committed, use `gh api` to reply to the comment on GitHub with an explanation.
+
+**Auto-lint gate:** Before committing, run a final format check across all modified files:
+```bash
+uv run black --check wfc/ && uv run ruff check .
+```
+If black would reformat any file, run `uv run black {modified_files}` first. This prevents CI failures from formatting issues.
+
+### Step 7: COMMIT & PUSH
+
+After all fix subagents complete:
+
+1. Check which files were modified: `git status`
+2. Stage all fixed files (by name, not `git add -A`)
+3. Create a single commit:
+
+```
+fix: address N PR review comments
+
+- {file1}: {brief description of fix}
+- {file2}: {brief description of fix}
+...
+
+Addresses comments on PR #{number}
+
+Co-Authored-By: Claude Opus 4.6 <noreply@anthropic.com>
+```
+
+4. Push to the PR branch:
+
+```bash
+git push origin {headRefName}
+```
+
+### Step 8: RESOLVE THREADS
+
+After pushing, reply to and resolve every addressed thread using the pr_threads helper.
+
+Build a JSON manifest of all threads:
+
+```python
+# manifest.json format
+[
+  {
+    "thread_id": "PRRT_...",           # thread node ID (from fetch --json)
+    "message": "Fixed in {commit}: {one-line description of what was done}",
+    "action": "fixed"                  # "fixed", "responded", or "skip"
+  }
+]
+```
+
+- **FIX threads** → `"action": "fixed"`, message describes the exact change made and the commit SHA
+- **RESPOND threads** → `"action": "responded"`, message is the explanation already provided
+- **SKIP threads** → `"action": "skip"`, these are NOT resolved (leave open for human decision)
+
+Run bulk resolution:
+
+```bash
+uv run python wfc/scripts/github/pr_threads.py bulk-resolve {owner} {repo} manifest.json
+```
+
+This posts the reply message to each thread on GitHub, then calls `resolveReviewThread` to mark it resolved.
+
+**Single thread (ad-hoc):**
+```bash
+uv run python wfc/scripts/github/pr_threads.py resolve PRRT_... \
+  --message "Fixed in abc1234: removed .decode() from text=True subprocess error path"
+```
+
+### Step 9: REPORT
+
+Display a final summary:
+
+```
+## PR Comment Fixes Complete
+
+**PR:** #{number} — {title}
+**Branch:** {headRefName}
+
+### Conflicts Resolved (if any)
+- N files resolved (--ours: M, manual: K)
+- Unique logic cherry-picked from {baseRefName}: [list or "none"]
+- Merge commit: {sha}
+
+### Fixed (N comments)
+- {file}:{line} — {brief fix description}
+- ...
+
+### Skipped (N comments)
+- {file}:{line} — {reason}
+- ...
+
+### Responded (N comments)
+- {file}:{line} — {reply summary}
+- ...
+
+Pushed to {headRefName}. PR updated.
+```
+
+---
+
+## Integration with WFC
+
+### Fits After
+- `wfc-build` or `wfc-implement` (which create PRs)
+- Any workflow that pushes a branch and creates a PR
+
+### Complements
+- `wfc-review` — internal review BEFORE creating a PR
+- `wfc-pr-comments` — external feedback AFTER PR is created
+
+### Typical Flow
+```
+wfc-build → Push PR → Reviewers comment → /wfc-pr-comments → Resolve conflicts (if any) → Push fixes → Merge
+```
+
+## Philosophy
+
+**ELEGANT:** Single skill replaces manual comment-by-comment triage
+**PARALLEL:** Fix subagents run concurrently by category
+**TOKEN-AWARE:** Only reads files that have comments, not the entire codebase
+**SAFE:** User approval gate before any fixes are applied
+
+---
+
+This session is being continued from a previous conversation that ran out of context. The summary below covers the earlier portion of the conversation.
+
+Analysis:
+Let me chronologically analyze this conversation:
+
+1. **Session continuation**: Picked up from previous context where merge conflicts on PR #22 were being resolved. Last action was fixing `tests/test_observability_edge_cases.py` signature assertion.
+
+2. **Completing conflict resolution**: Ran test suite → 1 failure (`test_finalize_review_emits_scored_and_completed` expecting `duration_seconds` in payload). Fixed by adding `import time` + `_start_time = time.monotonic()` at start of `finalize_review` and `"duration_seconds": time.monotonic() - _start_time` to `review.completed` payload. All 1260 tests passed. Staged files, completed merge commit, pushed.
+
+3. **Copilot review request**: User asked to request Copilot review. PR #22 was already merged (auto-merged by GitHub Actions). Opened PR #23 (`develop → main`) and requested Copilot review on it.
+
+4. **wfc-pr-comments skill update**: User asked if the skill was updated to handle conflicts. It wasn't — updated `~/.claude/skills/wfc-pr-comments/SKILL.md` with Step 2 (RESOLVE CONFLICTS). Then user asked to sync back to repo → copied to `wfc/wfc/skills/wfc-pr-comments/SKILL.md` and committed.
+
+5. **Checking other skill drift**: User asked about other changes in `~/.claude/skills/` not in repo. Ran diff — found many differences but user clarified "the repo is going to be different than what is installed" (install-time drift is expected). Only `wfc-isthissmart` was truly missing from repo, but user explained it became `wfc-validate` — so no action needed.
+
+6. **Install script cleanup**: User asked install script to remove dangling installed skills during refresh. Added prune logic to all 3 install paths in `install-universal.sh`.
+
+7. **Running /wfc-pr-comments**: User invoked the skill. Auto-detected PR #22 (closed/merged). Found PR #23 is CONFLICTING. Switched to `develop` branch and ran `git merge origin/main --no-edit` — massive conflict (60+ files), many related to the repo restructure (wfc_tools → gitwork, scripts/skills → scripts/orchestrators).
+
+The conversation was cut off mid-conflict-resolution on the `develop` branch for PR #23.
+
+Summary:
+1. Primary Request and Intent:
+   - **Completed from previous session**: Finish resolving merge conflicts on PR #22 (`claude/enhance-workflow-plugin-c25hS → develop`), run tests, commit merge, push
+   - **Request Copilot review**: On PR #22 (found already merged) → opened PR #23 (`develop → main`) and requested Copilot review there
+   - **Update wfc-pr-comments skill**: Add merge conflict resolution as Step 2 of the workflow (triggered by user saying "yeah but there are bigly conflicts" in previous session — skill should handle this automatically)
+   - **Sync skill to repo**: Ensure `wfc/wfc/skills/wfc-pr-comments/SKILL.md` matches installed `~/.claude/skills/wfc-pr-comments/SKILL.md`
+   - **Check other skill drift**: User asked about any other `~/.claude/skills/` changes not in repo; user confirmed install-time drift is expected — only truly missing was `wfc-isthissmart` (renamed to `wfc-validate`, no action needed)
+   - **Install script pruning**: Add logic to remove dangling installed skills (e.g., `wfc-isthissmart`) during refresh/reinstall
+   - **Run /wfc-pr-comments on current state**: User invoked the skill — auto-detected PR #22 (merged), identified PR #23 (`develop → main`, CONFLICTING), started conflict resolution
+
+2. Key Technical Concepts:
+   - **Loki Mode observability**: `wfc/observability/` package added on `develop` branch — `emit_event`, `incr`, `observe` wrapped in fail-open try/except in `ReviewOrchestrator`
+   - **`duration_seconds` in `review.completed` payload**: Test expected timing in the event payload; fixed with `time.monotonic()` tracking in `finalize_review`
+   - **PR merge conflict resolution strategy**: `git merge origin/{base}`, classify conflicts (`--ours`, `--theirs`, manual, `git rm`), cherry-pick unique logic from base before taking `--ours`
+   - **wfc-pr-comments Step 2**: New conflict detection/resolution step added between Detect PR and Fetch Comments
+   - **Install script prune logic**: After copying skills from repo, remove any `wfc-*` dirs/symlinks in install target that no longer exist in `wfc/skills/`
+   - **Three install paths in install-universal.sh**: Symlink source (`~/.wfc/skills/`), symlink platform dirs, direct install (`~/.claude/skills/` etc.)
+   - **PR #22 vs PR #23**: PR #22 (`claude/enhance-workflow-plugin-c25hS → develop`) auto-merged by GitHub Actions. PR #23 (`develop → main`) open and CONFLICTING — this is the active PR needing work
+   - **Repo restructure vs main**: `develop` has Loki Mode only; `main` has Five-Agent Consensus Engine + Wave 2 Kodus AI + repo restructure. Merging them creates large conflicts around renamed paths
+
+3. Files and Code Sections:
+   - **`wfc/scripts/orchestrators/review/orchestrator.py`**
+     - Added `import time` at top
+     - Added `_start_time = time.monotonic()` at start of `finalize_review`
+     - Added `duration_seconds` to `review.completed` event payload:
+     ```python
+     import time
+     # in finalize_review:
+     _start_time = time.monotonic()
+     # ...later in the try block:
+     emit_event(
+         "review.completed",
+         source="orchestrator",
+         payload={
+             "task_id": request.task_id,
+             "report_path": str(report_path),
+             "duration_seconds": time.monotonic() - _start_time,
+         },
+     )
+     ```
+
+   - **`tests/test_observability_review_instrumentation.py`**
+     - Old import path `wfc.scripts.skills.review.orchestrator` → fixed to `wfc.scripts.orchestrators.review.orchestrator`
+     - Test `test_finalize_review_emits_scored_and_completed` asserts `"duration_seconds" in completed[0].payload`
+
+   - **`tests/test_observability_edge_cases.py`**
+     - Fixed 4 old import paths (`skills` → `orchestrators`)
+     - Updated backward compat test:
+     ```python
+     assert params == ["self", "request", "task_responses", "output_dir", "skip_validation"]
+     ```
+
+   - **`~/.claude/skills/wfc-pr-comments/SKILL.md`** (and synced to `wfc/wfc/skills/wfc-pr-comments/SKILL.md`)
+     - Updated frontmatter description to mention conflict resolution
+     - Updated "What It Does" list (7 steps now)
+     - Added **Step 2: RESOLVE CONFLICTS** between Step 1 (Detect) and old Step 2 (now Step 3: Fetch):
+       - 2a: `git fetch origin && git merge origin/{baseRefName} --no-edit`
+       - 2b: Classify each conflicted file (table: `--ours`, `--theirs`, manual, `git rm`)
+       - 2c: `git show MERGE_HEAD:{file}` vs `git show HEAD:{file}` to find unique base logic
+       - 2d: Run tests to verify
+       - 2e: `git add ... && git commit --no-edit && git push origin {headRefName}`
+     - Renumbered old Steps 2–8 → 3–9
+     - Updated final report template to include "Conflicts Resolved" section
+     - Updated Typical Flow line
+
+   - **`install-universal.sh`**
+     - Added prune block in **symlink source path** (after `echo "  • Found $SKILLS_FOUND WFC skills"`):
+     ```bash
+     if [ -d "$WFC_ROOT/skills" ]; then
+         PRUNED=0
+         for installed in "$WFC_ROOT/skills"/wfc-*; do
+             [ -d "$installed" ] || continue
+             skill_name=$(basename "$installed")
+             if [ ! -d "$SCRIPT_DIR/wfc/skills/$skill_name" ]; then
+                 echo "    ├─ pruning stale: $skill_name"
+                 rm -rf "$installed"
+                 PRUNED=$((PRUNED + 1))
+             fi
+         done
+         [ $PRUNED -gt 0 ] && echo "  • Pruned $PRUNED stale skill(s)"
+     fi
+     ```
+     - Added prune block in **direct install path** (same location, targeting `$WFC_ROOT/wfc-*`)
+     - Added prune block in **symlink platform loop** (after shared resources, before `echo ""`):
+     ```bash
+     for installed in "$platform_path"/wfc-*; do
+         [ -e "$installed" ] || [ -L "$installed" ] || continue
+         skill_name=$(basename "$installed")
+         if [ ! -d "$WFC_ROOT/skills/$skill_name" ]; then
+             echo "  ├─ pruning stale: $skill_name"
+             rm -rf "$installed"
+         fi
+     done
+     ```
+
+4. Errors and Fixes:
+   - **`test_finalize_review_emits_scored_and_completed` failing**: Expected `"duration_seconds"` in `review.completed` payload but our orchestrator didn't include it. Fixed by adding `import time` + `_start_time = time.monotonic()` at start of `finalize_review`, then passing `"duration_seconds": time.monotonic() - _start_time` in the payload.
+   - **`import time` initially flagged by ruff as unused**: Added it before adding the actual usage, so ruff complained. Fixed by adding the `_start_time` usage in the same edit session.
+   - **PR #22 already merged when requesting Copilot review**: The API call went through (Copilot listed as reviewer) but the PR was closed. Opened PR #23 (`develop → main`) to give Copilot a live PR to review.
+   - **PR #23 CONFLICTING**: When running `/wfc-pr-comments`, found PR #23 (`develop → main`) has merge conflicts. Ran `git checkout develop && git merge origin/main --no-edit` — 60+ conflicted files due to repo restructure paths (`wfc_tools/gitwork` → `gitwork`, `scripts/skills` → `scripts/orchestrators`, `reviewers` → `references/reviewers`).
+
+5. Problem Solving:
+   - **Conflict resolution on PR #22**: Successfully resolved 43 files, cherry-picked Loki Mode instrumentation into orchestrator.py, fixed observability test import paths, fixed `duration_seconds` timing, completed merge commit and pushed.
+   - **Copilot review workflow**: PR #22 auto-merged before Copilot could review → created PR #23 as the review target.
+   - **Skill drift detection**: Confirmed install-time drift between `~/.claude/skills/` and `wfc/wfc/skills/` is expected. Only truly missing skill was `wfc-isthissmart` (old name for `wfc-validate`).
+   - **PR #23 conflicts (in progress)**: Switched to `develop` branch, ran `git merge origin/main`. 60+ file conflicts surfaced — mostly `(add/add)` conflicts for test files and `(file location)` conflicts for renamed dirs.
+
+6. All User Messages:
+   - *(session continuation — no explicit first message, task was to complete conflict resolution)*
+   - "request copolot review"
+   - "yes please" *(after being told PR #22 was merged and PR #23 needed to be opened for Copilot review)*
+   - "did you update the skill to also solve any PR merge conflicts?"
+   - "yes" *(approving the skill update)*
+   - "make sure the codebase is updated since we are working in wfc code"
+   - "any other changes that didnt make it to the repo from the ~ skills folder"
+   - "note that the repo is going to be different than what is installed" *(clarifying install-time drift is expected)*
+   - "when our install script refreshes settings, can it also remove any dangling stuff?"
+   - *(invoked `/wfc-pr-comments` skill)*
+
+7. Pending Tasks:
+   - **Resolve conflicts on PR #23** (`develop → main`): `git merge origin/main` has been initiated on the `develop` branch with 60+ conflicted files. Need to resolve all conflicts, run tests, commit merge, push.
+   - Copilot review on PR #23 is pending (was requested but PR is CONFLICTING — Copilot may not review until conflicts are resolved).
+
+8. Current Work:
+   Resolving merge conflicts on PR #23 (`develop → main`). The `develop` branch is currently in a mid-merge state after running `git checkout develop && git merge origin/main --no-edit`. The merge produced 60+ conflicts including:
+   - `(add/add)` conflicts in many test files (both sides added files)
+   - `(file location)` conflicts due to repo restructure renaming paths:
+     - `wfc/wfc_tools/gitwork/` → `wfc/gitwork/` (our restructure)
+     - `wfc/scripts/skills/review/` → `wfc/scripts/orchestrators/review/` (our restructure)
+   - `(modify/delete)` conflicts for deleted legacy dirs (`wfc/wfc-tools/`, `wfc/scripts/skills/review/orchestrator.py`)
+   - Content conflicts in: `CLAUDE.md`, `README.md`, `install-universal.sh`, several test files
+
+9. Optional Next Step:
+   Continue resolving the conflicts on the `develop` branch for PR #23. The merge is in progress (`git merge origin/main` was run). Strategy should mirror what we did for PR #22:
+   - For `(file location)` conflicts (wfc_tools → gitwork, scripts/skills → scripts/orchestrators): our restructured paths are correct → `git rm` the old-path ghost files, keep our renamed versions
+   - For `(add/add)` test files: `git checkout --ours` (our versions have correct import paths after restructure)
+   - For `(modify/delete)` deleted dirs (`wfc/wfc-tools/`, `wfc/scripts/skills/review/orchestrator.py`): `git rm` the ghost files
+   - For content conflicts (CLAUDE.md, README.md, install-universal.sh): inspect both sides, take ours (already updated for restructure) but check for unique main-branch additions
+   - Run `uv run pytest tests/ -q --tb=short --ignore=tests/test_installer_docker.py` to verify
+   - `git add -A && git commit --no-edit && git push origin develop`
+
+If you need specific details from before compaction (like exact code snippets, error messages, or content you generated), read the full transcript at: /Users/samfakhreddine/.REDACTED.jsonl
+Please continue the conversation from where we left off without asking the user any further questions. Continue with the last task that you were asked to work on.
+
+---
+
+Base directory for this skill: /Users/samfakhreddine/.claude/skills/wfc-pr-comments
+
+# WFC:PR-COMMENTS - Intelligent PR Comment Triage & Fix
+
+**Fetch, triage, fix.** Automates addressing PR review comments from humans, Copilot, CodeRabbit, and other reviewers.
+
+## What It Does
+
+1. **Detect** the PR and check mergeability
+2. **Resolve** merge conflicts if the PR is blocked (merge base branch, resolve intelligently)
+3. **Fetch** all unresolved review comments via `gh` CLI
+4. **Triage** each comment against 5 validity criteria
+5. **Present** triage summary to user for approval
+6. **Fix** valid comments in parallel (subagents by category)
+7. **Commit & push** fixes to the PR branch
+
+## Usage
+
+```bash
+# Auto-detect PR from current branch
+/wfc-pr-comments
+
+# Specific PR number
+/wfc-pr-comments 42
+
+# PR URL
+/wfc-pr-comments https://github.com/owner/repo/pull/42
+```
+
+---
+
+## Workflow
+
+Follow these steps exactly in order.
+
+### Step 1: DETECT PR
+
+Determine which PR to work on:
+
+1. If the user provided a PR number or URL as argument, use that.
+2. Otherwise, auto-detect from the current branch:
+
+```bash
+gh pr view --json number,url,headRefName,baseRefName,title
+```
+
+If no PR is found, tell the user and stop.
+
+Display: `PR #N: <title> (<head> -> <base>)`
+
+### Step 2: RESOLVE CONFLICTS (if any)
+
+Check whether the PR has merge conflicts:
+
+```bash
+gh pr view {number} --json mergeable,mergeStateStatus
+```
+
+- `mergeable: MERGEABLE` — no conflicts, skip to Step 3
+- `mergeable: CONFLICTING` — resolve before proceeding
+- `mergeable: UNKNOWN` — GitHub is still computing; wait a moment and re-check
+
+**If conflicts exist:**
+
+#### 2a. Fetch and merge the base branch
+
+```bash
+git fetch origin
+git merge origin/{baseRefName} --no-edit
+```
+
+This will leave conflicted files marked with `<<<<<<<` / `=======` / `>>>>>>>` markers. List them:
+
+```bash
+git diff --name-only --diff-filter=U
+```
+
+#### 2b. Classify each conflicted file
+
+For each conflicted file, determine ownership:
+
+| Situation | Resolution |
+|-----------|------------|
+| File only changed on our branch (PR branch) | `git checkout --ours {file}` |
+| File only changed on base branch | `git checkout --theirs {file}` |
+| File changed on both sides | Read both versions, merge manually |
+| File deleted on our branch but modified on base | `git rm {file}` |
+
+**Rule of thumb:** Our branch (the PR) is typically more current — default to `--ours` unless the base branch has unique logic that must be preserved.
+
+#### 2c. Identify unique logic from the base branch
+
+Before taking `--ours` on heavily modified files, diff the two sides to check for unique additions on the base branch that we don't have:
+
+```bash
+git show MERGE_HEAD:{file}   # their version
+git show HEAD:{file}         # our version
+```
+
+If the base branch added new functionality (e.g., new methods, new imports, instrumentation) that our branch lacks, **cherry-pick that logic manually** into our version of the file before taking `--ours`.
+
+#### 2d. Run tests to verify
+
+After resolving all conflicts:
+
+```bash
+uv run pytest tests/ -q --tb=short --ignore=tests/test_installer_docker.py
+```
+
+Fix any test failures caused by the merge (wrong import paths, missing symbols, etc.) before proceeding.
+
+#### 2e. Complete the merge commit
+
+```bash
+git add {all resolved files}
+git commit --no-edit   # uses the auto-generated merge commit message
+git push origin {headRefName}
+```
+
+Report to the user:
+
+```
+Conflicts resolved: N files
+Strategy: --ours for M files, manual merge for K files
+Unique logic cherry-picked from {baseRefName}: [list]
+Tests: X passed
+Merge commit: {sha}
+```
+
+### Step 3: FETCH UNRESOLVED COMMENTS
+
+Fetch only **unresolved** review comments from the PR. Use GraphQL — the REST API does not expose thread resolution status.
+
+```bash
+# Use the pr_threads helper (preferred — returns thread IDs needed for resolving)
+uv run python wfc/scripts/github/pr_threads.py fetch {owner} {repo} {number} --json
+
+# Or raw GraphQL (note: must include thread `id` for later resolution)
+gh api graphql -f query='
+  query($owner: String!, $repo: String!, $number: Int!) {
+    repository(owner: $owner, name: $repo) {
+      pullRequest(number: $number) {
+        reviewThreads(first: 100) {
+          nodes {
+            id
+            isResolved
+            isOutdated
+            path
+            line
+            startLine
+            diffSide
+            comments(first: 50) {
+              nodes {
+                id
+                body
+                author { login }
+                createdAt
+                path
+                diffHunk
+                originalLine
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+' -f owner='{owner}' -f repo='{repo}' -F number={number}
+```
+
+**Filter:** Only process threads where `isResolved` is `false`. Skip all resolved threads entirely — they have already been addressed.
+
+Optionally also skip threads where `isOutdated` is `true` (the code has changed since the comment was made), but flag these to the user in the triage table.
+
+Extract from each unresolved thread's first comment:
+- `id` — unique identifier
+- `author.login` — who wrote it
+- `body` — comment text
+- `path` — file being commented on
+- `line` / `originalLine` — line number
+- `diffHunk` — surrounding diff context
+- `createdAt` — timestamp
+
+**Deduplication:** If two threads reference the same file + line + substantially identical message, treat them as one.
+
+**Group by file** for display purposes.
+
+If there are zero unresolved comments, tell the user "All review threads are resolved" and stop.
+
+### Step 4: TRIAGE
+
+This is the core intelligence. For each comment, evaluate 5 dimensions and assign a verdict.
+
+**Read each file being commented on** before evaluating (use the Read tool).
+
+#### Dimension 1: ARCHITECTURAL VALIDITY
+
+Does this suggestion align with project patterns?
+- Check existing conventions in the file and codebase
+- Consider CLAUDE.md / PLANNING.md rules
+- A suggestion that contradicts project conventions → lean toward SKIP
+
+#### Dimension 2: SCOPE CHECK
+
+Is this about code in this PR's diff, or asking for unrelated work?
+- Comment about code changed in this PR → in scope
+- Request for unrelated refactoring → out of scope → SKIP
+- Feature request disguised as review comment → SKIP
+
+#### Dimension 3: CORRECTNESS
+
+Is the suggested fix actually correct?
+- Would implementing it introduce bugs?
+- Does it handle edge cases the reviewer may have missed?
+- Is the reviewer wrong about the issue? If so → SKIP with explanation
+
+#### Dimension 4: SEVERITY
+
+- **Critical** (security, data loss, crashes) → always FIX
+- **High** (bugs, logic errors) → FIX
+- **Medium** (code quality, patterns) → FIX if valid
+- **Low** (style, preferences) → FIX if trivial, SKIP if opinionated
+- **Info** (questions, suggestions) → RESPOND only
+
+#### Dimension 5: EFFORT vs VALUE
+
+- **Trivial** (1-2 lines) → always FIX
+- **Medium** (function-level) → FIX if high value
+- **Large** (multi-file refactor) → SKIP, suggest follow-up issue
+
+**Verdict per comment:** `FIX` | `SKIP (reason)` | `RESPOND (reply only)`
+
+### Step 5: PRESENT TRIAGE TO USER
+
+Display a markdown table summarizing the triage:
+
+```
+| # | File | Comment (summary) | Verdict | Reason |
+|---|------|-------------------|---------|--------|
+| 1 | security_hook.py:45 | Add lru_cache to pattern loading | FIX | Valid perf improvement, trivial |
+| 2 | orchestrator.py:120 | Rewrite auth flow | SKIP | Out of scope for this PR |
+| 3 | README.md:8 | Fix typo "teh" → "the" | FIX | Trivial |
+| 4 | consensus.py:30 | Why not use dataclass? | RESPOND | Question, not actionable |
+```
+
+Then show summary counts:
+
+```
+Summary: 8 FIX, 2 SKIP, 1 RESPOND
+
+Proceed with fixes?
+```
+
+**Use AskUserQuestion** to get approval. The user may:
+- Approve as-is
+- Override specific verdicts (e.g., "skip #1, fix #4")
+- Cancel entirely
+
+Apply any user overrides before proceeding.
+
+### Step 6: CATEGORIZE & DELEGATE
+
+Group all `FIX` comments into categories:
+
+| Category | Examples |
+|----------|----------|
+| **Lint** | Unused imports, formatting, naming conventions |
+| **Code Quality** | Caching, error handling, type safety, simplification |
+| **Design** | Architecture changes, API modifications, patterns |
+| **Docs** | Typos, missing docs, outdated comments |
+| **Security** | Vulnerabilities, hardcoded secrets, input validation |
+
+Spawn **1 subagent per category** via the Task tool (run in parallel).
+
+Each subagent receives this prompt:
+
+```
+You are fixing PR review comments in category: {category}
+
+PR: #{number} on branch {headRefName}
+Repository root: {repo_root}
+
+Comments to address:
+{for each comment in this category:}
+---
+File: {path}:{line}
+Comment by {author}: {body}
+Diff context:
+{diff_hunk}
+---
+{end for}
+
+Instructions:
+1. Read each file mentioned above
+2. Apply the fix described in each comment
+3. Verify the fix is correct — do not introduce regressions
+4. Run relevant tests if they exist (use: uv run pytest {test_file} -v)
+5. Run auto-lint on every modified file:
+   - Python files: `uv run ruff check --fix {file}` then `uv run black {file}`
+   - TypeScript/JS files: `npx prettier --write {file}` (if available)
+   - Go files: `gofmt -w {file}` (if available)
+   Report any remaining lint errors that couldn't be auto-fixed.
+6. Do NOT fix anything not in the comment list above
+7. Do NOT make unrelated improvements or refactors
+```
+
+For `RESPOND` comments: Do NOT spawn a subagent. Instead, after fixes are committed, use `gh api` to reply to the comment on GitHub with an explanation.
+
+**Auto-lint gate:** Before committing, run a final format check across all modified files:
+```bash
+uv run black --check wfc/ && uv run ruff check .
+```
+If black would reformat any file, run `uv run black {modified_files}` first. This prevents CI failures from formatting issues.
+
+### Step 7: COMMIT & PUSH
+
+After all fix subagents complete:
+
+1. Check which files were modified: `git status`
+2. Stage all fixed files (by name, not `git add -A`)
+3. Create a single commit:
+
+```
+fix: address N PR review comments
+
+- {file1}: {brief description of fix}
+- {file2}: {brief description of fix}
+...
+
+Addresses comments on PR #{number}
+
+Co-Authored-By: Claude Opus 4.6 <noreply@anthropic.com>
+```
+
+4. Push to the PR branch:
+
+```bash
+git push origin {headRefName}
+```
+
+### Step 8: RESOLVE THREADS
+
+After pushing, reply to and resolve every addressed thread using the pr_threads helper.
+
+Build a JSON manifest of all threads:
+
+```python
+# manifest.json format
+[
+  {
+    "thread_id": "PRRT_...",           # thread node ID (from fetch --json)
+    "message": "Fixed in {commit}: {one-line description of what was done}",
+    "action": "fixed"                  # "fixed", "responded", or "skip"
+  }
+]
+```
+
+- **FIX threads** → `"action": "fixed"`, message describes the exact change made and the commit SHA
+- **RESPOND threads** → `"action": "responded"`, message is the explanation already provided
+- **SKIP threads** → `"action": "skip"`, these are NOT resolved (leave open for human decision)
+
+Run bulk resolution:
+
+```bash
+uv run python wfc/scripts/github/pr_threads.py bulk-resolve {owner} {repo} manifest.json
+```
+
+This posts the reply message to each thread on GitHub, then calls `resolveReviewThread` to mark it resolved.
+
+**Single thread (ad-hoc):**
+```bash
+uv run python wfc/scripts/github/pr_threads.py resolve PRRT_... \
+  --message "Fixed in abc1234: removed .decode() from text=True subprocess error path"
+```
+
+### Step 9: REPORT
+
+Display a final summary:
+
+```
+## PR Comment Fixes Complete
+
+**PR:** #{number} — {title}
+**Branch:** {headRefName}
+
+### Conflicts Resolved (if any)
+- N files resolved (--ours: M, manual: K)
+- Unique logic cherry-picked from {baseRefName}: [list or "none"]
+- Merge commit: {sha}
+
+### Fixed (N comments)
+- {file}:{line} — {brief fix description}
+- ...
+
+### Skipped (N comments)
+- {file}:{line} — {reason}
+- ...
+
+### Responded (N comments)
+- {file}:{line} — {reply summary}
+- ...
+
+Pushed to {headRefName}. PR updated.
+```
+
+---
+
+## Integration with WFC
+
+### Fits After
+- `wfc-build` or `wfc-implement` (which create PRs)
+- Any workflow that pushes a branch and creates a PR
+
+### Complements
+- `wfc-review` — internal review BEFORE creating a PR
+- `wfc-pr-comments` — external feedback AFTER PR is created
+
+### Typical Flow
+```
+wfc-build → Push PR → Reviewers comment → /wfc-pr-comments → Resolve conflicts (if any) → Push fixes → Merge
+```
+
+## Philosophy
+
+**ELEGANT:** Single skill replaces manual comment-by-comment triage
+**PARALLEL:** Fix subagents run concurrently by category
+**TOKEN-AWARE:** Only reads files that have comments, not the entire codebase
+**SAFE:** User approval gate before any fixes are applied
+
+
+ARGUMENTS: https://github.com/sam-fakhreddine/wfc/pull/23
+
+---
+
+[Request interrupted by user]
+
+---
+
+lets not do that right now
+
+---
+
+rerequest copolit review
+
+---
+
+still seeing gfailed CI
