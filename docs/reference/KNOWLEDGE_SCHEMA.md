@@ -7,7 +7,7 @@ Each reviewer has a KNOWLEDGE.md that serves as its institutional memory -- huma
 ## File Location
 
 ```
-wfc/reviewers/<domain>/KNOWLEDGE.md
+wfc/references/reviewers/<domain>/KNOWLEDGE.md
 ```
 
 Where `<domain>` is one of: `security`, `correctness`, `performance`, `maintainability`, `reliability`.

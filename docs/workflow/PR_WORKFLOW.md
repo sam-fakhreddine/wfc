@@ -22,7 +22,7 @@ This document describes the new GitHub PR workflow implementation for WFC.
 
 ### Phase 2: PR Creation Module ✅
 
-**New File**: `wfc/wfc-tools/gitwork/api/pr.py` (420 lines)
+**New File**: `wfc/gitwork/api/pr.py` (420 lines)
 
 **Key Components**:
 
@@ -372,7 +372,7 @@ wfc implement plan/TASKS.md
 
 | File | Lines Changed | Purpose |
 |------|---------------|---------|
-| `wfc/wfc-tools/gitwork/api/pr.py` | +420 | PR creation module (NEW) |
+| `wfc/gitwork/api/pr.py` | +420 | PR creation module (NEW) |
 | `wfc/skills/implement/merge_engine.py` | +150 | PR workflow integration |
 | `wfc/skills/implement/executor.py` | +40 | Routing logic |
 | `wfc/shared/config/wfc_config.py` | +35 | Config defaults |

@@ -12,8 +12,8 @@ from unittest.mock import MagicMock, mock_open, patch
 import pytest
 
 # Import hook modules
-from wfc.wfc_tools.gitwork.hooks import commit_msg, pre_commit, pre_push
-from wfc.wfc_tools.gitwork.hooks.installer import HookInstaller
+from wfc.gitwork.hooks import commit_msg, pre_commit, pre_push
+from wfc.gitwork.hooks.installer import HookInstaller
 
 
 class TestPreCommitHook:
@@ -96,9 +96,9 @@ class TestPreCommitHook:
         sensitive = pre_commit.check_sensitive_files(files)
         assert len(sensitive) == 0
 
-    @patch("wfc.wfc_tools.gitwork.hooks.pre_commit.get_current_branch")
-    @patch("wfc.wfc_tools.gitwork.hooks.pre_commit.get_staged_files")
-    @patch("wfc.wfc_tools.gitwork.hooks.pre_commit.log_telemetry")
+    @patch("wfc.gitwork.hooks.pre_commit.get_current_branch")
+    @patch("wfc.gitwork.hooks.pre_commit.get_staged_files")
+    @patch("wfc.gitwork.hooks.pre_commit.log_telemetry")
     def test_pre_commit_hook_protected_branch(self, mock_log, mock_staged, mock_branch):
         """Test pre-commit hook on protected branch."""
         mock_branch.return_value = "main"
@@ -114,9 +114,9 @@ class TestPreCommitHook:
         assert "WARNING: Committing directly to 'main'" in output
         mock_log.assert_called()
 
-    @patch("wfc.wfc_tools.gitwork.hooks.pre_commit.get_current_branch")
-    @patch("wfc.wfc_tools.gitwork.hooks.pre_commit.get_staged_files")
-    @patch("wfc.wfc_tools.gitwork.hooks.pre_commit.log_telemetry")
+    @patch("wfc.gitwork.hooks.pre_commit.get_current_branch")
+    @patch("wfc.gitwork.hooks.pre_commit.get_staged_files")
+    @patch("wfc.gitwork.hooks.pre_commit.log_telemetry")
     def test_pre_commit_hook_invalid_branch_name(self, mock_log, mock_staged, mock_branch):
         """Test pre-commit hook with invalid branch name."""
         mock_branch.return_value = "random-branch"
@@ -130,9 +130,9 @@ class TestPreCommitHook:
         output = captured_output.getvalue()
         assert "WARNING" in output
 
-    @patch("wfc.wfc_tools.gitwork.hooks.pre_commit.get_current_branch")
-    @patch("wfc.wfc_tools.gitwork.hooks.pre_commit.get_staged_files")
-    @patch("wfc.wfc_tools.gitwork.hooks.pre_commit.log_telemetry")
+    @patch("wfc.gitwork.hooks.pre_commit.get_current_branch")
+    @patch("wfc.gitwork.hooks.pre_commit.get_staged_files")
+    @patch("wfc.gitwork.hooks.pre_commit.log_telemetry")
     def test_pre_commit_hook_sensitive_files(self, mock_log, mock_staged, mock_branch):
         """Test pre-commit hook with sensitive files."""
         mock_branch.return_value = "feat/TASK-001-test"
@@ -147,8 +147,8 @@ class TestPreCommitHook:
         assert "sensitive files detected" in output
         assert ".env" in output
 
-    @patch("wfc.wfc_tools.gitwork.hooks.pre_commit.get_current_branch")
-    @patch("wfc.wfc_tools.gitwork.hooks.pre_commit.get_staged_files")
+    @patch("wfc.gitwork.hooks.pre_commit.get_current_branch")
+    @patch("wfc.gitwork.hooks.pre_commit.get_staged_files")
     def test_pre_commit_hook_all_good(self, mock_staged, mock_branch):
         """Test pre-commit hook with valid branch and no issues."""
         mock_branch.return_value = "feat/TASK-001-add-feature"
@@ -208,7 +208,7 @@ class TestCommitMsgHook:
         assert task_id is None
 
     @patch("builtins.open", new_callable=mock_open, read_data="TASK-001: Add feature\n")
-    @patch("wfc.wfc_tools.gitwork.hooks.commit_msg.log_telemetry")
+    @patch("wfc.gitwork.hooks.commit_msg.log_telemetry")
     def test_commit_msg_hook_valid_task_format(self, mock_log, mock_file):
         """Test commit-msg hook with valid TASK format."""
         with patch("pathlib.Path.read_text", return_value="TASK-001: Add feature"):
@@ -218,7 +218,7 @@ class TestCommitMsgHook:
         mock_log.assert_called()
 
     @patch("builtins.open", new_callable=mock_open, read_data="feat: add feature\n")
-    @patch("wfc.wfc_tools.gitwork.hooks.commit_msg.log_telemetry")
+    @patch("wfc.gitwork.hooks.commit_msg.log_telemetry")
     def test_commit_msg_hook_valid_conventional(self, mock_log, mock_file):
         """Test commit-msg hook with valid conventional format."""
         with patch("pathlib.Path.read_text", return_value="feat: add feature"):
@@ -227,7 +227,7 @@ class TestCommitMsgHook:
         assert exit_code == 0
 
     @patch("builtins.open", new_callable=mock_open, read_data="bad message\n")
-    @patch("wfc.wfc_tools.gitwork.hooks.commit_msg.log_telemetry")
+    @patch("wfc.gitwork.hooks.commit_msg.log_telemetry")
     def test_commit_msg_hook_invalid_format(self, mock_log, mock_file):
         """Test commit-msg hook with invalid format."""
         captured_output = io.StringIO()
@@ -295,8 +295,8 @@ class TestPrePushHook:
         test_input = "refs/heads/main abc123 refs/heads/main def456\n"
 
         with patch("sys.stdin", io.StringIO(test_input)):
-            with patch("wfc.wfc_tools.gitwork.hooks.pre_push.get_remote_url") as mock_url:
-                with patch("wfc.wfc_tools.gitwork.hooks.pre_push.log_telemetry") as mock_telemetry:
+            with patch("wfc.gitwork.hooks.pre_push.get_remote_url") as mock_url:
+                with patch("wfc.gitwork.hooks.pre_push.log_telemetry") as mock_telemetry:
                     mock_url.return_value = "git@github.com:user/repo.git"
 
                     captured_output = io.StringIO()
@@ -309,7 +309,7 @@ class TestPrePushHook:
                     mock_telemetry.assert_called()
 
     @patch("sys.stdin", io.StringIO("refs/heads/feat a b refs/heads/feat c\n"))
-    @patch("wfc.wfc_tools.gitwork.hooks.pre_push.get_remote_url")
+    @patch("wfc.gitwork.hooks.pre_push.get_remote_url")
     def test_pre_push_hook_feature_branch(self, mock_url):
         """Test pre-push hook with feature branch (no warning)."""
         mock_url.return_value = "git@github.com:user/repo.git"
@@ -515,8 +515,8 @@ class TestHookInstaller:
 class TestHookTelemetryIntegration:
     """Test that hooks properly log to telemetry."""
 
-    @patch("wfc.wfc_tools.gitwork.hooks.pre_commit.get_current_branch")
-    @patch("wfc.wfc_tools.gitwork.hooks.pre_commit.get_staged_files")
+    @patch("wfc.gitwork.hooks.pre_commit.get_current_branch")
+    @patch("wfc.gitwork.hooks.pre_commit.get_staged_files")
     def test_pre_commit_logs_telemetry(self, mock_staged, mock_branch):
         """Test that pre-commit hook logs telemetry."""
         mock_branch.return_value = "main"

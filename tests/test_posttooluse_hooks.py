@@ -221,40 +221,76 @@ class TestTDDEnforcerTrivialEdit:
     """Test trivial edit detection."""
 
     def test_import_edit_is_trivial(self):
-        assert is_trivial_edit("Edit", {
-            "old_string": "import os",
-            "new_string": "import os\nimport sys",
-        }) is True
+        assert (
+            is_trivial_edit(
+                "Edit",
+                {
+                    "old_string": "import os",
+                    "new_string": "import os\nimport sys",
+                },
+            )
+            is True
+        )
 
     def test_constant_addition_is_trivial(self):
-        assert is_trivial_edit("Edit", {
-            "old_string": "MAX_RETRY = 3",
-            "new_string": "MAX_RETRY = 3\nDEFAULT_TIMEOUT = 30",
-        }) is True
+        assert (
+            is_trivial_edit(
+                "Edit",
+                {
+                    "old_string": "MAX_RETRY = 3",
+                    "new_string": "MAX_RETRY = 3\nDEFAULT_TIMEOUT = 30",
+                },
+            )
+            is True
+        )
 
     def test_line_removal_is_trivial(self):
-        assert is_trivial_edit("Edit", {
-            "old_string": "x = 1\ny = 2\nz = 3",
-            "new_string": "x = 1\nz = 3",
-        }) is True
+        assert (
+            is_trivial_edit(
+                "Edit",
+                {
+                    "old_string": "x = 1\ny = 2\nz = 3",
+                    "new_string": "x = 1\nz = 3",
+                },
+            )
+            is True
+        )
 
     def test_function_change_not_trivial(self):
-        assert is_trivial_edit("Edit", {
-            "old_string": "def foo():\n    return 1",
-            "new_string": "def foo():\n    return 2",
-        }) is False
+        assert (
+            is_trivial_edit(
+                "Edit",
+                {
+                    "old_string": "def foo():\n    return 1",
+                    "new_string": "def foo():\n    return 2",
+                },
+            )
+            is False
+        )
 
     def test_write_not_trivial(self):
-        assert is_trivial_edit("Write", {
-            "old_string": "x = 1",
-            "new_string": "x = 2",
-        }) is False
+        assert (
+            is_trivial_edit(
+                "Write",
+                {
+                    "old_string": "x = 1",
+                    "new_string": "x = 2",
+                },
+            )
+            is False
+        )
 
     def test_empty_strings_not_trivial(self):
-        assert is_trivial_edit("Edit", {
-            "old_string": "",
-            "new_string": "",
-        }) is False
+        assert (
+            is_trivial_edit(
+                "Edit",
+                {
+                    "old_string": "",
+                    "new_string": "",
+                },
+            )
+            is False
+        )
 
 
 class TestTDDEnforcerTestFileSearch:
@@ -317,18 +353,14 @@ class TestPytestLastfailed:
         cache_dir = tmp_path / ".pytest_cache" / "v" / "cache"
         cache_dir.mkdir(parents=True)
         lastfailed = cache_dir / "lastfailed"
-        lastfailed.write_text(json.dumps({
-            "tests/test_handler.py::test_handle": True
-        }))
+        lastfailed.write_text(json.dumps({"tests/test_handler.py::test_handle": True}))
         assert has_related_failing_test(str(tmp_path), str(tmp_path / "handler.py")) is True
 
     def test_no_failing_test(self, tmp_path):
         cache_dir = tmp_path / ".pytest_cache" / "v" / "cache"
         cache_dir.mkdir(parents=True)
         lastfailed = cache_dir / "lastfailed"
-        lastfailed.write_text(json.dumps({
-            "tests/test_other.py::test_other": True
-        }))
+        lastfailed.write_text(json.dumps({"tests/test_other.py::test_other": True}))
         assert has_related_failing_test(str(tmp_path), str(tmp_path / "handler.py")) is False
 
     def test_no_cache_file(self, tmp_path):

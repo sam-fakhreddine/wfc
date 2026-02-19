@@ -24,9 +24,7 @@ class TestIsWfcHookEntry:
     def test_ignores_non_wfc_hook(self):
         entry = {
             "matcher": "Write|Edit",
-            "hooks": [
-                {"type": "command", "command": "my-custom-linter"}
-            ],
+            "hooks": [{"type": "command", "command": "my-custom-linter"}],
         }
         assert is_wfc_hook_entry(entry) is False
 
@@ -121,7 +119,10 @@ class TestUpsertHooks:
                     {
                         "matcher": "Write|Edit",
                         "hooks": [
-                            {"type": "command", "command": "python ~/.wfc/scripts/hooks/old_checker.py"}
+                            {
+                                "type": "command",
+                                "command": "python ~/.wfc/scripts/hooks/old_checker.py",
+                            }
                         ],
                     },
                 ]

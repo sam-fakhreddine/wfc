@@ -7,6 +7,7 @@ Covers three validation layers:
 
 PROP-001: fail-open - all exceptions are swallowed; finding keeps current state.
 """
+
 from __future__ import annotations
 
 from pathlib import Path
@@ -14,12 +15,12 @@ from unittest.mock import MagicMock
 
 import pytest
 
-from wfc.scripts.skills.review.finding_validator import (
+from wfc.scripts.orchestrators.review.finding_validator import (
     FindingValidator,
     ValidatedFinding,
     ValidationStatus,
 )
-from wfc.scripts.skills.review.fingerprint import DeduplicatedFinding
+from wfc.scripts.orchestrators.review.fingerprint import DeduplicatedFinding
 
 
 def _make_finding(
@@ -64,8 +65,6 @@ def _make_validated(
     )
 
 
-
-
 class TestStructuralVerification:
     """Layer 1: check file existence and line content."""
 
@@ -83,11 +82,7 @@ class TestStructuralVerification:
     def test_structural_real_code_returns_verified(self, tmp_path: Path) -> None:
         """File with real code at reported line -> VERIFIED."""
         py_file = tmp_path / "app.py"
-        py_file.write_text(
-            "def foo():\n"
-            "    x = 1\n"
-            "    return x\n"
-        )
+        py_file.write_text("def foo():\n" "    x = 1\n" "    return x\n")
         finding = _make_finding(file=str(py_file), line_start=2, line_end=2)
         status, confidence, notes = self.validator.validate_structural(
             finding, file_content=py_file.read_text()
@@ -97,11 +92,7 @@ class TestStructuralVerification:
     def test_structural_comment_line_returns_unverified(self, tmp_path: Path) -> None:
         """Line that is a comment (starts with #) -> UNVERIFIED."""
         py_file = tmp_path / "app.py"
-        py_file.write_text(
-            "def foo():\n"
-            "    # this is a comment\n"
-            "    return 1\n"
-        )
+        py_file.write_text("def foo():\n" "    # this is a comment\n" "    return 1\n")
         finding = _make_finding(file=str(py_file), line_start=2, line_end=2, confidence=6.0)
         status, confidence, notes = self.validator.validate_structural(
             finding, file_content=py_file.read_text()
@@ -139,8 +130,6 @@ class TestStructuralVerification:
             finding, file_content=py_file.read_text()
         )
         assert status == ValidationStatus.UNVERIFIED
-
-
 
 
 class TestCrossCheckTaskSpec:
@@ -236,8 +225,6 @@ class TestApplyCrossCheckResult:
         assert len(result.validation_notes) > 0
 
 
-
-
 class TestHistoricalPatternMatch:
     """Layer 3: validate_historical queries retriever for past patterns."""
 
@@ -298,10 +285,12 @@ class TestHistoricalPatternMatch:
     def test_historical_rejected_takes_priority_over_accepted(self) -> None:
         """If results contain both 'rejected' and 'accepted', rejected wins."""
         vf = _make_validated(status=ValidationStatus.VERIFIED, confidence=8.0)
-        retriever = self._mock_retriever([
-            "This was accepted in similar contexts",
-            "This pattern was rejected as noise",
-        ])
+        retriever = self._mock_retriever(
+            [
+                "This was accepted in similar contexts",
+                "This pattern was rejected as noise",
+            ]
+        )
         result = self.validator.validate_historical(vf, retriever)
         assert result.validation_status == ValidationStatus.HISTORICALLY_REJECTED
 
@@ -311,8 +300,6 @@ class TestHistoricalPatternMatch:
         retriever = self._mock_retriever(["accepted pattern"])
         result = self.validator.validate_historical(vf, retriever)
         assert len(result.validation_notes) > 0
-
-
 
 
 class TestFailOpen:
@@ -361,8 +348,6 @@ class TestFailOpen:
         assert isinstance(result, ValidatedFinding)
 
 
-
-
 class TestWeightMapping:
     """ValidatedFinding.weight reflects ValidationStatus correctly."""
 
@@ -390,8 +375,6 @@ class TestWeightMapping:
     def test_weight_historically_rejected(self) -> None:
         vf = self._result_with_status(ValidationStatus.HISTORICALLY_REJECTED)
         assert vf.weight == pytest.approx(0.0)
-
-
 
 
 class TestValidateIntegration:

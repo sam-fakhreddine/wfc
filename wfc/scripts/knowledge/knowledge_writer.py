@@ -56,7 +56,7 @@ class KnowledgeWriter:
         global_knowledge_dir: Path | None = None,
     ) -> None:
         if reviewers_dir is None:
-            reviewers_dir = Path(__file__).resolve().parents[2] / "reviewers"
+            reviewers_dir = Path(__file__).resolve().parents[2] / "references" / "reviewers"
         self.reviewers_dir = reviewers_dir
 
         if global_knowledge_dir is None:
