@@ -1,0 +1,39 @@
+{
+  "cli_version": "0.4.2",
+  "checkpoint_id": "1a2a769710ea",
+  "session_id": "ce9b467e-c414-447f-b9f2-fe807be3000f",
+  "strategy": "manual-commit",
+  "created_at": "2026-02-19T01:44:28.912217Z",
+  "branch": "claude/enhance-workflow-plugin-c25hS",
+  "checkpoints_count": 1,
+  "files_touched": [
+    "CLAUDE.md",
+    "README.md",
+    "install-universal.sh",
+    "tests/test_hooks_security.py",
+    "tests/test_hooks_whitelist.py",
+    "tests/test_persona_deletion.py",
+    "tests/test_rag_pipeline.py",
+    "tests/test_reviewer_engine.py",
+    "wfc/scripts/knowledge/knowledge_writer.py",
+    "wfc/scripts/orchestrators/review/reviewer_loader.py"
+  ],
+  "agent": "Claude Code",
+  "transcript_identifier_at_start": "4572a7ba-0864-41f2-9fef-234e369adfd2",
+  "token_usage": {
+    "input_tokens": 118,
+    "cache_creation_tokens": 129829,
+    "cache_read_tokens": 8649486,
+    "output_tokens": 3835,
+    "api_call_count": 114
+  },
+  "initial_attribution": {
+    "calculated_at": "2026-02-19T01:44:28.856269Z",
+    "agent_lines": 0,
+    "human_added": 7624,
+    "human_modified": 203,
+    "human_removed": 0,
+    "total_committed": 7757,
+    "agent_percentage": 0
+  }
+}
