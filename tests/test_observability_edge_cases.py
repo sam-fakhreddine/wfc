@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-import threading
-from pathlib import Path
 from unittest.mock import MagicMock
 
 import pytest
@@ -62,9 +60,7 @@ class TestEdgeCases:
         from wfc.observability.events import EventBus
 
         bus = EventBus()
-        bus.emit(ObservabilityEvent(
-            event_type="test", source="test", session_id="s", payload={}
-        ))
+        bus.emit(ObservabilityEvent(event_type="test", source="test", session_id="s", payload={}))
 
     def test_missing_config_falls_back_silently(self, tmp_path, monkeypatch):
         """Missing config file falls back to defaults without errors."""
@@ -95,9 +91,7 @@ class TestEdgeCases:
         p1 = FileProvider(output_dir=str(tmp_path), session_id="session-A")
         p2 = FileProvider(output_dir=str(tmp_path), session_id="session-B")
 
-        event = ObservabilityEvent(
-            event_type="test", source="test", session_id="s", payload={}
-        )
+        event = ObservabilityEvent(event_type="test", source="test", session_id="s", payload={})
         p1.on_event(event)
         p2.on_event(event)
         p1.flush()
@@ -123,9 +117,10 @@ class TestBackwardCompatibility:
     """Verify no breaking changes to public APIs."""
 
     def test_review_orchestrator_init_signature(self):
+        import inspect
+
         from wfc.scripts.orchestrators.review.orchestrator import ReviewOrchestrator
 
-        import inspect
         sig = inspect.signature(ReviewOrchestrator.__init__)
         params = list(sig.parameters.keys())
         assert "self" in params
@@ -133,41 +128,46 @@ class TestBackwardCompatibility:
         assert "retriever" in params
 
     def test_review_orchestrator_prepare_review_signature(self):
+        import inspect
+
         from wfc.scripts.orchestrators.review.orchestrator import ReviewOrchestrator
 
-        import inspect
         sig = inspect.signature(ReviewOrchestrator.prepare_review)
         params = list(sig.parameters.keys())
         assert params == ["self", "request"]
 
     def test_review_orchestrator_finalize_review_signature(self):
+        import inspect
+
         from wfc.scripts.orchestrators.review.orchestrator import ReviewOrchestrator
 
-        import inspect
         sig = inspect.signature(ReviewOrchestrator.finalize_review)
         params = list(sig.parameters.keys())
         assert params == ["self", "request", "task_responses", "output_dir", "skip_validation"]
 
     def test_security_hook_check_signature(self):
+        import inspect
+
         from wfc.scripts.hooks.security_hook import check
 
-        import inspect
         sig = inspect.signature(check)
         params = list(sig.parameters.keys())
         assert params == ["input_data", "state"]
 
     def test_rule_engine_evaluate_signature(self):
+        import inspect
+
         from wfc.scripts.hooks.rule_engine import evaluate
 
-        import inspect
         sig = inspect.signature(evaluate)
         params = list(sig.parameters.keys())
         assert params == ["input_data", "rules_dir"]
 
     def test_drift_detector_analyze_signature(self):
+        import inspect
+
         from wfc.scripts.knowledge.drift_detector import DriftDetector
 
-        import inspect
         sig = inspect.signature(DriftDetector.analyze)
         params = list(sig.parameters.keys())
         assert params == ["self"]
