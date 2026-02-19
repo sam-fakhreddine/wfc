@@ -8,8 +8,6 @@ from __future__ import annotations
 from datetime import date, timedelta
 from pathlib import Path
 
-import pytest
-
 from wfc.scripts.knowledge.drift_detector import (
     DriftDetector,
     DriftReport,
@@ -31,8 +29,6 @@ def _make_reviewer_dir(tmp_path: Path, reviewer_id: str, content: str) -> Path:
     km = reviewer_dir / "KNOWLEDGE.md"
     km.write_text(content)
     return reviewer_dir
-
-
 
 
 def test_drift_signal_fields():
@@ -65,8 +61,6 @@ def test_drift_signal_line_range_optional():
     assert signal.line_range is None
 
 
-
-
 def test_no_knowledge_files_healthy(tmp_path: Path):
     """Empty dir → healthy report."""
     reviewers_dir = tmp_path / "reviewers"
@@ -78,8 +72,6 @@ def test_no_knowledge_files_healthy(tmp_path: Path):
     assert report.recommendation == "healthy"
     assert report.total_entries == 0
     assert report.healthy_count == 0
-
-
 
 
 def test_fresh_entries_not_stale(tmp_path: Path):
@@ -120,8 +112,6 @@ def test_old_entries_stale(tmp_path: Path):
     assert signals[0].severity == "medium"
 
 
-
-
 def test_many_entries_bloated(tmp_path: Path):
     """>50 entries → bloated signal."""
     today = date.today().isoformat()
@@ -129,9 +119,7 @@ def test_many_entries_bloated(tmp_path: Path):
     content = "## Patterns Found\n\n" + "\n".join(lines) + "\n"
     _make_reviewer_dir(tmp_path, "security", content)
     detector = DriftDetector(reviewers_dir=tmp_path / "reviewers")
-    signals = detector.check_bloat(
-        tmp_path / "reviewers" / "security" / "KNOWLEDGE.md", "security"
-    )
+    signals = detector.check_bloat(tmp_path / "reviewers" / "security" / "KNOWLEDGE.md", "security")
     assert len(signals) == 1
     assert signals[0].signal_type == "bloated"
     assert signals[0].severity == "high"
@@ -144,12 +132,8 @@ def test_few_entries_not_bloated(tmp_path: Path):
     content = "## Patterns Found\n\n" + "\n".join(lines) + "\n"
     _make_reviewer_dir(tmp_path, "security", content)
     detector = DriftDetector(reviewers_dir=tmp_path / "reviewers")
-    signals = detector.check_bloat(
-        tmp_path / "reviewers" / "security" / "KNOWLEDGE.md", "security"
-    )
+    signals = detector.check_bloat(tmp_path / "reviewers" / "security" / "KNOWLEDGE.md", "security")
     assert signals == []
-
-
 
 
 def test_contradiction_detected(tmp_path: Path):
@@ -193,8 +177,6 @@ def test_no_contradiction_different_paths(tmp_path: Path):
     assert signals == []
 
 
-
-
 def test_orphaned_file_detected(tmp_path: Path):
     """Path in entry that doesn't exist on disk → orphaned signal."""
     today = date.today().isoformat()
@@ -234,8 +216,6 @@ def test_existing_file_not_orphaned(tmp_path: Path):
     assert signals == []
 
 
-
-
 def test_analyze_combines_all_checks(tmp_path: Path):
     """Full analysis runs all 4 checks."""
     old_date = (date.today() - timedelta(days=120)).isoformat()
@@ -257,8 +237,6 @@ def test_analyze_combines_all_checks(tmp_path: Path):
     assert "stale" in signal_types
     assert "contradictory" in signal_types
     assert "orphaned" in signal_types
-
-
 
 
 def test_report_recommendation_healthy(tmp_path: Path):

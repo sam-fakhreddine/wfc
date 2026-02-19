@@ -1,0 +1,8 @@
+{
+  "id": "go-09-fp",
+  "language": "go",
+  "example_type": "false_positive_trap",
+  "source_code": "func tryConnect(addr string) {\n\tconn, err := net.Dial(\"tcp\", addr)\n\tif err != nil {\n\t\t// Best-effort probe; failure is expected and intentionally ignored\n\t\t_ = err\n\t\treturn\n\t}\n\tconn.Close()\n}\n",
+  "findings": [],
+  "notes": "The error is explicitly assigned to '_' with a comment explaining the intentional discard. This is a best-effort probe, not a forgotten error check. The blank identifier makes the intent explicit."
+}

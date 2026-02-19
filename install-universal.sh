@@ -700,11 +700,11 @@ if [ "$STRATEGY" = "symlink" ]; then
 
     echo "  • Found $SKILLS_FOUND WFC skills"
 
-    # Copy shared resources to ~/.wfc
-    if [ -d "$SCRIPT_DIR/wfc/references/personas" ]; then
-        echo "  • Copying shared resources..."
-        mkdir -p "$WFC_ROOT/personas"
-        cp -r "$SCRIPT_DIR/wfc/references/personas"/* "$WFC_ROOT/personas/"
+    # Copy reviewers (5 fixed specialist reviewers)
+    if [ -d "$SCRIPT_DIR/wfc/references/reviewers" ]; then
+        echo "  • Installing reviewers..."
+        mkdir -p "$WFC_ROOT/reviewers"
+        cp -r "$SCRIPT_DIR/wfc/references/reviewers"/* "$WFC_ROOT/reviewers/"
     fi
 
     # Copy hooks infrastructure
@@ -764,12 +764,11 @@ else
 
     echo "  • Found $SKILLS_FOUND WFC skills"
 
-    # Copy shared resources
-    if [ -d "$SCRIPT_DIR/wfc/references/personas" ]; then
-        echo "  • Copying shared resources..."
-        # Create wfc/ subdirectory for shared resources
-        mkdir -p "$WFC_ROOT/wfc/personas"
-        cp -r "$SCRIPT_DIR/wfc/references/personas"/* "$WFC_ROOT/wfc/personas/"
+    # Copy reviewers (5 fixed specialist reviewers)
+    if [ -d "$SCRIPT_DIR/wfc/references/reviewers" ]; then
+        echo "  • Installing reviewers..."
+        mkdir -p "$WFC_ROOT/wfc/references/reviewers"
+        cp -r "$SCRIPT_DIR/wfc/references/reviewers"/* "$WFC_ROOT/wfc/references/reviewers/"
     fi
 
     # Copy hooks infrastructure
@@ -968,13 +967,14 @@ echo "  • ${CYAN}/wfc-safeclaude${RESET}   - Safe command allowlist"
 echo "  • ${CYAN}/wfc-safeguard${RESET}    - Real-time security hooks"
 echo "  • ${CYAN}/wfc-rules${RESET}        - Custom enforcement rules"
 echo "  • ${CYAN}/wfc-playground${RESET}   - Interactive HTML playgrounds"
-echo "  • ${CYAN}/wfc-isthissmart${RESET}  - Critical thinking advisor"
+echo "  • ${CYAN}/wfc-validate${RESET}     - Critical thinking advisor"
 echo "  • ${CYAN}/wfc-pr-comments${RESET} - PR comment triage & fix"
 echo "  • ${CYAN}/wfc-newskill${RESET}     - Create new WFC skills"
 echo "  • ${CYAN}/wfc-init${RESET}        - Project initialization tool"
 echo "  • ${CYAN}/wfc-vibe${RESET}         - Natural brainstorming mode"
 echo "  • ${CYAN}/wfc-sync${RESET}        - Sync rules & discover patterns"
 echo "  • ${CYAN}/wfc-agentic${RESET}     - GitHub Agentic Workflows (gh-aw)"
+echo "  • ${CYAN}/wfc-ba${RESET}          - Business analysis & requirements"
 
 echo ""
 echo -e "${BOLD}🚀 Next Steps${RESET}"

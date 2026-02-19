@@ -5,15 +5,15 @@ SOLID: Dependency Inversion - Composes specialized components
 DRY: No duplication - delegates to specialized classes
 """
 
-from pathlib import Path
-from typing import List, Optional, Dict, Any
 from datetime import datetime
+from pathlib import Path
+from typing import Any, Dict, List, Optional
 
-from .schemas import ReflexionEntry, WorkflowMetric, OperationalPattern
-from .reflexion import ReflexionLogger
 from .metrics import MetricsLogger
-from .pattern_detector import PatternDetector
 from .ops_tasks import OpsTasksGenerator
+from .pattern_detector import PatternDetector
+from .reflexion import ReflexionLogger
+from .schemas import OperationalPattern, ReflexionEntry, WorkflowMetric
 
 
 class MemoryManager:

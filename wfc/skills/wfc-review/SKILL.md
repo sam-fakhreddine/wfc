@@ -151,7 +151,35 @@ CS=3.50 (informational): 2 finding(s), review passed.
 - Consensus Score decision (pass/fail with tier)
 - Deduplicated findings with reviewer agreement counts
 
-## Relevance Gate
+## Conditional Reviewer Activation
+
+Reviewers are activated based on change characteristics, not just file extensions. This saves tokens on small changes and adds depth on risky ones.
+
+### Tier 1: Lightweight Review (S complexity, <50 lines changed)
+
+Only 2 reviewers run:
+- **Correctness** (always)
+- **Maintainability** (always)
+
+**Triggers:** Single-file changes, typo fixes, small refactors, config changes.
+
+### Tier 2: Standard Review (M complexity, 50-500 lines changed)
+
+All 5 base reviewers run with relevance gating.
+
+### Tier 3: Deep Review (L/XL complexity, >500 lines or risk signals)
+
+All 5 base reviewers + conditional specialist agents:
+
+| Signal Detected | Additional Agent | What It Checks |
+|----------------|-----------------|----------------|
+| Database migration files | **Schema Drift Detector** | Unrelated schema changes, migration safety |
+| Database migration files | **Data Migration Expert** | ID mappings, swapped values, rollback safety |
+| Auth/security changes | **Auth Deep Dive** | Token handling, session management, RBAC gaps |
+| API endpoint changes | **API Contract Checker** | Breaking changes, versioning, backwards compat |
+| Infrastructure/deploy | **Deploy Verification** | Go/No-Go checklist, rollback plan |
+
+### Relevance Gate (File Extensions)
 
 Each reviewer has domain-specific file extensions. Only relevant reviewers execute:
 
@@ -162,6 +190,48 @@ Each reviewer has domain-specific file extensions. Only relevant reviewers execu
 | Performance | .py, .js, .ts, .go, .java, .rs, .sql |
 | Maintainability | * (always relevant) |
 | Reliability | .py, .js, .ts, .go, .java, .rs |
+
+### Signal Detection Rules
+
+```
+IF files include **/migrations/** OR **/migrate/** OR schema changes:
+    → Activate Schema Drift Detector + Data Migration Expert
+
+IF files include **/auth/** OR **/security/** OR JWT/token/session patterns:
+    → Activate Auth Deep Dive
+
+IF files include **/api/** OR **/routes/** OR **/endpoints/**:
+    → Activate API Contract Checker
+
+IF files include Dockerfile, docker-compose, k8s, terraform, CI configs:
+    → Activate Deploy Verification
+```
+
+### Knowledge Search (Always-On)
+
+Regardless of tier, the review always searches `docs/solutions/` for related past issues via wfc-compound's knowledge base. This surfaces known pitfalls before they become findings.
+
+### Per-Project Configuration
+
+Projects can customize which reviewers run via `wfc-review.local.md`:
+
+```yaml
+---
+review_agents:
+  - security
+  - correctness
+  - performance
+  - maintainability
+  - reliability
+additional_agents:
+  - schema-drift-detector
+tier_overrides:
+  always_deep: true  # Force Tier 3 for all reviews
+---
+
+# Optional: Review Context
+Focus on Rails conventions and N+1 query detection.
+```
 
 ## Philosophy
 

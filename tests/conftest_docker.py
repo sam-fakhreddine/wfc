@@ -1,8 +1,9 @@
 """Pytest fixtures for Docker-based installer testing."""
 
-import pytest
 import subprocess
 from pathlib import Path
+
+import pytest
 
 
 @pytest.fixture(scope="session")

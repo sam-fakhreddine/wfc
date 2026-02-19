@@ -6,9 +6,9 @@ Scans project, generates safe command allowlist, eliminates approval friction.
 
 __version__ = "0.1.0"
 
-from .scanner import ProjectScanner, ProjectProfile
-from .allowlist import AllowlistGenerator, AllowlistCategories
+from .allowlist import AllowlistCategories, AllowlistGenerator
 from .generator import SettingsGenerator
+from .scanner import ProjectProfile, ProjectScanner
 
 __all__ = [
     "ProjectScanner",

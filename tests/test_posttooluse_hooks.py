@@ -2,33 +2,27 @@
 
 import json
 import sys
-import tempfile
-from io import StringIO
 from pathlib import Path
-from unittest.mock import MagicMock, patch
-
-import pytest
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "wfc" / "scripts" / "hooks"))
 
-from _util import check_file_length, find_git_root
-from _checkers.python import strip_python_comments
-from _checkers.typescript import strip_typescript_comments, find_project_root
 from _checkers.go import strip_go_comments
+from _checkers.python import strip_python_comments
+from _checkers.typescript import find_project_root, strip_typescript_comments
+from _util import check_file_length
+from context_monitor import (
+    THRESHOLD_CRITICAL,
+    THRESHOLD_STOP,
+    THRESHOLD_WARN,
+)
 from tdd_enforcer import (
-    should_skip,
+    has_go_test_file,
+    has_python_test_file,
+    has_related_failing_test,
+    has_typescript_test_file,
     is_test_file,
     is_trivial_edit,
-    has_python_test_file,
-    has_typescript_test_file,
-    has_go_test_file,
-    has_related_failing_test,
-)
-from context_monitor import (
-    THRESHOLD_WARN,
-    THRESHOLD_STOP,
-    THRESHOLD_CRITICAL,
-    run_context_monitor,
+    should_skip,
 )
 
 
@@ -227,40 +221,76 @@ class TestTDDEnforcerTrivialEdit:
     """Test trivial edit detection."""
 
     def test_import_edit_is_trivial(self):
-        assert is_trivial_edit("Edit", {
-            "old_string": "import os",
-            "new_string": "import os\nimport sys",
-        }) is True
+        assert (
+            is_trivial_edit(
+                "Edit",
+                {
+                    "old_string": "import os",
+                    "new_string": "import os\nimport sys",
+                },
+            )
+            is True
+        )
 
     def test_constant_addition_is_trivial(self):
-        assert is_trivial_edit("Edit", {
-            "old_string": "MAX_RETRY = 3",
-            "new_string": "MAX_RETRY = 3\nDEFAULT_TIMEOUT = 30",
-        }) is True
+        assert (
+            is_trivial_edit(
+                "Edit",
+                {
+                    "old_string": "MAX_RETRY = 3",
+                    "new_string": "MAX_RETRY = 3\nDEFAULT_TIMEOUT = 30",
+                },
+            )
+            is True
+        )
 
     def test_line_removal_is_trivial(self):
-        assert is_trivial_edit("Edit", {
-            "old_string": "x = 1\ny = 2\nz = 3",
-            "new_string": "x = 1\nz = 3",
-        }) is True
+        assert (
+            is_trivial_edit(
+                "Edit",
+                {
+                    "old_string": "x = 1\ny = 2\nz = 3",
+                    "new_string": "x = 1\nz = 3",
+                },
+            )
+            is True
+        )
 
     def test_function_change_not_trivial(self):
-        assert is_trivial_edit("Edit", {
-            "old_string": "def foo():\n    return 1",
-            "new_string": "def foo():\n    return 2",
-        }) is False
+        assert (
+            is_trivial_edit(
+                "Edit",
+                {
+                    "old_string": "def foo():\n    return 1",
+                    "new_string": "def foo():\n    return 2",
+                },
+            )
+            is False
+        )
 
     def test_write_not_trivial(self):
-        assert is_trivial_edit("Write", {
-            "old_string": "x = 1",
-            "new_string": "x = 2",
-        }) is False
+        assert (
+            is_trivial_edit(
+                "Write",
+                {
+                    "old_string": "x = 1",
+                    "new_string": "x = 2",
+                },
+            )
+            is False
+        )
 
     def test_empty_strings_not_trivial(self):
-        assert is_trivial_edit("Edit", {
-            "old_string": "",
-            "new_string": "",
-        }) is False
+        assert (
+            is_trivial_edit(
+                "Edit",
+                {
+                    "old_string": "",
+                    "new_string": "",
+                },
+            )
+            is False
+        )
 
 
 class TestTDDEnforcerTestFileSearch:
@@ -323,18 +353,14 @@ class TestPytestLastfailed:
         cache_dir = tmp_path / ".pytest_cache" / "v" / "cache"
         cache_dir.mkdir(parents=True)
         lastfailed = cache_dir / "lastfailed"
-        lastfailed.write_text(json.dumps({
-            "tests/test_handler.py::test_handle": True
-        }))
+        lastfailed.write_text(json.dumps({"tests/test_handler.py::test_handle": True}))
         assert has_related_failing_test(str(tmp_path), str(tmp_path / "handler.py")) is True
 
     def test_no_failing_test(self, tmp_path):
         cache_dir = tmp_path / ".pytest_cache" / "v" / "cache"
         cache_dir.mkdir(parents=True)
         lastfailed = cache_dir / "lastfailed"
-        lastfailed.write_text(json.dumps({
-            "tests/test_other.py::test_other": True
-        }))
+        lastfailed.write_text(json.dumps({"tests/test_other.py::test_other": True}))
         assert has_related_failing_test(str(tmp_path), str(tmp_path / "handler.py")) is False
 
     def test_no_cache_file(self, tmp_path):

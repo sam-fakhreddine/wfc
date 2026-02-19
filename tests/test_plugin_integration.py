@@ -15,13 +15,12 @@ import sys
 import tempfile
 from pathlib import Path
 
-from wfc.scripts.hooks.hook_state import HookState
-from wfc.scripts.hooks.security_hook import check as security_check
-from wfc.scripts.hooks.rule_engine import evaluate as rule_evaluate
 from wfc.scripts.hooks.config_loader import load_rules
-from wfc.scripts.skills.review.agents import ReviewComment
-from wfc.scripts.skills.review.consensus import ConsensusAlgorithm
-from wfc.scripts.skills.review.agents import AgentReview, AgentType
+from wfc.scripts.hooks.hook_state import HookState
+from wfc.scripts.hooks.rule_engine import evaluate as rule_evaluate
+from wfc.scripts.hooks.security_hook import check as security_check
+from wfc.scripts.orchestrators.review.agents import AgentReview, AgentType, ReviewComment
+from wfc.scripts.orchestrators.review.consensus import ConsensusAlgorithm
 
 _arch_designer_path = (
     Path(__file__).parent.parent / "wfc" / "skills" / "wfc-plan" / "architecture_designer.py"
@@ -31,8 +30,6 @@ _arch_mod = importlib.util.module_from_spec(_spec)
 _spec.loader.exec_module(_arch_mod)
 ArchitectureDesigner = _arch_mod.ArchitectureDesigner
 ArchitectureApproach = _arch_mod.ArchitectureApproach
-
-
 
 
 class TestHookState:
@@ -394,8 +391,6 @@ class TestPreToolUseDispatcher:
         assert result.returncode == 0
 
 
-
-
 class TestConfidenceFiltering:
     """Test confidence-based false positive filtering."""
 
@@ -638,7 +633,7 @@ class TestReviewRequestFields:
 
     def test_review_request_defaults(self):
         """ReviewRequest has sensible defaults for optional fields."""
-        from wfc.scripts.skills.review.orchestrator import ReviewRequest
+        from wfc.scripts.orchestrators.review.orchestrator import ReviewRequest
 
         req = ReviewRequest(
             task_id="TASK-001",
@@ -649,7 +644,7 @@ class TestReviewRequestFields:
 
     def test_review_request_with_all_fields(self):
         """ReviewRequest accepts all fields."""
-        from wfc.scripts.skills.review.orchestrator import ReviewRequest
+        from wfc.scripts.orchestrators.review.orchestrator import ReviewRequest
 
         req = ReviewRequest(
             task_id="TASK-001",
@@ -659,8 +654,6 @@ class TestReviewRequestFields:
         )
         assert req.task_id == "TASK-001"
         assert req.diff_content == "diff --git a/test.py"
-
-
 
 
 class TestArchitectureDesigner:

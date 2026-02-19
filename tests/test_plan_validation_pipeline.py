@@ -14,11 +14,6 @@ from pathlib import Path
 SKILL_MD_PATH = Path(__file__).resolve().parent.parent / "wfc" / "skills" / "wfc-plan" / "SKILL.md"
 
 
-# ---------------------------------------------------------------------------
-# TASK-005a: SKILL.md content validation
-# ---------------------------------------------------------------------------
-
-
 class TestSkillMDValidationPipelineSection:
     """Verify SKILL.md contains all required plan validation pipeline instructions."""
 
@@ -33,7 +28,9 @@ class TestSkillMDValidationPipelineSection:
 
     def test_has_isthissmart_gate_instructions(self):
         content = SKILL_MD_PATH.read_text()
-        assert "IsThisSmart Gate" in content, "SKILL.md must describe the IsThisSmart Gate step"
+        assert (
+            "Validate Gate" in content or "IsThisSmart Gate" in content
+        ), "SKILL.md must describe the Validate Gate step"
 
     def test_has_revision_mechanism(self):
         content = SKILL_MD_PATH.read_text()
@@ -73,7 +70,7 @@ class TestSkillMDValidationPipelineSection:
         required_fields = [
             "hash_algorithm",
             "original_hash",
-            "isthissmart_score",
+            "validate_score",
             "revision_count",
             "review_score",
             "final_hash",
@@ -101,11 +98,6 @@ class TestSkillMDValidationPipelineSection:
         content = SKILL_MD_PATH.read_text()
         assert "Must-Do" in content, "SKILL.md must describe Must-Do recommendations"
         assert "Should-Do" in content, "SKILL.md must describe Should-Do recommendations"
-
-
-# ---------------------------------------------------------------------------
-# TASK-005a/b: SHA-256 hash computation utility
-# ---------------------------------------------------------------------------
 
 
 class TestPlanHashComputation:
@@ -140,13 +132,7 @@ class TestPlanHashComputation:
         combined = tasks + properties + test_plan
         h = hashlib.sha256(combined).hexdigest()
         assert len(h) == 64
-        # Verify it matches recomputation
         assert h == hashlib.sha256(tasks + properties + test_plan).hexdigest()
-
-
-# ---------------------------------------------------------------------------
-# TASK-005b: plan-audit.json schema validation
-# ---------------------------------------------------------------------------
 
 
 AUDIT_SCHEMA_REQUIRED_FIELDS = {
@@ -237,11 +223,6 @@ class TestPlanAuditJsonSchema:
         assert (
             audit["original_hash"] != audit["final_hash"]
         ), "After revision, original and final hashes should differ"
-
-
-# ---------------------------------------------------------------------------
-# TASK-005a: revision-log.md format validation
-# ---------------------------------------------------------------------------
 
 
 class TestRevisionLogFormat:

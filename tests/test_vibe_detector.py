@@ -4,7 +4,7 @@ Tests for WFC Vibe Scope Detection
 Verifies smart detection of growing scope (PROP-006)
 """
 
-from wfc.scripts.skills.vibe.detector import ScopeDetector
+from wfc.scripts.orchestrators.vibe.detector import ScopeDetector
 
 
 class TestScopeDetector:

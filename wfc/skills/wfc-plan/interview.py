@@ -5,10 +5,10 @@ Gathers requirements through intelligent questioning.
 Adapts questions based on previous answers.
 """
 
-from dataclasses import dataclass, field
-from typing import List, Dict, Any, Optional
-from pathlib import Path
 import json
+from dataclasses import dataclass, field
+from pathlib import Path
+from typing import Any, Dict, List, Optional
 
 
 @dataclass

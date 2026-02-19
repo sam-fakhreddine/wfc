@@ -10,12 +10,12 @@ Tracks and analyzes:
 - Time-to-completion
 """
 
-from dataclasses import dataclass
-from typing import List, Dict, Any
-from pathlib import Path
-from datetime import datetime, timedelta
 import json
 import statistics
+from dataclasses import dataclass
+from datetime import datetime, timedelta
+from pathlib import Path
+from typing import Any, Dict, List
 
 
 @dataclass

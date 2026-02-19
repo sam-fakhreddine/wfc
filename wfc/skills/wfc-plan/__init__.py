@@ -6,21 +6,21 @@ Converts requirements into structured implementation plans.
 
 __version__ = "0.1.0"
 
-from .interview import AdaptiveInterviewer, InterviewResult, Question
-from .tasks_generator import TasksGenerator, Task
-from .properties_generator import PropertiesGenerator, Property
-from .test_plan_generator import TestPlanGenerator, TestCase
-from .orchestrator import PlanOrchestrator, PlanResult
-from .architecture_designer import ArchitectureDesigner, ArchitectureApproach
+from .architecture_designer import ArchitectureApproach, ArchitectureDesigner
 from .cli import PlanCLI
+from .interview import AdaptiveInterviewer, InterviewResult, Question
 
 # Keep mock for backwards compatibility
 from .mock import (
-    generate_mock_plan,
-    MOCK_TASKS,
     MOCK_PROPERTIES,
+    MOCK_TASKS,
     MOCK_TEST_PLAN,
+    generate_mock_plan,
 )
+from .orchestrator import PlanOrchestrator, PlanResult
+from .properties_generator import PropertiesGenerator, Property
+from .tasks_generator import Task, TasksGenerator
+from .test_plan_generator import TestCase, TestPlanGenerator
 
 __all__ = [
     "AdaptiveInterviewer",

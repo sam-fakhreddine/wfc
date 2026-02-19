@@ -12,8 +12,8 @@ from .orchestrator import PlanOrchestrator
 
 # Import from shared (two levels up from skills/plan)
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
-from shared.telemetry_auto import log_event
 from shared.config import get_config
+from shared.telemetry_auto import log_event
 
 
 class PlanCLI:

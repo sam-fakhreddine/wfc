@@ -1,0 +1,8 @@
+{
+  "id": "java-09-fp",
+  "language": "java",
+  "example_type": "false_positive_trap",
+  "source_code": "public class Singleton {\n    private volatile static Singleton instance;\n\n    public static Singleton getInstance() {\n        if (instance == null) {\n            synchronized (Singleton.class) {\n                if (instance == null) {\n                    instance = new Singleton();\n                }\n            }\n        }\n        return instance;\n    }\n\n    private Singleton() {}\n}\n",
+  "findings": [],
+  "notes": "Double-checked locking with volatile is a correct and well-known pattern in Java 5+. The volatile keyword ensures the partially-constructed instance is never visible to other threads. Not a race condition."
+}

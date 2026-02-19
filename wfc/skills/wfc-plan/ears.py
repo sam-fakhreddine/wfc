@@ -5,8 +5,8 @@ Provides structured templates for writing clear, testable requirements.
 """
 
 from dataclasses import dataclass
-from typing import List, Optional
 from enum import Enum
+from typing import List, Optional
 
 
 class EARSType(Enum):

@@ -1,0 +1,8 @@
+{
+  "id": "java-08-fp",
+  "language": "java",
+  "example_type": "false_positive_trap",
+  "source_code": "public class StatusCode {\n    public static final String OK = \"OK\";\n    public static final String ERROR = \"ERROR\";\n\n    public boolean check(String status) {\n        // Interned constants: identity comparison is intentional and safe\n        return status == OK || status == ERROR;\n    }\n}\n",
+  "findings": [],
+  "notes": "Using == to compare with compile-time string constants (OK, ERROR) is intentional; string literals are interned by the JVM, so identity comparison works correctly here. The comment documents the intent."
+}

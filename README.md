@@ -1,6 +1,6 @@
 # WFC — AI-Powered Development Team in Your IDE
 
-> **Ship better code, faster.** 56 expert AI agents work in parallel to build, review, and secure your code—while you stay in flow.
+> **Ship better code, faster.** 5 specialist reviewers, parallel TDD agents, and real-time security enforcement—all in your IDE.
 
 [![MIT License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 [![Production Ready](https://img.shields.io/badge/status-production-green.svg)]()
@@ -14,47 +14,59 @@
 
 **Traditional AI coding assistants give you one perspective.** WFC gives you an entire engineering team.
 
-Instead of writing code alone, you orchestrate 56 specialized AI agents who:
-- **Build features in parallel** using TDD workflows in isolated environments
-- **Review your code** from security, performance, architecture, and quality perspectives
-- **Catch issues before production** with multi-expert consensus (not just one opinion)
+Instead of writing code alone, you orchestrate specialized AI agents that:
+- **Build features in parallel** using TDD workflows in isolated git worktrees
+- **Review your code** from 5 specialist perspectives with mathematical consensus scoring
+- **Catch issues before production** with real-time security hooks and quality gates
 - **Learn from patterns** across sessions to prevent recurring mistakes
 
-**Result:** Production-quality code with systematic quality enforcement, delivered faster.
+**Result:** Production-quality code with systematic quality enforcement.
 
 ---
 
 ## 🚀 Key Features
 
-### 1. Multi-Agent Consensus Reviews
+### 1. Five-Agent Consensus Reviews
 
-Get your code reviewed by 5 specialized experts—automatically selected from a pool of 56.
+Every review runs 5 fixed specialist reviewers in parallel, then calculates a mathematically weighted Consensus Score (CS).
 
 ```bash
 /wfc-review
 ```
 
-**What happens:**
-- Automatically detects your tech stack (Python? React? Go?)
-- Selects 5 relevant experts (e.g., AppSec, Backend Engineer, Performance Tester)
-- Runs parallel independent reviews with weighted consensus
-- Returns actionable feedback with severity scoring
+**The 5 reviewers:**
+| Reviewer | Focus |
+|----------|-------|
+| **Security** | OWASP Top 10, injection flaws, auth/authz, secrets |
+| **Correctness** | Logic bugs, edge cases, type safety, contracts |
+| **Performance** | Algorithmic complexity, N+1 queries, memory |
+| **Maintainability** | Readability, SOLID/DRY, coupling, naming |
+| **Reliability** | Error handling, fault tolerance, resource leaks |
 
-**Example Output:**
+**How scoring works:**
+- Each finding gets a score: `R_i = (severity × confidence) / 10`
+- Consensus Score: `CS = (0.5 × R̄) + (0.3 × R̄ × k/n) + (0.2 × R_max)`
+- Minority Protection Rule: if Security or Reliability raises a critical finding, CS is elevated regardless of consensus
+- Findings are deduplicated via SHA-256 fingerprinting (±3 lines across reviewers)
+
+**Decision tiers:**
 ```
-✅ Overall Score: 8.5/10 - APPROVED
+CS < 4.0   → Informational (log only)
+CS 4-7     → Moderate (inline comment)
+CS 7-9     → Important (blocks merge)
+CS ≥ 9.0   → Critical (block + escalate)
+```
 
-✅ Consensus (4/5 agree):
-   - Clean architecture, well-structured
-   - Database queries optimized
-   - Security best practices followed
+**Example output:**
+```
+✅ Overall Score: 8.2/10 - APPROVED
 
-⚠️ Critical Issues:
-   - SQL injection risk in user input (AppSec Specialist)
-   - Missing index on orders.user_id (DB Architect)
+⚠️ Critical (3 reviewers agree):
+   - SQL injection risk in user input [Security, Correctness, Reliability]
+   - N+1 query detected on orders.user_id [Performance]
 
-💡 Unique Insights:
-   - Consider caching for GET requests (Performance Tester)
+💡 Suggestions:
+   - Consider caching for GET /api/products [Performance]
 ```
 
 ### 2. Parallel TDD Implementation
@@ -67,7 +79,7 @@ Execute multiple tasks simultaneously with isolated TDD agents.
 ```
 
 **How it works:**
-- Each agent gets its own git worktree (zero contamination)
+- Each agent gets its own git worktree (zero contamination between tasks)
 - Enforced RED → GREEN → REFACTOR workflow
 - Universal quality gates (100+ tools via Trunk.io)
 - Auto-merge on success, rollback on failure
@@ -77,12 +89,12 @@ Execute multiple tasks simultaneously with isolated TDD agents.
 ```
 5 Agents in parallel:
 ├─ Agent 1: Setup auth system      [worktree-1]
-├─ Agent 2: OAuth2 flow            [worktree-2]  
+├─ Agent 2: OAuth2 flow            [worktree-2]
 ├─ Agent 3: JWT token handler      [worktree-3]
 ├─ Agent 4: Token refresh logic    [worktree-4]
 └─ Agent 5: Integration tests      [worktree-5]
     ↓
-Quality checks → Review → Merge → Integration tests → Main
+Quality checks → Consensus review → Merge → Integration tests → Main
 ```
 
 ### 3. Built-in Security & Best Practices
@@ -93,33 +105,33 @@ WFC mitigates **9/9** applicable OWASP LLM Top 10 risks:
 - **Prompt injection defenses** with 94% attack surface reduction
 - **Secret detection** prevents credential leaks
 - **Supply chain controls** with hash-pinned dependencies
-- **Multi-agent consensus** detects misinformation
+- **Multi-reviewer consensus** catches misinformation
 
 [Full OWASP Analysis →](docs/security/OWASP_LLM_TOP10_MITIGATIONS.md)
 
-### 4. 17 Specialized Skills
+### 4. 26 Specialized Skills
 
 | Skill | What It Does | When To Use |
 |-------|--------------|-------------|
 | `wfc-build` | Quick feature builder with TDD | Single feature, need it fast |
-| `wfc-review` | Multi-expert consensus review | PR reviews, quality checks |
+| `wfc-review` | Five-reviewer consensus review | PR reviews, quality checks |
 | `wfc-plan` | Structured task breakdown | Complex features, dependencies |
 | `wfc-implement` | Parallel TDD execution | Execute structured plans |
 | `wfc-security` | STRIDE threat modeling | Security audits, compliance |
 | `wfc-test` | Property-based test generation | Comprehensive test coverage |
 | `wfc-architecture` | C4 diagrams + ADRs | Document system design |
-| `wfc-isthissmart` | Critical thinking advisor | Validate approach before coding |
+| `wfc-validate` | Critical thinking advisor | Validate approach before coding |
 
-[See all 19 skills →](QUICKSTART.md#available-skills)
+[See all 26 skills →](QUICKSTART.md#available-skills)
 
-### 5. 92% Faster with Progressive Disclosure
+### 5. Progressive Disclosure Architecture
 
-WFC uses progressive disclosure architecture to load only what you need:
+WFC loads only what's needed, when it's needed:
 
-- **Traditional context loading:** 43,000 tokens, slow
-- **WFC:** 3,400 tokens, 10x faster, 90% less memory
-
-Only full persona details are fetched when experts are selected. Everything else stays lazy-loaded.
+- **Skill prompts:** Compact metadata loaded at startup
+- **Reviewer prompts:** Loaded per-review from `wfc/references/reviewers/{name}/PROMPT.md`
+- **Knowledge base:** RAG-retrieved context per reviewer domain
+- **Result:** Fast startup, low memory, full capability
 
 ---
 
@@ -132,9 +144,9 @@ PHASE 1: PLANNING          PHASE 2: IMPLEMENTATION      PHASE 3: REVIEW
 ────────────────          ─────────────────────────    ───────────────
 /wfc-plan                  /wfc-implement               /wfc-review
     ↓                          ↓                            ↓
-TASKS.md                   5 Parallel Agents            5 Expert Reviews
-PROPERTIES.md              TDD Workflows                Consensus Decision
-TEST-PLAN.md               Quality Gates                Score ≥ 7.0 to ship
+TASKS.md                   Parallel Agents              5 Fixed Reviewers
+PROPERTIES.md              TDD Workflows                Consensus Score
+TEST-PLAN.md               Quality Gates                CS ≥ 7.0 to ship
 ```
 
 **Phase 1: Smart Planning**
@@ -146,14 +158,14 @@ TEST-PLAN.md               Quality Gates                Score ≥ 7.0 to ship
 **Phase 2: Parallel Execution**
 - Up to 5 agents work simultaneously in isolated git worktrees
 - Each follows strict TDD: TEST FIRST → IMPLEMENT → REFACTOR
-- Universal quality checks with 100+ tools
+- Universal quality checks with 100+ tools (Trunk.io)
 - Automatic rollback if quality gates fail
 
 **Phase 3: Expert Consensus**
-- Auto-selects 5 most relevant experts from 56-person panel
-- Weighted scoring: Security 35%, Code Review 30%, Performance 20%, Complexity 15%
-- All experts must pass (≥7/10), no critical issues
-- Detailed feedback with severity levels
+- 5 specialist reviewers analyze in parallel
+- Consensus Score with Minority Protection Rule
+- Finding deduplication via SHA-256 fingerprinting
+- Detailed feedback with severity and confidence levels
 
 ---
 
@@ -178,7 +190,7 @@ The installer auto-detects your platform (Claude Code, Cursor, VS Code, Kiro, et
 /wfc-review
 ```
 
-That's it. WFC will analyze your code and return expert feedback from 5 specialized reviewers.
+That's it. WFC runs 5 specialist reviewers in parallel and returns findings with a Consensus Score.
 
 ### 3. Build a Feature
 
@@ -193,7 +205,7 @@ That's it. WFC will analyze your code and return expert feedback from 5 speciali
 WFC will:
 1. Interview you (3-5 quick questions)
 2. Spawn TDD agents in isolated worktrees
-3. Run quality checks and expert reviews
+3. Run quality checks and consensus review
 4. Create a PR for you to review and merge
 
 ---
@@ -212,13 +224,13 @@ AI: "Yes, looks fine!" ❌ (missed SQL injection)
 ```
 You: /wfc-review
 
-Security Expert: ⚠️ CRITICAL - SQL injection in line 42
-Backend Expert: ✅ Logic is sound
-Performance Expert: ⚠️ N+1 query detected, add index
-Architecture Expert: ✅ Follows SOLID principles
-Code Reviewer: ⚠️ Missing error handling for edge case
+Security:       ⚠️ CRITICAL - SQL injection in line 42
+Correctness:    ✅ Logic is sound
+Performance:    ⚠️ N+1 query detected, add index
+Maintainability:✅ Follows SOLID principles
+Reliability:    ⚠️ Missing error handling for edge case
 
-Overall: 6.8/10 - CONDITIONAL APPROVE
+Consensus Score: 6.8/10 - CONDITIONAL APPROVE
 Required fixes: SQL injection, N+1 query, error handling
 ```
 
@@ -226,22 +238,12 @@ Required fixes: SQL injection, N+1 query, error handling
 
 **Task:** Add complete authentication system (OAuth2 + JWT + refresh tokens + tests)
 
-**Traditional approach:** 4-8 hours sequential work
-
-**With WFC:**
 ```bash
-/wfc-plan                    # 2 minutes - structured breakdown
-/wfc-implement --agents 5    # 45 minutes - 5 agents working in parallel
+/wfc-plan                    # Structured breakdown → TASKS.md
+/wfc-implement --agents 5    # 5 agents working in parallel
 ```
 
-5 agents work simultaneously:
-- Agent 1: Database schema + migrations
-- Agent 2: OAuth2 authorization flow
-- Agent 3: JWT token generation/validation
-- Agent 4: Refresh token rotation
-- Agent 5: Integration tests + security tests
-
-All with TDD, quality checks, and expert reviews built-in.
+5 agents work simultaneously—each with TDD, quality checks, and expert review built-in.
 
 ### Use Case 3: Security Audits
 
@@ -250,41 +252,36 @@ All with TDD, quality checks, and expert reviews built-in.
 /wfc-review --properties SECURITY,SAFETY
 ```
 
-WFC automatically:
-- Identifies attack vectors
-- Reviews authentication/authorization
-- Checks for common vulnerabilities (OWASP Top 10)
-- Validates input sanitization
-- Ensures secrets aren't hardcoded
+WFC automatically: identifies attack vectors, checks OWASP Top 10, validates input sanitization, ensures secrets aren't hardcoded.
 
 ---
 
 ## Developer Benefits
 
 ### ⚡ **Faster Shipping**
-- Parallel execution: 5 agents work simultaneously
-- Smart planning: Break complex features into parallelizable tasks
-- Auto-merge: Passing code goes straight to your branch
+- Parallel execution: up to 5 agents work simultaneously
+- Smart planning: break complex features into parallelizable tasks
+- Auto-merge: passing code goes straight to your branch
 
 ### 🛡️ **Better Quality**
-- Multi-expert consensus catches issues single reviewers miss
+- Five-reviewer consensus catches issues single reviewers miss
 - 100+ quality tools run automatically (Trunk.io)
 - TDD enforcement prevents "implement first, test later" technical debt
 
 ### 🔒 **Security Built-In**
 - OWASP LLM Top 10 mitigations out of the box
-- Real-time hooks block dangerous operations
-- Security experts on every review
+- Real-time hooks block dangerous operations as you code
+- Security specialist on every review with Minority Protection Rule
 
 ### 🧠 **Learn & Improve**
+- RAG-powered knowledge base per reviewer domain
 - Cross-session learning prevents recurring mistakes
-- Pattern detection suggests systematic improvements
-- Detailed feedback explains the "why" behind issues
+- Detailed feedback explains the "why" behind every issue
 
 ### 🔧 **Framework Agnostic**
 - Works with any language or framework
-- Universal quality checker supports Python, JavaScript, Go, Rust, Java, etc.
-- Extensible with custom personas and rules
+- Universal quality checker supports Python, JavaScript, Go, Rust, Java, and more
+- Extensible with custom rules (`.wfc/rules/*.md`)
 
 ---
 
@@ -294,7 +291,7 @@ WFC automatically:
 - **`wfc-build`** — Quick feature builder with adaptive interview + TDD
 - **`wfc-plan`** — Structured task breakdown with EARS requirements
 - **`wfc-implement`** — Multi-agent parallel TDD execution engine
-- **`wfc-review`** — Multi-expert consensus code review
+- **`wfc-review`** — Five-reviewer consensus code review
 
 ### Quality & Testing
 - **`wfc-test`** — Property-based test generation from formal specs
@@ -304,15 +301,18 @@ WFC automatically:
 
 ### Governance & Safety
 - **`wfc-safeguard`** — Real-time security hooks (PreToolUse enforcement)
-- **`wfc-rules`** — Custom code standards enforcement
+- **`wfc-rules`** — Custom code standards enforcement via Markdown rules
 - **`wfc-safeclaude`** — Reduce approval prompts with safe command allowlist
-- **`wfc-isthissmart`** — Critical thinking advisor (7-dimension analysis)
+- **`wfc-validate`** — Critical thinking advisor (7-dimension analysis)
 
 ### Workflow & Productivity
 - **`wfc-vibe`** — Natural brainstorming mode with smooth transitions
+- **`wfc-ba`** — Business analysis and requirements gathering
 - **`wfc-retro`** — AI-powered retrospectives with metrics
 - **`wfc-playground`** — Interactive HTML playgrounds for prototyping
-- **`wfc-pr-comments`** — Triage & fix PR review feedback automatically
+- **`wfc-pr-comments`** — Triage and fix PR review feedback automatically
+- **`wfc-sync`** — Discover patterns and sync project rules
+- **`wfc-housekeeping`** — Remove dead code, stale branches, orphaned files
 - **`wfc-newskill`** — Create custom WFC skills with scaffolding
 
 [Full documentation →](QUICKSTART.md)
@@ -332,8 +332,8 @@ cd wfc
 The installer:
 1. Auto-detects your IDE/platform
 2. Offers branding choice (SFW: "Workflow Champion" or NSFW: "World Fucking Class")
-3. Installs all 19 skills to the correct location
-4. Sets up progressive disclosure (92% token reduction)
+3. Installs all 26 skills to the correct location
+4. Configures progressive disclosure and security hooks
 
 **Restart your IDE** after installation to load the skills.
 
@@ -363,7 +363,7 @@ WFC will interview you (3-5 questions), spawn agents, implement with TDD, review
 
 ```bash
 # Step 1: Validate approach
-/wfc-isthissmart "Add OAuth2 with JWT tokens and refresh flow"
+/wfc-validate "Add OAuth2 with JWT tokens and refresh flow"
 
 # Step 2: Create structured plan
 /wfc-plan
@@ -384,7 +384,7 @@ WFC will interview you (3-5 questions), spawn agents, implement with TDD, review
 # Generates: THREAT-MODEL.md with attack vectors
 
 /wfc-review --properties SECURITY,SAFETY
-# Auto-selects security experts for focused review
+# Security reviewer's findings trigger Minority Protection Rule
 ```
 
 ### Workflow 4: PR Review
@@ -401,46 +401,53 @@ WFC will interview you (3-5 questions), spawn agents, implement with TDD, review
 
 ## Technical Highlights
 
-### 56 Expert Personas
+### Five Fixed Specialist Reviewers
 
-| Domain | Count | Examples |
-|--------|-------|----------|
-| **Engineering** | 11 | Python, Node, Go, Rust, React, iOS, Android |
-| **Security** | 8 | AppSec, PenTest, Cloud Security, Compliance |
-| **Architecture** | 7 | Solutions, APIs, Microservices, Event-Driven |
-| **Quality** | 10 | Performance, Load Testing, Code Review, A11y |
-| **Data** | 4 | SQL, NoSQL, Data Engineering, ML |
-| **Product** | 3 | Developer Experience, Technical PM |
-| **Operations** | 4 | SRE, Platform, DevOps, Observability |
-| **Domain** | 5 | Fintech, Healthcare, E-commerce, Gaming |
-| **Specialists** | 4 | WCAG, Performance Optimization, i18n |
+All reviews use the same 5 reviewers every time—no randomness, no selection:
 
-[Full persona library →](docs/quality/PERSONAS.md)
+| Reviewer | Located at |
+|----------|------------|
+| Security | `wfc/references/reviewers/security/PROMPT.md` |
+| Correctness | `wfc/references/reviewers/correctness/PROMPT.md` |
+| Performance | `wfc/references/reviewers/performance/PROMPT.md` |
+| Maintainability | `wfc/references/reviewers/maintainability/PROMPT.md` |
+| Reliability | `wfc/references/reviewers/reliability/PROMPT.md` |
 
-### Progressive Disclosure Architecture
+Each reviewer has a `KNOWLEDGE.md` that grows via RAG-powered auto-append after each review.
 
-- **Traditional loading:** 43,000 tokens, slow startup
-- **WFC:** 3,400 tokens (92% reduction), 10x faster
-- **How:** Load summaries first, fetch details only when needed
-- **Result:** 90% less memory usage, instant startup
+### Consensus Score (CS) Algorithm
+
+```
+CS = (0.5 × R̄) + (0.3 × R̄ × k/n) + (0.2 × R_max)
+
+Where:
+  R_i  = (severity × confidence) / 10  per deduplicated finding
+  R̄    = mean of all R_i values
+  k    = total reviewer agreements
+  n    = 5 (total reviewers)
+  R_max = max(R_i) across all findings
+
+Minority Protection Rule:
+  If R_max ≥ 8.5 from Security or Reliability:
+    CS = max(CS, 0.7 × R_max + 2.0)
+```
 
 ### EARS Requirements Format
 
-WFC uses the aerospace industry's EARS (Easy Approach to Requirements Syntax) for unambiguous, testable requirements:
+WFC uses the aerospace industry's EARS format for unambiguous, testable requirements:
 
 - **UBIQUITOUS:** `The system shall <action>`
 - **EVENT_DRIVEN:** `WHEN <trigger>, system shall <action>`
 - **STATE_DRIVEN:** `WHILE <state>, system shall <action>`
-- **OPTIONAL:** `WHERE <feature>, system shall <action>`
 - **UNWANTED:** `IF <condition>, THEN system shall <action>`
 
 [EARS documentation →](docs/reference/EARS.md)
 
-### Performance Metrics
+### Key Metrics
 
-- **56** expert personas
-- **5** max parallel agents
-- **92%** token reduction
+- **5** fixed specialist reviewers
+- **26** WFC skills
+- **5** max parallel implementation agents
 - **100+** quality tools (Trunk.io)
 - **8+** platform support
 - **>80%** test coverage
@@ -449,9 +456,8 @@ WFC uses the aerospace industry's EARS (Easy Approach to Requirements Syntax) fo
 
 ## Platform Compatibility
 
-WFC implements the [Agent Skills specification](https://agentskills.io) for universal compatibility across AI coding assistants:
+WFC implements the [Agent Skills specification](https://agentskills.io) for universal compatibility:
 
-**Supported Platforms:**
 - **Claude Code** — Primary platform
 - **Kiro** — AWS AI coding assistant
 - **OpenCode** — OpenAI coding assistant
@@ -461,7 +467,7 @@ WFC implements the [Agent Skills specification](https://agentskills.io) for univ
 - **Antigravity** — AI pair programmer
 - **Goose** — CLI-based AI assistant
 
-The installer handles everything automatically—just run `./install.sh` and it detects your setup.
+The installer handles everything automatically—just run `./install.sh`.
 
 ---
 
@@ -469,7 +475,6 @@ The installer handles everything automatically—just run `./install.sh` and it 
 
 - **[Quick Start Guide](QUICKSTART.md)** — Get running in 5 minutes
 - **[Architecture Overview](docs/architecture/ARCHITECTURE.md)** — System design and principles
-- **[Persona Library](docs/quality/PERSONAS.md)** — All 56 expert reviewers
 - **[Security Guide](docs/security/OWASP_LLM_TOP10_MITIGATIONS.md)** — OWASP LLM Top 10 coverage
 - **[EARS Requirements](docs/reference/EARS.md)** — Requirements methodology
 - **[Contributing Guide](CONTRIBUTING.md)** — How to contribute
@@ -485,7 +490,7 @@ The installer handles everything automatically—just run `./install.sh` and it 
 
 **MULTI-TIER** — Separation of presentation, logic, data, and config
 
-**TOKEN-AWARE** — 92% reduction through progressive disclosure
+**TOKEN-AWARE** — Progressive disclosure: load only what's needed
 
 **SECURE** — OWASP LLM Top 10 mitigations built-in
 
@@ -498,7 +503,7 @@ The installer handles everything automatically—just run `./install.sh` and it 
 We welcome contributions! See [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
 
 Key areas:
-- Add new expert personas
+- Improve reviewer prompts and knowledge bases
 - Create custom skills
 - Improve quality checkers
 - Extend platform support

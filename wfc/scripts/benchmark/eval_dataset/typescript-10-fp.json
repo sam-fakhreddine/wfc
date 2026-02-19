@@ -1,0 +1,8 @@
+{
+  "id": "typescript-10-fp",
+  "language": "typescript",
+  "example_type": "false_positive_trap",
+  "source_code": "// Intentional coercion: API always returns numeric strings for legacy compat\nfunction parseCount(raw: string): number {\n  const n = +raw;\n  if (Number.isNaN(n)) throw new Error(`Invalid count: ${raw}`);\n  return n;\n}\n",
+  "findings": [],
+  "notes": "The unary + operator looks like implicit coercion abuse, but is intentional here for parsing legacy API strings, guarded by an explicit NaN check. Not a bug."
+}

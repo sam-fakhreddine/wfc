@@ -6,12 +6,11 @@ Intentional Vibe: Quick adaptive interview → complexity assessment → delegat
 CRITICAL: Orchestrator NEVER implements, ONLY coordinates.
 """
 
-from dataclasses import dataclass
-from pathlib import Path
-from typing import List, Dict, Optional
-
 # Add parent to path for wfc imports
 import sys
+from dataclasses import dataclass
+from pathlib import Path
+from typing import Dict, List, Optional
 
 wfc_root = Path(__file__).parent.parent.parent
 sys.path.insert(0, str(wfc_root))

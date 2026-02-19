@@ -145,7 +145,7 @@ Planned enhancements:
 **Validated Plan Flow**:
 
 ```
-Plan Generation → IsThisSmart (7D critique) → Revise → Code Review (loop to 8.5+) → Final
+Plan Generation → Validate (7D critique) → Revise → Code Review (loop to 8.5+) → Final
 ```
 
 **Governance Documents**:
@@ -706,7 +706,7 @@ for level in levels:
 ### Code
 
 - **wfc/scripts/personas/** - Persona system
-- **wfc/scripts/skills/** - Skill implementations
+- **wfc/scripts/orchestrators/** - Skill implementations
 - **wfc/references/** - Progressive disclosure docs
 - **~/.claude/skills/wfc-*/** - Installed skills
 

@@ -1,0 +1,8 @@
+{
+  "id": "java-05-tn",
+  "language": "java",
+  "example_type": "true_negative",
+  "source_code": "public String getUserName(User user) {\n    if (user == null) return \"unknown\";\n    Profile profile = user.getProfile();\n    if (profile == null) return \"unknown\";\n    String name = profile.getName();\n    return name != null ? name.trim() : \"unknown\";\n}\n",
+  "findings": [],
+  "notes": "Each potential null is checked before dereference. Defensive and safe."
+}

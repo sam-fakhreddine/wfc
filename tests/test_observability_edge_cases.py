@@ -30,7 +30,7 @@ class TestEdgeCases:
         monkeypatch.setenv("WFC_OBSERVABILITY_PROVIDERS", "memory")
         obs.init()
 
-        from wfc.scripts.skills.review.orchestrator import ReviewOrchestrator, ReviewRequest
+        from wfc.scripts.orchestrators.review.orchestrator import ReviewOrchestrator, ReviewRequest
 
         engine = MagicMock()
         engine.prepare_review_tasks.return_value = []
@@ -123,7 +123,7 @@ class TestBackwardCompatibility:
     """Verify no breaking changes to public APIs."""
 
     def test_review_orchestrator_init_signature(self):
-        from wfc.scripts.skills.review.orchestrator import ReviewOrchestrator
+        from wfc.scripts.orchestrators.review.orchestrator import ReviewOrchestrator
 
         import inspect
         sig = inspect.signature(ReviewOrchestrator.__init__)
@@ -133,7 +133,7 @@ class TestBackwardCompatibility:
         assert "retriever" in params
 
     def test_review_orchestrator_prepare_review_signature(self):
-        from wfc.scripts.skills.review.orchestrator import ReviewOrchestrator
+        from wfc.scripts.orchestrators.review.orchestrator import ReviewOrchestrator
 
         import inspect
         sig = inspect.signature(ReviewOrchestrator.prepare_review)
@@ -141,12 +141,12 @@ class TestBackwardCompatibility:
         assert params == ["self", "request"]
 
     def test_review_orchestrator_finalize_review_signature(self):
-        from wfc.scripts.skills.review.orchestrator import ReviewOrchestrator
+        from wfc.scripts.orchestrators.review.orchestrator import ReviewOrchestrator
 
         import inspect
         sig = inspect.signature(ReviewOrchestrator.finalize_review)
         params = list(sig.parameters.keys())
-        assert params == ["self", "request", "task_responses", "output_dir"]
+        assert params == ["self", "request", "task_responses", "output_dir", "skip_validation"]
 
     def test_security_hook_check_signature(self):
         from wfc.scripts.hooks.security_hook import check

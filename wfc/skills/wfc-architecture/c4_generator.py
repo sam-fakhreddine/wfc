@@ -6,8 +6,8 @@ Generates Context, Container, Component, and Code diagrams in Mermaid format.
 """
 
 from dataclasses import dataclass, field
-from typing import List, Dict, Any, Optional
 from pathlib import Path
+from typing import Any, Dict, List, Optional
 
 
 @dataclass

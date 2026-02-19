@@ -1,0 +1,16 @@
+{
+  "id": "java-01-tp",
+  "language": "java",
+  "example_type": "true_positive",
+  "source_code": "public String getUserName(User user) {\n    return user.getProfile().getName().trim();\n}\n",
+  "findings": [
+    {
+      "line_start": 2,
+      "line_end": 2,
+      "category": "null-pointer-exception",
+      "severity": 8.0,
+      "description": "user, user.getProfile(), or getName() may return null; chained calls with no null checks will throw NullPointerException"
+    }
+  ],
+  "notes": "Three unchecked dereferences in a chain. Should use Optional or explicit null guards."
+}

@@ -5,10 +5,13 @@ Signals when knowledge files need pruning, updating, or review.
 
 from __future__ import annotations
 
+import logging
 import re
 from dataclasses import dataclass, field
 from datetime import date, timedelta
 from pathlib import Path
+
+logger = logging.getLogger(__name__)
 
 _DATE_RE = re.compile(r"\[(\d{4}-\d{2}-\d{2})\]")
 
@@ -67,7 +70,7 @@ class DriftDetector:
         knowledge_files = self._find_knowledge_files()
 
         for km_path, reviewer_id in knowledge_files:
-            content = km_path.read_text()
+            content = km_path.read_text(encoding="utf-8")
             entries = sum(1 for line in content.splitlines() if _ENTRY_RE.match(line))
             report.total_entries += entries
 
@@ -85,27 +88,6 @@ class DriftDetector:
                 report.healthy_count += 1
 
         report.recommendation = self._compute_recommendation(report)
-
-        try:
-            from wfc.observability.instrument import emit_event, gauge_set
-
-            for signal in report.signals:
-                emit_event(
-                    "knowledge.drift.detected",
-                    source="drift_detector",
-                    payload={
-                        "reviewer_id": signal.reviewer_id,
-                        "signal_type": signal.signal_type,
-                        "severity": signal.severity,
-                        "description": signal.description,
-                    },
-                )
-            gauge_set("knowledge.total_entries", report.total_entries)
-            gauge_set("knowledge.stale_count", report.stale_count)
-            gauge_set("knowledge.bloated_count", report.bloated_count)
-        except Exception:
-            pass
-
         return report
 
     def check_staleness(
@@ -115,7 +97,7 @@ class DriftDetector:
         signals: list[DriftSignal] = []
         cutoff = date.today() - timedelta(days=self.STALE_THRESHOLD_DAYS)
         if content is None:
-            content = knowledge_path.read_text()
+            content = knowledge_path.read_text(encoding="utf-8")
         lines = content.splitlines()
 
         for i, line in enumerate(lines, start=1):
@@ -147,7 +129,7 @@ class DriftDetector:
     ) -> list[DriftSignal]:
         """Check if a knowledge file exceeds BLOAT_THRESHOLD_ENTRIES."""
         if content is None:
-            content = knowledge_path.read_text()
+            content = knowledge_path.read_text(encoding="utf-8")
         entry_count = sum(1 for line in content.splitlines() if _ENTRY_RE.match(line))
         if entry_count > self.BLOAT_THRESHOLD_ENTRIES:
             return [
@@ -169,7 +151,7 @@ class DriftDetector:
     ) -> list[DriftSignal]:
         """Check for entries in both Patterns Found and False Positives with similar file paths."""
         if content is None:
-            content = knowledge_path.read_text()
+            content = knowledge_path.read_text(encoding="utf-8")
         sections = self._parse_sections(content)
 
         patterns_paths = self._extract_file_paths_from_section(sections.get(_PATTERNS_FOUND, ""))
@@ -200,7 +182,7 @@ class DriftDetector:
     ) -> list[DriftSignal]:
         """Check for entries referencing files that no longer exist in the project."""
         if content is None:
-            content = knowledge_path.read_text()
+            content = knowledge_path.read_text(encoding="utf-8")
         file_paths = self._extract_file_paths_from_section(content)
         seen: set[str] = set()
         signals: list[DriftSignal] = []
@@ -211,6 +193,11 @@ class DriftDetector:
                 continue
             seen.add(stem)
             resolved = self.project_root / stem
+            try:
+                resolved.resolve().relative_to(self.project_root.resolve())
+            except ValueError:
+                logger.warning("Skipping path traversal attempt: %s", stem)
+                continue
             if not resolved.exists():
                 signals.append(
                     DriftSignal(
@@ -235,7 +222,7 @@ class DriftDetector:
 
     def _count_entries(self, knowledge_path: Path) -> int:
         """Count entry lines (lines starting with '- ') in a knowledge file."""
-        content = knowledge_path.read_text()
+        content = knowledge_path.read_text(encoding="utf-8")
         return sum(1 for line in content.splitlines() if _ENTRY_RE.match(line))
 
     def _parse_sections(self, content: str) -> dict[str, str]:

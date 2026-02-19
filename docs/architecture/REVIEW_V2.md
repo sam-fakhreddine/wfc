@@ -10,7 +10,7 @@ The review system uses 5 fixed specialist reviewers to analyze code changes. Eac
 ReviewOrchestrator (orchestrator.py)
   ├── prepare_review(request) → 5 task specs
   │     └── ReviewerEngine.prepare_review_tasks()
-  │           └── ReviewerLoader (loads wfc/reviewers/{name}/PROMPT.md)
+  │           └── ReviewerLoader (loads wfc/references/reviewers/{name}/PROMPT.md)
   │                 └── KnowledgeRetriever (optional, two-tier RAG)
   │
   └── finalize_review(request, responses, output_dir) → ReviewResult
@@ -30,7 +30,7 @@ ReviewBenchmark → dataset.json (21 labeled test cases, precision/recall/F1)
 
 ## The 5 Reviewers
 
-Each reviewer lives at `wfc/reviewers/{id}/` with two files:
+Each reviewer lives at `wfc/references/reviewers/{id}/` with two files:
 
 | Reviewer | Domain | Focus Areas |
 |----------|--------|-------------|

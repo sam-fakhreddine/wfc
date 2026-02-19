@@ -288,6 +288,50 @@ Orchestrator:
 Done! ✅ Rate limiting added to API
 ```
 
+## Post-Deploy Validation Plan
+
+**REQUIRED** in every PR created by wfc-build. The orchestrator must generate a `## Post-Deploy Monitoring & Validation` section in the PR body.
+
+### What Gets Generated
+
+```markdown
+## Post-Deploy Monitoring & Validation
+
+### Metrics to Watch
+- [specific metrics relevant to the change]
+
+### Healthy Signals
+- [what "working correctly" looks like]
+
+### Failure Triggers
+- [what indicates a problem]
+
+### Log Queries
+- [specific log searches to run]
+
+### Validation Window
+- Duration: [24h for standard, 72h for data/auth changes]
+- Escalation: [who to contact if metrics degrade]
+
+### Rollback Criteria
+- [specific conditions that warrant rollback]
+```
+
+### How It Works
+
+1. Orchestrator analyzes the implemented changes (files modified, endpoints added, etc.)
+2. Maps changes to observable metrics (response times, error rates, throughput)
+3. Generates monitoring plan based on change type:
+   - **API changes**: Response time P95/P99, error rate, throughput
+   - **Database changes**: Query latency, connection pool usage, migration status
+   - **Auth changes**: Login success rate, token validation failures, session count
+   - **UI changes**: Core Web Vitals, JS error rate, render time
+4. Includes plan in PR body alongside review summary
+
+### Integration with wfc-observe
+
+If PROPERTIES.md exists, the validation plan also maps formal properties to runtime observables using wfc-observe patterns.
+
 ## Philosophy
 
 **ELEGANT:** Simple orchestration, clear delegation, no over-engineering

@@ -5,7 +5,8 @@ Verifies PROP-008: Interview completes in <30 seconds
 """
 
 import time
-from wfc.scripts.skills.build.interview import QuickInterview, InterviewResult
+
+from wfc.scripts.orchestrators.build.interview import InterviewResult, QuickInterview
 
 
 class TestQuickInterview:

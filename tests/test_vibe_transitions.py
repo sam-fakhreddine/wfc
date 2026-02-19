@@ -4,12 +4,12 @@ Tests for WFC Vibe Transition Handling
 Verifies command detection and workflow orchestration (PROP-004)
 """
 
-from wfc.scripts.skills.vibe.transitions import (
+from wfc.scripts.orchestrators.vibe.detector import ScopeDetector
+from wfc.scripts.orchestrators.vibe.summarizer import Message
+from wfc.scripts.orchestrators.vibe.transitions import (
     TransitionHandler,
     TransitionOrchestrator,
 )
-from wfc.scripts.skills.vibe.summarizer import Message
-from wfc.scripts.skills.vibe.detector import ScopeDetector
 
 
 class TestTransitionHandler:
@@ -124,7 +124,7 @@ class TestTransitionHandler:
 
     def test_format_workflow_input_simple(self):
         """TEST-048: Formats input for wfc-build"""
-        from wfc.scripts.skills.vibe.summarizer import PlanningContext
+        from wfc.scripts.orchestrators.vibe.summarizer import PlanningContext
 
         context = PlanningContext(
             goal="Add logging to API",
@@ -142,7 +142,7 @@ class TestTransitionHandler:
 
     def test_format_workflow_input_complex(self):
         """TEST-049: Formats input for wfc-plan"""
-        from wfc.scripts.skills.vibe.summarizer import PlanningContext
+        from wfc.scripts.orchestrators.vibe.summarizer import PlanningContext
 
         context = PlanningContext(
             goal="Build user management system",

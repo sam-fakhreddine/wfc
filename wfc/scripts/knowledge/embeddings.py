@@ -64,11 +64,15 @@ class TfidfEmbeddings(EmbeddingProvider):
 
     def fit(self, texts: list[str]) -> None:
         """Fit the vectorizer on a corpus of texts."""
+        if not texts:
+            return
         self._corpus = list(texts)
         self.vectorizer.fit(self._corpus)
         self._fitted = True
 
     def embed(self, texts: list[str]) -> list[list[float]]:
+        if not texts:
+            return []
         if not self._fitted:
             self.fit(texts)
         matrix = self.vectorizer.transform(texts)

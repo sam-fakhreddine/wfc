@@ -3,9 +3,10 @@
 PyTest configuration and shared fixtures for WFC tests.
 """
 
-import pytest
 import sys
 from pathlib import Path
+
+import pytest
 
 # Add WFC to Python path
 sys.path.insert(0, str(Path(__file__).parent.parent))

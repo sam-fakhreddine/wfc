@@ -1,0 +1,8 @@
+{
+  "id": "java-10-fp",
+  "language": "java",
+  "example_type": "false_positive_trap",
+  "source_code": "public class EventBus {\n    private final List<Runnable> handlers = new ArrayList<>();\n\n    public void subscribe(Runnable handler) {\n        handlers.add(handler);\n    }\n\n    // Snapshot iteration avoids ConcurrentModificationException\n    public void publish() {\n        List<Runnable> snapshot = new ArrayList<>(handlers);\n        snapshot.forEach(Runnable::run);\n    }\n}\n",
+  "findings": [],
+  "notes": "Copying the list before iterating looks like unnecessary allocation but is a deliberate snapshot pattern that prevents ConcurrentModificationException if a handler modifies the subscribers list during dispatch."
+}

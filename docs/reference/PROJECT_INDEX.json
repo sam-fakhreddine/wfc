@@ -146,8 +146,8 @@
           "settings.json generation"
         ]
       },
-      "isthissmart": {
-        "path": "wfc/skills/isthissmart",
+      "validate": {
+        "path": "wfc/skills/validate",
         "purpose": "Critical thinking advisor",
         "features": [
           "7-dimension analysis",
@@ -261,7 +261,7 @@
     },
     "tools": {
       "gitwork": {
-        "path": "wfc/wfc-tools/gitwork",
+        "path": "wfc/gitwork",
         "purpose": "Git workflow automation",
         "features": [
           "Branch management",

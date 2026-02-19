@@ -5,8 +5,9 @@ Integration Tests for TEAMCHARTER Workflow (TASK-009)
 Tests cross-component flows for TEAMCHARTER integration:
 1. Interview values context → plan generation → task values alignment fields
 2. Complexity-budget gate → flags oversized S task → passes appropriately-sized L task
-3. ReflexionMemory stores and retrieves values tags
-4. Plan audit trail records validation chain
+3. Customer Advocate persona selected for customer-facing tasks
+4. ReflexionMemory stores and retrieves values tags
+5. Plan audit trail records validation chain
 """
 
 import json
@@ -339,7 +340,7 @@ class TestPlanAuditTrailSchema:
 
 class TestEndToEndTeamcharterFlow:
     """
-    Integration test: Full flow from interview → complexity check → memory.
+    Integration test: Full flow from interview → complexity check → persona selection → memory.
 
     This is a smoke test ensuring all components can work together.
     """

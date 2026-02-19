@@ -238,16 +238,93 @@ Example:
 └─────────────────────────────┘
 ```
 
+## Living Plan Documents
+
+Plans are living documents that track progress during implementation, not static artifacts.
+
+### YAML Frontmatter
+
+Every TASKS.md includes frontmatter for machine-readable status tracking:
+
+```yaml
+---
+title: OAuth2 Authentication
+status: active          # active | in_progress | completed | abandoned
+created: 2026-02-18T14:30:00Z
+updated: 2026-02-18T16:45:00Z
+tasks_total: 5
+tasks_completed: 0
+complexity: M
+---
+```
+
+### Checkbox Progress
+
+Each acceptance criterion uses markdown checkboxes. wfc-implement updates these as tasks complete:
+
+```markdown
+## TASK-001: Setup project structure
+- **Status**: completed
+- **Acceptance Criteria**:
+  - [x] Project structure follows best practices
+  - [x] Dependencies documented
+
+## TASK-002: Implement JWT auth
+- **Status**: in_progress
+- **Acceptance Criteria**:
+  - [x] Token generation works
+  - [ ] Token refresh implemented
+  - [ ] Rate limiting on auth endpoints
+```
+
+### Status Lifecycle
+
+```
+active → in_progress → completed
+                    ↘ abandoned (with reason)
+```
+
+- **active**: Plan created, not yet started
+- **in_progress**: wfc-implement is executing tasks
+- **completed**: All tasks done, tests passing, PR merged
+- **abandoned**: Scope changed, plan no longer relevant (reason recorded)
+
+### Divergence Tracking
+
+When implementation diverges from the plan, wfc-implement records it:
+
+```markdown
+## Divergence Log
+
+### TASK-003: Redis caching layer
+- **Planned**: Use Redis Cluster with 3 nodes
+- **Actual**: Switched to single Redis instance (sufficient for current scale)
+- **Reason**: Over-engineered for <1000 req/s
+- **Impact**: TASK-004 dependency removed (cluster config no longer needed)
+```
+
+### Knowledge Integration
+
+Plans automatically search `docs/solutions/` (via wfc-compound) during generation:
+
+```markdown
+## TASK-005: Connection pool configuration
+- **Known pitfall**: docs/solutions/performance-issues/redis-pool-exhaustion.md
+  - Size pools relative to worker count, not static
+  - Monitor utilization > 80%
+```
+
 ## Integration with WFC
 
-### Produces (consumed by wfc-implement)
-- `plan/TASKS.md` → Task orchestration
+### Produces (consumed by wfc-implement, wfc-deepen, wfc-lfg)
+- `plan/TASKS.md` → Task orchestration (living document)
 - `plan/PROPERTIES.md` → TDD test requirements
 - `plan/TEST-PLAN.md` → Test strategy
 
-### Consumes (future)
-- `wfc-architecture` for architecture analysis
-- `wfc-security` for threat model properties
+### Consumes
+- `docs/solutions/` → Past solutions for pitfall warnings (via wfc-compound)
+- `wfc-architecture` → Architecture analysis
+- `wfc-security` → Threat model properties
 
 ## Configuration
 
@@ -280,7 +357,7 @@ After generating the draft plan (TASKS.md, PROPERTIES.md, TEST-PLAN.md), run a m
 ### Pipeline Overview
 
 ```
-Draft Plan → SHA-256 Hash → IsThisSmart Gate → Revise → Review Gate (loop until 8.5+) → Final Plan
+Draft Plan → SHA-256 Hash → Validate Gate → Revise → Review Gate (loop until 8.5+) → Final Plan
 ```
 
 ### Step 1: Record Original Hash
@@ -293,22 +370,22 @@ content = tasks_md + properties_md + test_plan_md
 original_hash = hashlib.sha256(content.encode()).hexdigest()
 ```
 
-### Step 2: IsThisSmart Gate
+### Step 2: Validate Gate
 
-Invoke `/wfc-isthissmart` on the generated draft plan. All plan content **must** be delimited with XML tags per PROP-009 prompt injection defense:
+Invoke `/wfc-validate` on the generated draft plan. All plan content **must** be delimited with XML tags per PROP-009 prompt injection defense:
 
 ```
-/wfc-isthissmart
+/wfc-validate
 <plan-content>
 [Full content of TASKS.md, PROPERTIES.md, TEST-PLAN.md concatenated]
 </plan-content>
 ```
 
-This produces an `ISTHISSMART.md` output with scored recommendations categorized as Must-Do, Should-Do, or informational.
+This produces a `VALIDATE.md` output with scored recommendations categorized as Must-Do, Should-Do, or informational.
 
 ### Step 3: Revision Mechanism
 
-After IsThisSmart produces its analysis, read the ISTHISSMART.md output and apply revisions:
+After validation produces its analysis, read the VALIDATE.md output and apply revisions:
 
 1. **Must-Do** recommendations: Apply every Must-Do change to the draft TASKS.md and/or PROPERTIES.md. These are non-negotiable improvements identified by the analysis.
 2. **Should-Do** recommendations: Apply if low-effort (can be done in under 5 minutes). Otherwise, note as deferred with a reason.
@@ -322,7 +399,7 @@ Write a `revision-log.md` in the plan directory documenting what changed and why
 ## Original Plan Hash
 `<original_hash>` (SHA-256)
 
-## IsThisSmart Score
+## Validate Score
 <score>/10
 
 ## Revisions Applied
@@ -330,19 +407,19 @@ Write a `revision-log.md` in the plan directory documenting what changed and why
 ### Must-Do
 
 1. **<change title>** - <description of change>
-   - Source: IsThisSmart recommendation #N
+   - Source: Validate recommendation #N
    - File changed: TASKS.md | PROPERTIES.md | TEST-PLAN.md
 
 ### Should-Do
 
 1. **<change title>** - <description>
-   - Source: IsThisSmart recommendation #N
+   - Source: Validate recommendation #N
    - Status: Applied (low effort) | Deferred (high effort)
 
 ### Deferred
 
 1. **<item>** - <reason for deferral>
-   - Source: IsThisSmart recommendation #N
+   - Source: Validate recommendation #N
    - Reason: <explanation>
 
 ## Review Gate Results
@@ -379,7 +456,7 @@ After the review gate passes (or validation is skipped), write a `plan-audit.jso
 {
   "hash_algorithm": "sha256",
   "original_hash": "<64-char hex SHA-256 of draft plan>",
-  "isthissmart_score": 7.8,
+  "validate_score": 7.8,
   "revision_count": 2,
   "review_score": 8.7,
   "final_hash": "<64-char hex SHA-256 of final plan>",
@@ -392,8 +469,8 @@ After the review gate passes (or validation is skipped), write a `plan-audit.jso
 Field definitions:
 - `hash_algorithm`: Always `"sha256"`
 - `original_hash`: SHA-256 hash of the draft plan before any revisions
-- `isthissmart_score`: Numeric score from the IsThisSmart analysis
-- `revision_count`: Total number of revision rounds applied (IsThisSmart revisions + review loop rounds)
+- `validate_score`: Numeric score from the validation analysis
+- `revision_count`: Total number of revision rounds applied (validation revisions + review loop rounds)
 - `review_score`: Final weighted consensus score from wfc-review (numeric, e.g. 8.7)
 - `final_hash`: SHA-256 hash of the plan after all revisions are complete
 - `timestamp`: ISO 8601 timestamp of when validation completed
@@ -408,7 +485,7 @@ Update HISTORY.md to record whether the plan was validated or skipped. Add a `- 
 
 If `--skip-validation` is passed as an argument:
 
-1. Skip Steps 2-4 entirely (no IsThisSmart Gate, no Review Gate, no revision)
+1. Skip Steps 2-4 entirely (no Validate Gate, no Review Gate, no revision)
 2. Still compute SHA-256 hashes (original_hash = final_hash since no changes were made)
 3. Write `plan-audit_YYYYMMDD_HHMMSS.json` with `"skipped": true` and `"validated": false`
 4. Do not generate `revision-log.md` (no revisions occurred)
@@ -419,7 +496,7 @@ If `--skip-validation` is passed as an argument:
 | Step | Action | Output |
 |------|--------|--------|
 | 1 | SHA-256 hash of draft plan | `original_hash` |
-| 2 | `/wfc-isthissmart` with `<plan-content>` XML tags (PROP-009) | ISTHISSMART.md |
+| 2 | `/wfc-validate` with `<plan-content>` XML tags (PROP-009) | VALIDATE.md |
 | 3 | Apply Must-Do + low-effort Should-Do revisions | revision-log.md, updated plan files |
 | 4 | `/wfc-review` with `<plan-content>` XML tags (PROP-009), loop until >= 8.5 | Review consensus |
 | 5 | Write plan-audit_YYYYMMDD_HHMMSS.json with all fields | plan-audit_YYYYMMDD_HHMMSS.json |
@@ -447,7 +524,7 @@ Created TEST-PLAN.md (12 test cases)
 
 [PLAN VALIDATION PIPELINE]
 SHA-256 hash recorded: a1b2c3...
-IsThisSmart Gate: 7.8/10
+Validate Gate: 7.8/10
   - Applied 2 Must-Do revisions
   - Applied 1 Should-Do revision (low effort)
   - Deferred 1 suggestion

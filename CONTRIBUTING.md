@@ -227,7 +227,7 @@ WFC currently provides 17 Agent Skills compliant skills. When contributing, be a
 - **wfc-architecture** - Architecture docs + C4 diagrams
 - **wfc-test** - Property-based test generation
 - **wfc-observe** - Observability from properties
-- **wfc-isthissmart** - 7-dimension analysis
+- **wfc-validate** - 7-dimension analysis
 - **wfc-vibe** - Default conversational mode
 - **wfc-init** - Project initialization
 - **wfc-safeguard** - Defensive coding safeguards

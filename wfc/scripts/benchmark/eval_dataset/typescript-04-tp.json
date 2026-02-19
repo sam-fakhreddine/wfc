@@ -1,0 +1,16 @@
+{
+  "id": "typescript-04-tp",
+  "language": "typescript",
+  "example_type": "true_positive",
+  "source_code": "function processItems(items: string[]) {\n  items.forEach(async (item) => {\n    await saveToDb(item);\n  });\n  console.log('All saved');\n}\n\ndeclare function saveToDb(item: string): Promise<void>;\n",
+  "findings": [
+    {
+      "line_start": 2,
+      "line_end": 4,
+      "category": "unhandled-async-in-foreach",
+      "severity": 7.0,
+      "description": "async callback inside forEach is not awaited; console.log runs before any saves complete and errors are silently dropped"
+    }
+  ],
+  "notes": "forEach does not await async callbacks. Use 'for...of' with await or Promise.all instead."
+}

@@ -55,12 +55,17 @@ Display: `PR #N: <title> (<head> -> <base>)`
 Fetch only **unresolved** review comments from the PR. Use GraphQL — the REST API does not expose thread resolution status.
 
 ```bash
+# Use the pr_threads helper (preferred — returns thread IDs needed for resolving)
+uv run python wfc/scripts/github/pr_threads.py fetch {owner} {repo} {number} --json
+
+# Or raw GraphQL (note: must include thread `id` for later resolution)
 gh api graphql -f query='
   query($owner: String!, $repo: String!, $number: Int!) {
     repository(owner: $owner, name: $repo) {
       pullRequest(number: $number) {
         reviewThreads(first: 100) {
           nodes {
+            id
             isResolved
             isOutdated
             path
@@ -213,11 +218,22 @@ Instructions:
 2. Apply the fix described in each comment
 3. Verify the fix is correct — do not introduce regressions
 4. Run relevant tests if they exist (use: uv run pytest {test_file} -v)
-5. Do NOT fix anything not in the comment list above
-6. Do NOT make unrelated improvements or refactors
+5. Run auto-lint on every modified file:
+   - Python files: `uv run ruff check --fix {file}` then `uv run black {file}`
+   - TypeScript/JS files: `npx prettier --write {file}` (if available)
+   - Go files: `gofmt -w {file}` (if available)
+   Report any remaining lint errors that couldn't be auto-fixed.
+6. Do NOT fix anything not in the comment list above
+7. Do NOT make unrelated improvements or refactors
 ```
 
 For `RESPOND` comments: Do NOT spawn a subagent. Instead, after fixes are committed, use `gh api` to reply to the comment on GitHub with an explanation.
+
+**Auto-lint gate:** Before committing, run a final format check across all modified files:
+```bash
+uv run black --check wfc/ && uv run ruff check .
+```
+If black would reformat any file, run `uv run black {modified_files}` first. This prevents CI failures from formatting issues.
 
 ### Step 6: COMMIT & PUSH
 
@@ -245,7 +261,42 @@ Co-Authored-By: Claude Opus 4.6 <noreply@anthropic.com>
 git push origin {headRefName}
 ```
 
-### Step 7: REPORT
+### Step 7: RESOLVE THREADS
+
+After pushing, reply to and resolve every addressed thread using the pr_threads helper.
+
+Build a JSON manifest of all threads:
+
+```python
+# manifest.json format
+[
+  {
+    "thread_id": "PRRT_...",           # thread node ID (from fetch --json)
+    "message": "Fixed in {commit}: {one-line description of what was done}",
+    "action": "fixed"                  # "fixed", "responded", or "skip"
+  }
+]
+```
+
+- **FIX threads** → `"action": "fixed"`, message describes the exact change made and the commit SHA
+- **RESPOND threads** → `"action": "responded"`, message is the explanation already provided
+- **SKIP threads** → `"action": "skip"`, these are NOT resolved (leave open for human decision)
+
+Run bulk resolution:
+
+```bash
+uv run python wfc/scripts/github/pr_threads.py bulk-resolve {owner} {repo} manifest.json
+```
+
+This posts the reply message to each thread on GitHub, then calls `resolveReviewThread` to mark it resolved.
+
+**Single thread (ad-hoc):**
+```bash
+uv run python wfc/scripts/github/pr_threads.py resolve PRRT_... \
+  --message "Fixed in abc1234: removed .decode() from text=True subprocess error path"
+```
+
+### Step 8: REPORT
 
 Display a final summary:
 

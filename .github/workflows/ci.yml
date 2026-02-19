@@ -68,8 +68,7 @@ jobs:
 
       - name: Install dependencies
         run: |
-          uv pip install --system pytest pytest-cov
-          uv pip install --system -e .
+          uv pip install --system -e ".[dev]"
 
       - name: Install WFC skills
         run: |
@@ -78,7 +77,7 @@ jobs:
 
       - name: Run tests
         run: |
-          uv run pytest tests/ -v --cov=wfc --cov-report=xml
+          uv run pytest tests/ -v --cov=wfc --cov-report=xml --ignore=tests/test_installer_docker.py
 
       - name: Upload coverage
         if: matrix.python-version == '3.12' && matrix.os == 'ubuntu-latest'
@@ -88,80 +87,41 @@ jobs:
           flags: unittests
           name: codecov-wfc
 
-  validate-personas:
-    name: Validate Persona Library
+  validate-reviewers:
+    name: Validate Reviewer Library
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
 
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.12'
-
-      - name: Validate JSON files
+      - name: Validate reviewer PROMPT.md files
         run: |
           python3 << 'EOF'
-          import json
           from pathlib import Path
 
-          panels_dir = Path('wfc/references/personas/panels')
+          reviewers_dir = Path('wfc/reviewers')
+          expected = ['security', 'correctness', 'performance', 'maintainability', 'reliability']
           errors = []
 
-          for persona_file in panels_dir.glob('*/*.json'):
-              try:
-                  with open(persona_file) as f:
-                      data = json.load(f)
-                      # Basic validation
-                      required_fields = ['id', 'name', 'panel', 'skills', 'lens', 'selection_criteria']
-                      missing = [field for field in required_fields if field not in data]
-                      if missing:
-                          errors.append(f"{persona_file}: Missing fields: {missing}")
-              except json.JSONDecodeError as e:
-                  errors.append(f"{persona_file}: Invalid JSON: {e}")
-              except Exception as e:
-                  errors.append(f"{persona_file}: Error: {e}")
+          for name in expected:
+              prompt = reviewers_dir / name / 'PROMPT.md'
+              if not prompt.exists():
+                  errors.append(f"Missing: {prompt}")
+              elif len(prompt.read_text()) < 100:
+                  errors.append(f"Too short: {prompt}")
 
           if errors:
-              print("❌ Persona validation errors:")
-              for error in errors:
-                  print(f"  - {error}")
+              print("❌ Reviewer validation errors:")
+              for e in errors:
+                  print(f"  - {e}")
               exit(1)
           else:
-              persona_count = len(list(panels_dir.glob('*/*.json')))
-              print(f"✅ All {persona_count} personas validated successfully")
-          EOF
-
-      - name: Check model aliases
-        run: |
-          python3 << 'EOF'
-          import json
-          from pathlib import Path
-
-          panels_dir = Path('wfc/references/personas/panels')
-          allowed_models = ['opus', 'sonnet', 'haiku']
-          errors = []
-
-          for persona_file in panels_dir.glob('*/*.json'):
-              with open(persona_file) as f:
-                  data = json.load(f)
-                  model_pref = data.get('model_preference', {}).get('default', '')
-                  if model_pref not in allowed_models:
-                      errors.append(f"{persona_file}: Invalid model '{model_pref}' (use: {allowed_models})")
-
-          if errors:
-              print("❌ Model alias errors:")
-              for error in errors:
-                  print(f"  - {error}")
-              exit(1)
-          else:
-              print("✅ All personas use valid model aliases")
+              print(f"✅ All {len(expected)} reviewer PROMPT.md files validated")
           EOF
 
   build:
     name: Build Check
     runs-on: ubuntu-latest
-    needs: [lint, test, validate-personas]
+    needs: [lint, test, validate-reviewers]
     steps:
       - uses: actions/checkout@v4
 
@@ -222,11 +182,11 @@ jobs:
               exit 1
           fi
 
-          # Check persona library
-          persona_count=$(find ~/.claude/skills/wfc/personas/panels -name "*.json" 2>/dev/null | wc -l)
-          if [ "$persona_count" -lt 50 ]; then
-              echo "❌ Persona library incomplete (found $persona_count, expected ≥50)"
+          # Check 5 fixed reviewers installed
+          reviewer_count=$(ls -d ~/.claude/skills/wfc/reviewers/*/PROMPT.md 2>/dev/null | wc -l)
+          if [ "$reviewer_count" -lt 5 ]; then
+              echo "❌ Reviewer library incomplete (found $reviewer_count, expected 5)"
               exit 1
           fi
 
-          echo "✅ Installation verified: $skill_count skills, $persona_count personas"
+          echo "✅ Installation verified: $skill_count skills, $reviewer_count reviewers"

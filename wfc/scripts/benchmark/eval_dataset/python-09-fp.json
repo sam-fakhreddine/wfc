@@ -1,0 +1,8 @@
+{
+  "id": "python-09-fp",
+  "language": "python",
+  "example_type": "false_positive_trap",
+  "source_code": "import sys\n\n# Monkey-patch for test isolation\ndef _patched_exit(code=0):\n    raise SystemExit(code)\n\nif 'pytest' in sys.modules:\n    sys.exit = _patched_exit\n",
+  "findings": [],
+  "notes": "Assigning to sys.exit looks dangerous but is deliberate test isolation monkey-patching guarded by a pytest check. Not a bug."
+}

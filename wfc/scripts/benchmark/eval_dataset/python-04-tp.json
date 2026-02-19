@@ -1,0 +1,23 @@
+{
+  "id": "python-04-tp",
+  "language": "python",
+  "example_type": "true_positive",
+  "source_code": "import subprocess\n\ndef run_command(user_input):\n    try:\n        result = subprocess.run(user_input, shell=True, capture_output=True)\n        return result.stdout\n    except:\n        return b''\n",
+  "findings": [
+    {
+      "line_start": 5,
+      "line_end": 5,
+      "category": "command-injection",
+      "severity": 9.0,
+      "description": "shell=True with unsanitized user_input enables command injection"
+    },
+    {
+      "line_start": 7,
+      "line_end": 7,
+      "category": "bare-except",
+      "severity": 5.0,
+      "description": "Bare except clause silently swallows all exceptions including KeyboardInterrupt and SystemExit"
+    }
+  ],
+  "notes": "Two separate bugs: command injection and silent error swallowing."
+}

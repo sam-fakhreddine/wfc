@@ -4,11 +4,9 @@ import json
 import sys
 from pathlib import Path
 
-import pytest
-
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "wfc" / "scripts" / "hooks"))
 
-from register_hooks import WFC_MARKER, is_wfc_hook_entry, upsert_hooks
+from register_hooks import is_wfc_hook_entry, upsert_hooks
 
 
 class TestIsWfcHookEntry:
@@ -26,9 +24,7 @@ class TestIsWfcHookEntry:
     def test_ignores_non_wfc_hook(self):
         entry = {
             "matcher": "Write|Edit",
-            "hooks": [
-                {"type": "command", "command": "my-custom-linter"}
-            ],
+            "hooks": [{"type": "command", "command": "my-custom-linter"}],
         }
         assert is_wfc_hook_entry(entry) is False
 
@@ -123,7 +119,10 @@ class TestUpsertHooks:
                     {
                         "matcher": "Write|Edit",
                         "hooks": [
-                            {"type": "command", "command": "python ~/.wfc/scripts/hooks/old_checker.py"}
+                            {
+                                "type": "command",
+                                "command": "python ~/.wfc/scripts/hooks/old_checker.py",
+                            }
                         ],
                     },
                 ]

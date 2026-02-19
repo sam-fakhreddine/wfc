@@ -34,8 +34,29 @@ wfc validate                     # Validate skills (after install)
 ### Complete Workflow
 
 ```
-1. Plan → 2. Build/Implement → 3. Review → 4. User Pushes
+1. BA → 2. Validate → 3. Plan → 4. Deepen → 5. Build/Implement → 6. Review → 7. Compound → 8. User Pushes
 ```
+
+#### Option Z: Full Auto (LFG)
+
+```bash
+/wfc-lfg "add rate limiting to API"
+```
+
+**Use when:**
+- Feature scope is clear, you trust the pipeline
+- Want zero human intervention between steps
+- Well-understood codebase patterns
+
+**What happens:**
+1. Plan (quick interview → TASKS.md)
+2. Deepen (parallel research enrichment)
+3. Implement (parallel agents, TDD, quality gates)
+4. Review (5-agent consensus, conditional activation)
+5. Resolve findings automatically
+6. Test suite + quality checks
+7. Push branch + create PR with post-deploy validation plan
+8. **STOP - PR created, user reviews on GitHub**
 
 #### Option A: Quick Features (Intentional Vibe)
 
@@ -60,14 +81,26 @@ wfc validate                     # Validate skills (after install)
 #### Option B: Complex Features (Full Planning)
 
 ```bash
-# Step 1: Create structured plan
+# Step 1: Gather and structure requirements
+/wfc-ba
+
+# Step 2: Validate requirements quality
+/wfc-validate
+
+# Step 3: Create structured plan from validated BA
 /wfc-plan
 
-# Step 2: Execute plan with parallel agents
+# Step 3.5 (optional): Deepen plan with parallel research
+/wfc-deepen
+
+# Step 4: Execute plan with parallel agents
 /wfc-implement
 
-# Step 3: Final review (if not already done per-task)
+# Step 5: Final review (if not already done per-task)
 /wfc-review
+
+# Step 6 (after solving problems): Document solutions
+/wfc-compound
 ```
 
 **Use when:**
@@ -84,7 +117,7 @@ wfc validate                     # Validate skills (after install)
 ```
 1. Generate Plan (wfc-plan)
    ↓
-2. IsThisSmart Review (7-dimension critique)
+2. Validate Review (7-dimension critique)
    ↓
 3. Revise Plan (based on feedback)
    ↓
@@ -95,7 +128,7 @@ wfc validate                     # Validate skills (after install)
 
 **What happens:**
 - Plan generator creates initial TASKS.md with values alignment
-- IsThisSmart skill performs 7-dimension critique (complexity, risk, customer value, etc.)
+- Validate skill performs 7-dimension critique (complexity, risk, customer value, etc.)
 - Plan is revised based on feedback
 - Multi-agent code review validates quality (loops until 8.5+ weighted score)
 - Final plan includes immutable audit trail showing validation was performed
@@ -164,18 +197,23 @@ WFC autonomous loop:
 | Brainstorming | **default mode** | wfc-vibe: natural chat, transitions when ready |
 | New feature (small) | `/wfc-build` | Intentional Vibe - fast iteration |
 | New feature (large) | `/wfc-plan` + `/wfc-implement` | Structured approach |
-| Code review | `/wfc-review` | Multi-agent consensus |
+| Full auto pipeline | `/wfc-lfg` | Plan + deepen + implement + review + ship |
+| Deepen a plan | `/wfc-deepen` | Post-plan parallel research enhancement |
+| Document solution | `/wfc-compound` | Codify solved problems for team knowledge |
+| Code review | `/wfc-review` | Multi-agent consensus (conditional activation) |
 | Security audit | `/wfc-security` | STRIDE threat modeling |
 | Architecture docs | `/wfc-architecture` | C4 diagrams + ADRs |
 | Generate tests | `/wfc-test` | Property-based tests |
 | Add monitoring | `/wfc-observe` | Observability from properties |
-| Validate idea | `/wfc-isthissmart` | 7-dimension analysis |
+| Validate idea | `/wfc-validate` | 7-dimension analysis |
 | Security hooks | `/wfc-safeguard` | Real-time pattern enforcement |
 | Custom rules | `/wfc-rules` | Markdown-based code standards |
 | Visual exploration | `/wfc-playground` | Interactive HTML prototyping |
 | Fix PR comments | `/wfc-pr-comments` | Triage & fix review feedback |
 | Sync rules | `/wfc-sync` | Discover patterns & sync rules |
 | Agentic workflows | `/wfc-agentic` | Generate gh-aw workflows |
+| Business analysis | `/wfc-ba` | Requirements gathering & BA docs |
+| Export skills | `/wfc-export` | Multi-platform skill export (Copilot, Gemini, etc.) |
 
 **Note:** wfc-vibe is the default conversational mode. Just chat naturally - when you're ready to implement, say "let's plan this" or "let's build this".
 
@@ -304,9 +342,13 @@ WFC - World Fucking Class
 │           └── playground/       # HTML playground templates
 │
 ├── ~/.claude/skills/wfc-*/      # Installed skills (Agent Skills compliant)
-│   ├── wfc-review/               # Multi-agent consensus review
-│   ├── wfc-plan/                 # Adaptive planning
-│   ├── wfc-implement/            # Parallel implementation
+│   ├── wfc-review/               # Multi-agent consensus review (conditional activation)
+│   ├── wfc-plan/                 # Adaptive planning (living documents)
+│   ├── wfc-implement/            # Parallel implementation (post-deploy validation)
+│   ├── wfc-compound/             # Knowledge codification (docs/solutions/)
+│   ├── wfc-deepen/               # Post-plan research enhancement
+│   ├── wfc-lfg/                  # Autonomous end-to-end pipeline
+│   ├── wfc-export/               # Multi-platform skill export
 │   ├── wfc-security/             # STRIDE threat analysis
 │   ├── wfc-architecture/         # Architecture docs + C4 diagrams
 │   ├── wfc-test/                 # Property-based test generation
@@ -315,8 +357,8 @@ WFC - World Fucking Class
 │   ├── wfc-playground/           # Interactive HTML playground generator
 │   ├── wfc-sync/                # Rule/pattern discovery & sync
 │   ├── wfc-agentic/             # GitHub Agentic Workflows (gh-aw) generator
-│   └── ... (19 total)
-│   └── ... (20 total)
+│   ├── wfc-ba/                  # Business analysis & requirements gathering
+│   └── ... (28 total)
 │
 ├── docs/                         # Documentation (organized by topic)
 │   ├── architecture/             # System design, planning
@@ -464,7 +506,7 @@ make test-coverage
 ReviewOrchestrator (orchestrator.py)
   ├── prepare_review(request) → 5 task specs
   │     └── ReviewerEngine.prepare_review_tasks()
-  │           └── ReviewerLoader (loads from wfc/reviewers/{name}/PROMPT.md)
+  │           └── ReviewerLoader (loads from wfc/references/reviewers/{name}/PROMPT.md)
   │                 └── KnowledgeRetriever (optional, two-tier RAG)
   │
   └── finalize_review(request, responses, output_dir) → ReviewResult
@@ -474,7 +516,7 @@ ReviewOrchestrator (orchestrator.py)
         └── Generate REVIEW-{task_id}.md report
 ```
 
-**5 Reviewers** (`wfc/reviewers/{name}/PROMPT.md + KNOWLEDGE.md`):
+**5 Reviewers** (`wfc/references/reviewers/{name}/PROMPT.md + KNOWLEDGE.md`):
 - **Security**: OWASP/CWE taxonomy, hostile threat modeling
 - **Correctness**: Edge cases, contract verification, type safety
 - **Performance**: Big-O analysis, N+1 detection, memory profiling
@@ -517,7 +559,7 @@ Where:
 
 ### Agent Skills Compliance
 
-All 19 WFC skills are Agent Skills compliant:
+All 28 WFC skills are Agent Skills compliant:
 - Valid frontmatter (only: name, description, license)
 - Hyphenated names (wfc-review, not wfc-review)
 - Comprehensive descriptions
@@ -585,6 +627,17 @@ All 19 WFC skills are Agent Skills compliant:
 - **NEVER** bypass pre-commit validation
 - **ALWAYS** update tests when changing code
 
+### Workspace Isolation
+- **NEVER** provision worktrees with bare `git worktree add` — route through `worktree-manager.sh`
+- **ALWAYS** invoke the controller: `bash wfc/gitwork/scripts/worktree-manager.sh create <name>`
+- **WHY**: Bare git skips env bootstrap, .gitignore registration, and config propagation
+- **ALWAYS** tear down idle workspaces when done: `worktree-manager.sh cleanup`
+
+### Knowledge Capture
+- **ALWAYS** invoke `/wfc-compound` after resolving non-trivial problems
+- **NEVER** let solutions that took >15 minutes go undocumented
+- **ALWAYS** show before/after code and prevention guidance
+
 ## 📊 Key Metrics
 
 **Review System**:
@@ -598,26 +651,32 @@ All 19 WFC skills are Agent Skills compliant:
 - Review system: ~200 tests (engine, fingerprint, CS, CLI, E2E, benchmark)
 
 **Agent Skills Compliance**:
-- Valid skills: 20/20 (100%)
-- XML generation: 20/20 (100%)
+- Valid skills: 28/28 (100%)
+- XML generation: 28/28 (100%)
 
 ## 🔍 Quick Reference
 
 ### File Locations
 
-**Review Orchestrator**: `wfc/scripts/skills/review/orchestrator.py`
-**Reviewer Engine**: `wfc/scripts/skills/review/reviewer_engine.py`
-**Consensus Score**: `wfc/scripts/skills/review/consensus_score.py`
-**Fingerprinter**: `wfc/scripts/skills/review/fingerprint.py`
-**Emergency Bypass**: `wfc/scripts/skills/review/emergency_bypass.py`
-**Review CLI**: `wfc/scripts/skills/review/cli.py`
+**Review Orchestrator**: `wfc/scripts/orchestrators/review/orchestrator.py`
+**Reviewer Engine**: `wfc/scripts/orchestrators/review/reviewer_engine.py`
+**Consensus Score**: `wfc/scripts/orchestrators/review/consensus_score.py`
+**Fingerprinter**: `wfc/scripts/orchestrators/review/fingerprint.py`
+**Emergency Bypass**: `wfc/scripts/orchestrators/review/emergency_bypass.py`
+**Review CLI**: `wfc/scripts/orchestrators/review/cli.py`
 **Knowledge System**: `wfc/scripts/knowledge/`
 **Drift Detector**: `wfc/scripts/knowledge/drift_detector.py`
-**Reviewer Prompts**: `wfc/reviewers/{security,correctness,performance,maintainability,reliability}/PROMPT.md`
+**Reviewer Prompts**: `wfc/references/reviewers/{security,correctness,performance,maintainability,reliability}/PROMPT.md`
 **Hook Infrastructure**: `wfc/scripts/hooks/pretooluse_hook.py`
 **Security Patterns**: `wfc/scripts/hooks/patterns/security.json`
 **Architecture Designer**: `wfc/skills/wfc-plan/architecture_designer.py`
 **Playground Templates**: `wfc/assets/templates/playground/`
+**Worktree Manager**: `wfc/gitwork/scripts/worktree-manager.sh`
+**Worktree API**: `wfc/gitwork/api/worktree.py`
+**Knowledge Codification**: `wfc/skills/wfc-compound/SKILL.md`
+**Autonomous Pipeline**: `wfc/skills/wfc-lfg/SKILL.md`
+**Plan Deepening**: `wfc/skills/wfc-deepen/SKILL.md`
+**Multi-Platform Export**: `wfc/skills/wfc-export/SKILL.md`
 **Installed Skills**: `~/.claude/skills/wfc-*/`
 
 ### Testing
@@ -684,7 +743,7 @@ cd .devcontainer && docker compose build && docker compose up -d
 - **Database Clients**: postgresql-client, redis-tools
 - **Firewall**: iptables-based audit/enforce modes
 - **VS Code Extensions**: Python, ruff, black, ESLint, Prettier, Docker, Copilot, GitLens
-- **WFC Skills**: All 19 skills auto-installed via `install-universal.sh`
+- **WFC Skills**: All 28 skills auto-installed via `install-universal.sh`
 
 ### Workspace Layout
 

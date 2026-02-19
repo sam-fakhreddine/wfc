@@ -1,0 +1,8 @@
+{
+  "id": "java-07-tn",
+  "language": "java",
+  "example_type": "true_negative",
+  "source_code": "public boolean isAdmin(String role) {\n    return \"admin\".equals(role);\n}\n",
+  "findings": [],
+  "notes": "Yoda condition: calling equals() on the literal prevents NullPointerException if role is null and correctly compares by value."
+}

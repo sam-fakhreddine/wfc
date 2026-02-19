@@ -13,7 +13,7 @@ Components:
 """
 
 from wfc.scripts.hooks.hook_state import HookState
-from wfc.scripts.hooks.security_hook import check as security_check
 from wfc.scripts.hooks.rule_engine import evaluate as rule_evaluate
+from wfc.scripts.hooks.security_hook import check as security_check
 
 __all__ = ["HookState", "security_check", "rule_evaluate"]

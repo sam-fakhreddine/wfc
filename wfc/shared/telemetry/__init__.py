@@ -7,8 +7,8 @@ This __init__.py exists for backwards compatibility only.
 from wfc.shared.telemetry_auto import (
     AutoTelemetry,
     get_telemetry,
-    log_event,
     get_workflow_metrics,
+    log_event,
     print_workflow_metrics,
 )
 

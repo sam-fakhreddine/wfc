@@ -353,7 +353,7 @@ class MergeEngine:
 
             result.integration_tests_passed = True
 
-            from wfc.wfc_tools.gitwork.api.pr import get_pr_operations
+            from wfc.gitwork.api.pr import get_pr_operations
 
             pr_ops = get_pr_operations(self.project_root)
 

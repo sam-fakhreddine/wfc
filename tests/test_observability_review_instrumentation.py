@@ -9,7 +9,7 @@ import pytest
 
 import wfc.observability as obs
 from wfc.observability.providers.memory_provider import InMemoryProvider
-from wfc.scripts.skills.review.orchestrator import ReviewOrchestrator, ReviewRequest
+from wfc.scripts.orchestrators.review.orchestrator import ReviewOrchestrator, ReviewRequest
 
 
 @pytest.fixture(autouse=True)

@@ -159,6 +159,45 @@ Orchestrator
 - **Integrates**: wfc-consensus-review (for code review)
 - **Produces**: PR to develop branch, telemetry records, agent reports
 
+## Post-Deploy Validation Plan
+
+After all tasks are implemented and merged, the orchestrator generates a post-deploy validation plan included in the PR body.
+
+### Generation Process
+
+1. Collect all PROPERTIES.md entries for implemented tasks
+2. Map each property to observable metrics:
+   - SAFETY properties → error rate monitors, auth failure alerts
+   - PERFORMANCE properties → latency P95/P99 thresholds, throughput baselines
+   - LIVENESS properties → health check endpoints, heartbeat monitors
+   - INVARIANT properties → data consistency checks, constraint validations
+3. Generate validation plan section for PR body
+
+### Validation Plan Format
+
+```markdown
+## Post-Deploy Monitoring & Validation
+
+### Properties Validated
+| Property | Type | Observable | Threshold |
+|----------|------|-----------|-----------|
+| PROP-001 | SAFETY | auth_failure_rate | < 0.1% |
+| PROP-002 | PERFORMANCE | api_latency_p99 | < 200ms |
+
+### Monitoring Queries
+- `auth_failures{service="api"} / auth_total > 0.001`
+- `histogram_quantile(0.99, api_latency) > 0.2`
+
+### Validation Window
+- Standard changes: 24 hours
+- Data/auth changes: 72 hours
+- Infrastructure changes: 1 week
+
+### Rollback Criteria
+- Any SAFETY property violation triggers immediate rollback
+- PERFORMANCE degradation >20% from baseline triggers investigation
+```
+
 ## Philosophy
 
 **ELEGANT**: Simple agent logic, clear orchestration, no over-engineering
