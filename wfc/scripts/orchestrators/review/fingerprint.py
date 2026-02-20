@@ -132,7 +132,7 @@ class Fingerprinter:
         max_severity = max(f.get("severity", 0) for f in group)
         max_confidence = max(f.get("confidence", 0) for f in group)
 
-        line_end = primary.get("line_end", primary.get("line_start", 0))
+        line_end = primary.get("line_end") or primary.get("line_start", 0)
 
         return DeduplicatedFinding(
             fingerprint=fingerprint,

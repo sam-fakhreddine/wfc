@@ -15,7 +15,10 @@ import json
 import logging
 import re
 from dataclasses import dataclass, field
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
+
+from wfc.scripts.schemas.finding import validate_finding
+from wfc.scripts.schemas.reviewer_response import validate_reviewer_response
 
 from .reviewer_loader import ReviewerConfig, ReviewerLoader
 
@@ -72,7 +75,7 @@ class ReviewerEngine:
         files: list[str],
         diff_content: str = "",
         properties: list[dict] | None = None,
-        model_router: object | None = None,
+        model_router: Any | None = None,
         single_model: str | None = None,
     ) -> list[dict]:
         """
@@ -151,8 +154,15 @@ class ReviewerEngine:
         results: list[ReviewerResult] = []
 
         for item in task_responses:
-            reviewer_id = item.get("reviewer_id", "unknown")
-            response = item.get("response", "")
+            validated_item = validate_reviewer_response(item)
+            if validated_item is None:
+                logger.warning(
+                    "Skipping invalid task_response: keys=%s",
+                    list(item.keys()) if isinstance(item, dict) else type(item).__name__,
+                )
+                continue
+            reviewer_id = validated_item["reviewer_id"]
+            response = validated_item["response"]
             reviewer_name = REVIEWER_NAMES.get(reviewer_id, f"{reviewer_id.title()} Reviewer")
 
             if not response.strip():
@@ -280,7 +290,7 @@ class ReviewerEngine:
         """
         findings: list[dict] = []
 
-        MAX_RESPONSE_LEN = 500_000
+        MAX_RESPONSE_LEN = 50_000
         if len(response) > MAX_RESPONSE_LEN:
             response = response[:MAX_RESPONSE_LEN]
 
@@ -289,7 +299,11 @@ class ReviewerEngine:
             try:
                 parsed, _ = json.JSONDecoder().raw_decode(response, first_bracket)
                 if isinstance(parsed, list):
-                    findings.extend(item for item in parsed if isinstance(item, dict))
+                    for item in parsed:
+                        if isinstance(item, dict):
+                            validated = validate_finding(item)
+                            if validated is not None:
+                                findings.append(validated)
                     if findings:
                         return findings
             except json.JSONDecodeError:
@@ -298,7 +312,11 @@ class ReviewerEngine:
                     try:
                         parsed = json.loads(array_match.group())
                         if isinstance(parsed, list):
-                            findings.extend(item for item in parsed if isinstance(item, dict))
+                            for item in parsed:
+                                if isinstance(item, dict):
+                                    validated = validate_finding(item)
+                                    if validated is not None:
+                                        findings.append(validated)
                             if findings:
                                 return findings
                     except json.JSONDecodeError:
@@ -312,7 +330,9 @@ class ReviewerEngine:
             try:
                 parsed = json.loads(block)
                 if isinstance(parsed, dict):
-                    findings.append(parsed)
+                    validated = validate_finding(parsed)
+                    if validated is not None:
+                        findings.append(validated)
             except json.JSONDecodeError:
                 continue
 
@@ -331,7 +351,10 @@ class ReviewerEngine:
         if not findings:
             return 10.0
 
-        max_severity = max(float(f.get("severity", 1)) for f in findings)
+        try:
+            max_severity = max(float(f.get("severity", 1)) for f in findings)
+        except (ValueError, TypeError):
+            max_severity = 1.0
         return max(0.0, 10.0 - max_severity)
 
     def _extract_summary(self, findings: list[dict], response: str, reviewer_id: str) -> str:
@@ -344,7 +367,14 @@ class ReviewerEngine:
             return f"{reviewer_id.title()} review: no issues found."
 
         count = len(findings)
-        high_sev = sum(1 for f in findings if float(f.get("severity", 0)) >= 7)
+
+        def _safe_severity(f: dict) -> float:
+            try:
+                return float(f.get("severity", 0))
+            except (ValueError, TypeError):
+                return 0.0
+
+        high_sev = sum(1 for f in findings if _safe_severity(f) >= 7)
         if high_sev:
             return f"{reviewer_id.title()} review: {count} finding(s), {high_sev} high severity."
         return f"{reviewer_id.title()} review: {count} finding(s)."
