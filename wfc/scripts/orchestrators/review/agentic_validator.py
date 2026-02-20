@@ -36,7 +36,8 @@ def _sanitize_response(text: str, max_len: int = 2000) -> str:
     system roles. Never raises.
     """
     sanitized = re.sub(r"<[^>]+>", "", text)
-    sanitized = re.sub(r"(?im)^(system|assistant|human)\s*:", "", sanitized)
+    sanitized = re.sub(r"<[^>]+>", "", sanitized)
+    sanitized = re.sub(r"(?im)^\s*(system|assistant|human)\s*:", "", sanitized)
     sanitized = sanitized.replace("```", "'''")
     if len(sanitized) > max_len:
         sanitized = sanitized[:max_len] + "\n[... truncated ...]"

@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import logging
 import math
+import os
 from typing import Any
 
 logger = logging.getLogger(__name__)
@@ -36,6 +37,14 @@ try:
         confidence: float = 0.0
         remediation: str | None = None
         model_config = ConfigDict(extra="allow", coerce_numbers_to_str=False)
+
+        @field_validator("file")
+        @classmethod
+        def sanitize_file_path(cls, v: str) -> str:
+            normalized = os.path.normpath(v)
+            if normalized.startswith("..") or os.path.isabs(normalized):
+                raise ValueError("file path must be relative and not escape project root")
+            return normalized
 
         @field_validator("line_start")
         @classmethod
@@ -75,6 +84,10 @@ def _validate_finding_stdlib(data: dict[str, Any]) -> dict[str, Any] | None:
     try:
         if not isinstance(out["file"], str):
             return None
+        normalized = os.path.normpath(out["file"])
+        if normalized.startswith("..") or os.path.isabs(normalized):
+            return None
+        out["file"] = normalized
         if not isinstance(out["category"], str):
             return None
         if not isinstance(out["description"], str):

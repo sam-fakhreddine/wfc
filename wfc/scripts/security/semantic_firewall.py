@@ -161,40 +161,46 @@ def _store_hardened_embedding(
     - Never raises.
     """
     try:
+        import fcntl
         import tempfile as _tempfile
 
         prompt_hash = hashlib.sha256(prompt_text.encode()).hexdigest()
         _HARDENED_DIR.mkdir(parents=True, exist_ok=True)
         _HARDENED_DIR.chmod(0o700)
         hardened_path = _HARDENED_DIR / "hardened.json"
+        lock_path = _HARDENED_DIR / ".hardened.lock"
 
-        entries: list[dict[str, Any]] = []
-        if hardened_path.exists() and not hardened_path.is_symlink():
+        with open(lock_path, "w") as lf:
+            fcntl.flock(lf, fcntl.LOCK_EX)
+
+            entries: list[dict[str, Any]] = []
+            if hardened_path.exists() and not hardened_path.is_symlink():
+                try:
+                    entries = json.loads(hardened_path.read_text())
+                except Exception:
+                    entries = []
+
+            if any(e.get("hash") == prompt_hash for e in entries):
+                return
+
+            if len(entries) >= _HARDENED_CAP:
+                return
+
+            entries.append(
+                {
+                    "hash": prompt_hash,
+                    "embedding": embedding,
+                    "similarity": similarity,
+                    "timestamp": time.time(),
+                }
+            )
+            fd, tmp_path = _tempfile.mkstemp(dir=str(_HARDENED_DIR))
             try:
-                entries = json.loads(hardened_path.read_text())
-            except Exception:
-                entries = []
-
-        if any(e.get("hash") == prompt_hash for e in entries):
-            return
-
-        if len(entries) >= _HARDENED_CAP:
-            return
-
-        entries.append(
-            {
-                "hash": prompt_hash,
-                "embedding": embedding,
-                "similarity": similarity,
-                "timestamp": time.time(),
-            }
-        )
-        fd, tmp_path = _tempfile.mkstemp(dir=str(_HARDENED_DIR))
-        try:
-            os.write(fd, json.dumps(entries).encode())
-        finally:
-            os.close(fd)
-        os.replace(tmp_path, str(hardened_path))
+                os.fchmod(fd, 0o600)
+                os.write(fd, json.dumps(entries).encode())
+            finally:
+                os.close(fd)
+            os.replace(tmp_path, str(hardened_path))
     except Exception:
         logger.debug("Failed to store hardened embedding", exc_info=True)
 

@@ -304,7 +304,7 @@ class ReviewerEngine:
                     if findings:
                         return findings
             except json.JSONDecodeError:
-                array_match = re.search(r"\[[\s\S]*\]", response)
+                array_match = re.search(r"\[[\s\S]*?\]", response)
                 if array_match:
                     try:
                         parsed = json.loads(array_match.group())
