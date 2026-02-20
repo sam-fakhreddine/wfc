@@ -13,6 +13,7 @@
     "CLAUDE.md",
     "experiments/task_tool_spike_results.md",
     "experiments/test_task_tool_spike.py",
+    "install-universal.sh",
     "plans/HISTORY.json",
     "plans/HISTORY.md",
     "plans/plan_fix_prompt_fixer_doctor_20260220_072925/PROPERTIES.md",
@@ -29,6 +30,7 @@
     "tests/test_schemas.py",
     "tests/test_workspace_error_handling.py",
     "wfc/references/SKILLS.md",
+    "wfc/scripts/hooks/register_hooks.py",
     "wfc/skills/wfc-prompt-fixer/SKILL.md",
     "wfc/skills/wfc-prompt-fixer/__init__.py",
     "wfc/skills/wfc-prompt-fixer/agents/analyzer.md",
@@ -46,13 +48,20 @@
       "context": "/70/33fd4cbc2a/0/context.md",
       "content_hash": "/70/33fd4cbc2a/0/content_hash.txt",
       "prompt": "/70/33fd4cbc2a/0/prompt.txt"
+    },
+    {
+      "metadata": "/70/33fd4cbc2a/1/metadata.json",
+      "transcript": "/70/33fd4cbc2a/1/full.jsonl",
+      "context": "/70/33fd4cbc2a/1/context.md",
+      "content_hash": "/70/33fd4cbc2a/1/content_hash.txt",
+      "prompt": "/70/33fd4cbc2a/1/prompt.txt"
     }
   ],
   "token_usage": {
-    "input_tokens": 1607,
-    "cache_creation_tokens": 2126943,
-    "cache_read_tokens": 40976287,
-    "output_tokens": 2973,
-    "api_call_count": 411
+    "input_tokens": 1678,
+    "cache_creation_tokens": 2304678,
+    "cache_read_tokens": 45577410,
+    "output_tokens": 10442,
+    "api_call_count": 467
   }
 }
