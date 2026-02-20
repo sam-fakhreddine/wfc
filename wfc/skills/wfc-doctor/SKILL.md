@@ -8,15 +8,29 @@ license: MIT
 
 Comprehensive WFC installation health checker and auto-fixer.
 
-## What It Does
+## ⚠️ Status: EXPERIMENTAL (Stub Implementation)
+
+**Current Implementation:** All checks return PASS unconditionally (no actual validation performed)
+
+This skill provides the **integration framework and architecture** for health checking, but check modules are placeholder stubs. Use for:
+
+- Testing health check orchestration
+- Understanding the health check workflow
+- Reference implementation for future development
+
+**Production use:** Not recommended until check implementations complete (tracked in [#50](https://github.com/sam-fakhreddine/wfc/issues/50))
+
+---
+
+## What It Will Do (When Complete)
 
 Runs 5 health checks and auto-fixes safe issues:
 
-1. **Agent Skills Compliance** - Validates all 30 wfc-* skills pass `skills-ref validate`
-2. **Prompt Quality** - Delegates to `wfc-prompt-fixer --batch --wfc` for all skill/reviewer prompts
-3. **Settings.json** - Validates hook matchers, permission modes, detects common misconfigurations
-4. **Hook Installation** - Verifies hook scripts exist and are executable
-5. **Pre-commit** - Runs `uv run pre-commit run --all-files` and reports failures
+1. **Agent Skills Compliance** - Validates all 30 wfc-* skills pass `skills-ref validate` ⚠️ *stub*
+2. **Prompt Quality** - Delegates to `wfc-prompt-fixer --batch --wfc` for all skill/reviewer prompts ⚠️ *stub*
+3. **Settings.json** - Validates hook matchers, permission modes, detects common misconfigurations ⚠️ *stub*
+4. **Hook Installation** - Verifies hook scripts exist and are executable ⚠️ *partial*
+5. **Pre-commit** - Runs `uv run pre-commit run --all-files` and reports failures ✅ *implemented*
 
 ## When to Use
 
