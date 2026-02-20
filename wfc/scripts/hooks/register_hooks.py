@@ -25,7 +25,7 @@ WFC_HOOKS = {
             "hooks": [
                 {
                     "type": "command",
-                    "command": "python ~/.wfc/scripts/security/semantic_firewall.py",
+                    "command": "uv run python ~/.wfc/scripts/security/semantic_firewall.py",
                 },
             ],
         },
@@ -36,11 +36,11 @@ WFC_HOOKS = {
             "hooks": [
                 {
                     "type": "command",
-                    "command": "python ~/.wfc/scripts/hooks/file_checker.py",
+                    "command": "uv run python ~/.wfc/scripts/hooks/file_checker.py",
                 },
                 {
                     "type": "command",
-                    "command": "python ~/.wfc/scripts/hooks/tdd_enforcer.py",
+                    "command": "uv run python ~/.wfc/scripts/hooks/tdd_enforcer.py",
                 },
             ],
         },
@@ -49,7 +49,7 @@ WFC_HOOKS = {
             "hooks": [
                 {
                     "type": "command",
-                    "command": "python ~/.wfc/scripts/hooks/context_monitor.py",
+                    "command": "uv run python ~/.wfc/scripts/hooks/context_monitor.py",
                 },
             ],
         },
@@ -107,7 +107,6 @@ def upsert_hooks(settings_path: Path) -> bool:
     if modified:
         settings_path.parent.mkdir(parents=True, exist_ok=True)
         content = json.dumps(data, indent=2) + "\n"
-        # Atomic write: temp file in same dir + os.replace
         fd, tmp_path = tempfile.mkstemp(dir=str(settings_path.parent))
         try:
             os.write(fd, content.encode())

@@ -29,7 +29,14 @@ from typing import Any
 logger = logging.getLogger("wfc.security.semantic_firewall")
 
 _SIGNATURES_DIR: Path = Path(__file__).parent / "signatures"
-_HARDENED_DIR: Path = Path.home() / ".wfc" / "firewall"
+
+
+def _get_hardened_dir() -> Path:
+    """Return the hardened signatures directory, configurable via WFC_FIREWALL_DIR."""
+    env = os.environ.get("WFC_FIREWALL_DIR")
+    return Path(env) if env else Path.home() / ".wfc" / "firewall"
+
+
 _DEFAULT_THRESHOLD_BLOCK: float = 0.85
 _DEFAULT_THRESHOLD_WARN: float = 0.70
 _TIMEOUT_MS: int = 500
@@ -79,7 +86,7 @@ def _load_signatures(provider: Any) -> tuple[list[list[float]], list[dict[str, A
     """
     global _signature_embeddings, _signature_metadata
     if _signature_embeddings is not None:
-        return _signature_embeddings, _signature_metadata
+        return _signature_embeddings, _signature_metadata or []
     try:
         sig_path = _SIGNATURES_DIR / "seed_signatures.json"
         if not sig_path.exists():
@@ -96,6 +103,9 @@ def _load_signatures(provider: Any) -> tuple[list[list[float]], list[dict[str, A
 
         texts = [sig["text"] for sig in valid_sigs]
         embeddings = provider.embed(texts)
+        if not isinstance(embeddings, list):
+            logger.debug("embed() returned unexpected type: %s", type(embeddings).__name__)
+            return [], []
         metadata = [
             {"id": sig["id"], "category": sig.get("category", "unknown")} for sig in valid_sigs
         ]
@@ -164,11 +174,12 @@ def _store_hardened_embedding(
         import fcntl
         import tempfile as _tempfile
 
+        hardened_dir = _get_hardened_dir()
         prompt_hash = hashlib.sha256(prompt_text.encode()).hexdigest()
-        _HARDENED_DIR.mkdir(parents=True, exist_ok=True)
-        _HARDENED_DIR.chmod(0o700)
-        hardened_path = _HARDENED_DIR / "hardened.json"
-        lock_path = _HARDENED_DIR / ".hardened.lock"
+        hardened_dir.mkdir(parents=True, exist_ok=True)
+        hardened_dir.chmod(0o700)
+        hardened_path = hardened_dir / "hardened.json"
+        lock_path = hardened_dir / ".hardened.lock"
 
         with open(lock_path, "w") as lf:
             fcntl.flock(lf, fcntl.LOCK_EX)
@@ -194,7 +205,7 @@ def _store_hardened_embedding(
                     "timestamp": time.time(),
                 }
             )
-            fd, tmp_path = _tempfile.mkstemp(dir=str(_HARDENED_DIR))
+            fd, tmp_path = _tempfile.mkstemp(dir=str(hardened_dir))
             try:
                 os.fchmod(fd, 0o600)
                 os.write(fd, json.dumps(entries).encode())

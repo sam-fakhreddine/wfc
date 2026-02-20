@@ -15,7 +15,7 @@ import json
 import logging
 import re
 from dataclasses import dataclass, field
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 from wfc.scripts.schemas.finding import validate_finding
 from wfc.scripts.schemas.reviewer_response import validate_reviewer_response
@@ -75,7 +75,7 @@ class ReviewerEngine:
         files: list[str],
         diff_content: str = "",
         properties: list[dict] | None = None,
-        model_router: object | None = None,
+        model_router: Any | None = None,
         single_model: str | None = None,
     ) -> list[dict]:
         """
@@ -156,7 +156,10 @@ class ReviewerEngine:
         for item in task_responses:
             validated_item = validate_reviewer_response(item)
             if validated_item is None:
-                logger.warning("Skipping invalid task_response: %r", item)
+                logger.warning(
+                    "Skipping invalid task_response: keys=%s",
+                    list(item.keys()) if isinstance(item, dict) else type(item).__name__,
+                )
                 continue
             reviewer_id = validated_item["reviewer_id"]
             response = validated_item["response"]
@@ -304,7 +307,7 @@ class ReviewerEngine:
                     if findings:
                         return findings
             except json.JSONDecodeError:
-                array_match = re.search(r"\[[\s\S]*?\]", response)
+                array_match = re.search(r"\[[\s\S]*\]", response)
                 if array_match:
                     try:
                         parsed = json.loads(array_match.group())

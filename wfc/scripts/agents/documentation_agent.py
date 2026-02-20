@@ -92,13 +92,17 @@ def validate_payload(raw: Any) -> dict[str, Any] | None:
     if not any(target_file.startswith(prefix) for prefix in ALLOWED_PREFIXES):
         return None
 
+    rationale = str(raw["rationale"]).strip()
+    if not rationale:
+        return None
+
     return {
         "action": action,
         "target_file": target_file,
-        "content": raw.get("content", ""),
-        "rationale": raw["rationale"],
-        "generating_agent": raw.get("generating_agent", "unknown"),
-        "workflow_id": raw.get("workflow_id", ""),
+        "content": str(raw.get("content", "")),
+        "rationale": rationale,
+        "generating_agent": str(raw.get("generating_agent", "unknown")),
+        "workflow_id": str(raw.get("workflow_id", "")),
     }
 
 

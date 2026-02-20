@@ -399,7 +399,7 @@ class TestSelfHardening:
         from wfc.scripts.security.semantic_firewall import _store_hardened_embedding
 
         hardened_dir = tmp_path / "firewall"
-        with patch.object(semantic_firewall, "_HARDENED_DIR", hardened_dir):
+        with patch.object(semantic_firewall, "_get_hardened_dir", return_value=hardened_dir):
             _store_hardened_embedding("test prompt", [1, 0, 0], 0.90)
 
         hardened_file = hardened_dir / "hardened.json"
@@ -416,7 +416,7 @@ class TestSelfHardening:
         from wfc.scripts.security.semantic_firewall import _store_hardened_embedding
 
         hardened_dir = tmp_path / "firewall"
-        with patch.object(semantic_firewall, "_HARDENED_DIR", hardened_dir):
+        with patch.object(semantic_firewall, "_get_hardened_dir", return_value=hardened_dir):
             _store_hardened_embedding("test prompt", [1, 0, 0], 0.90)
             _store_hardened_embedding("test prompt", [1, 0, 0], 0.90)
 
@@ -437,7 +437,7 @@ class TestSelfHardening:
         ]
         hardened_file.write_text(json.dumps(existing))
 
-        with patch.object(semantic_firewall, "_HARDENED_DIR", hardened_dir):
+        with patch.object(semantic_firewall, "_get_hardened_dir", return_value=hardened_dir):
             _store_hardened_embedding("new prompt 101", [1, 0, 0], 0.95)
 
         data = json.loads(hardened_file.read_text())
@@ -448,7 +448,7 @@ class TestSelfHardening:
         from wfc.scripts.security.semantic_firewall import _store_hardened_embedding
 
         hardened_dir = tmp_path / "firewall"
-        with patch.object(semantic_firewall, "_HARDENED_DIR", hardened_dir):
+        with patch.object(semantic_firewall, "_get_hardened_dir", return_value=hardened_dir):
             _store_hardened_embedding("prompt one", [1, 0, 0], 0.90)
             _store_hardened_embedding("prompt two", [0, 1, 0], 0.88)
 
@@ -468,7 +468,7 @@ class TestSelfHardening:
         symlink = hardened_dir / "hardened.json"
         symlink.symlink_to(real_file)
 
-        with patch.object(semantic_firewall, "_HARDENED_DIR", hardened_dir):
+        with patch.object(semantic_firewall, "_get_hardened_dir", return_value=hardened_dir):
             _store_hardened_embedding("test prompt", [1, 0, 0], 0.90)
 
         data = json.loads(real_file.read_text())
@@ -701,9 +701,9 @@ class TestModuleConstants:
         assert _FRESHNESS_DAYS == 30
 
     def test_hardened_dir(self):
-        from wfc.scripts.security.semantic_firewall import _HARDENED_DIR
+        from wfc.scripts.security.semantic_firewall import _get_hardened_dir
 
-        assert _HARDENED_DIR == Path.home() / ".wfc" / "firewall"
+        assert _get_hardened_dir() == Path.home() / ".wfc" / "firewall"
 
 
 class TestParseInput:

@@ -50,7 +50,7 @@ _ERROR_LINE_PATTERNS: list[re.Pattern[str]] = [
     re.compile(r"^WARN(?:ING)?\b", re.IGNORECASE),
     re.compile(r"Traceback \(most recent call last\)"),
     re.compile(r"^\s*raise\s+\w+"),
-    re.compile(r"AssertionError|AssertionError|AssertionError"),
+    re.compile(r"AssertionError|TypeError"),
     re.compile(r"Exception:|Error:"),
 ]
 
