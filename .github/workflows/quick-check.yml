@@ -1,5 +1,8 @@
 name: Quick Check
 
+permissions:
+  contents: read
+
 # Fast validation workflow - runs on every push
 # Optimized for speed: ~30 seconds vs full CI ~3-5 minutes
 
