@@ -1,0 +1,47 @@
+{
+  "cli_version": "0.4.5",
+  "checkpoint_id": "940060def757",
+  "session_id": "e2e7a891-0583-49a4-abad-e5c8bd79801b",
+  "strategy": "manual-commit",
+  "created_at": "2026-02-20T22:46:11.840001Z",
+  "branch": "claude/add-prompt-fixer-and-doctor",
+  "checkpoints_count": 0,
+  "files_touched": [
+    "tests/test_doctor_types.py",
+    "wfc/skills/wfc-doctor/checks/__init__.py",
+    "wfc/skills/wfc-doctor/checks/prompts_check.py",
+    "wfc/skills/wfc-doctor/checks/settings_check.py",
+    "wfc/skills/wfc-prompt-fixer/orchestrator.py",
+    "tests/test_doctor.py",
+    "wfc/skills/wfc-doctor/__init__.py",
+    "wfc/skills/wfc-doctor/checks/precommit_check.py",
+    "wfc/skills/wfc-doctor/fixes/__init__.py",
+    "wfc/skills/wfc-doctor/SKILL.md",
+    "wfc/skills/wfc-doctor/checks/skills_check.py",
+    "wfc/skills/wfc-doctor/cli.py",
+    "wfc/skills/wfc-doctor/orchestrator.py",
+    "wfc/skills/wfc-doctor/checks/hooks_check.py",
+    "wfc/skills/wfc-doctor/types.py"
+  ],
+  "agent": "Claude Code",
+  "transcript_identifier_at_start": "1b08ae65-eb73-4997-aadc-a64cc7afa29f",
+  "checkpoint_transcript_start": 2001,
+  "transcript_lines_at_start": 2001,
+  "token_usage": {
+    "input_tokens": 281,
+    "cache_creation_tokens": 655152,
+    "cache_read_tokens": 23623146,
+    "output_tokens": 22184,
+    "api_call_count": 221
+  },
+  "initial_attribution": {
+    "calculated_at": "2026-02-20T22:46:10.846571Z",
+    "agent_lines": 34,
+    "human_added": 0,
+    "human_modified": 0,
+    "human_removed": 0,
+    "total_committed": 34,
+    "agent_percentage": 100
+  },
+  "transcript_path": ".claude/projects/-Users-samfakhreddine-repos-wfc/e2e7a891-0583-49a4-abad-e5c8bd79801b.jsonl"
+}
