@@ -1,16 +1,14 @@
 """Agent Skills compliance checker."""
 
 from pathlib import Path
-from typing import TYPE_CHECKING
 
-if TYPE_CHECKING:
-    from ..orchestrator import CheckResult
+from ..types import CheckResult
 
 
 class SkillsChecker:
     """Check Agent Skills compliance for all WFC skills."""
 
-    def check(self, auto_fix: bool = False) -> "CheckResult":
+    def check(self, auto_fix: bool = False) -> CheckResult:
         """
         Check Agent Skills compliance.
 
@@ -18,7 +16,6 @@ class SkillsChecker:
         - Validates YAML frontmatter
         - Checks for deprecated fields
         """
-        from ..orchestrator import CheckResult
 
         issues = []
         fixes_applied = []

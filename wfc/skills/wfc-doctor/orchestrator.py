@@ -5,36 +5,16 @@ Coordinates 5 health checks: Agent Skills, Prompt Quality, Settings, Hooks, Pre-
 CRITICAL: Orchestrator NEVER implements, ONLY coordinates.
 """
 
-from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
-from typing import Dict, List, Optional
+from typing import Dict, Optional
 
 from .checks.hooks_check import HooksChecker
 from .checks.precommit_check import PrecommitChecker
 from .checks.prompts_check import PromptsChecker
 from .checks.settings_check import SettingsChecker
 from .checks.skills_check import SkillsChecker
-
-
-@dataclass
-class CheckResult:
-    """Result from a single health check."""
-
-    name: str
-    status: str
-    issues: List[str]
-    fixes_applied: List[str]
-
-
-@dataclass
-class HealthCheckResult:
-    """Complete health check result."""
-
-    status: str
-    checks: Dict[str, CheckResult]
-    report_path: Path
-    timestamp: str
+from .types import CheckResult, HealthCheckResult
 
 
 class DoctorOrchestrator:

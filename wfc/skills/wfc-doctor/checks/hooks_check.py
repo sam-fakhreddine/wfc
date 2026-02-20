@@ -2,10 +2,8 @@
 
 import os
 from pathlib import Path
-from typing import TYPE_CHECKING
 
-if TYPE_CHECKING:
-    from ..orchestrator import CheckResult
+from ..types import CheckResult
 
 
 class HooksChecker:
@@ -16,7 +14,7 @@ class HooksChecker:
         self.cwd = cwd
         self.hooks_dir = cwd / "wfc" / "scripts" / "hooks"
 
-    def check(self, auto_fix: bool = False) -> "CheckResult":
+    def check(self, auto_fix: bool = False) -> CheckResult:
         """
         Check hook installation.
 
@@ -24,7 +22,6 @@ class HooksChecker:
         - Checks file permissions (executable)
         - Validates hook registration in settings
         """
-        from ..orchestrator import CheckResult
 
         issues = []
         fixes_applied = []

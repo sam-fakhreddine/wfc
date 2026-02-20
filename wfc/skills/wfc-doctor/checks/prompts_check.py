@@ -1,10 +1,8 @@
 """Prompt quality checker (delegates to wfc-prompt-fixer)."""
 
 from pathlib import Path
-from typing import TYPE_CHECKING
 
-if TYPE_CHECKING:
-    from ..orchestrator import CheckResult
+from ..types import CheckResult
 
 
 class PromptsChecker:
@@ -14,13 +12,12 @@ class PromptsChecker:
         """Initialize checker."""
         self.cwd = cwd
 
-    def check(self, auto_fix: bool = False) -> "CheckResult":
+    def check(self, auto_fix: bool = False) -> CheckResult:
         """
         Check prompt quality.
 
         Delegates to: wfc-prompt-fixer --batch --wfc
         """
-        from ..orchestrator import CheckResult
 
         issues = []
         fixes_applied = []

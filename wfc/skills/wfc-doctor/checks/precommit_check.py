@@ -2,10 +2,8 @@
 
 import subprocess
 from pathlib import Path
-from typing import TYPE_CHECKING
 
-if TYPE_CHECKING:
-    from ..orchestrator import CheckResult
+from ..types import CheckResult
 
 
 class PrecommitChecker:
@@ -15,7 +13,7 @@ class PrecommitChecker:
         """Initialize checker."""
         self.cwd = cwd
 
-    def check(self, auto_fix: bool = False) -> "CheckResult":
+    def check(self, auto_fix: bool = False) -> CheckResult:
         """
         Check pre-commit.
 
@@ -23,7 +21,6 @@ class PrecommitChecker:
         - Reports failures by category
         - Auto-fixes if --fix enabled
         """
-        from ..orchestrator import CheckResult
 
         issues = []
         fixes_applied = []

@@ -2,16 +2,14 @@
 
 import json
 from pathlib import Path
-from typing import TYPE_CHECKING
 
-if TYPE_CHECKING:
-    from ..orchestrator import CheckResult
+from ..types import CheckResult
 
 
 class SettingsChecker:
     """Check ~/.claude/settings.json validity."""
 
-    def check(self, auto_fix: bool = False) -> "CheckResult":
+    def check(self, auto_fix: bool = False) -> CheckResult:
         """
         Check settings.json.
 
@@ -19,7 +17,6 @@ class SettingsChecker:
         - Checks hook matchers (e.g., Task in context_monitor)
         - Validates permission modes
         """
-        from ..orchestrator import CheckResult
 
         issues = []
         fixes_applied = []
