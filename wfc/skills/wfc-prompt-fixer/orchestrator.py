@@ -230,6 +230,43 @@ class PromptFixerOrchestrator:
         self.cwd = cwd or Path.cwd()
         self.workspace_manager = WorkspaceManager()
 
+    def _poll_for_file(
+        self,
+        target_path: Path,
+        agent_name: str,
+        timeout_seconds: int = 300,
+        poll_interval: int = 2,
+    ) -> None:
+        """
+        Poll for file creation with timeout and progress logging.
+
+        Issue #49: Extracted common polling logic to eliminate duplication
+        across 4 agent spawn methods.
+
+        Args:
+            target_path: Path to file being polled
+            agent_name: Name of agent (for error messages)
+            timeout_seconds: Maximum wait time in seconds (default 300)
+            poll_interval: Poll frequency in seconds (default 2)
+
+        Raises:
+            TimeoutError: If file doesn't appear within timeout_seconds
+        """
+        import time
+
+        elapsed = 0
+
+        while not target_path.exists():
+            if elapsed >= timeout_seconds:
+                raise TimeoutError(
+                    f"{agent_name} did not complete within {timeout_seconds}s. "
+                    f"Expected output at {target_path}"
+                )
+            time.sleep(poll_interval)
+            elapsed += poll_interval
+            if elapsed % 30 == 0:
+                print(f"   [Waiting for {agent_name}... {elapsed}s elapsed]")
+
     def fix_prompt(
         self,
         prompt_path: Path,
@@ -334,15 +371,17 @@ class PromptFixerOrchestrator:
         if not is_valid:
             raise ValueError(f"Invalid glob pattern: {error_msg}")
 
+        from itertools import islice
+
         cwd = Path.cwd()
-        all_matches = list(cwd.glob(validated_pattern))
+        all_matches = list(islice(cwd.glob(validated_pattern), MAX_GLOB_MATCHES + 1))
 
         prompt_paths = [p for p in all_matches if p.is_file()]
 
-        if len(prompt_paths) > MAX_GLOB_MATCHES:
+        if len(all_matches) > MAX_GLOB_MATCHES:
             print(
-                f"⚠️  Warning: Pattern matched {len(prompt_paths)} files, "
-                f"truncating to first {MAX_GLOB_MATCHES}"
+                f"⚠️  Warning: Pattern matched >{MAX_GLOB_MATCHES} files, "
+                f"using first {MAX_GLOB_MATCHES}"
             )
             prompt_paths = prompt_paths[:MAX_GLOB_MATCHES]
 
@@ -579,8 +618,6 @@ class PromptFixerOrchestrator:
             WorkspaceError: If analysis.json not found or invalid schema
             TimeoutError: If agent doesn't complete within 300 seconds
         """
-        import time
-
         agent_prompt = self._prepare_analyzer_prompt(workspace, wfc_mode)
 
         # NOTE: In production, Claude will see this message and use Task tool
@@ -594,20 +631,7 @@ class PromptFixerOrchestrator:
         )
 
         analysis_path = workspace / "01-analyzer" / "analysis.json"
-        timeout_seconds = 300
-        poll_interval = 2
-        elapsed = 0
-
-        while not analysis_path.exists():
-            if elapsed >= timeout_seconds:
-                raise TimeoutError(
-                    f"Analyzer agent did not complete within {timeout_seconds}s. "
-                    f"Expected output at {analysis_path}"
-                )
-            time.sleep(poll_interval)
-            elapsed += poll_interval
-            if elapsed % 30 == 0:
-                print(f"   [Waiting for analyzer... {elapsed}s elapsed]")
+        self._poll_for_file(analysis_path, "analyzer")
 
         analysis = self.workspace_manager.read_analysis(workspace)
 
@@ -682,20 +706,7 @@ class PromptFixerOrchestrator:
             )
 
             validation_path = workspace / "02-fixer" / "validation.json"
-            timeout_seconds = 300
-            poll_interval = 2
-            elapsed = 0
-
-            while not validation_path.exists():
-                if elapsed >= timeout_seconds:
-                    raise TimeoutError(
-                        f"Fixer agent did not complete within {timeout_seconds}s. "
-                        f"Expected output at {validation_path}"
-                    )
-                time.sleep(poll_interval)
-                elapsed += poll_interval
-                if elapsed % 30 == 0:
-                    print(f"   [Waiting for fixer... {elapsed}s elapsed]")
+            self._poll_for_file(validation_path, "fixer")
 
             try:
                 with open(validation_path) as f:
@@ -754,8 +765,6 @@ class PromptFixerOrchestrator:
         Returns:
             Path to report.md file
         """
-        import time
-
         agent_prompt = self._prepare_reporter_prompt(workspace, no_changes=True)
 
         # NOTE: In production, Claude will see this message and use Task tool
@@ -768,20 +777,7 @@ class PromptFixerOrchestrator:
         )
 
         report_path = workspace / "03-reporter" / "report.md"
-        timeout_seconds = 300
-        poll_interval = 2
-        elapsed = 0
-
-        while not report_path.exists():
-            if elapsed >= timeout_seconds:
-                raise TimeoutError(
-                    f"Reporter agent did not complete within {timeout_seconds}s. "
-                    f"Expected output at {report_path}"
-                )
-            time.sleep(poll_interval)
-            elapsed += poll_interval
-            if elapsed % 30 == 0:
-                print(f"   [Waiting for reporter... {elapsed}s elapsed]")
+        self._poll_for_file(report_path, "reporter")
 
         return self.workspace_manager.read_report(workspace)
 
@@ -811,8 +807,6 @@ class PromptFixerOrchestrator:
         Returns:
             Path to report.md file
         """
-        import time
-
         agent_prompt = self._prepare_reporter_prompt(workspace, no_changes=False)
 
         # NOTE: In production, Claude will see this message and use Task tool
@@ -825,20 +819,7 @@ class PromptFixerOrchestrator:
         )
 
         report_path = workspace / "03-reporter" / "report.md"
-        timeout_seconds = 300
-        poll_interval = 2
-        elapsed = 0
-
-        while not report_path.exists():
-            if elapsed >= timeout_seconds:
-                raise TimeoutError(
-                    f"Reporter agent did not complete within {timeout_seconds}s. "
-                    f"Expected output at {report_path}"
-                )
-            time.sleep(poll_interval)
-            elapsed += poll_interval
-            if elapsed % 30 == 0:
-                print(f"   [Waiting for reporter... {elapsed}s elapsed]")
+        self._poll_for_file(report_path, "reporter")
 
         return self.workspace_manager.read_report(workspace)
 
@@ -874,6 +855,7 @@ class PromptFixerOrchestrator:
                 capture_output=True,
                 text=True,
                 timeout=30,
+                bufsize=-1,
             )
             print(f"   Created branch: {branch_name}")
 
@@ -890,6 +872,7 @@ class PromptFixerOrchestrator:
                 capture_output=True,
                 text=True,
                 timeout=30,
+                bufsize=-1,
             )
 
             sanitized_name = prompt_path.name.replace("\n", " ").replace("\r", " ")[:100]
@@ -900,6 +883,7 @@ class PromptFixerOrchestrator:
                 capture_output=True,
                 text=True,
                 timeout=30,
+                bufsize=-1,
             )
             print(f"   Committed changes: {grade_before} → {grade_after}")
 
@@ -909,6 +893,7 @@ class PromptFixerOrchestrator:
                 capture_output=True,
                 text=True,
                 timeout=30,
+                bufsize=-1,
             )
             print(f"   Pushed to origin/{branch_name}")
 
@@ -938,6 +923,7 @@ Generated with Claude Code.
                 capture_output=True,
                 text=True,
                 timeout=30,
+                bufsize=-1,
             )
             print(f"   PR created: {pr_title}")
 
