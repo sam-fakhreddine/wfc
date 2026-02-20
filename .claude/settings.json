@@ -31,6 +31,15 @@
             "command": "entire hooks claude-code user-prompt-submit"
           }
         ]
+      },
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "uv run python wfc/scripts/security/semantic_firewall.py"
+          }
+        ]
       }
     ],
     "Stop": [

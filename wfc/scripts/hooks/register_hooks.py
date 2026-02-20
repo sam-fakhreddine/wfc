@@ -13,21 +13,34 @@ If settings_path is omitted, defaults to ~/.claude/settings.json.
 from __future__ import annotations
 
 import json
+import os
 import sys
+import tempfile
 from pathlib import Path
 
 WFC_HOOKS = {
+    "UserPromptSubmit": [
+        {
+            "matcher": "",
+            "hooks": [
+                {
+                    "type": "command",
+                    "command": "uv run python ~/.wfc/scripts/security/semantic_firewall.py",
+                },
+            ],
+        },
+    ],
     "PostToolUse": [
         {
             "matcher": "Write|Edit",
             "hooks": [
                 {
                     "type": "command",
-                    "command": "python ~/.wfc/scripts/hooks/file_checker.py",
+                    "command": "uv run python ~/.wfc/scripts/hooks/file_checker.py",
                 },
                 {
                     "type": "command",
-                    "command": "python ~/.wfc/scripts/hooks/tdd_enforcer.py",
+                    "command": "uv run python ~/.wfc/scripts/hooks/tdd_enforcer.py",
                 },
             ],
         },
@@ -36,21 +49,21 @@ WFC_HOOKS = {
             "hooks": [
                 {
                     "type": "command",
-                    "command": "python ~/.wfc/scripts/hooks/context_monitor.py",
+                    "command": "uv run python ~/.wfc/scripts/hooks/context_monitor.py",
                 },
             ],
         },
     ],
 }
 
-WFC_MARKER = "~/.wfc/scripts/hooks/"
+WFC_MARKERS = ("~/.wfc/scripts/hooks/", "wfc/scripts/security/", "~/.wfc/scripts/security/")
 
 
 def is_wfc_hook_entry(entry: dict) -> bool:
     """Check if a hook entry belongs to WFC."""
     for hook in entry.get("hooks", []):
         cmd = hook.get("command", "")
-        if WFC_MARKER in cmd:
+        if any(marker in cmd for marker in WFC_MARKERS):
             return True
     return False
 
@@ -77,6 +90,7 @@ def upsert_hooks(settings_path: Path) -> bool:
     for hook_type, wfc_entries in WFC_HOOKS.items():
         if hook_type not in hooks:
             hooks[hook_type] = []
+            modified = True
 
         existing = hooks[hook_type]
 
@@ -85,13 +99,20 @@ def upsert_hooks(settings_path: Path) -> bool:
         if len(cleaned) != len(existing):
             modified = True
 
-        cleaned.extend(wfc_entries)
-        hooks[hook_type] = cleaned
-        modified = True
+        new_entries = cleaned + wfc_entries
+        if new_entries != hooks[hook_type]:
+            modified = True
+        hooks[hook_type] = new_entries
 
     if modified:
         settings_path.parent.mkdir(parents=True, exist_ok=True)
-        settings_path.write_text(json.dumps(data, indent=2) + "\n")
+        content = json.dumps(data, indent=2) + "\n"
+        fd, tmp_path = tempfile.mkstemp(dir=str(settings_path.parent))
+        try:
+            os.write(fd, content.encode())
+        finally:
+            os.close(fd)
+        os.replace(tmp_path, str(settings_path))
 
     return modified
 
