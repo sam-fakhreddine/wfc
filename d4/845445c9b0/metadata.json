@@ -5,10 +5,21 @@
   "branch": "claude/sync-main-into-develop-1771560196",
   "checkpoints_count": 2,
   "files_touched": [
+    ".development/README.md",
     ".development/plans/CLAUDE_MD_REMEDIATION_TASKS.md",
     ".development/scratch/pr35_manifest.json",
+    ".github/workflows/publish.yml",
+    "README.md",
+    "RETRO-REPORT.md",
+    "docs/OWASP_LLM_TOP10_MITIGATIONS.md",
+    "docs/README.md",
+    "docs/architecture/PLANNING.md",
+    "docs/quality/PERSONAS.md",
+    "docs/reference/REGISTRY.json",
+    "docs/workflow/UNIVERSAL_INSTALL.md",
     "install-universal.sh",
     "wfc/references/SKILLS.md",
+    "wfc/scripts/hooks/__init__.py",
     "wfc/scripts/hooks/register_hooks.py",
     "wfc/scripts/orchestrators/claude_md/schemas.py"
   ],
@@ -33,13 +44,20 @@
       "context": "/d4/845445c9b0/2/context.md",
       "content_hash": "/d4/845445c9b0/2/content_hash.txt",
       "prompt": "/d4/845445c9b0/2/prompt.txt"
+    },
+    {
+      "metadata": "/d4/845445c9b0/3/metadata.json",
+      "transcript": "/d4/845445c9b0/3/full.jsonl",
+      "context": "/d4/845445c9b0/3/context.md",
+      "content_hash": "/d4/845445c9b0/3/content_hash.txt",
+      "prompt": "/d4/845445c9b0/3/prompt.txt"
     }
   ],
   "token_usage": {
-    "input_tokens": 197,
-    "cache_creation_tokens": 452976,
-    "cache_read_tokens": 11945056,
-    "output_tokens": 12459,
-    "api_call_count": 149
+    "input_tokens": 14993,
+    "cache_creation_tokens": 1278927,
+    "cache_read_tokens": 32396289,
+    "output_tokens": 24520,
+    "api_call_count": 338
   }
 }
