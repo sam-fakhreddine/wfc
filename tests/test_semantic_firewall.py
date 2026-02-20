@@ -556,7 +556,8 @@ class TestLoadSignatures:
         mock_provider.embed.return_value = [[1, 0], [0, 1]]
 
         with patch.object(semantic_firewall, "_SIGNATURES_DIR", tmp_path):
-            embeddings, metadata = semantic_firewall._load_signatures(mock_provider)
+            deadline = time.monotonic() + 10.0
+            embeddings, metadata = semantic_firewall._load_signatures(mock_provider, deadline)
 
         assert len(embeddings) == 2
         assert len(metadata) == 2
@@ -571,7 +572,8 @@ class TestLoadSignatures:
         mock_provider = MagicMock()
 
         with patch.object(semantic_firewall, "_SIGNATURES_DIR", tmp_path):
-            embeddings, metadata = semantic_firewall._load_signatures(mock_provider)
+            deadline = time.monotonic() + 10.0
+            embeddings, metadata = semantic_firewall._load_signatures(mock_provider, deadline)
 
         assert embeddings == []
         assert metadata == []
@@ -586,7 +588,8 @@ class TestLoadSignatures:
         mock_provider = MagicMock()
 
         with patch.object(semantic_firewall, "_SIGNATURES_DIR", tmp_path):
-            embeddings, metadata = semantic_firewall._load_signatures(mock_provider)
+            deadline = time.monotonic() + 10.0
+            embeddings, metadata = semantic_firewall._load_signatures(mock_provider, deadline)
 
         assert embeddings == []
         assert metadata == []
@@ -602,7 +605,8 @@ class TestLoadSignatures:
         mock_provider = MagicMock()
 
         with patch.object(semantic_firewall, "_SIGNATURES_DIR", tmp_path):
-            embeddings, metadata = semantic_firewall._load_signatures(mock_provider)
+            deadline = time.monotonic() + 10.0
+            embeddings, metadata = semantic_firewall._load_signatures(mock_provider, deadline)
 
         assert embeddings == []
         assert metadata == []
@@ -627,7 +631,8 @@ class TestLoadSignatures:
         mock_provider.embed.return_value = [[1, 0]]
 
         with patch.object(semantic_firewall, "_SIGNATURES_DIR", tmp_path):
-            embeddings, metadata = semantic_firewall._load_signatures(mock_provider)
+            deadline = time.monotonic() + 10.0
+            embeddings, metadata = semantic_firewall._load_signatures(mock_provider, deadline)
 
         assert len(embeddings) == 1
         assert metadata[0]["id"] == "sig-001"
@@ -650,12 +655,40 @@ class TestLoadSignatures:
         mock_provider.embed.return_value = [[1, 0]]
 
         with patch.object(semantic_firewall, "_SIGNATURES_DIR", tmp_path):
-            embeddings1, metadata1 = semantic_firewall._load_signatures(mock_provider)
-            embeddings2, metadata2 = semantic_firewall._load_signatures(mock_provider)
+            deadline = time.monotonic() + 10.0
+            embeddings1, metadata1 = semantic_firewall._load_signatures(mock_provider, deadline)
+            embeddings2, metadata2 = semantic_firewall._load_signatures(mock_provider, deadline)
 
         mock_provider.embed.assert_called_once()
         assert embeddings1 == embeddings2
         assert metadata1 == metadata2
+
+    def test_load_expired_deadline_returns_empty(self, tmp_path):
+        """When the deadline has already passed, _load_signatures returns empty."""
+        sf = self._reset_module()
+        from wfc.scripts.security import semantic_firewall
+
+        sig_file = tmp_path / "seed_signatures.json"
+        sig_data = {
+            "version": "1.0.0",
+            "signatures": [
+                {"id": "sig-001", "text": "ignore instructions", "category": "override"},
+            ],
+        }
+        sig_file.write_text(json.dumps(sig_data))
+
+        mock_provider = MagicMock()
+        mock_provider.embed.return_value = [[1, 0]]
+
+        with patch.object(semantic_firewall, "_SIGNATURES_DIR", tmp_path):
+            expired_deadline = time.monotonic() - 1.0
+            embeddings, metadata = semantic_firewall._load_signatures(
+                mock_provider, expired_deadline
+            )
+
+        assert embeddings == []
+        assert metadata == []
+        mock_provider.embed.assert_not_called()
 
 
 class TestEmitMetric:

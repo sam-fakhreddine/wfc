@@ -78,11 +78,15 @@ def _get_provider() -> Any:
         return None
 
 
-def _load_signatures(provider: Any) -> tuple[list[list[float]], list[dict[str, Any]]]:
+def _load_signatures(
+    provider: Any, deadline: float
+) -> tuple[list[list[float]], list[dict[str, Any]]]:
     """Load and embed attack signatures from seed_signatures.json.
 
     Caches results in module-level globals on first successful load.
     Returns (embeddings, metadata) tuples. On any error returns ([], []).
+    The ``deadline`` (monotonic time) is enforced around the provider.embed()
+    call so that signature loading respects the 500ms hard timeout.
     """
     global _signature_embeddings, _signature_metadata
     if _signature_embeddings is not None:
@@ -102,7 +106,23 @@ def _load_signatures(provider: Any) -> tuple[list[list[float]], list[dict[str, A
             return [], []
 
         texts = [sig["text"] for sig in valid_sigs]
-        embeddings = provider.embed(texts)
+
+        remaining = deadline - time.monotonic()
+        if remaining <= 0:
+            _emit_metric("firewall.timeout", {"phase": "pre_signature_embed"})
+            return [], []
+
+        from concurrent.futures import ThreadPoolExecutor
+        from concurrent.futures import TimeoutError as FuturesTimeoutError
+
+        with ThreadPoolExecutor(max_workers=1) as pool:
+            future = pool.submit(provider.embed, texts)
+            try:
+                embeddings = future.result(timeout=max(0.01, remaining))
+            except FuturesTimeoutError:
+                _emit_metric("firewall.timeout", {"phase": "signature_embed"})
+                return [], []
+
         if not isinstance(embeddings, list):
             logger.debug("embed() returned unexpected type: %s", type(embeddings).__name__)
             return [], []
@@ -356,7 +376,7 @@ def _run() -> None:
         _emit_metric("firewall.no_provider")
         sys.exit(0)
 
-    sig_embeddings, sig_metadata = _load_signatures(provider)
+    sig_embeddings, sig_metadata = _load_signatures(provider, deadline)
     if not sig_embeddings:
         _emit_metric("firewall.no_signatures")
         sys.exit(0)
