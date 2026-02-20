@@ -8,6 +8,16 @@ from pathlib import Path
 from typing import Dict, List, Optional
 
 
+class WorkspaceError(Exception):
+    """Custom exception for workspace-related errors.
+
+    Provides actionable error messages for file I/O failures, permission errors,
+    and other workspace operations issues.
+    """
+
+    pass
+
+
 @dataclass
 class WorkspaceMetadata:
     """Metadata for a prompt fixer run."""
@@ -69,7 +79,18 @@ class WorkspaceManager:
         (workspace / "03-reporter").mkdir(exist_ok=True)
 
         if prompt_path.exists():
-            shutil.copy(prompt_path, workspace / "input" / "prompt.md")
+            try:
+                shutil.copy(prompt_path, workspace / "input" / "prompt.md")
+            except PermissionError as e:
+                raise WorkspaceError(
+                    f"Failed to copy prompt file: Permission denied. "
+                    f"Check file permissions for {prompt_path}."
+                ) from e
+            except OSError as e:
+                raise WorkspaceError(
+                    f"Failed to copy prompt file from {prompt_path}: {e}. "
+                    f"Check available disk space and file system status."
+                ) from e
 
         metadata = WorkspaceMetadata(
             run_id=run_id,
@@ -84,27 +105,83 @@ class WorkspaceManager:
     def write_metadata(self, workspace: Path, metadata: WorkspaceMetadata) -> None:
         """Write metadata to workspace."""
         metadata_path = workspace / "metadata.json"
-        with open(metadata_path, "w") as f:
-            json.dump(asdict(metadata), f, indent=2)
+        try:
+            with open(metadata_path, "w") as f:
+                json.dump(asdict(metadata), f, indent=2)
+        except PermissionError as e:
+            raise WorkspaceError(
+                f"Failed to write metadata: Permission denied. "
+                f"Check file permissions for {metadata_path}."
+            ) from e
+        except OSError as e:
+            raise WorkspaceError(
+                f"Failed to write metadata to {metadata_path}: {e}. "
+                f"Check available disk space and file system status."
+            ) from e
 
     def read_metadata(self, workspace: Path) -> WorkspaceMetadata:
         """Read metadata from workspace."""
         metadata_path = workspace / "metadata.json"
-        with open(metadata_path) as f:
-            data = json.load(f)
-        return WorkspaceMetadata(**data)
+        try:
+            with open(metadata_path) as f:
+                data = json.load(f)
+            return WorkspaceMetadata(**data)
+        except FileNotFoundError as e:
+            raise WorkspaceError(
+                f"Metadata file not found at {metadata_path}. "
+                f"Workspace may be corrupted or incomplete."
+            ) from e
+        except PermissionError as e:
+            raise WorkspaceError(
+                f"Failed to read metadata: Permission denied. "
+                f"Check file permissions for {metadata_path}."
+            ) from e
+        except json.JSONDecodeError as e:
+            raise WorkspaceError(
+                f"Invalid JSON in metadata file {metadata_path}: {e}. File may be corrupted."
+            ) from e
+        except OSError as e:
+            raise WorkspaceError(f"Failed to read metadata from {metadata_path}: {e}") from e
 
     def write_analysis(self, workspace: Path, analysis: Dict) -> None:
         """Write analyzer results to workspace."""
         analysis_path = workspace / "01-analyzer" / "analysis.json"
-        with open(analysis_path, "w") as f:
-            json.dump(analysis, f, indent=2)
+        try:
+            with open(analysis_path, "w") as f:
+                json.dump(analysis, f, indent=2)
+        except PermissionError as e:
+            raise WorkspaceError(
+                f"Failed to write analysis: Permission denied. "
+                f"Check file permissions for {analysis_path}."
+            ) from e
+        except OSError as e:
+            raise WorkspaceError(
+                f"Failed to write analysis to {analysis_path}: {e}. "
+                f"Check available disk space and file system status."
+            ) from e
 
     def read_analysis(self, workspace: Path) -> Dict:
         """Read analyzer results from workspace."""
         analysis_path = workspace / "01-analyzer" / "analysis.json"
-        with open(analysis_path) as f:
-            return json.load(f)
+        try:
+            with open(analysis_path) as f:
+                return json.load(f)
+        except FileNotFoundError as e:
+            raise WorkspaceError(
+                f"Analysis file not found at {analysis_path}. "
+                f"Analyzer may not have completed successfully."
+            ) from e
+        except PermissionError as e:
+            raise WorkspaceError(
+                f"Failed to read analysis: Permission denied. "
+                f"Check file permissions for {analysis_path}."
+            ) from e
+        except json.JSONDecodeError as e:
+            raise WorkspaceError(
+                f"Invalid JSON in analysis file {analysis_path}: {e}. File may be corrupted."
+            ) from e
+        except OSError as e:
+            raise WorkspaceError(f"Failed to read analysis from {analysis_path}: {e}") from e
 
     def write_fix(
         self,
@@ -116,31 +193,66 @@ class WorkspaceManager:
         """Write fixer results to workspace."""
         fixer_dir = workspace / "02-fixer"
 
-        (fixer_dir / "fixed_prompt.md").write_text(fixed_prompt)
+        try:
+            (fixer_dir / "fixed_prompt.md").write_text(fixed_prompt)
 
-        changelog_text = "\n".join(f"{i + 1}. {change}" for i, change in enumerate(changelog))
-        (fixer_dir / "changelog.md").write_text(changelog_text)
+            changelog_text = "\n".join(f"{i + 1}. {change}" for i, change in enumerate(changelog))
+            (fixer_dir / "changelog.md").write_text(changelog_text)
 
-        if unresolved:
-            unresolved_text = "\n".join(f"- {item}" for item in unresolved)
-        else:
-            unresolved_text = "No unresolved items."
-        (fixer_dir / "unresolved.md").write_text(unresolved_text)
+            if unresolved:
+                unresolved_text = "\n".join(f"- {item}" for item in unresolved)
+            else:
+                unresolved_text = "No unresolved items."
+            (fixer_dir / "unresolved.md").write_text(unresolved_text)
+        except PermissionError as e:
+            raise WorkspaceError(
+                f"Failed to write fix results: Permission denied. "
+                f"Check file permissions for {fixer_dir}."
+            ) from e
+        except OSError as e:
+            raise WorkspaceError(
+                f"Failed to write fix results to {fixer_dir}: {e}. "
+                f"Check available disk space and file system status."
+            ) from e
 
     def read_fix(self, workspace: Path) -> Dict[str, str]:
         """Read fixer results from workspace."""
         fixer_dir = workspace / "02-fixer"
-        return {
-            "fixed_prompt": (fixer_dir / "fixed_prompt.md").read_text(),
-            "changelog": (fixer_dir / "changelog.md").read_text(),
-            "unresolved": (fixer_dir / "unresolved.md").read_text(),
-        }
+        try:
+            return {
+                "fixed_prompt": (fixer_dir / "fixed_prompt.md").read_text(),
+                "changelog": (fixer_dir / "changelog.md").read_text(),
+                "unresolved": (fixer_dir / "unresolved.md").read_text(),
+            }
+        except FileNotFoundError as e:
+            raise WorkspaceError(
+                f"Fix result files not found in {fixer_dir}. "
+                f"Fixer may not have completed successfully."
+            ) from e
+        except PermissionError as e:
+            raise WorkspaceError(
+                f"Failed to read fix results: Permission denied. "
+                f"Check file permissions for {fixer_dir}."
+            ) from e
+        except OSError as e:
+            raise WorkspaceError(f"Failed to read fix results from {fixer_dir}: {e}") from e
 
     def write_report(self, workspace: Path, report: str) -> Path:
         """Write final report to workspace."""
         report_path = workspace / "03-reporter" / "report.md"
-        report_path.write_text(report)
-        return report_path
+        try:
+            report_path.write_text(report)
+            return report_path
+        except PermissionError as e:
+            raise WorkspaceError(
+                f"Failed to write report: Permission denied. "
+                f"Check file permissions for {report_path}."
+            ) from e
+        except OSError as e:
+            raise WorkspaceError(
+                f"Failed to write report to {report_path}: {e}. "
+                f"Check available disk space and file system status."
+            ) from e
 
     def list_workspaces(self) -> List[Path]:
         """List all workspace directories."""
@@ -149,6 +261,10 @@ class WorkspaceManager:
         return sorted(self.base_dir.iterdir(), key=lambda p: p.stat().st_mtime, reverse=True)
 
     def cleanup(self, workspace: Path) -> None:
-        """Remove workspace directory."""
+        """Remove workspace directory.
+
+        Uses ignore_errors=True to ensure cleanup never propagates exceptions,
+        satisfying PROP-002 (cleanup on failure) and PROP-004 (liveness).
+        """
         if workspace.exists():
-            shutil.rmtree(workspace)
+            shutil.rmtree(workspace, ignore_errors=True)

@@ -5,12 +5,78 @@ Coordinates 3-agent pipeline: Analyzer → Fixer → Reporter
 CRITICAL: Orchestrator NEVER implements, ONLY coordinates.
 """
 
-import glob
 from dataclasses import dataclass
+from functools import lru_cache
 from pathlib import Path
-from typing import List, Optional
+from typing import List, Optional, Tuple
 
 from .workspace import WorkspaceManager
+
+SAFE_GLOB_PREFIXES = ("wfc/", "references/", "./wfc/", "./references/")
+MAX_RECURSIVE_DEPTH = 2
+MAX_GLOB_MATCHES = 1000
+
+
+def validate_glob_pattern(pattern: any) -> Tuple[bool, Optional[str], Optional[str]]:
+    """
+    Validate glob pattern for safety (PROP-003, PROP-011).
+
+    Prevents:
+    - Path traversal attacks (.. in patterns)
+    - Filesystem enumeration DoS (/**/* patterns)
+    - Unauthorized file access (patterns outside safe directories)
+    - Excessive recursion depth (>2 levels of **)
+
+    Args:
+        pattern: Glob pattern to validate (must be str)
+
+    Returns:
+        Tuple of (is_valid, error_message, validated_pattern)
+        - is_valid: True if pattern is safe
+        - error_message: None if valid, error description if invalid
+        - validated_pattern: Normalized pattern if valid, None if invalid
+
+    Examples:
+        >>> validate_glob_pattern("wfc/skills/**/*.md")
+        (True, None, "wfc/skills/**/*.md")
+
+        >>> validate_glob_pattern("../etc/passwd")
+        (False, "Pattern contains path traversal (..)", None)
+
+        >>> validate_glob_pattern("/etc/passwd")
+        (False, "Pattern is an absolute path", None)
+    """
+    if not isinstance(pattern, str):
+        return (False, f"Pattern must be a string, got {type(pattern).__name__}", None)
+
+    if not pattern or not pattern.strip():
+        return (False, "Pattern cannot be empty or whitespace-only", None)
+
+    pattern = pattern.strip()
+
+    if ".." in pattern:
+        return (False, "Pattern contains path traversal (..)", None)
+
+    if pattern.startswith("/"):
+        return (False, "Pattern is an absolute path (starts with /)", None)
+
+    if not any(pattern.startswith(prefix) for prefix in SAFE_GLOB_PREFIXES):
+        return (
+            False,
+            f"Pattern must start with one of: {', '.join(SAFE_GLOB_PREFIXES)}",
+            None,
+        )
+
+    recursive_count = pattern.count("**")
+    if recursive_count > MAX_RECURSIVE_DEPTH:
+        return (
+            False,
+            f"Pattern has too many recursive globs (**): {recursive_count} "
+            f"(max {MAX_RECURSIVE_DEPTH})",
+            None,
+        )
+
+    return (True, None, pattern)
 
 
 @dataclass
@@ -127,9 +193,25 @@ class PromptFixerOrchestrator:
 
         Returns:
             List of FixResults
+
+        Raises:
+            ValueError: If glob pattern is invalid or unsafe
         """
-        files = glob.glob(pattern, recursive=True)
-        prompt_paths = [Path(f) for f in files if Path(f).is_file()]
+        is_valid, error_msg, validated_pattern = validate_glob_pattern(pattern)
+        if not is_valid:
+            raise ValueError(f"Invalid glob pattern: {error_msg}")
+
+        cwd = Path.cwd()
+        all_matches = list(cwd.glob(validated_pattern))
+
+        prompt_paths = [p for p in all_matches if p.is_file()]
+
+        if len(prompt_paths) > MAX_GLOB_MATCHES:
+            print(
+                f"⚠️  Warning: Pattern matched {len(prompt_paths)} files, "
+                f"truncating to first {MAX_GLOB_MATCHES}"
+            )
+            prompt_paths = prompt_paths[:MAX_GLOB_MATCHES]
 
         if not prompt_paths:
             print(f"❌ No files match pattern: {pattern}")
@@ -158,14 +240,24 @@ class PromptFixerOrchestrator:
 
         return results
 
+    @lru_cache(maxsize=128)
     def _detect_wfc_mode(self, prompt_path: Path) -> bool:
         """
         Auto-detect if WFC mode should be enabled.
 
         Checks:
         - Filename is SKILL.md or PROMPT.md
-        - Has YAML frontmatter with 'name:' field
+        - Has YAML frontmatter with 'name:' field (properly delimited)
         - Path matches wfc/skills/* or wfc/references/reviewers/*
+
+        Uses @lru_cache for performance optimization (TASK-010).
+        Limits file reads to 10KB to prevent memory issues on large files.
+
+        Args:
+            prompt_path: Path to the prompt file
+
+        Returns:
+            True if WFC mode should be enabled, False otherwise
         """
         if prompt_path.name in ["SKILL.md", "PROMPT.md"]:
             return True
@@ -174,10 +266,26 @@ class PromptFixerOrchestrator:
         if "wfc/skills/" in path_str or "wfc/references/reviewers/" in path_str:
             return True
 
-        if prompt_path.exists():
-            content = prompt_path.read_text()
-            if content.startswith("---\n") and "\nname:" in content[:200]:
+        if not prompt_path.exists():
+            return False
+
+        try:
+            with open(prompt_path, encoding="utf-8") as f:
+                content = f.read(10000)
+
+            if not content.startswith("---\n"):
+                return False
+
+            closing_pos = content.find("\n---\n", 4)
+            if closing_pos == -1:
+                return False
+
+            frontmatter = content[4:closing_pos]
+            if "\nname:" in frontmatter or frontmatter.startswith("name:"):
                 return True
+
+        except (UnicodeDecodeError, PermissionError, OSError):
+            return False
 
         return False
 
