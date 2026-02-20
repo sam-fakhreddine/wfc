@@ -61,5 +61,9 @@ def validate_reviewer_response(data: dict[str, Any]) -> dict[str, Any] | None:
             return model.model_dump()
         return _validate_response_stdlib(data)
     except Exception:
-        logger.debug("Reviewer response validation failed for %r", data, exc_info=True)
+        logger.debug(
+            "Reviewer response validation failed (keys=%s)",
+            list(data.keys()) if isinstance(data, dict) else type(data).__name__,
+            exc_info=True,
+        )
         return None

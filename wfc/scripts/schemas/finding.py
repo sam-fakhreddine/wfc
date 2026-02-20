@@ -110,7 +110,11 @@ def validate_finding(data: dict[str, Any]) -> dict[str, Any] | None:
             return model.model_dump(exclude_none=True)
         return _validate_finding_stdlib(data)
     except Exception:
-        logger.debug("Finding validation failed for %r", data, exc_info=True)
+        logger.debug(
+            "Finding validation failed (keys=%s)",
+            list(data.keys()) if isinstance(data, dict) else type(data).__name__,
+            exc_info=True,
+        )
         return None
 
 
