@@ -128,17 +128,20 @@ Push branch and create PR
 Even in autonomous mode, WFC maintains safety:
 
 ### Hard Stops (pipeline halts)
+
 - Review CS >= 9.0 (Critical findings)
 - Security findings with severity >= 8.5
 - Test suite failure after resolve step
 - Merge conflicts that can't be auto-resolved
 
 ### Soft Warnings (pipeline continues with note)
+
 - Review CS 7.0-9.0 (Important findings deferred)
 - Skipped reviewers (irrelevant file types)
 - Deferred ambiguous findings
 
 ### Never Does
+
 - Push to main/master
 - Force push
 - Skip TDD workflow
@@ -175,13 +178,15 @@ Post-Deploy Validation:
 
 ## When to Use
 
-### Use LFG when:
+### Use LFG when
+
 - Feature scope is clear from description
 - You trust the pipeline for this type of work
 - Want to parallelize and speed up delivery
 - Working on well-understood codebase patterns
 
-### Don't use when:
+### Don't use when
+
 - Exploring ideas (use /wfc-vibe)
 - Need human decisions at each step (use manual workflow)
 - Critical security feature (use /wfc-plan + manual review)

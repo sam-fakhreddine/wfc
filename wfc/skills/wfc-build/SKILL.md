@@ -36,11 +36,13 @@ Simplified workflow that skips formal planning but maintains all WFC quality inf
 ## "Intentional Vibe" Philosophy
 
 **Vibe Coding:**
+
 - Fast iteration
 - Minimal planning
 - Just ship it
 
 **+ WFC Guardrails:**
+
 - Git worktrees (isolation)
 - TDD workflow (tests first)
 - Quality checks (formatters, linters)
@@ -48,6 +50,7 @@ Simplified workflow that skips formal planning but maintains all WFC quality inf
 - Auto-rollback (safety)
 
 **= Intentional Vibe:**
+
 - Quick enough to flow
 - Structured enough to be safe
 - Professional enough to ship
@@ -79,12 +82,14 @@ Orchestrator decides based on scope:
 ### Simple Task → 1 Subagent
 
 **Examples:**
+
 - "add a utility function"
 - "create a doc loader"
 - "fix a bug"
 - "add a new endpoint"
 
 **Flow:**
+
 ```
 Spawn 1 subagent via Task tool
     ↓
@@ -96,11 +101,13 @@ Quality check → Review → Merge
 ### Complex Task → N Subagents
 
 **Examples:**
+
 - "add OAuth2 authentication" (backend + frontend + security)
 - "build a dashboard" (API + UI + charts)
 - "refactor auth system" (multiple components)
 
 **Flow:**
+
 ```
 Spawn N subagents via Task tool (parallel)
     ↓
@@ -116,6 +123,7 @@ Merge sequentially
 ## Orchestrator Responsibilities
 
 **What orchestrator DOES:**
+
 - ✅ Ask clarifying questions
 - ✅ Assess task complexity
 - ✅ Decide: 1 agent or N agents?
@@ -125,6 +133,7 @@ Merge sequentially
 - ✅ Coordinate merge/rollback
 
 **What orchestrator NEVER DOES:**
+
 - ❌ Write code
 - ❌ Write tests
 - ❌ Run formatters/linters
@@ -205,31 +214,36 @@ User: /wfc-build "add doc loader"
 
 ## Integration with WFC
 
-### Uses (delegates to):
+### Uses (delegates to)
+
 - **Git worktrees** - Isolated implementation environments
 - **Quality checker** - Pre-review gates (formatters, linters, tests)
 - **wfc-review** - Consensus review with expert personas
 - **Merge engine** - Auto-merge with rollback capability
 
-### Produces:
+### Produces
+
 - PR targeting develop branch (auto-merge for agent branches)
 - Agent reports (telemetry)
 - Review reports
 
-### Skips:
+### Skips
+
 - Formal TASKS.md generation
 - Multi-tier planning
 - Property formalization (uses lightweight acceptance criteria instead)
 
 ## When to Use
 
-### Use wfc-build when:
+### Use wfc-build when
+
 - ✅ Single feature or small addition
 - ✅ Want to iterate quickly
 - ✅ Scope is clear from description
 - ✅ "Just build this and ship it"
 
-### Use wfc-plan + wfc-implement when:
+### Use wfc-plan + wfc-implement when
+
 - ✅ Large feature with multiple tasks
 - ✅ Complex dependencies
 - ✅ Need formal properties (SAFETY, LIVENESS, etc.)
@@ -355,11 +369,13 @@ WFC workflow:
 Agent branches (claude/*) auto-merge to develop when CI passes. Human branches require manual review. Release candidates are cut from develop to main on a schedule.
 
 **What WFC does:**
+
 - Creates feature branches
 - Pushes branches to remote
 - Creates GitHub PRs targeting develop (draft by default)
 
 **What WFC never does:**
+
 - Push directly to main/master
 - Force push
 - Merge PRs to main (you decide when to cut releases)

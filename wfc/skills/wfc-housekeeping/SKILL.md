@@ -43,6 +43,7 @@ license: MIT
 ### 1. BRANCHES — Stale Branch Cleanup
 
 **Scans:**
+
 - Local branches merged into main/develop
 - Local branches with no remote tracking
 - Remote branches merged into main/develop
@@ -72,6 +73,7 @@ git for-each-ref --sort=-committerdate --format='%(refname:short) %(committerdat
 ### 2. DEAD CODE — Unused Code Detection
 
 **Scans:**
+
 - Functions/classes with zero references outside their own file
 - Commented-out code blocks (3+ consecutive commented lines)
 - Unreachable code after return/raise/break/continue
@@ -81,6 +83,7 @@ git for-each-ref --sort=-committerdate --format='%(refname:short) %(committerdat
 **How to detect:**
 
 For each Python function/class definition found via Grep:
+
 1. Search the entire codebase for references to that name
 2. Exclude the definition file itself and `__init__.py` re-exports
 3. If zero external references → candidate for removal
@@ -97,6 +100,7 @@ uv run ruff check --select F841,F811 .  # Unused variables, redefined
 **Approval required:** Remove functions/classes, remove commented-out code.
 
 **Safety:**
+
 - NEVER remove code with `# TODO`, `# FIXME`, `# HACK` comments (intentional)
 - NEVER remove `__all__` exports or `__init__.py` re-exports
 - NEVER remove test fixtures/utilities (check `tests/` and `conftest.py` usage)
@@ -105,6 +109,7 @@ uv run ruff check --select F841,F811 .  # Unused variables, redefined
 ### 3. IMPORTS — Import Optimization
 
 **Scans:**
+
 - Unused imports
 - Duplicate imports
 - Import ordering (stdlib → third-party → local)
@@ -123,6 +128,7 @@ uv run ruff check --select F401,F811,I001,F403 --fix --diff .  # Preview fixes
 ### 4. FILES — Orphaned & Redundant Files
 
 **Scans:**
+
 - `.pyc` files and `__pycache__` directories not in `.gitignore`
 - Empty `__init__.py` files that serve no purpose
 - Duplicate files (same content, different locations)
@@ -152,6 +158,7 @@ git ls-files '*.tmp' '*.bak' '*.swp' '*.orig'
 ### 5. DEV ARTIFACTS — Development Leftovers
 
 **Scans:**
+
 - Orphaned worktree directories (`.worktrees/`)
 - Debug print statements (`print(`, `console.log(`, `debugger`)
 - Hardcoded `localhost`/`127.0.0.1` URLs outside of tests
@@ -159,6 +166,7 @@ git ls-files '*.tmp' '*.bak' '*.swp' '*.orig'
 - Files with `TODO` or `FIXME` (report only, don't remove)
 
 **Preserved (NEVER clean):**
+
 - `.development/plans/` — Plan history is valuable project context. Never delete.
 - `.development/summaries/` — Session summaries are kept for reference.
 
@@ -253,6 +261,7 @@ cat .development/housekeeping/keep-list.json 2>/dev/null || echo '{"kept_items":
 ### Step 1: SCAN
 
 Run all applicable scanners. For each finding, record:
+
 - **Domain**: branches | dead-code | imports | files | dev-artifacts
 - **Item**: What was found (file path, branch name, function name)
 - **Severity**: critical | high | medium | low | info
@@ -307,12 +316,14 @@ Proceed with cleanup?
 ### Step 3: APPROVE
 
 Use **AskUserQuestion** to get user approval:
+
 - "Apply all auto-fixes + approved items?"
 - User can override individual items (e.g., "skip #4, fix #5, delete #3")
 - `--safe` mode: skip this step, only apply auto-fix items
 - `--preview` mode: stop here, don't apply anything
 
 **After approval:**
+
 - Items the user chose to **keep** → add/update in keep list (increment `runs_kept`, update date)
 - Items the user chose to **delete** that were on the keep list → remove from keep list
 - Write updated keep list to `.development/housekeeping/keep-list.json`
@@ -326,6 +337,7 @@ Apply approved cleanups. Parallelize by domain using Task tool subagents:
 - **Files agent**: Removes orphaned files, cleans dev artifacts, prunes worktrees
 
 Each agent:
+
 1. Applies its changes
 2. Runs `uv run pytest` on affected test files
 3. Reports what was changed
@@ -395,15 +407,18 @@ No regressions introduced.
 ## Integration with WFC
 
 ### Complements
+
 - `/wfc-retro` — Retro can recommend running housekeeping
 - `/wfc-build` / `/wfc-implement` — Run housekeeping before starting new features
 - `/wfc-pr-comments` — Reviewers may request cleanup
 
 ### Produces
+
 - Clean codebase (fewer files, cleaner imports, no dead branches)
 - Housekeeping report (optional: save to `.development/summaries/`)
 
 ### Consumes
+
 - Git history (branch analysis)
 - Ruff/black (import and lint analysis)
 - Test suite (verification)

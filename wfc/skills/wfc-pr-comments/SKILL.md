@@ -96,6 +96,7 @@ gh api graphql -f query='
 Optionally also skip threads where `isOutdated` is `true` (the code has changed since the comment was made), but flag these to the user in the triage table.
 
 Extract from each unresolved thread's first comment:
+
 - `id` — unique identifier
 - `author.login` — who wrote it
 - `body` — comment text
@@ -119,6 +120,7 @@ This is the core intelligence. For each comment, evaluate 5 dimensions and assig
 #### Dimension 1: ARCHITECTURAL VALIDITY
 
 Does this suggestion align with project patterns?
+
 - Check existing conventions in the file and codebase
 - Consider CLAUDE.md / PLANNING.md rules
 - A suggestion that contradicts project conventions → lean toward SKIP
@@ -126,6 +128,7 @@ Does this suggestion align with project patterns?
 #### Dimension 2: SCOPE CHECK
 
 Is this about code in this PR's diff, or asking for unrelated work?
+
 - Comment about code changed in this PR → in scope
 - Request for unrelated refactoring → out of scope → SKIP
 - Feature request disguised as review comment → SKIP
@@ -133,6 +136,7 @@ Is this about code in this PR's diff, or asking for unrelated work?
 #### Dimension 3: CORRECTNESS
 
 Is the suggested fix actually correct?
+
 - Would implementing it introduce bugs?
 - Does it handle edge cases the reviewer may have missed?
 - Is the reviewer wrong about the issue? If so → SKIP with explanation
@@ -175,6 +179,7 @@ Proceed with fixes?
 ```
 
 **Use AskUserQuestion** to get approval. The user may:
+
 - Approve as-is
 - Override specific verdicts (e.g., "skip #1, fix #4")
 - Cancel entirely
@@ -230,9 +235,11 @@ Instructions:
 For `RESPOND` comments: Do NOT spawn a subagent. Instead, after fixes are committed, use `gh api` to reply to the comment on GitHub with an explanation.
 
 **Auto-lint gate:** Before committing, run a final format check across all modified files:
+
 ```bash
 uv run black --check wfc/ && uv run ruff check .
 ```
+
 If black would reformat any file, run `uv run black {modified_files}` first. This prevents CI failures from formatting issues.
 
 ### Step 6: COMMIT & PUSH
@@ -255,7 +262,7 @@ Addresses comments on PR #{number}
 Co-Authored-By: Claude Opus 4.6 <noreply@anthropic.com>
 ```
 
-4. Push to the PR branch:
+1. Push to the PR branch:
 
 ```bash
 git push origin {headRefName}
@@ -291,6 +298,7 @@ uv run python wfc/scripts/github/pr_threads.py bulk-resolve {owner} {repo} manif
 This posts the reply message to each thread on GitHub, then calls `resolveReviewThread` to mark it resolved.
 
 **Single thread (ad-hoc):**
+
 ```bash
 uv run python wfc/scripts/github/pr_threads.py resolve PRRT_... \
   --message "Fixed in abc1234: removed .decode() from text=True subprocess error path"
@@ -326,14 +334,17 @@ Pushed to {headRefName}. PR updated.
 ## Integration with WFC
 
 ### Fits After
+
 - `wfc-build` or `wfc-implement` (which create PRs)
 - Any workflow that pushes a branch and creates a PR
 
 ### Complements
+
 - `wfc-review` — internal review BEFORE creating a PR
 - `wfc-pr-comments` — external feedback AFTER PR is created
 
 ### Typical Flow
+
 ```
 wfc-build → Push PR → Reviewers comment → /wfc-pr-comments → Push fixes → Merge
 ```

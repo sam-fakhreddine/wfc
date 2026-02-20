@@ -52,21 +52,25 @@ class TestHookEventEmission:
     def test_security_check_emits_decision_on_pass(self):
         from wfc.scripts.hooks.security_hook import check
 
-        result = check({
-            "tool_name": "Bash",
-            "tool_input": {"command": "echo hello"},
-        })
+        result = check(
+            {
+                "tool_name": "Bash",
+                "tool_input": {"command": "echo hello"},
+            }
+        )
         mem = _get_memory_provider()
-        decisions = [e for e in mem.events if e.event_type == "hook.decision"]
+        _decisions = [e for e in mem.events if e.event_type == "hook.decision"]
         assert result == {} or "decision" in result
 
     def test_security_check_emits_on_block(self):
         from wfc.scripts.hooks.security_hook import check
 
-        result = check({
-            "tool_name": "Bash",
-            "tool_input": {"command": "rm -rf /"},
-        })
+        result = check(
+            {
+                "tool_name": "Bash",
+                "tool_input": {"command": "rm -rf /"},
+            }
+        )
         mem = _get_memory_provider()
         decisions = [e for e in mem.events if e.event_type == "hook.decision"]
         if result.get("decision") == "block":

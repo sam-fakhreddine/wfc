@@ -156,6 +156,7 @@ python3 scripts/docs/generate_doc_registry.py
 ```
 
 This will:
+
 1. Scan `docs/` directory
 2. Extract titles, summaries, topics
 3. Generate `docs/reference/REGISTRY.json` (machine-readable)
@@ -187,23 +188,29 @@ if user_asks_about_delegation:
 ## Benefits
 
 ### ✅ Token Efficiency
+
 Load only what you need, when you need it.
 
 ### ✅ Fast Context Loading
+
 2.2K tokens for all summaries vs 62K for full docs.
 
 ### ✅ Searchable
+
 Find docs by keyword, skill, topic, or category.
 
 ### ✅ Auto-Indexed
+
 Run generator script to update registry automatically.
 
 ### ✅ Cached
+
 Loaded docs cached in memory for session.
 
 ## Comparison: Before vs After
 
 ### Before (No Registry)
+
 ```python
 # Load all docs (62K tokens)
 quickstart = Path('docs/QUICKSTART.md').read_text()
@@ -217,6 +224,7 @@ architecture = Path('docs/architecture/ARCHITECTURE.md').read_text()
 ```
 
 ### After (With Registry)
+
 ```python
 loader = DocLoader()
 

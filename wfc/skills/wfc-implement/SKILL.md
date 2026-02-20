@@ -221,11 +221,13 @@ WFC workflow:
 Agent branches (claude/*) auto-merge to develop when CI passes. Human branches require manual review. Release candidates are cut from develop to main on a schedule.
 
 **What WFC does:**
+
 - Creates feature branches
 - Pushes branches to remote
 - Creates GitHub PRs targeting develop (draft by default)
 
 **What WFC never does:**
+
 - Push directly to main/master
 - Force push
 - Merge PRs to main (you decide when to cut releases)
@@ -237,16 +239,19 @@ See [GIT_SAFETY_POLICY.md](../../../docs/security/GIT_SAFETY_POLICY.md) for comp
 ## Current Implementation Status
 
 ### ✅ Done
+
 - Orchestrator (task queue, dependency management)
 - Shared infrastructure (config, telemetry, schemas, utils)
 - Mock dependencies (wfc-plan, wfc-consensus-review)
 
 ### 🚧 In Progress
+
 - Agent TDD workflow
 - Merge engine with rollback
 - Dashboard
 
 ### 📋 TODO
+
 - CLI interface
 - Full integration tests
 - Performance optimization

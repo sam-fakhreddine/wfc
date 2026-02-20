@@ -112,16 +112,19 @@ plans/
 After the interview, WFC generates 2-3 architecture approaches:
 
 ### Option 1: Minimal Changes
+
 - Smallest diff, maximum code reuse
 - Lowest risk, fastest to implement
 - Best for simple features or hotfixes
 
 ### Option 2: Clean Architecture
+
 - Proper abstractions, maintainability-first
 - Best long-term design
 - Higher initial effort
 
 ### Option 3: Pragmatic Balance
+
 - Speed + quality tradeoff
 - Addresses key concerns without over-engineering
 - Best for most features
@@ -133,11 +136,13 @@ The approaches are saved to `ARCHITECTURE-OPTIONS.md` for reference.
 The adaptive interview gathers:
 
 ### Core Understanding
+
 - What are you building? (goal)
 - Why are you building it? (context)
 - Who will use it? (users)
 
 ### Requirements
+
 - Core features (must-have)
 - Nice-to-have features
 - Technical constraints
@@ -145,12 +150,14 @@ The adaptive interview gathers:
 - Security requirements
 
 ### Technical Details
+
 - Technology stack
 - Existing codebase or new project
 - Testing approach
 - Coverage targets
 
 ### Formal Properties
+
 - Safety properties (what must never happen)
 - Liveness properties (what must eventually happen)
 - Invariants (what must always be true)
@@ -159,7 +166,9 @@ The adaptive interview gathers:
 ## Outputs
 
 ### 1. TASKS.md
+
 Structured implementation tasks with:
+
 - Unique IDs (TASK-001, TASK-002, ...)
 - Complexity ratings (S, M, L, XL)
 - Dependency graph (DAG)
@@ -168,6 +177,7 @@ Structured implementation tasks with:
 - Acceptance criteria
 
 Example:
+
 ```markdown
 ## TASK-001: Setup project structure
 - **Complexity**: S
@@ -181,7 +191,9 @@ Example:
 ```
 
 ### 2. PROPERTIES.md
+
 Formal properties with:
+
 - Type (SAFETY, LIVENESS, INVARIANT, PERFORMANCE)
 - Formal statement
 - Rationale
@@ -189,6 +201,7 @@ Formal properties with:
 - Suggested observables
 
 Example:
+
 ```markdown
 ## PROP-001: SAFETY
 - **Statement**: Unauthenticated user must never access protected endpoints
@@ -198,13 +211,16 @@ Example:
 ```
 
 ### 3. TEST-PLAN.md
+
 Test strategy and cases:
+
 - Testing approach (unit, integration, e2e)
 - Coverage targets
 - Specific test cases linked to tasks and properties
 - Test steps and expected outcomes
 
 Example:
+
 ```markdown
 ### TEST-001: Verify SAFETY property
 - **Type**: integration
@@ -220,6 +236,7 @@ Example:
 ## Architecture
 
 ### MULTI-TIER Design
+
 ```
 ┌─────────────────────────────┐
 │  PRESENTATION (cli.py)      │  User interaction, output formatting
@@ -317,11 +334,13 @@ Plans automatically search `docs/solutions/` (via wfc-compound) during generatio
 ## Integration with WFC
 
 ### Produces (consumed by wfc-implement, wfc-deepen, wfc-lfg)
+
 - `plan/TASKS.md` → Task orchestration (living document)
 - `plan/PROPERTIES.md` → TDD test requirements
 - `plan/TEST-PLAN.md` → Test strategy
 
 ### Consumes
+
 - `docs/solutions/` → Past solutions for pitfall warnings (via wfc-compound)
 - `wfc-architecture` → Architecture analysis
 - `wfc-security` → Threat model properties
@@ -467,6 +486,7 @@ After the review gate passes (or validation is skipped), write a `plan-audit.jso
 ```
 
 Field definitions:
+
 - `hash_algorithm`: Always `"sha256"`
 - `original_hash`: SHA-256 hash of the draft plan before any revisions
 - `validate_score`: Numeric score from the validation analysis

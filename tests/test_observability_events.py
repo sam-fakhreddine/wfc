@@ -5,7 +5,6 @@ from __future__ import annotations
 import threading
 from unittest.mock import MagicMock
 
-import pytest
 
 from wfc.observability.events import EventBus, ObservabilityEvent
 
@@ -57,9 +56,7 @@ class TestEventBus:
     def test_emit_to_no_providers(self):
         """Emit with no providers registered — no error."""
         bus = EventBus()
-        event = ObservabilityEvent(
-            event_type="test", source="test", session_id="s", payload={}
-        )
+        event = ObservabilityEvent(event_type="test", source="test", session_id="s", payload={})
         bus.emit(event)
 
     def test_emit_dispatches_to_provider(self):
@@ -81,9 +78,7 @@ class TestEventBus:
         bus.register_provider(p1)
         bus.register_provider(p2)
 
-        event = ObservabilityEvent(
-            event_type="test", source="test", session_id="s", payload={}
-        )
+        event = ObservabilityEvent(event_type="test", source="test", session_id="s", payload={})
         bus.emit(event)
 
         p1.on_event.assert_called_once_with(event)
@@ -98,9 +93,7 @@ class TestEventBus:
         bus.register_provider(bad_provider)
         bus.register_provider(good_provider)
 
-        event = ObservabilityEvent(
-            event_type="test", source="test", session_id="s", payload={}
-        )
+        event = ObservabilityEvent(event_type="test", source="test", session_id="s", payload={})
         bus.emit(event)
 
         good_provider.on_event.assert_called_once_with(event)
@@ -111,9 +104,7 @@ class TestEventBus:
         bus.register_provider(provider)
         bus.unregister_provider(provider)
 
-        event = ObservabilityEvent(
-            event_type="test", source="test", session_id="s", payload={}
-        )
+        event = ObservabilityEvent(event_type="test", source="test", session_id="s", payload={})
         bus.emit(event)
 
         provider.on_event.assert_not_called()

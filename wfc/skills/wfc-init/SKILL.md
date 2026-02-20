@@ -166,28 +166,28 @@ Next steps:
 ```makefile
 # Quality checks for all languages
 quality-check:
-	@echo "🔍 Running quality checks..."
-	# Python
-	@black --check wfc/
-	@ruff check wfc/
-	@pytest
-	# JavaScript
-	@prettier --check src/
-	@eslint src/
-	@jest
-	@echo "✅ All checks passed"
+ @echo "🔍 Running quality checks..."
+ # Python
+ @black --check wfc/
+ @ruff check wfc/
+ @pytest
+ # JavaScript
+ @prettier --check src/
+ @eslint src/
+ @jest
+ @echo "✅ All checks passed"
 
 format:
-	@echo "🎨 Formatting code..."
-	@black wfc/
-	@prettier --write src/
-	@echo "✅ Code formatted"
+ @echo "🎨 Formatting code..."
+ @black wfc/
+ @prettier --write src/
+ @echo "✅ Code formatted"
 
 lint:
-	@echo "🔍 Linting..."
-	@ruff check --fix wfc/
-	@eslint --fix src/
-	@echo "✅ Linting complete"
+ @echo "🔍 Linting..."
+ @ruff check --fix wfc/
+ @eslint --fix src/
+ @echo "✅ Linting complete"
 ```
 
 ### .pre-commit-config.yaml (optional)
@@ -270,6 +270,7 @@ When initializing a project, wfc-init confirms Entire.io is ready to capture ses
 ### What is Entire.io?
 
 **Agent session capture** for debugging and cross-session learning:
+
 - 📹 Records agent reasoning at each TDD phase
 - 🐛 Rewind failed agents to exact failure point
 - 📚 Learn from past mistakes across sessions

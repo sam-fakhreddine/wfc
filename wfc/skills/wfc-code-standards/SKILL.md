@@ -88,6 +88,7 @@ All backend/service code follows three tiers. No exceptions.
 ```
 
 **Rules**:
+
 - Presentation **never** imports data tier directly (always goes through logic)
 - Logic tier has **zero** knowledge of HTTP, CLI, or UI frameworks
 - Data tier has **zero** business logic - it fetches, stores, and returns
@@ -109,6 +110,7 @@ The three-tier architecture tells you *what* to separate. This tells you *how* t
 ```
 
 **Rules**:
+
 - **Business logic is pure**: Functions in the logic tier take data in and return data out. No database calls, no file reads, no network requests, no randomness, no current time. These are injected as arguments or returned as "commands" for the shell to execute.
 - **I/O lives at the edges**: The presentation and data tiers handle all side effects. The shell reads from the world, passes data to the core, gets results back, and writes to the world.
 - **Testing the core needs zero mocks**: If you need mocks to test your business logic, the boundary is in the wrong place. Pure functions are tested with input/output pairs.
@@ -141,10 +143,12 @@ GuideDog has: Animal (data), PetBehavior, GuidingCapability, TrainingRecord
 ```
 
 **When inheritance is OK**:
+
 - Extending a framework's base class (one level)
 - Enum/error type hierarchies (flat)
 
 **When to use composition**:
+
 - Behavior varies independently
 - Multiple capabilities needed
 - Testing requires swapping implementations
@@ -154,12 +158,14 @@ GuideDog has: Animal (data), PetBehavior, GuidingCapability, TrainingRecord
 Data should be immutable unless there's a specific reason to mutate it. Mutable shared state is the root cause of entire bug categories.
 
 **Rules**:
+
 - **Default to immutable data structures**: Frozen dataclasses, readonly records, const declarations, `val` not `var`. Opt into mutability only when the algorithm requires it.
 - **Never mutate function arguments**: If a function needs a modified version, return a new copy. Callers should never be surprised that their data changed.
 - **Collections are immutable by default**: Return frozen/unmodifiable collections from APIs. If the caller needs to modify, they copy.
 - **Configuration is immutable after load**: Parse config once at startup, freeze it, inject it everywhere. No runtime config mutation.
 
 **When mutability is OK**:
+
 - Builder patterns during construction (freeze after `.build()`)
 - Performance-critical inner loops (local mutation, not shared)
 - Accumulator patterns (local to a single function scope)
@@ -182,6 +188,7 @@ def process_users(users):
 Expose the minimum possible interface. Everything is private by default, public only when needed.
 
 **Rules**:
+
 - **Private by default**: Functions, classes, methods, and fields start as private/internal. Promote to public only when an external consumer needs it.
 - **Narrow function signatures**: Accept the minimum data needed. A function that needs a user's email takes `email: str`, not `user: User`.
 - **Return the minimum data needed**: Don't return an entire object when the caller only needs a status code.
@@ -195,11 +202,13 @@ Expose the minimum possible interface. Everything is private by default, public 
 Use factories when object creation involves decisions. Don't use them for simple construction.
 
 **When to use**:
+
 - Creation depends on runtime conditions (config, input type, feature flags)
 - Registry of implementations (plugins, handlers, strategies)
 - Object requires complex setup (connection pools, configuration chains)
 
 **When NOT to use**:
+
 - Simple dataclass/struct construction
 - Only one implementation exists
 - No conditional logic in creation
@@ -211,6 +220,7 @@ Use factories when object creation involves decisions. Don't use them for simple
 No source file may exceed 500 lines. This is a hard cap, not a guideline.
 
 **When approaching the limit**:
+
 1. Extract a class into its own module
 2. Group related functions into a submodule
 3. Move constants/types to a dedicated file
@@ -233,6 +243,7 @@ Extract when you see 3+ repetitions. Not 2 - that's premature abstraction. At 3,
 ### Error Handling and Error Contract (DPS-4)
 
 **Rules**:
+
 - Define a structured exception/error hierarchy per project (base error, then domain errors)
 - **Never** silently swallow errors - log and re-raise, or handle explicitly
 - **Never** use bare catch-all (`except:`, `catch (Exception)`, `catch(...)`) - always specify the type
@@ -261,11 +272,13 @@ Extract when you see 3+ repetitions. Not 2 - that's premature abstraction. At 3,
 Detect bad state at the boundary. Reject it immediately with a clear error. Never let invalid data propagate into the system where it becomes a mystery bug three layers deep.
 
 **Schema validation at entry**:
+
 - Validate the **shape** of all external input before touching it: required fields present, types correct, enums in range, sizes bounded
 - Use schema libraries (pydantic, zod, JSON Schema, protobuf) — hand-rolled validation drifts from intent
 - **No business logic executes before validation passes** — validation is the first thing that happens at every entry point
 
 **Validation rules**:
+
 - **Reject unknown fields**: If the schema doesn't define it, reject it. Silent acceptance of extra fields hides API misuse and version drift
 - **Enforce max payload size**: Every ingress point (HTTP, queue, file upload) has an explicit size cap. No unbounded reads
 - **Validate enum values against allowed set**: Don't trust that a string is one of your valid states — check it
@@ -295,6 +308,7 @@ def process_order(order):
 Related to boundary validation: put all your armor at the gates, not inside the castle.
 
 **Validate here** (system boundaries):
+
 - User input (HTTP requests, CLI args, form data)
 - External API responses (they can change without warning)
 - Internal service responses (treat as untrusted — APIs drift)
@@ -303,6 +317,7 @@ Related to boundary validation: put all your armor at the gates, not inside the 
 - File contents read from disk
 
 **Trust here** (internal code):
+
 - Function-to-function calls within the same module
 - Data that already passed boundary validation
 - Return values from your own functions
@@ -312,6 +327,7 @@ Related to boundary validation: put all your armor at the gates, not inside the 
 ### Resource Lifecycle
 
 All resources (files, connections, handles, locks) must use the language's structured lifecycle mechanism:
+
 - Python: context managers (`with`/`async with`)
 - Go: `defer`
 - Rust: RAII / `Drop`
@@ -323,6 +339,7 @@ All resources (files, connections, handles, locks) must use the language's struc
 ### Atomic Writes
 
 When writing files that represent state (config, data, caches), use atomic write patterns:
+
 1. Write to a temporary file in the same directory
 2. Flush and sync to disk
 3. Atomically rename/move to the target path
@@ -334,6 +351,7 @@ This prevents half-written files on crash. A file either exists with complete co
 Operations should be safe to retry. Running the same operation twice must produce the same result as running it once.
 
 **Rules**:
+
 - **Writes**: Use upsert/create-or-update, not blind insert. A retry after a crash shouldn't create duplicates.
 - **Deletes**: Deleting something that doesn't exist is a no-op, not an error.
 - **Side effects**: Guard with idempotency keys or check-before-act patterns. If the effect already happened, skip it.
@@ -358,6 +376,7 @@ Operations should be safe to retry. Running the same operation twice must produc
 No implicit states. Every stateful entity must have explicitly enumerated states and guarded transitions.
 
 **Rules**:
+
 - **Enumerate all states**: Use enums, Literal types, or constant sets — never raw strings for state values
 - **Define an explicit transition map**: Valid transitions are declared, not scattered across if/else chains. The map IS the documentation
 - **Guard every transition**: Setting state must validate that the transition from current → target is legal. Invalid transitions raise explicit errors, never silently no-op
@@ -389,6 +408,7 @@ def transition(order, target):
 All external calls must have explicit timeouts and bounded retry policies. This applies to ALL calls — not just async.
 
 **Timeout rules**:
+
 - **Every HTTP request** must set `timeout=` — no unbounded waits
 - **Every subprocess call** must set `timeout=` — no runaway processes
 - **Every database query** must have a statement timeout or connection timeout
@@ -396,6 +416,7 @@ All external calls must have explicit timeouts and bounded retry policies. This 
 - **Every file operation over network** (NFS, S3, etc.) must have a timeout
 
 **Retry rules**:
+
 - **Max attempts must be explicit** — no infinite retry loops
 - **Backoff strategy required** — exponential backoff preferred, never fixed-interval hammering
 - **Total timeout cap** — the sum of all retries must have an upper bound
@@ -431,6 +452,7 @@ for attempt in range(3):
 Security is not a feature — it's a constraint on every feature.
 
 **Rules**:
+
 - **Parameterized queries only**: Never concatenate user input into SQL, NoSQL, LDAP, or shell commands. Use parameterized queries, prepared statements, or ORM methods
 - **Principle of least privilege**: Database users, API tokens, IAM roles, file permissions — scope to the minimum required. No wildcards (`*`) unless explicitly justified in a comment
 - **Rate limiting on public endpoints**: Every public-facing API must have rate limits. No exceptions
@@ -442,6 +464,7 @@ Security is not a feature — it's a constraint on every feature.
 Config is the boundary between your code and the environment. Treat it defensively.
 
 **Rules**:
+
 - **Explicit defaults for all config values**: `None` without downstream handling is a crash waiting to happen. Every config key has a documented, safe default
 - **Feature flags default to OFF**: New features ship disabled. Enable explicitly after verification. A missing flag means "off", not "on"
 - **Fail at startup on missing critical config**: If the service cannot function without `DATABASE_URL`, crash immediately at startup with a clear error message — don't wait until the first request hits the missing config
@@ -467,6 +490,7 @@ def load_config():
 Infrastructure is part of defensive programming. A service without a health check is a service you can't monitor.
 
 **Required for new services**:
+
 - **Health check endpoint**: `/health` or `/healthz` that returns 200 when the service can process requests and 503 when it can't (e.g., database unreachable)
 - **Graceful shutdown**: Handle SIGTERM/SIGINT — stop accepting new work, drain in-flight requests, close connections, exit cleanly. Never hard-kill with active transactions
 - **Dead-letter queue (DLQ)**: Async message consumers must have a DLQ for messages that fail after max retries. Unprocessable messages must not block the queue
@@ -480,6 +504,7 @@ Infrastructure is part of defensive programming. A service without a health chec
 Text logs are dead. We log **events**, not sentences.
 
 **Rules**:
+
 - **No print/console.log/fmt.Println for logging** - use structured logging libraries
 - **No string interpolation in log calls** - it breaks aggregation and indexing
 - **Log events as key-value pairs** - machine-parseable, queryable, aggregatable
@@ -499,6 +524,7 @@ log.info("order_processing", order_id=order_id)
 **Context propagation**: In request-based systems, bind context (request ID, user ID) at the middleware/handler entry point. All downstream log calls automatically include this context without passing it manually.
 
 **Error logging**: Always include:
+
 - Event name (what happened)
 - Error type (class/type of error)
 - Error message (human-readable)
@@ -520,6 +546,7 @@ log.info("order_processing", order_id=order_id)
 Logs tell you *what happened*. Metrics tell you *how the system is doing*.
 
 **Required metrics for new services/endpoints**:
+
 - **Error rate**: Count of errors per endpoint/operation, bucketed by error code
 - **Latency**: p50, p95, p99 response time per endpoint
 - **Retry count**: How often retries fire — a spike means an upstream is degraded
@@ -527,6 +554,7 @@ Logs tell you *what happened*. Metrics tell you *how the system is doing*.
 - **Saturation**: Connection pool usage, thread pool usage, memory — how close to limits
 
 **Alarm thresholds** (define alongside the service, not as afterthoughts):
+
 - Sustained error rate above baseline
 - p99 latency above SLA threshold
 - DLQ depth growing (messages that can't be processed)
@@ -609,6 +637,7 @@ Tests that only cover the happy path give false confidence. The bugs that wake y
 The event loop must never be blocked. A single blocking call in async code stalls every concurrent task in that runtime.
 
 **Universal rules**:
+
 - **No blocking I/O in async functions**: File reads, network calls, and sleeps must use async variants
 - **No blocking sleep**: Use the async sleep variant (`asyncio.sleep`, `setTimeout`/`await delay`, etc.)
 - **CPU-bound work in thread pools**: If you must call CPU-intensive or legacy blocking code from async context, dispatch it to a thread pool
@@ -646,6 +675,7 @@ The event loop must never be blocked. A single blocking call in async code stall
 Every public module, class, function, and method must have a docstring/doc comment. This is non-negotiable.
 
 **What a docstring must contain**:
+
 1. **Summary**: One sentence, imperative mood ("Calculate velocity." not "This function calculates velocity.")
 2. **Description** (if non-obvious): Why this exists, when to use it vs alternatives
 3. **Parameters**: Name and purpose (types come from the signature, not the docs)
@@ -653,6 +683,7 @@ Every public module, class, function, and method must have a docstring/doc comme
 5. **Errors/Exceptions**: What can go wrong and when
 
 **What a docstring must NOT contain**:
+
 - Type information that's already in the signature
 - Implementation details that change with refactoring
 - Changelog entries ("Added in v2.3")
@@ -666,6 +697,7 @@ Every public module, class, function, and method must have a docstring/doc comme
 When reviewing code in any language, flag:
 
 **Architecture violations**:
+
 - Presentation tier importing data tier directly (bypassing logic)
 - Business logic in route handlers / controllers / CLI commands
 - Database queries or API calls in the logic tier
@@ -675,6 +707,7 @@ When reviewing code in any language, flag:
 - Public API surface larger than necessary (internal details exposed)
 
 **Code quality violations**:
+
 - Files exceeding 500 lines
 - Bare catch-all error handling
 - Silently swallowed errors
@@ -690,6 +723,7 @@ When reviewing code in any language, flag:
 - Shared mutable state between threads/tasks without synchronization
 
 **Concurrency and data integrity violations (DPS-7)**:
+
 - Read-modify-write without optimistic locking (version field, ETag, conditional write)
 - Shared mutable state between concurrent operations without synchronization
 - Race-prone patterns (check-then-act without atomicity)
@@ -697,12 +731,14 @@ When reviewing code in any language, flag:
 - Background/async jobs that aren't idempotent
 
 **Observability violations**:
+
 - print/console.log for logging
 - String interpolation in log calls
 - Missing context in error logs (no request ID, no operation name)
 - Logging secrets or PII
 
 **Testing violations**:
+
 - Tests with loops instead of parametrization
 - Tests that depend on execution order
 - Missing assertions (test runs code but doesn't verify anything)
@@ -710,11 +746,13 @@ When reviewing code in any language, flag:
 - No test for the error/edge cases
 
 **Async violations**:
+
 - Blocking I/O in async functions
 - Missing timeouts on external calls
 - Swallowed cancellation signals
 
 **Idempotency violations (DPS-2)**:
+
 - Blind inserts that create duplicates on retry
 - Delete operations that error on missing resources
 - Side effects without idempotency guards (duplicate emails, double charges)
@@ -722,30 +760,35 @@ When reviewing code in any language, flag:
 - Queue consumers without dedup
 
 **State management violations (DPS-3)**:
+
 - State stored as raw strings instead of enums/Literal types
 - State transitions via ad-hoc if/else without a transition map
 - Setting state without validating the transition is legal
 - Orphan states (unreachable or no exit path)
 
 **Retry and timeout violations (DPS-5)**:
+
 - HTTP/subprocess/socket calls without explicit timeout
 - Retry loops without max attempt cap
 - No backoff strategy (fixed-interval hammering)
 - `time.sleep()` in retry loops without total timeout cap
 
 **Security violations (DPS-8)**:
+
 - String concatenation in SQL/NoSQL/shell commands (must use parameterized)
 - Wildcard permissions without justification comment
 - Missing rate limiting on public endpoints
 - Secrets in URLs, logs, or error responses
 
 **Configuration violations (DPS-9)**:
+
 - Config values with `None` default and no null handling downstream
 - Feature flags defaulting to ON (must default OFF)
 - Missing config causing runtime crash instead of startup failure
 - Environment variables read lazily without startup validation
 
 **Infrastructure violations (DPS-10)**:
+
 - New service without health check endpoint
 - No graceful shutdown handling (SIGTERM/SIGINT)
 - Async consumer without dead-letter queue
@@ -753,6 +796,7 @@ When reviewing code in any language, flag:
 - Monitoring/alarms missing from service deployment
 
 **Dependency violations**:
+
 - Lock file not committed
 - Exact version pins in manifest (not lockfile)
 - No CVE scanning in CI

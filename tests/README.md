@@ -81,31 +81,37 @@ Tests the complete workflow:
 ## Running Tests
 
 ### Run all tests
+
 ```bash
 pytest tests/
 ```
 
 ### Run integration tests only
+
 ```bash
 pytest tests/test_implement_integration.py -v
 ```
 
 ### Run end-to-end tests only
+
 ```bash
 pytest tests/test_implement_e2e.py -v
 ```
 
 ### Run with coverage
+
 ```bash
 pytest tests/ --cov=wfc --cov-report=html --cov-report=term
 ```
 
 ### Run specific test
+
 ```bash
 pytest tests/test_implement_integration.py::TestConfidenceChecker::test_high_confidence_task -v
 ```
 
 ### Run marked tests
+
 ```bash
 # Integration tests only
 pytest tests/ -m integration
@@ -179,21 +185,25 @@ make test-coverage # Run with coverage report
 ## Debugging Tests
 
 ### Verbose output
+
 ```bash
 pytest tests/ -v
 ```
 
 ### Show print statements
+
 ```bash
 pytest tests/ -s
 ```
 
 ### Drop into debugger on failure
+
 ```bash
 pytest tests/ --pdb
 ```
 
 ### Show local variables on failure
+
 ```bash
 pytest tests/ -l
 ```

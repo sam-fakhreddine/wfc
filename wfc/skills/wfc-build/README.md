@@ -5,12 +5,14 @@
 ## Philosophy
 
 ### Vibe Coding
+
 - ❌ Heavy upfront planning
 - ❌ Formal documentation
 - ❌ Slow iteration
 - ✅ Just build and ship
 
 ### + WFC Guardrails
+
 - ✅ Git worktrees (isolation)
 - ✅ TDD workflow (tests first)
 - ✅ Quality checks (formatters, linters)
@@ -18,6 +20,7 @@
 - ✅ Auto-rollback (safety)
 
 ### = Intentional Vibe
+
 **Fast enough to flow. Structured enough to ship.**
 
 ## Usage
@@ -92,17 +95,20 @@ Orchestrator decides: simple (1 agent) or complex (N agents)?
 ### Simple → 1 Subagent
 
 **Indicators:**
+
 - 1-2 files affected
 - Single component
 - Clear scope
 - No complex keywords
 
 **Examples:**
+
 - "add a utility function"
 - "create a doc loader"
 - "fix a bug in auth.py"
 
 **Flow:**
+
 ```
 Spawn 1 subagent
     ↓
@@ -116,17 +122,20 @@ Merge
 ### Complex → N Subagents
 
 **Indicators:**
+
 - 3+ files affected
 - Multiple components
 - Keywords: "system", "refactor", "architecture"
 - Multiple tech stacks
 
 **Examples:**
+
 - "add OAuth2 authentication" (backend + frontend + security)
 - "refactor auth system" (multiple components)
 - "build dashboard" (API + UI + charts)
 
 **Flow:**
+
 ```
 Decompose into subtasks
     ↓
@@ -144,6 +153,7 @@ Merge sequentially
 ### Orchestrator Responsibilities
 
 **DOES:**
+
 - ✅ Ask clarifying questions
 - ✅ Assess task complexity
 - ✅ Decide: 1 or N agents?
@@ -153,6 +163,7 @@ Merge sequentially
 - ✅ Coordinate merge/rollback
 
 **NEVER DOES:**
+
 - ❌ Write code
 - ❌ Write tests
 - ❌ Run formatters/linters
@@ -161,11 +172,13 @@ Merge sequentially
 ### Subagent Responsibilities
 
 **DOES:**
+
 - ✅ TDD workflow (TEST → IMPLEMENT → REFACTOR)
 - ✅ Run quality checks
 - ✅ Submit report
 
 **NEVER DOES:**
+
 - ❌ Coordinate other agents
 - ❌ Merge to main
 - ❌ Run review
@@ -175,32 +188,38 @@ Merge sequentially
 Each subagent follows strict TDD in isolated worktree:
 
 ### 1. UNDERSTAND
+
 - Read task spec from orchestrator
 - Review existing files (if any)
 - Understand expected behavior
 
 ### 2. TEST_FIRST (RED)
+
 - Write tests BEFORE implementation
 - Tests must cover acceptance criteria
 - Run tests → they MUST FAIL
 
 ### 3. IMPLEMENT (GREEN)
+
 - Write minimum code to pass tests
 - Follow tech stack patterns
 - Run tests → they MUST PASS
 
 ### 4. REFACTOR
+
 - Clean up without changing behavior
 - Maintain SOLID & DRY
 - Run tests → still PASS
 
 ### 5. QUALITY_CHECK
+
 - Run formatters (black, prettier, etc.)
 - Run linters (ruff, eslint, etc.)
 - Run all tests
 - **BLOCKS if any check fails**
 
 ### 6. SUBMIT
+
 - Verify all acceptance criteria met
 - Produce agent report
 - Return to orchestrator
@@ -351,24 +370,31 @@ wfc/skills/build/
 ## Benefits
 
 ### ✅ Fast Iteration
+
 Skip heavy planning, start building quickly.
 
 ### ✅ Still Safe
+
 TDD + quality checks + consensus review = production-ready.
 
 ### ✅ Intelligent Delegation
+
 Orchestrator assesses complexity, spawns right number of agents.
 
 ### ✅ Isolation
+
 Each agent works in isolated worktree, no conflicts.
 
 ### ✅ Auto-Quality
+
 Formatters, linters, tests enforced before review.
 
 ### ✅ Consensus Review
+
 Multi-agent review ensures quality from multiple perspectives.
 
 ### ✅ Auto-Rollback
+
 Integration test failures trigger automatic rollback.
 
 ## Philosophy Summary
