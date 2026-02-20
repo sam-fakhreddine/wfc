@@ -276,5 +276,5 @@ class TestSpawnAnalyzer:
         with patch.object(orchestrator, "_prepare_analyzer_prompt") as mock_prepare:
             mock_prepare.return_value = "Test prompt"
 
-            with pytest.raises(WorkspaceError, match="(?i)not found|analyzer"):
+            with pytest.raises(TimeoutError, match="(?i)did not complete|timeout"):
                 orchestrator._spawn_analyzer(workspace, wfc_mode=False)

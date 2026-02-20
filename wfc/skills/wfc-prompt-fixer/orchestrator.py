@@ -58,24 +58,23 @@ def validate_analysis_schema(analysis: Dict) -> Tuple[bool, List[str]]:
         if field not in analysis:
             errors.append(f"Missing required field: {field}")
 
-    if "overall_grade" in analysis:
-        grade = analysis["overall_grade"]
-        if grade not in ["A", "B", "C", "D", "F"]:
-            errors.append(f"Invalid overall_grade: {grade} (must be A-F)")
+    grade = analysis.get("overall_grade")
+    if grade is not None and grade not in ["A", "B", "C", "D", "F"]:
+        errors.append(f"Invalid overall_grade: {grade} (must be A-F)")
 
-    if "issues" in analysis and isinstance(analysis["issues"], list):
-        for i, issue in enumerate(analysis["issues"]):
+    issues = analysis.get("issues", [])
+    if isinstance(issues, list):
+        for i, issue in enumerate(issues):
             if not isinstance(issue, dict):
                 errors.append(f"Issue {i} is not a dictionary")
                 continue
 
-            if "severity" in issue:
-                severity = issue["severity"]
-                if severity not in ["critical", "major", "minor"]:
-                    errors.append(
-                        f"Issue {i} has invalid severity: {severity} "
-                        f"(must be critical, major, or minor)"
-                    )
+            severity = issue.get("severity")
+            if severity is not None and severity not in ["critical", "major", "minor"]:
+                errors.append(
+                    f"Issue {i} has invalid severity: {severity} "
+                    f"(must be critical, major, or minor)"
+                )
 
     return (len(errors) == 0, errors)
 
@@ -118,24 +117,21 @@ def validate_fix_result_schema(fix_result: Dict) -> Tuple[bool, List[str]]:
         if field not in fix_result:
             errors.append(f"Missing required field: {field}")
 
-    if "verdict" in fix_result:
-        verdict = fix_result["verdict"]
-        if verdict not in ["PASS", "FAIL", "PASS_WITH_NOTES"]:
-            errors.append(f"Invalid verdict: {verdict} (must be PASS, FAIL, or PASS_WITH_NOTES)")
+    verdict = fix_result.get("verdict")
+    if verdict is not None and verdict not in ["PASS", "FAIL", "PASS_WITH_NOTES"]:
+        errors.append(f"Invalid verdict: {verdict} (must be PASS, FAIL, or PASS_WITH_NOTES)")
 
-    if "grade_after" in fix_result:
-        grade = fix_result["grade_after"]
-        if grade not in ["A", "B", "C", "D", "F"]:
-            errors.append(f"Invalid grade_after: {grade} (must be A-F)")
+    grade = fix_result.get("grade_after")
+    if grade is not None and grade not in ["A", "B", "C", "D", "F"]:
+        errors.append(f"Invalid grade_after: {grade} (must be A-F)")
 
-    if "final_recommendation" in fix_result:
-        rec = fix_result["final_recommendation"]
-        if rec not in ["ship", "revise"]:
-            errors.append(f"Invalid final_recommendation: {rec} (must be ship or revise)")
+    rec = fix_result.get("final_recommendation")
+    if rec is not None and rec not in ["ship", "revise"]:
+        errors.append(f"Invalid final_recommendation: {rec} (must be ship or revise)")
 
-    if "intent_preserved" in fix_result:
-        if not isinstance(fix_result["intent_preserved"], bool):
-            errors.append("intent_preserved must be a boolean")
+    intent_preserved = fix_result.get("intent_preserved")
+    if intent_preserved is not None and not isinstance(intent_preserved, bool):
+        errors.append("intent_preserved must be a boolean")
 
     return (len(errors) == 0, errors)
 
@@ -356,25 +352,38 @@ class PromptFixerOrchestrator:
 
         print(f"📦 Batch mode: {len(prompt_paths)} prompts")
 
+        from concurrent.futures import ThreadPoolExecutor, as_completed
+
         results = []
         batch_size = 4
+        max_workers = 4
 
         for i in range(0, len(prompt_paths), batch_size):
             batch = prompt_paths[i : i + batch_size]
             print(f"\n🔄 Processing batch {i // batch_size + 1} ({len(batch)} prompts)")
 
-            # TODO: Spawn parallel agents for this batch
-            for prompt_path in batch:
-                try:
-                    result = self.fix_prompt(
+            with ThreadPoolExecutor(max_workers=max_workers) as executor:
+                future_to_path = {
+                    executor.submit(
+                        self.fix_prompt,
                         prompt_path,
                         wfc_mode=wfc_mode,
                         auto_pr=False,
                         keep_workspace=keep_workspace,
-                    )
-                    results.append(result)
-                except Exception as e:
-                    print(f"⚠️  Failed to fix {prompt_path}: {e}")
+                    ): prompt_path
+                    for prompt_path in batch
+                }
+
+                for future in as_completed(future_to_path):
+                    prompt_path = future_to_path[future]
+                    try:
+                        result = future.result()
+                        results.append(result)
+                        print(
+                            f"  ✅ {prompt_path.name}: {result.grade_before} → {result.grade_after}"
+                        )
+                    except Exception as e:
+                        print(f"  ⚠️  Failed to fix {prompt_path.name}: {e}")
 
         if auto_pr and results:
             print("\n🚀 Creating batch PR...")
@@ -568,7 +577,10 @@ class PromptFixerOrchestrator:
 
         Raises:
             WorkspaceError: If analysis.json not found or invalid schema
+            TimeoutError: If agent doesn't complete within 300 seconds
         """
+        import time
+
         agent_prompt = self._prepare_analyzer_prompt(workspace, wfc_mode)
 
         # NOTE: In production, Claude will see this message and use Task tool
@@ -580,6 +592,22 @@ class PromptFixerOrchestrator:
             "   [INSTRUCTION: Use Task tool with subagent_type='general-purpose' "
             "and the prepared prompt]"
         )
+
+        analysis_path = workspace / "01-analyzer" / "analysis.json"
+        timeout_seconds = 300
+        poll_interval = 2
+        elapsed = 0
+
+        while not analysis_path.exists():
+            if elapsed >= timeout_seconds:
+                raise TimeoutError(
+                    f"Analyzer agent did not complete within {timeout_seconds}s. "
+                    f"Expected output at {analysis_path}"
+                )
+            time.sleep(poll_interval)
+            elapsed += poll_interval
+            if elapsed % 30 == 0:
+                print(f"   [Waiting for analyzer... {elapsed}s elapsed]")
 
         analysis = self.workspace_manager.read_analysis(workspace)
 
@@ -654,11 +682,20 @@ class PromptFixerOrchestrator:
             )
 
             validation_path = workspace / "02-fixer" / "validation.json"
-            if not validation_path.exists():
-                raise WorkspaceError(
-                    f"Validation file not found at {validation_path}. "
-                    f"Fixer agent may not have completed successfully."
-                )
+            timeout_seconds = 300
+            poll_interval = 2
+            elapsed = 0
+
+            while not validation_path.exists():
+                if elapsed >= timeout_seconds:
+                    raise TimeoutError(
+                        f"Fixer agent did not complete within {timeout_seconds}s. "
+                        f"Expected output at {validation_path}"
+                    )
+                time.sleep(poll_interval)
+                elapsed += poll_interval
+                if elapsed % 30 == 0:
+                    print(f"   [Waiting for fixer... {elapsed}s elapsed]")
 
             try:
                 with open(validation_path) as f:
@@ -717,6 +754,8 @@ class PromptFixerOrchestrator:
         Returns:
             Path to report.md file
         """
+        import time
+
         agent_prompt = self._prepare_reporter_prompt(workspace, no_changes=True)
 
         # NOTE: In production, Claude will see this message and use Task tool
@@ -727,6 +766,22 @@ class PromptFixerOrchestrator:
             "   [INSTRUCTION: Use Task tool with subagent_type='general-purpose' "
             "and the prepared prompt]"
         )
+
+        report_path = workspace / "03-reporter" / "report.md"
+        timeout_seconds = 300
+        poll_interval = 2
+        elapsed = 0
+
+        while not report_path.exists():
+            if elapsed >= timeout_seconds:
+                raise TimeoutError(
+                    f"Reporter agent did not complete within {timeout_seconds}s. "
+                    f"Expected output at {report_path}"
+                )
+            time.sleep(poll_interval)
+            elapsed += poll_interval
+            if elapsed % 30 == 0:
+                print(f"   [Waiting for reporter... {elapsed}s elapsed]")
 
         return self.workspace_manager.read_report(workspace)
 
@@ -756,6 +811,8 @@ class PromptFixerOrchestrator:
         Returns:
             Path to report.md file
         """
+        import time
+
         agent_prompt = self._prepare_reporter_prompt(workspace, no_changes=False)
 
         # NOTE: In production, Claude will see this message and use Task tool
@@ -766,6 +823,22 @@ class PromptFixerOrchestrator:
             "   [INSTRUCTION: Use Task tool with subagent_type='general-purpose' "
             "and the prepared prompt]"
         )
+
+        report_path = workspace / "03-reporter" / "report.md"
+        timeout_seconds = 300
+        poll_interval = 2
+        elapsed = 0
+
+        while not report_path.exists():
+            if elapsed >= timeout_seconds:
+                raise TimeoutError(
+                    f"Reporter agent did not complete within {timeout_seconds}s. "
+                    f"Expected output at {report_path}"
+                )
+            time.sleep(poll_interval)
+            elapsed += poll_interval
+            if elapsed % 30 == 0:
+                print(f"   [Waiting for reporter... {elapsed}s elapsed]")
 
         return self.workspace_manager.read_report(workspace)
 
@@ -800,6 +873,7 @@ class PromptFixerOrchestrator:
                 check=True,
                 capture_output=True,
                 text=True,
+                timeout=30,
             )
             print(f"   Created branch: {branch_name}")
 
@@ -815,14 +889,17 @@ class PromptFixerOrchestrator:
                 check=True,
                 capture_output=True,
                 text=True,
+                timeout=30,
             )
 
-            commit_message = f"fix(prompt): improve {prompt_path.name} ({grade_before} → {grade_after})\n\nCo-Authored-By: Claude Sonnet 4.5 <noreply@anthropic.com>"
+            sanitized_name = prompt_path.name.replace("\n", " ").replace("\r", " ")[:100]
+            commit_message = f"fix(prompt): improve {sanitized_name} ({grade_before} → {grade_after})\n\nCo-Authored-By: Claude Sonnet 4.5 <noreply@anthropic.com>"
             subprocess.run(
                 ["git", "commit", "-m", commit_message],
                 check=True,
                 capture_output=True,
                 text=True,
+                timeout=30,
             )
             print(f"   Committed changes: {grade_before} → {grade_after}")
 
@@ -831,24 +908,27 @@ class PromptFixerOrchestrator:
                 check=True,
                 capture_output=True,
                 text=True,
+                timeout=30,
             )
             print(f"   Pushed to origin/{branch_name}")
 
-            pr_title = f"Fix prompt: {prompt_path.name} ({grade_before} → {grade_after})"
+            sanitized_title_name = prompt_path.name.replace("[", "").replace("]", "")[:100]
+            sanitized_workspace = str(workspace).replace("`", "")[:200]
+            pr_title = f"Fix prompt: {sanitized_title_name} ({grade_before} → {grade_after})"
             pr_body = f"""## Summary
 
 Automated prompt fix using wfc-prompt-fixer.
 
 - **Original grade:** {grade_before}
 - **Final grade:** {grade_after}
-- **Workspace:** `{workspace}`
+- **Workspace:** `{sanitized_workspace}`
 
 ## Changes
 
 See workspace files for detailed analysis and changelog:
-- `{workspace}/01-analyzer/analysis.json` - Diagnostic results
-- `{workspace}/02-fixer/changelog.md` - List of changes
-- `{workspace}/03-reporter/report.md` - Full report
+- `{sanitized_workspace}/01-analyzer/analysis.json` - Diagnostic results
+- `{sanitized_workspace}/02-fixer/changelog.md` - List of changes
+- `{sanitized_workspace}/03-reporter/report.md` - Full report
 
 Generated with Claude Code.
 """
@@ -857,6 +937,7 @@ Generated with Claude Code.
                 check=True,
                 capture_output=True,
                 text=True,
+                timeout=30,
             )
             print(f"   PR created: {pr_title}")
 

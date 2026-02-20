@@ -63,9 +63,10 @@ def main() -> int:
     try:
         if batch_mode:
             print(f"🔧 Batch mode: {prompt_path}")
+            effective_wfc_mode = wfc_mode or (not no_wfc)
             results = orchestrator.fix_batch(
                 pattern=str(prompt_path),
-                wfc_mode=wfc_mode if wfc_mode else (not no_wfc),
+                wfc_mode=effective_wfc_mode,
                 auto_pr=auto_pr,
                 keep_workspace=keep_workspace,
             )
@@ -74,9 +75,10 @@ def main() -> int:
                 print(f"  - {result.prompt_name}: {result.grade_before} → {result.grade_after}")
         else:
             print(f"🔧 Fixing prompt: {prompt_path}")
+            effective_wfc_mode = wfc_mode or (not no_wfc)
             result = orchestrator.fix_prompt(
                 prompt_path=prompt_path,
-                wfc_mode=wfc_mode if wfc_mode else (not no_wfc),
+                wfc_mode=effective_wfc_mode,
                 auto_pr=auto_pr,
                 keep_workspace=keep_workspace,
             )
