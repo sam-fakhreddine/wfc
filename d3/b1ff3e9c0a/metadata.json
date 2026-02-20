@@ -1,0 +1,28 @@
+{
+  "cli_version": "0.4.5",
+  "checkpoint_id": "d3b1ff3e9c0a",
+  "strategy": "manual-commit",
+  "branch": "claude/add-prompt-fixer-and-doctor",
+  "checkpoints_count": 1,
+  "files_touched": [
+    "tests/test_prompt_fixer.py",
+    "wfc/skills/wfc-prompt-fixer/cli.py",
+    "wfc/skills/wfc-prompt-fixer/orchestrator.py"
+  ],
+  "sessions": [
+    {
+      "metadata": "/d3/b1ff3e9c0a/0/metadata.json",
+      "transcript": "/d3/b1ff3e9c0a/0/full.jsonl",
+      "context": "/d3/b1ff3e9c0a/0/context.md",
+      "content_hash": "/d3/b1ff3e9c0a/0/content_hash.txt",
+      "prompt": "/d3/b1ff3e9c0a/0/prompt.txt"
+    }
+  ],
+  "token_usage": {
+    "input_tokens": 807,
+    "cache_creation_tokens": 1063705,
+    "cache_read_tokens": 16965464,
+    "output_tokens": 1097,
+    "api_call_count": 168
+  }
+}
