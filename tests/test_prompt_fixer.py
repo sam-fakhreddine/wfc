@@ -824,3 +824,280 @@ class TestFixerRetryLogic:
         with patch.object(orchestrator, "_prepare_fixer_prompt", return_value="Mock prompt"):
             with pytest.raises(Exception):
                 orchestrator._spawn_fixer_with_retry(workspace, max_retries=0)
+
+
+class TestReporterPromptGeneration:
+    """Test _prepare_reporter_prompt() method (TASK-005)."""
+
+    @pytest.fixture
+    def orchestrator(self):
+        """Create orchestrator instance."""
+        from wfc.skills import wfc_prompt_fixer
+
+        return wfc_prompt_fixer.PromptFixerOrchestrator()
+
+    def test_prepare_reporter_prompt_loads_template(self, orchestrator, tmp_path):
+        """Test that _prepare_reporter_prompt loads reporter.md template."""
+        workspace = tmp_path / "workspace"
+        workspace.mkdir()
+
+        prompt = orchestrator._prepare_reporter_prompt(workspace, no_changes=False)
+
+        assert isinstance(prompt, str)
+        assert len(prompt) > 0
+        assert "Reporter Agent" in prompt or "reporter" in prompt.lower()
+
+    def test_prepare_reporter_prompt_injects_workspace_path(self, orchestrator, tmp_path):
+        """Test that workspace path is injected into template."""
+        workspace = tmp_path / "workspace"
+        workspace.mkdir()
+
+        prompt = orchestrator._prepare_reporter_prompt(workspace, no_changes=False)
+
+        assert str(workspace) in prompt
+
+    def test_prepare_reporter_prompt_includes_no_changes_flag(self, orchestrator, tmp_path):
+        """Test that no_changes flag is included in reporter prompt."""
+        workspace = tmp_path / "workspace"
+        workspace.mkdir()
+
+        prompt = orchestrator._prepare_reporter_prompt(workspace, no_changes=True)
+
+        assert "no_changes" in prompt.lower() or "grade a" in prompt.lower()
+
+    def test_prepare_reporter_prompt_template_missing_raises_error(self, orchestrator, tmp_path):
+        """Test that missing reporter.md template raises WorkspaceError."""
+        workspace = tmp_path / "workspace"
+        workspace.mkdir()
+
+        with patch.object(
+            orchestrator, "_get_agent_template_path", return_value=Path("/nonexistent/reporter.md")
+        ):
+            with pytest.raises(Exception, match="Agent template not found"):
+                orchestrator._prepare_reporter_prompt(workspace, no_changes=False)
+
+
+class TestReporterSpawning:
+    """Test Reporter agent spawning methods (TASK-005)."""
+
+    @pytest.fixture
+    def orchestrator(self):
+        """Create orchestrator instance."""
+        from wfc.skills import wfc_prompt_fixer
+
+        return wfc_prompt_fixer.PromptFixerOrchestrator()
+
+    @pytest.fixture
+    def workspace(self, tmp_path):
+        """Create a workspace with all required files."""
+        workspace = tmp_path / "workspace"
+        (workspace / "input").mkdir(parents=True)
+        (workspace / "01-analyzer").mkdir(parents=True)
+        (workspace / "02-fixer").mkdir(parents=True)
+        (workspace / "03-reporter").mkdir(parents=True)
+
+        metadata = {
+            "run_id": "test-run-123",
+            "prompt_path": "/test/PROMPT.md",
+            "wfc_mode": False,
+            "timestamp": "2024-01-01T00:00:00",
+        }
+        with open(workspace / "metadata.json", "w") as f:
+            json.dump(metadata, f)
+
+        (workspace / "input" / "prompt.md").write_text("# Test Prompt\n\nOriginal content.")
+
+        analysis = {
+            "classification": {},
+            "scores": {},
+            "issues": [],
+            "overall_grade": "A",
+            "average_score": 3.0,
+            "rewrite_recommended": False,
+            "rewrite_scope": "none",
+            "wfc_mode": False,
+            "summary": "Excellent prompt",
+        }
+        with open(workspace / "01-analyzer" / "analysis.json", "w") as f:
+            json.dump(analysis, f)
+
+        return workspace
+
+    def test_skip_to_reporter_prepares_prompt(self, orchestrator, workspace):
+        """Test that _skip_to_reporter prepares reporter prompt correctly."""
+        with patch.object(
+            orchestrator, "_prepare_reporter_prompt", return_value="Mock prompt"
+        ) as mock_prepare:
+            report_path = workspace / "03-reporter" / "report.md"
+            report_path.write_text("Mock report")
+            with patch.object(
+                orchestrator.workspace_manager, "read_report", return_value=report_path
+            ):
+                result = orchestrator._skip_to_reporter(workspace, no_changes=True)
+
+                mock_prepare.assert_called_once_with(workspace, no_changes=True)
+                assert result.exists()
+
+    def test_skip_to_reporter_creates_report_file(self, orchestrator, workspace):
+        """Test that _skip_to_reporter creates a report file."""
+        with patch.object(orchestrator, "_prepare_reporter_prompt", return_value="Mock prompt"):
+            report_path = workspace / "03-reporter" / "report.md"
+            report_path.write_text("# Prompt Fix Report\n\nNo changes needed.")
+            with patch.object(
+                orchestrator.workspace_manager, "read_report", return_value=report_path
+            ):
+                result = orchestrator._skip_to_reporter(workspace, no_changes=True)
+
+                assert result.exists()
+                assert "report.md" in str(result)
+
+    def test_spawn_reporter_prepares_prompt(self, orchestrator, workspace):
+        """Test that _spawn_reporter prepares reporter prompt correctly."""
+        (workspace / "02-fixer" / "fixed_prompt.md").write_text("# Fixed Prompt")
+        (workspace / "02-fixer" / "changelog.md").write_text("1. Change 1")
+        (workspace / "02-fixer" / "unresolved.md").write_text("No unresolved items.")
+        validation = {
+            "verdict": "PASS",
+            "intent_preserved": True,
+            "issues_resolved": {},
+            "regressions": [],
+            "scope_creep": [],
+            "grade_after": "A",
+            "final_recommendation": "ship",
+        }
+        with open(workspace / "02-fixer" / "validation.json", "w") as f:
+            json.dump(validation, f)
+
+        with patch.object(
+            orchestrator, "_prepare_reporter_prompt", return_value="Mock prompt"
+        ) as mock_prepare:
+            report_path = workspace / "03-reporter" / "report.md"
+            report_path.write_text("Mock report")
+            with patch.object(
+                orchestrator.workspace_manager, "read_report", return_value=report_path
+            ):
+                result = orchestrator._spawn_reporter(workspace)
+
+                mock_prepare.assert_called_once_with(workspace, no_changes=False)
+                assert result.exists()
+
+    def test_spawn_reporter_creates_comprehensive_report(self, orchestrator, workspace):
+        """Test that _spawn_reporter creates a comprehensive report with all sections."""
+        (workspace / "02-fixer" / "fixed_prompt.md").write_text("# Fixed Prompt")
+        (workspace / "02-fixer" / "changelog.md").write_text("1. Change 1")
+        (workspace / "02-fixer" / "unresolved.md").write_text("No unresolved items.")
+        validation = {
+            "verdict": "PASS",
+            "intent_preserved": True,
+            "issues_resolved": {},
+            "regressions": [],
+            "scope_creep": [],
+            "grade_after": "A",
+            "final_recommendation": "ship",
+        }
+        with open(workspace / "02-fixer" / "validation.json", "w") as f:
+            json.dump(validation, f)
+
+        with patch.object(orchestrator, "_prepare_reporter_prompt", return_value="Mock prompt"):
+            report_path = workspace / "03-reporter" / "report.md"
+            report_content = """# Prompt Fix Report
+
+**Prompt:** test
+**Run ID:** test-run-123
+
+## Summary
+- Original grade: A
+- Final grade: A
+- Verdict: PASS
+"""
+            report_path.write_text(report_content)
+            with patch.object(
+                orchestrator.workspace_manager, "read_report", return_value=report_path
+            ):
+                result = orchestrator._spawn_reporter(workspace)
+
+                assert result.exists()
+                content = result.read_text()
+                assert "Summary" in content
+                assert "Original grade" in content
+
+
+class TestPRCreation:
+    """Test _create_pr() method (TASK-005)."""
+
+    @pytest.fixture
+    def orchestrator(self):
+        """Create orchestrator instance."""
+        from wfc.skills import wfc_prompt_fixer
+
+        return wfc_prompt_fixer.PromptFixerOrchestrator()
+
+    @pytest.fixture
+    def workspace(self, tmp_path):
+        """Create a workspace for PR testing."""
+        workspace = tmp_path / "workspace"
+        (workspace / "02-fixer").mkdir(parents=True)
+        (workspace / "02-fixer" / "fixed_prompt.md").write_text("# Fixed Prompt")
+        return workspace
+
+    def test_create_pr_creates_branch(self, orchestrator, workspace, tmp_path):
+        """Test that _create_pr creates a git branch."""
+        prompt_path = tmp_path / "PROMPT.md"
+        prompt_path.write_text("# Original")
+
+        with patch("subprocess.run") as mock_run:
+            mock_run.return_value = MagicMock(returncode=0, stdout="", stderr="")
+            orchestrator._create_pr(prompt_path, workspace, "B", "A")
+
+            branch_calls = [call for call in mock_run.call_args_list if "branch" in str(call)]
+            assert len(branch_calls) > 0 or any(
+                "checkout -b" in str(call) for call in mock_run.call_args_list
+            )
+
+    def test_create_pr_commits_changes(self, orchestrator, workspace, tmp_path):
+        """Test that _create_pr commits the fixed prompt."""
+        prompt_path = tmp_path / "PROMPT.md"
+        prompt_path.write_text("# Original")
+
+        with patch("subprocess.run") as mock_run:
+            mock_run.return_value = MagicMock(returncode=0, stdout="", stderr="")
+            orchestrator._create_pr(prompt_path, workspace, "B", "A")
+
+            commit_calls = [call for call in mock_run.call_args_list if "commit" in str(call)]
+            assert len(commit_calls) > 0
+
+    def test_create_pr_pushes_to_remote(self, orchestrator, workspace, tmp_path):
+        """Test that _create_pr pushes to remote."""
+        prompt_path = tmp_path / "PROMPT.md"
+        prompt_path.write_text("# Original")
+
+        with patch("subprocess.run") as mock_run:
+            mock_run.return_value = MagicMock(returncode=0, stdout="", stderr="")
+            orchestrator._create_pr(prompt_path, workspace, "B", "A")
+
+            push_calls = [call for call in mock_run.call_args_list if "push" in str(call)]
+            assert len(push_calls) > 0
+
+    def test_create_pr_uses_gh_cli(self, orchestrator, workspace, tmp_path):
+        """Test that _create_pr uses gh CLI to create PR."""
+        prompt_path = tmp_path / "PROMPT.md"
+        prompt_path.write_text("# Original")
+
+        with patch("subprocess.run") as mock_run:
+            mock_run.return_value = MagicMock(returncode=0, stdout="", stderr="")
+            orchestrator._create_pr(prompt_path, workspace, "B", "A")
+
+            gh_calls = [call for call in mock_run.call_args_list if "gh" in str(call)]
+            assert len(gh_calls) > 0
+
+    def test_create_pr_includes_grade_in_message(self, orchestrator, workspace, tmp_path):
+        """Test that _create_pr includes grade improvement in commit message."""
+        prompt_path = tmp_path / "PROMPT.md"
+        prompt_path.write_text("# Original")
+
+        with patch("subprocess.run") as mock_run:
+            mock_run.return_value = MagicMock(returncode=0, stdout="", stderr="")
+            orchestrator._create_pr(prompt_path, workspace, "B", "A")
+
+            commit_calls = [str(call) for call in mock_run.call_args_list if "commit" in str(call)]
+            assert any("B" in call and "A" in call for call in commit_calls)

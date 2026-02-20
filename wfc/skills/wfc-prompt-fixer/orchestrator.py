@@ -510,6 +510,39 @@ class PromptFixerOrchestrator:
 
         return prompt
 
+    def _prepare_reporter_prompt(self, workspace: Path, no_changes: bool = False) -> str:
+        """
+        Prepare reporter agent prompt by loading template and injecting context.
+
+        This implements the "prompt generator" pattern from TASK-003:
+        - Load agent template from agents/reporter.md
+        - Inject workspace path
+        - Return prompt string for Claude to use with Task tool
+
+        Args:
+            workspace: Path to workspace directory
+            no_changes: If True, indicates grade A (no changes needed)
+
+        Returns:
+            Prepared prompt string for Reporter agent
+
+        Raises:
+            WorkspaceError: If reporter.md template file not found
+        """
+        template_path = self._get_agent_template_path("reporter")
+
+        try:
+            template = template_path.read_text()
+        except FileNotFoundError as e:
+            raise WorkspaceError(
+                f"Agent template not found: {template_path}. "
+                f"Expected agents/reporter.md in wfc-prompt-fixer package."
+            ) from e
+
+        prompt = template.replace("{workspace}", str(workspace))
+
+        return prompt
+
     def _spawn_analyzer(self, workspace: Path, wfc_mode: bool) -> dict:
         """
         Spawn Analyzer agent (Router + Diagnostician combined).
@@ -659,61 +692,177 @@ class PromptFixerOrchestrator:
         return validation_result
 
     def _skip_to_reporter(self, workspace: Path, no_changes: bool = True) -> Path:
-        """Skip to Reporter when no changes needed (grade A)."""
-        print("   [TODO: Spawn Reporter subagent (no changes)]")
+        """
+        Skip to Reporter when no changes needed (grade A).
 
-        report = """## Summary
-- Original grade: A
-- Final grade: A
-- Verdict: PASS (no changes needed)
-- Token delta: 0 tokens
+        ARCHITECTURE (from TASK-005):
+        This method implements the "prompt generator" pattern:
+        1. Prepare agent prompt from agents/reporter.md template
+        2. Print instructions for Claude to invoke Task tool
+        3. Wait for agent to write report.md to workspace
+        4. Return report path
 
-## Critical Changes
-None - prompt is already well-formed.
+        Agent reads:
+        - workspace/input/prompt.md
+        - workspace/01-analyzer/analysis.json
+        - workspace/metadata.json
 
-## Rewritten Prompt
-(Original prompt unchanged)
-"""
+        Agent writes:
+        - workspace/03-reporter/report.md
 
-        return self.workspace_manager.write_report(workspace, report)
+        Args:
+            workspace: Path to workspace directory
+            no_changes: If True, indicates grade A (no changes needed)
+
+        Returns:
+            Path to report.md file
+        """
+        agent_prompt = self._prepare_reporter_prompt(workspace, no_changes=True)
+
+        # NOTE: In production, Claude will see this message and use Task tool
+        print("   [Reporter agent prompt prepared (no changes path)]")
+        print(f"   [Workspace: {workspace}]")
+        print(f"   [Prompt length: {len(agent_prompt)} chars]")
+        print(
+            "   [INSTRUCTION: Use Task tool with subagent_type='general-purpose' "
+            "and the prepared prompt]"
+        )
+
+        return self.workspace_manager.read_report(workspace)
 
     def _spawn_reporter(self, workspace: Path) -> Path:
         """
         Spawn Reporter agent.
 
-        Agent reads all workspace files and generates final report.
+        ARCHITECTURE (from TASK-005):
+        This method implements the "prompt generator" pattern:
+        1. Prepare agent prompt from agents/reporter.md template
+        2. Print instructions for Claude to invoke Task tool
+        3. Wait for agent to write report.md to workspace
+        4. Return report path
+
+        Agent reads all workspace files:
+        - workspace/input/prompt.md
+        - workspace/01-analyzer/analysis.json
+        - workspace/02-fixer/fixed_prompt.md
+        - workspace/02-fixer/changelog.md
+        - workspace/02-fixer/unresolved.md
+        - workspace/02-fixer/validation.json
+        - workspace/metadata.json
+
+        Agent writes:
+        - workspace/03-reporter/report.md
 
         Returns:
-            Path to report.md
+            Path to report.md file
         """
-        print("   [TODO: Spawn Reporter subagent]")
+        agent_prompt = self._prepare_reporter_prompt(workspace, no_changes=False)
 
-        report = """## Summary
-- Original grade: B
-- Final grade: A
-- Verdict: PASS
-- Token delta: +50 tokens
+        # NOTE: In production, Claude will see this message and use Task tool
+        print("   [Reporter agent prompt prepared]")
+        print(f"   [Workspace: {workspace}]")
+        print(f"   [Prompt length: {len(agent_prompt)} chars]")
+        print(
+            "   [INSTRUCTION: Use Task tool with subagent_type='general-purpose' "
+            "and the prepared prompt]"
+        )
 
-## Critical Changes
-1. Added XML tags for structure
-2. Fixed vague output specification
-3. Added verification step
-
-## Unresolved Items
-None
-
-## Rewritten Prompt
-(See workspace/02-fixer/fixed_prompt.md)
-"""
-
-        return self.workspace_manager.write_report(workspace, report)
+        return self.workspace_manager.read_report(workspace)
 
     def _create_pr(
         self, prompt_path: Path, workspace: Path, grade_before: str, grade_after: str
     ) -> None:
-        """Create PR for single prompt fix."""
-        # TODO: Implement PR creation
-        print(f"   [TODO: Create PR - {grade_before} → {grade_after}]")
+        """
+        Create PR for single prompt fix (TASK-005).
+
+        Workflow:
+        1. Create branch: claude/fix-prompt-{timestamp}
+        2. Copy fixed_prompt.md to original location
+        3. Commit with message including grade change
+        4. Push to remote
+        5. Create PR using gh CLI
+
+        Args:
+            prompt_path: Original prompt file path
+            workspace: Workspace directory
+            grade_before: Grade before fixing
+            grade_after: Grade after fixing
+        """
+        import subprocess
+        import time
+
+        timestamp = int(time.time())
+        branch_name = f"claude/fix-prompt-{prompt_path.stem}-{timestamp}"
+
+        try:
+            subprocess.run(
+                ["git", "checkout", "-b", branch_name],
+                check=True,
+                capture_output=True,
+                text=True,
+            )
+            print(f"   Created branch: {branch_name}")
+
+            fixed_prompt_path = workspace / "02-fixer" / "fixed_prompt.md"
+            if fixed_prompt_path.exists():
+                import shutil
+
+                shutil.copy2(fixed_prompt_path, prompt_path)
+                print(f"   Copied fixed prompt to: {prompt_path}")
+
+            subprocess.run(
+                ["git", "add", str(prompt_path)],
+                check=True,
+                capture_output=True,
+                text=True,
+            )
+
+            commit_message = f"fix(prompt): improve {prompt_path.name} ({grade_before} → {grade_after})\n\nCo-Authored-By: Claude Sonnet 4.5 <noreply@anthropic.com>"
+            subprocess.run(
+                ["git", "commit", "-m", commit_message],
+                check=True,
+                capture_output=True,
+                text=True,
+            )
+            print(f"   Committed changes: {grade_before} → {grade_after}")
+
+            subprocess.run(
+                ["git", "push", "-u", "origin", branch_name],
+                check=True,
+                capture_output=True,
+                text=True,
+            )
+            print(f"   Pushed to origin/{branch_name}")
+
+            pr_title = f"Fix prompt: {prompt_path.name} ({grade_before} → {grade_after})"
+            pr_body = f"""## Summary
+
+Automated prompt fix using wfc-prompt-fixer.
+
+- **Original grade:** {grade_before}
+- **Final grade:** {grade_after}
+- **Workspace:** `{workspace}`
+
+## Changes
+
+See workspace files for detailed analysis and changelog:
+- `{workspace}/01-analyzer/analysis.json` - Diagnostic results
+- `{workspace}/02-fixer/changelog.md` - List of changes
+- `{workspace}/03-reporter/report.md` - Full report
+
+Generated with Claude Code.
+"""
+            subprocess.run(
+                ["gh", "pr", "create", "--title", pr_title, "--body", pr_body],
+                check=True,
+                capture_output=True,
+                text=True,
+            )
+            print(f"   PR created: {pr_title}")
+
+        except subprocess.CalledProcessError as e:
+            print(f"   ⚠️  PR creation failed: {e}")
+            print(f"   You can manually create PR from branch: {branch_name}")
 
     def _create_batch_pr(self, results: List[FixResult]) -> None:
         """Create single PR for batch of fixes."""

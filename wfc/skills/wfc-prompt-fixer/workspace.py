@@ -254,6 +254,27 @@ class WorkspaceManager:
                 f"Check available disk space and file system status."
             ) from e
 
+    def read_report(self, workspace: Path) -> Path:
+        """
+        Read final report from workspace.
+
+        Args:
+            workspace: Path to workspace directory
+
+        Returns:
+            Path to report.md file
+
+        Raises:
+            WorkspaceError: If report file not found
+        """
+        report_path = workspace / "03-reporter" / "report.md"
+        if not report_path.exists():
+            raise WorkspaceError(
+                f"Report file not found at {report_path}. "
+                f"Reporter may not have completed successfully."
+            )
+        return report_path
+
     def list_workspaces(self) -> List[Path]:
         """List all workspace directories."""
         if not self.base_dir.exists():
