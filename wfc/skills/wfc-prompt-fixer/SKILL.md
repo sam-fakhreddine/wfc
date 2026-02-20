@@ -71,6 +71,32 @@ Use `/wfc-prompt-fixer` when:
 
 **Batch mode:** Processes up to 4 prompts in parallel (each runs full 3-agent pipeline)
 
+### Agent Spawning Pattern (Task Tool)
+
+The orchestrator uses the "prompt generator" pattern for agent spawning:
+
+1. **Orchestrator prepares agent prompts** from templates in `agents/` directory
+2. **Claude spawns agents via Task tool** with prepared prompts
+3. **Agents write results to workspace** (analysis.json, fixed_prompt.md, report.md)
+4. **Orchestrator reads and validates results** before continuing
+
+When the orchestrator prints `[INSTRUCTION: Use Task tool...]`, you should:
+
+```python
+# Use Task tool to spawn the agent
+Task(
+    subagent_type="general-purpose",
+    prompt=<agent_prompt>,
+    description="Spawn <agent_name> agent for prompt analysis"
+)
+```
+
+The agent will:
+
+- Read inputs from `workspace/input/` and `workspace/../references/`
+- Write outputs to `workspace/<phase>/` directory
+- Follow instructions from the prepared agent prompt template
+
 ## Diagnostic Rubric
 
 **4 Categories, 14 Dimensions** (scored 0-3 each):

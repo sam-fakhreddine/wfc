@@ -8,13 +8,76 @@ CRITICAL: Orchestrator NEVER implements, ONLY coordinates.
 from dataclasses import dataclass
 from functools import lru_cache
 from pathlib import Path
-from typing import List, Optional, Tuple
+from typing import Dict, List, Optional, Tuple
 
-from .workspace import WorkspaceManager
+from .workspace import WorkspaceError, WorkspaceManager
 
 SAFE_GLOB_PREFIXES = ("wfc/", "references/", "./wfc/", "./references/")
 MAX_RECURSIVE_DEPTH = 2
 MAX_GLOB_MATCHES = 1000
+
+
+def validate_analysis_schema(analysis: Dict) -> Tuple[bool, List[str]]:
+    """
+    Validate analysis.json schema (PROP-006).
+
+    Required fields:
+    - classification (dict)
+    - scores (dict)
+    - issues (list)
+    - overall_grade (str: A-F)
+    - average_score (float)
+    - rewrite_recommended (bool)
+    - rewrite_scope (str)
+    - wfc_mode (bool)
+    - summary (str)
+
+    Args:
+        analysis: Analysis dictionary to validate
+
+    Returns:
+        Tuple of (is_valid, errors)
+        - is_valid: True if schema is valid
+        - errors: List of error messages (empty if valid)
+    """
+    errors = []
+
+    required_fields = [
+        "classification",
+        "scores",
+        "issues",
+        "overall_grade",
+        "average_score",
+        "rewrite_recommended",
+        "rewrite_scope",
+        "wfc_mode",
+        "summary",
+    ]
+
+    for field in required_fields:
+        if field not in analysis:
+            errors.append(f"Missing required field: {field}")
+
+    if "overall_grade" in analysis:
+        grade = analysis["overall_grade"]
+        if grade not in ["A", "B", "C", "D", "F"]:
+            errors.append(f"Invalid overall_grade: {grade} (must be A-F)")
+
+    if "issues" in analysis and isinstance(analysis["issues"], list):
+        for i, issue in enumerate(analysis["issues"]):
+            if not isinstance(issue, dict):
+                errors.append(f"Issue {i} is not a dictionary")
+                continue
+
+            if "severity" in issue:
+                severity = issue["severity"]
+                if severity not in ["critical", "major", "minor"]:
+                    errors.append(
+                        f"Issue {i} has invalid severity: {severity} "
+                        f"(must be critical, major, or minor)"
+                    )
+
+    return (len(errors) == 0, errors)
 
 
 def validate_glob_pattern(pattern: any) -> Tuple[bool, Optional[str], Optional[str]]:
@@ -308,9 +371,64 @@ class PromptFixerOrchestrator:
 
         return False
 
+    def _get_agent_template_path(self, agent_name: str) -> Path:
+        """
+        Get path to agent template file.
+
+        Args:
+            agent_name: Name of agent (analyzer, fixer, reporter)
+
+        Returns:
+            Path to agent template markdown file
+        """
+        orchestrator_dir = Path(__file__).parent
+        agent_template = orchestrator_dir / "agents" / f"{agent_name}.md"
+
+        if not agent_template.exists():
+            raise WorkspaceError(
+                f"Agent template not found: {agent_template}. "
+                f"Expected agents/{agent_name}.md in wfc-prompt-fixer package."
+            )
+
+        return agent_template
+
+    def _prepare_analyzer_prompt(self, workspace: Path, wfc_mode: bool) -> str:
+        """
+        Prepare analyzer agent prompt by loading template and injecting context.
+
+        This implements the "prompt generator" pattern from TASK-003A spike:
+        - Load agent template from agents/analyzer.md
+        - Inject workspace path
+        - Reference metadata.json for wfc_mode flag
+        - Return prompt string for Claude to use with Task tool
+
+        Args:
+            workspace: Path to workspace directory
+            wfc_mode: Whether WFC-specific checks are enabled
+
+        Returns:
+            Prepared prompt string for Analyzer agent
+        """
+        template_path = self._get_agent_template_path("analyzer")
+        template = template_path.read_text()
+
+        prompt = template.replace("{workspace}", str(workspace))
+
+        prompt = prompt.replace("{wfc_mode}", str(wfc_mode).lower())
+
+        return prompt
+
     def _spawn_analyzer(self, workspace: Path, wfc_mode: bool) -> dict:
         """
         Spawn Analyzer agent (Router + Diagnostician combined).
+
+        ARCHITECTURE (from TASK-003A spike):
+        This method implements the "prompt generator" pattern:
+        1. Prepare agent prompt from agents/analyzer.md template
+        2. Print instructions for Claude to invoke Task tool
+        3. Wait for agent to write analysis.json to workspace
+        4. Read and validate analysis.json
+        5. Return analysis dict
 
         Agent reads:
         - workspace/input/prompt.md
@@ -322,30 +440,31 @@ class PromptFixerOrchestrator:
 
         Returns:
             Analysis dict with {grade, scores, issues, wfc_mode}
+
+        Raises:
+            WorkspaceError: If analysis.json not found or invalid schema
         """
-        # TODO: Implement actual agent spawning via Task tool
-        print("   [TODO: Spawn Analyzer subagent]")
+        agent_prompt = self._prepare_analyzer_prompt(workspace, wfc_mode)
 
-        analysis = {
-            "grade": "B",
-            "scores": {
-                "XML_SEGMENTATION": {"score": 2, "evidence": "Some segmentation"},
-                "INSTRUCTION_HIERARCHY": {"score": 2, "evidence": "Clear hierarchy"},
-            },
-            "issues": [
-                {
-                    "id": "ISSUE-001",
-                    "category": "STRUCTURE",
-                    "severity": "major",
-                    "description": "Missing XML tags",
-                    "fix_directive": "Wrap sections in XML tags",
-                }
-            ],
-            "wfc_mode": wfc_mode,
-            "rewrite_recommended": True,
-        }
+        # NOTE: In production, Claude will see this message and use Task tool
+        print("   [Analyzer agent prompt prepared]")
+        print(f"   [Workspace: {workspace}]")
+        print(f"   [WFC mode: {wfc_mode}]")
+        print(f"   [Prompt length: {len(agent_prompt)} chars]")
+        print(
+            "   [INSTRUCTION: Use Task tool with subagent_type='general-purpose' "
+            "and the prepared prompt]"
+        )
 
-        self.workspace_manager.write_analysis(workspace, analysis)
+        analysis = self.workspace_manager.read_analysis(workspace)
+
+        is_valid, errors = validate_analysis_schema(analysis)
+        if not is_valid:
+            error_msg = "\n".join(f"  - {err}" for err in errors)
+            raise WorkspaceError(
+                f"Invalid analysis.json schema:\n{error_msg}\n"
+                f"Analysis file may be corrupted or agent failed to generate valid output."
+            )
 
         return analysis
 
