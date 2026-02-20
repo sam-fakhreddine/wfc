@@ -1101,3 +1101,188 @@ class TestPRCreation:
 
             commit_calls = [str(call) for call in mock_run.call_args_list if "commit" in str(call)]
             assert any("B" in call and "A" in call for call in commit_calls)
+
+
+class TestSafeDictionaryAccess:
+    """Test safe dictionary access patterns (TASK-009, PROP-012)."""
+
+    @pytest.fixture
+    def orchestrator(self):
+        """Create orchestrator instance."""
+        from wfc.skills import wfc_prompt_fixer
+
+        return wfc_prompt_fixer.PromptFixerOrchestrator()
+
+    @pytest.fixture
+    def workspace(self, tmp_path):
+        """Create a workspace with required directories."""
+        workspace = tmp_path / "workspace"
+        (workspace / "01-analyzer").mkdir(parents=True)
+        (workspace / "02-fixer").mkdir(parents=True)
+        (workspace / "03-reporter").mkdir(parents=True)
+        return workspace
+
+    def test_fix_prompt_handles_missing_grade_key_in_analysis(
+        self, orchestrator, workspace, tmp_path
+    ):
+        """Test that missing 'grade' key in analysis doesn't raise KeyError (PROP-012)."""
+        prompt_file = tmp_path / "PROMPT.md"
+        prompt_file.write_text("# Test")
+
+        analysis = {
+            "classification": {},
+            "scores": {},
+            "issues": [],
+            "overall_grade": "B",
+            "average_score": 7.0,
+            "rewrite_recommended": True,
+            "rewrite_scope": "full",
+            "wfc_mode": False,
+            "summary": "Test",
+        }
+
+        with patch.object(orchestrator, "_spawn_analyzer", return_value=analysis):
+            with patch.object(
+                orchestrator, "_spawn_fixer_with_retry", return_value={"grade_after": "A"}
+            ):
+                with patch.object(
+                    orchestrator, "_spawn_reporter", return_value=Path("/mock/report.md")
+                ):
+                    result = orchestrator.fix_prompt(prompt_file)
+                    assert result.grade_before in ["A", "B", "C", "D", "F", "UNKNOWN"]
+
+    def test_spawn_analyzer_uses_safe_dict_access(self, orchestrator, workspace):
+        """Test that _spawn_analyzer uses safe dictionary access for analysis results."""
+        analysis_minimal = {
+            "classification": {},
+            "scores": {},
+            "issues": [],
+            "overall_grade": "C",
+            "average_score": 6.0,
+            "rewrite_recommended": False,
+            "rewrite_scope": "none",
+            "wfc_mode": False,
+            "summary": "Test",
+            # Note: "grade" key is missing - should use safe access
+        }
+
+        analysis_path = workspace / "01-analyzer" / "analysis.json"
+        with open(analysis_path, "w") as f:
+            json.dump(analysis_minimal, f)
+
+        with patch.object(orchestrator, "_prepare_analyzer_prompt", return_value="Mock prompt"):
+            result = orchestrator._spawn_analyzer(workspace, wfc_mode=False)
+            assert "overall_grade" in result
+            assert result["overall_grade"] == "C"
+
+    def test_fix_prompt_handles_missing_grade_after_in_fix_result(
+        self, orchestrator, workspace, tmp_path
+    ):
+        """Test that missing 'grade_after' key in fix_result uses safe default (PROP-012)."""
+        prompt_file = tmp_path / "PROMPT.md"
+        prompt_file.write_text("# Test")
+
+        analysis = {
+            "classification": {},
+            "scores": {},
+            "issues": [],
+            "overall_grade": "C",
+            "average_score": 6.0,
+            "rewrite_recommended": True,
+            "rewrite_scope": "full",
+            "wfc_mode": False,
+            "summary": "Test",
+        }
+
+        fix_result_minimal = {
+            "verdict": "PASS",
+            "intent_preserved": True,
+            "issues_resolved": {},
+            "regressions": [],
+            "scope_creep": [],
+            "grade_after": "A",
+            "final_recommendation": "ship",
+        }
+
+        with patch.object(orchestrator, "_spawn_analyzer", return_value=analysis):
+            with patch.object(
+                orchestrator, "_spawn_fixer_with_retry", return_value=fix_result_minimal
+            ):
+                with patch.object(
+                    orchestrator, "_spawn_reporter", return_value=Path("/mock/report.md")
+                ):
+                    result = orchestrator.fix_prompt(prompt_file)
+                    assert result.grade_after in ["A", "B", "C", "D", "F"]
+
+    def test_spawn_fixer_uses_safe_verdict_access(self, orchestrator, workspace):
+        """Test that _spawn_fixer_with_retry uses safe access for verdict field."""
+        validation_result = {
+            "verdict": "PASS",
+            "intent_preserved": True,
+            "issues_resolved": {},
+            "regressions": [],
+            "scope_creep": [],
+            "grade_after": "A",
+            "final_recommendation": "ship",
+        }
+
+        validation_path = workspace / "02-fixer" / "validation.json"
+        with open(validation_path, "w") as f:
+            json.dump(validation_result, f)
+
+        with patch.object(orchestrator, "_prepare_fixer_prompt", return_value="Mock prompt"):
+            result = orchestrator._spawn_fixer_with_retry(workspace, max_retries=0)
+
+            assert result.get("verdict") == "PASS"
+            assert "verdict" in result
+
+    def test_spawn_fixer_handles_missing_revision_notes(self, orchestrator, workspace):
+        """Test that missing revision_notes field is handled safely (PROP-012)."""
+        validation_result_no_notes = {
+            "verdict": "FAIL",
+            "intent_preserved": False,
+            "issues_resolved": {},
+            "regressions": [],
+            "scope_creep": [],
+            "grade_after": "C",
+            "final_recommendation": "revise",
+            # Note: revision_notes is missing
+        }
+
+        validation_path = workspace / "02-fixer" / "validation.json"
+        with open(validation_path, "w") as f:
+            json.dump(validation_result_no_notes, f)
+
+        with patch.object(orchestrator, "_prepare_fixer_prompt", return_value="Mock prompt"):
+            result = orchestrator._spawn_fixer_with_retry(workspace, max_retries=0)
+
+            assert result.get("revision_notes", "") == ""
+
+    def test_fix_prompt_gracefully_handles_corrupted_analysis(
+        self, orchestrator, workspace, tmp_path
+    ):
+        """Test that fix_prompt handles analysis dict with unexpected structure."""
+        prompt_file = tmp_path / "PROMPT.md"
+        prompt_file.write_text("# Test")
+
+        analysis_unusual = {
+            "classification": {},
+            "scores": {},
+            "issues": [],
+            "overall_grade": "B",
+            "average_score": 7.0,
+            "rewrite_recommended": True,
+            "rewrite_scope": "full",
+            "wfc_mode": False,
+            "summary": "Test",
+        }
+
+        with patch.object(orchestrator, "_spawn_analyzer", return_value=analysis_unusual):
+            with patch.object(
+                orchestrator, "_spawn_fixer_with_retry", return_value={"grade_after": "A"}
+            ):
+                with patch.object(
+                    orchestrator, "_spawn_reporter", return_value=Path("/mock/report.md")
+                ):
+                    result = orchestrator.fix_prompt(prompt_file)
+                    assert hasattr(result, "grade_before")

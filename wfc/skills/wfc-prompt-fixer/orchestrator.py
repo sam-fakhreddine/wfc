@@ -265,7 +265,7 @@ class PromptFixerOrchestrator:
         try:
             print("\n🔍 Phase 1: Analyzing prompt...")
             analysis = self._spawn_analyzer(workspace, wfc_mode)
-            grade_before = analysis["grade"]
+            grade_before = analysis.get("overall_grade", analysis.get("grade", "UNKNOWN"))
             print(f"   Grade: {grade_before}")
 
             if grade_before == "A":
