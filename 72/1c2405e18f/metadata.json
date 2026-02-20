@@ -1,0 +1,57 @@
+{
+  "cli_version": "0.4.5",
+  "checkpoint_id": "721c2405e18f",
+  "strategy": "manual-commit",
+  "branch": "claude/add-prompt-fixer-and-doctor",
+  "checkpoints_count": 0,
+  "files_touched": [
+    "CLAUDE.md",
+    "tests/test_doc_auditor.py",
+    "tests/test_doctor.py",
+    "tests/test_orchestrator_integration.py",
+    "tests/test_plugin_integration.py",
+    "tests/test_prompt_fixer.py",
+    "tests/test_retriever.py",
+    "tests/test_reviewer_engine.py",
+    "wfc/references/SKILLS.md",
+    "wfc/skills/wfc-doctor/SKILL.md",
+    "wfc/skills/wfc-doctor/__init__.py",
+    "wfc/skills/wfc-doctor/checks/__init__.py",
+    "wfc/skills/wfc-doctor/checks/hooks_check.py",
+    "wfc/skills/wfc-doctor/checks/precommit_check.py",
+    "wfc/skills/wfc-doctor/checks/prompts_check.py",
+    "wfc/skills/wfc-doctor/checks/settings_check.py",
+    "wfc/skills/wfc-doctor/checks/skills_check.py",
+    "wfc/skills/wfc-doctor/cli.py",
+    "wfc/skills/wfc-doctor/fixes/__init__.py",
+    "wfc/skills/wfc-doctor/orchestrator.py",
+    "wfc/skills/wfc-prompt-fixer/SKILL.md",
+    "wfc/skills/wfc-prompt-fixer/__init__.py",
+    "wfc/skills/wfc-prompt-fixer/agents/__init__.py",
+    "wfc/skills/wfc-prompt-fixer/agents/analyzer.md",
+    "wfc/skills/wfc-prompt-fixer/agents/fixer.md",
+    "wfc/skills/wfc-prompt-fixer/agents/reporter.md",
+    "wfc/skills/wfc-prompt-fixer/cli.py",
+    "wfc/skills/wfc-prompt-fixer/orchestrator.py",
+    "wfc/skills/wfc-prompt-fixer/references/__init__.py",
+    "wfc/skills/wfc-prompt-fixer/references/antipatterns.json",
+    "wfc/skills/wfc-prompt-fixer/references/rubric.json",
+    "wfc/skills/wfc-prompt-fixer/workspace.py"
+  ],
+  "sessions": [
+    {
+      "metadata": "/72/1c2405e18f/0/metadata.json",
+      "transcript": "/72/1c2405e18f/0/full.jsonl",
+      "context": "/72/1c2405e18f/0/context.md",
+      "content_hash": "/72/1c2405e18f/0/content_hash.txt",
+      "prompt": "/72/1c2405e18f/0/prompt.txt"
+    }
+  ],
+  "token_usage": {
+    "input_tokens": 126,
+    "cache_creation_tokens": 131146,
+    "cache_read_tokens": 4313094,
+    "output_tokens": 273,
+    "api_call_count": 48
+  }
+}
