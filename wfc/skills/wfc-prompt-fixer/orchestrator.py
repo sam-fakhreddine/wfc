@@ -435,8 +435,8 @@ class PromptFixerOrchestrator:
                         print(f"  ⚠️  Failed to fix {prompt_path.name}: {e}")
 
         if auto_pr and results:
-            print("\n🚀 Creating batch PR...")
-            self._create_batch_pr(results)
+            print("\n⚠️  Batch PR creation not yet implemented")
+            print("   Use --auto-pr on individual prompts or create PR manually")
 
         return results
 
@@ -934,8 +934,3 @@ Generated with Claude Code.
         except subprocess.CalledProcessError as e:
             print(f"   ⚠️  PR creation failed: {e}")
             print(f"   You can manually create PR from branch: {branch_name}")
-
-    def _create_batch_pr(self, results: List[FixResult]) -> None:
-        """Create single PR for batch of fixes."""
-        # TODO: Implement batch PR creation
-        print(f"   [TODO: Create batch PR for {len(results)} prompts]")
