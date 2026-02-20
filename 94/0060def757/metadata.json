@@ -1,0 +1,40 @@
+{
+  "cli_version": "0.4.5",
+  "checkpoint_id": "940060def757",
+  "strategy": "manual-commit",
+  "branch": "claude/add-prompt-fixer-and-doctor",
+  "checkpoints_count": 1,
+  "files_touched": [
+    "tests/test_doctor.py",
+    "tests/test_doctor_types.py",
+    "wfc/skills/wfc-doctor/SKILL.md",
+    "wfc/skills/wfc-doctor/__init__.py",
+    "wfc/skills/wfc-doctor/checks/__init__.py",
+    "wfc/skills/wfc-doctor/checks/hooks_check.py",
+    "wfc/skills/wfc-doctor/checks/precommit_check.py",
+    "wfc/skills/wfc-doctor/checks/prompts_check.py",
+    "wfc/skills/wfc-doctor/checks/settings_check.py",
+    "wfc/skills/wfc-doctor/checks/skills_check.py",
+    "wfc/skills/wfc-doctor/cli.py",
+    "wfc/skills/wfc-doctor/fixes/__init__.py",
+    "wfc/skills/wfc-doctor/orchestrator.py",
+    "wfc/skills/wfc-doctor/types.py",
+    "wfc/skills/wfc-prompt-fixer/orchestrator.py"
+  ],
+  "sessions": [
+    {
+      "metadata": "/94/0060def757/0/metadata.json",
+      "transcript": "/94/0060def757/0/full.jsonl",
+      "context": "/94/0060def757/0/context.md",
+      "content_hash": "/94/0060def757/0/content_hash.txt",
+      "prompt": "/94/0060def757/0/prompt.txt"
+    }
+  ],
+  "token_usage": {
+    "input_tokens": 1511,
+    "cache_creation_tokens": 2062944,
+    "cache_read_tokens": 38743139,
+    "output_tokens": 2787,
+    "api_call_count": 378
+  }
+}
