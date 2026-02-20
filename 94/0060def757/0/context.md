@@ -322,3 +322,18 @@ Let me chronologically analyze this extensive session:
    - Created PR #47 with 1,592 passing tests
    - Ran consensus revie...
 
+### Prompt 39
+
+Base directory for this skill: /Users/samfakhreddine/.claude/skills/wfc-review
+
+# WFC:CONSENSUS-REVIEW - Five-Agent Consensus Code Review
+
+Five fixed reviewers analyze code and a Consensus Score determines the decision.
+
+## What It Does
+
+1. **Security Reviewer** - Injection, auth/authz, OWASP Top 10
+2. **Correctness Reviewer** - Logic bugs, edge cases, type safety
+3. **Performance Reviewer** - Algorithmic efficiency, N+1 queries, memory
+4. **Maintainability Reviewer** - Readability, naming, SOLI...
+
