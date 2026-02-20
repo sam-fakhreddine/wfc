@@ -34,15 +34,19 @@ Determine what to debug:
 
 1. If a run ID or job ID is provided, use it directly.
 2. If a PR number is given, fetch its checks:
+
    ```bash
    gh pr checks {number} --repo {owner}/{repo}
    ```
+
 3. If no argument, auto-detect from current branch:
+
    ```bash
    gh pr checks --repo {owner}/{repo}
    ```
 
 Display all failing checks in a table:
+
 ```
 | # | Job Name | Duration | Status | URL |
 |---|----------|----------|--------|-----|
@@ -61,6 +65,7 @@ gh run view {run_id} --repo {owner}/{repo} --job {job_id} --log 2>&1
 ```
 
 **Extraction strategy:** Don't dump the entire log. Extract:
+
 1. Lines matching `error|Error|FAILED|failed|Exit code [^0]|##\[error\]`
 2. The last 50 lines (often contains the summary)
 3. Any lines with file paths + line numbers (e.g., `file.py:42:`)
@@ -124,12 +129,14 @@ Group duplicate root causes — if 3 jobs all fail for the same reason, say so c
 ### Step 5: FIX
 
 Ask the user if they want fixes applied:
+
 - **Auto-fixable** (FORMAT, LINT): Apply immediately, no approval needed
 - **Code fixes** (TEST, TYPE, SYNTAX, IMPORT): Show the fix, ask for approval
 - **Config fixes** (SECRET, PERMISSION, SKILL): Explain the fix, require explicit approval
 - **Infra issues** (INFRA): Cannot auto-fix — explain and suggest manual action
 
 **For FORMAT fixes:**
+
 ```bash
 # Python
 uv run black {file}
@@ -144,11 +151,13 @@ gofmt -w {file}
 
 **For SKILL fixes:**
 Read the failing skill file, check against Agent Skills spec:
+
 - Valid frontmatter fields only: `name`, `description`, `license`
 - Name uses hyphens only, no colons
 - Run `wfc validate` after fixing
 
 **For PERMISSION fixes:**
+
 ```bash
 chmod +x {script}
 git add {script}
@@ -166,6 +175,7 @@ Check if the module exists in `pyproject.toml` / `package.json`. If missing, sug
 After applying fixes:
 
 1. Run the equivalent check locally:
+
    ```bash
    # FORMAT
    uv run black --check wfc/
@@ -179,6 +189,7 @@ After applying fixes:
    ```
 
 2. If local check passes:
+
    ```bash
    git add {fixed_files}
    git commit -m "fix: resolve CI failures — {brief description}
@@ -188,6 +199,7 @@ After applying fixes:
    ```
 
 3. Optionally watch CI re-run:
+
    ```bash
    gh pr checks {pr_number} --watch --repo {owner}/{repo}
    ```
@@ -210,6 +222,7 @@ CI re-triggered. Watch progress:
 ## Common Failure Patterns
 
 ### Black/Prettier formatting
+
 ```bash
 # Identify
 uv run black --check wfc/
@@ -219,6 +232,7 @@ uv run black wfc/
 ```
 
 ### Ruff lint errors
+
 ```bash
 # Identify + auto-fix
 uv run ruff check --fix .
@@ -228,12 +242,15 @@ uv run ruff check .
 ```
 
 ### Failing tests after refactor
+
 Look for:
+
 - Import path changes (renamed module, moved file)
 - API signature changes (added/removed parameter)
 - Mock targets that no longer exist
 
 ### Agent Skills compliance
+
 ```bash
 # Validate all skills
 wfc validate
@@ -243,11 +260,13 @@ skills-ref validate ~/.claude/skills/wfc-foo/SKILL.md
 ```
 
 Common issues:
+
 - Invalid frontmatter fields (`user-invocable`, `argument-hint`, `disable-model-invocation`)
 - Colons in skill names (`wfc:foo` → `wfc-foo`)
 - Missing required fields
 
 ### Missing dependencies in CI
+
 Check `pyproject.toml` `[project.dependencies]` — if a new import was added but not declared, CI will fail with `ModuleNotFoundError` while local works (because local has the dev install).
 
 ---
@@ -255,16 +274,19 @@ Check `pyproject.toml` `[project.dependencies]` — if a new import was added bu
 ## Integration with WFC
 
 ### Triggered by
+
 - Failing PR checks noticed during `/wfc-pr-comments`
 - User reports CI is red
 - After `/wfc-build` or `/wfc-implement` pushes a branch
 
 ### Typical Flow
+
 ```
 wfc-build → Push PR → CI fails → /wfc-gh-debug → Fix → CI green → Merge
 ```
 
 ### Complements
+
 - `/wfc-pr-comments` — fixes review comments; `/wfc-gh-debug` fixes CI
 - `/wfc-review` — catches issues before CI; `/wfc-gh-debug` fixes what slips through
 

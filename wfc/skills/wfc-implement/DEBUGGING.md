@@ -23,6 +23,7 @@ Random fixes waste time, introduce new bugs, and demonstrate cargo-cult programm
 Before touching ANY code, complete this investigation:
 
 #### 1.1 Read Error Messages Carefully
+
 ```
 ❌ BAD: "There's an error, let me try this fix..."
 ✅ GOOD: "The error says 'NoneType has no attribute id' at line 123.
@@ -30,12 +31,14 @@ Before touching ANY code, complete this investigation:
 ```
 
 **Action Items**:
+
 - Read the FULL error message, not just the last line
 - Read the FULL stack trace, not just the first frame
 - Identify the EXACT line where the failure occurs
 - Identify the EXACT value that is wrong (None, wrong type, wrong value)
 
 #### 1.2 Reproduce Consistently
+
 ```
 ❌ BAD: "It fails sometimes, I'll just add error handling..."
 ✅ GOOD: "It fails 100% of the time when user token is expired.
@@ -43,12 +46,14 @@ Before touching ANY code, complete this investigation:
 ```
 
 **Action Items**:
+
 - Create minimal reproduction case (simplest input that triggers bug)
 - Verify bug reproduces 100% of the time with that input
 - Document the reproduction steps clearly
 - If bug is intermittent, identify the environmental variable (race condition, timing, state)
 
 #### 1.3 Trace Data Flow
+
 ```
 ❌ BAD: "The output is wrong, I'll change the calculation..."
 ✅ GOOD: "Input: user_id=5. At line 50: user_id is still 5.
@@ -56,12 +61,14 @@ Before touching ANY code, complete this investigation:
 ```
 
 **Action Items**:
+
 - Add print statements / logging at each component boundary
 - Track the value through the entire flow: input → processing → output
 - Identify WHERE the value becomes wrong (not just that it's wrong)
 - For multi-layer systems, instrument each layer boundary
 
 #### 1.4 Identify Root Cause
+
 ```
 ❌ BAD: "The user is None, so I'll add a null check..."
 ✅ GOOD: "The user is None BECAUSE authenticate() returns None for
@@ -70,11 +77,13 @@ Before touching ANY code, complete this investigation:
 ```
 
 **Document**:
+
 - **WHAT**: What symptom are you observing? (e.g., "NoneType error")
 - **WHY**: What is the underlying cause? (e.g., "authenticate() returns None for expired tokens")
 - **WHERE**: Where in the code does this happen? (e.g., "api/routes.py:123, authenticate() at auth.py:45")
 
 **RED FLAG INDICATORS** (you haven't found root cause yet):
+
 - "I think..." - You should KNOW, not think
 - "Maybe..." - No maybes, only certainties
 - "Probably..." - Probably means you haven't investigated enough
@@ -87,6 +96,7 @@ Before touching ANY code, complete this investigation:
 Once you understand WHY it's failing, look for working examples:
 
 #### 2.1 Find Similar Working Code
+
 ```
 ✅ GOOD: "In users.py, authenticate() is called with error handling:
          user = authenticate(token)
@@ -96,11 +106,13 @@ Once you understand WHY it's failing, look for working examples:
 ```
 
 **Action Items**:
+
 - Search codebase for similar functionality that works
 - Identify the pattern used in working code
 - Note differences between working and broken code
 
 #### 2.2 Compare Line-by-Line
+
 ```
 WORKING (users.py:45):
     user = authenticate(token)
@@ -114,11 +126,13 @@ BROKEN (api/routes.py:123):
 ```
 
 **Action Items**:
+
 - Create side-by-side comparison
 - Identify EXACT differences
 - Understand which difference causes the failure
 
 #### 2.3 Map Dependencies
+
 ```
 authenticate() depends on:
   - token_parser() - returns dict or None
@@ -130,6 +144,7 @@ Assumptions:
 ```
 
 **Action Items**:
+
 - List all dependencies (functions called, data accessed)
 - List all assumptions (implicit and explicit)
 - Identify which assumption is violated
@@ -141,6 +156,7 @@ Assumptions:
 Apply the scientific method:
 
 #### 3.1 Form Hypothesis
+
 ```
 ❌ BAD: "I'll add error handling everywhere..."
 ✅ GOOD: "HYPOTHESIS: Adding null check after authenticate()
@@ -148,11 +164,13 @@ Apply the scientific method:
 ```
 
 **Requirements**:
+
 - ONE clear hypothesis (not multiple changes)
 - Testable prediction (what will happen if hypothesis is correct)
 - Falsifiable (can prove it wrong if incorrect)
 
 #### 3.2 Test Hypothesis with Minimal Change
+
 ```
 ✅ GOOD: "Change ONLY line 123:
          user = authenticate(token)
@@ -162,12 +180,14 @@ Apply the scientific method:
 ```
 
 **Action Items**:
+
 - Make ONE change at a time
 - Test the change in isolation
 - Verify it fixes the bug (or doesn't)
 - If it doesn't work, revert and form new hypothesis
 
 #### 3.3 Verify Results
+
 ```
 TEST CASE 1: Valid token
   ✅ Expected: Return user data
@@ -183,6 +203,7 @@ TEST CASE 3: Invalid token
 ```
 
 **Action Items**:
+
 - Test with original failing case (must now pass)
 - Test with edge cases (expired, invalid, missing)
 - Test with working cases (must still work)
@@ -195,6 +216,7 @@ TEST CASE 3: Invalid token
 Only after understanding root cause and validating hypothesis:
 
 #### 4.1 Write Test First
+
 ```python
 def test_authenticate_with_expired_token():
     """Test that expired tokens return 401, not NoneType error"""
@@ -207,11 +229,13 @@ def test_authenticate_with_expired_token():
 ```
 
 **Action Items**:
+
 - Write test that reproduces the bug (fails before fix)
 - Test covers the root cause, not just the symptom
 - Test is specific and focused (one scenario per test)
 
 #### 4.2 Implement Minimal Fix
+
 ```python
 def process_request(token):
     user = authenticate(token)
@@ -223,12 +247,14 @@ def process_request(token):
 ```
 
 **Action Items**:
+
 - ONE focused change that addresses root cause
 - Add comment explaining WHY (references root cause)
 - Follow existing code patterns (from Phase 2 analysis)
 - No unrelated changes (formatting, refactoring, etc.)
 
 #### 4.3 Verify All Tests Pass
+
 ```
 ✅ test_authenticate_with_valid_token
 ✅ test_authenticate_with_expired_token  ← NEW
@@ -238,6 +264,7 @@ def process_request(token):
 ```
 
 **Action Items**:
+
 - Run test suite (all tests, not just new ones)
 - Verify new test passes (was failing before fix)
 - Verify all existing tests still pass (no regressions)
@@ -261,6 +288,7 @@ Strike 3: Third fix attempt fails
 ```
 
 **Action Items**:
+
 - Track how many attempts you've made
 - If third attempt fails, STOP and reassess
 - Consider whether the system needs refactoring, not fixing
@@ -395,6 +423,7 @@ You're doing systematic debugging correctly when:
 ## Expected Outcomes
 
 Following this methodology:
+
 - **50-70% reduction in debugging time** (from hours to 15-30 minutes)
 - **Near-zero introduction of new bugs** during fixing
 - **First or second attempt success rate** ~90%

@@ -45,6 +45,7 @@ Translates WFC skill definitions into native configs for 7+ AI coding platforms 
 ## Supported Platforms
 
 ### OpenCode
+
 **Output:** `~/.config/opencode/` or `.opencode/`
 **Format:** `opencode.json` + skill directories + agent markdown files
 
@@ -61,6 +62,7 @@ Translates WFC skill definitions into native configs for 7+ AI coding platforms 
 ```
 
 ### GitHub Copilot
+
 **Output:** `.github/`
 **Format:** `.agent.md` files with Copilot frontmatter
 
@@ -74,6 +76,7 @@ Translates WFC skill definitions into native configs for 7+ AI coding platforms 
 ```
 
 **Copilot Agent Format:**
+
 ```markdown
 ---
 name: wfc-review
@@ -85,6 +88,7 @@ tools: Bash, Read, Write, Glob, Grep
 ```
 
 ### Gemini CLI
+
 **Output:** `.gemini/`
 **Format:** TOML commands + skill directories
 
@@ -101,6 +105,7 @@ tools: Bash, Read, Write, Glob, Grep
 ```
 
 ### Codex
+
 **Output:** `~/.codex/`
 **Format:** Prompts + skills (descriptions truncated to 1024 chars)
 
@@ -115,6 +120,7 @@ tools: Bash, Read, Write, Glob, Grep
 ```
 
 ### Kiro CLI
+
 **Output:** `.kiro/`
 **Format:** JSON agent configs + prompt markdown + steering files
 
@@ -133,6 +139,7 @@ tools: Bash, Read, Write, Glob, Grep
 ```
 
 ### Cursor
+
 **Output:** `.cursor/`
 **Format:** Rules + agent configs
 
@@ -147,6 +154,7 @@ tools: Bash, Read, Write, Glob, Grep
 ```
 
 ### Factory Droid
+
 **Output:** `~/.factory/`
 **Format:** Tool-mapped configs (Bash→Execute, Write→Create, etc.)
 
@@ -189,10 +197,12 @@ tools: Bash, Read, Write, Glob, Grep
 ## Integration with WFC
 
 ### Consumed By
+
 - CI/CD pipelines (export on release)
 - Team onboarding (export for new developer's preferred tool)
 
 ### Produces
+
 - Platform-specific config files
 - Export manifest (which skills exported to which platforms)
 

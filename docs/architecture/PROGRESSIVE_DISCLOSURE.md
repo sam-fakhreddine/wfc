@@ -7,6 +7,7 @@
 ## Documentation Hierarchy
 
 ### Level 1: Quick Start (5 minutes)
+
 **Goal**: Get running immediately
 
 - README.md (overview + installation)
@@ -18,6 +19,7 @@
 ---
 
 ### Level 2: Essential Guides (15-30 minutes)
+
 **Goal**: Understand core features
 
 - docs/workflow/WFC_IMPLEMENTATION.md (complete guide)
@@ -29,6 +31,7 @@
 ---
 
 ### Level 3: Deep Dives (1-2 hours)
+
 **Goal**: Master specific features
 
 - docs/reference/AGENT_SKILLS_COMPLIANCE.md (spec details)
@@ -39,6 +42,7 @@
 ---
 
 ### Level 4: Reference (as needed)
+
 **Goal**: Find specific information
 
 - API documentation
@@ -53,6 +57,7 @@
 ## Progressive Loading Pattern
 
 ### 1. SKILL.md (Entry Point)
+
 - < 500 lines
 - High-level overview
 - Usage examples
@@ -77,12 +82,14 @@ Multi-agent parallel implementation engine.
 ```
 
 ### 2. docs/ (Deep Dives)
+
 - Comprehensive guides
 - Architecture docs
 - Pattern libraries
 - No length limits
 
 ### 3. references/ (On Demand)
+
 - Large reference docs
 - Persona catalogs
 - Token management details
@@ -93,6 +100,7 @@ Multi-agent parallel implementation engine.
 ## Reorganization Plan
 
 ### Current Structure (Flat)
+
 ```
 /
 ├── README.md
@@ -109,6 +117,7 @@ Multi-agent parallel implementation engine.
 ```
 
 ### Proposed Structure (Progressive)
+
 ```
 /
 ├── README.md                     # L1: Overview (5min)
@@ -150,21 +159,25 @@ Multi-agent parallel implementation engine.
 ## Benefits
 
 **Faster Onboarding**:
+
 - Get started in 5 minutes (not 1 hour)
 - Learn incrementally
 - Only read what's needed
 
 **Better Discovery**:
+
 - Clear hierarchy
 - Logical grouping
 - Easy to find information
 
 **Reduced Cognitive Load**:
+
 - Not overwhelmed with 20+ docs
 - Progressive learning curve
 - Just-in-time information
 
 **Maintainability**:
+
 - Logical organization
 - Clear ownership
 - Easy to update

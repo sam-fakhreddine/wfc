@@ -74,4 +74,3 @@ entire/checkpoints/
 # act local secrets (prevent accidental commit)
 .act.secrets
 .worktrees
-.venv/

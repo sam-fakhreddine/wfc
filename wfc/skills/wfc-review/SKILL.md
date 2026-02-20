@@ -33,15 +33,19 @@ Five fixed reviewers analyze code and a Consensus Score determines the decision.
 ## Two-Phase Workflow
 
 ### Phase 1: Prepare Review
+
 ```
 orchestrator.prepare_review(request) -> 5 task specs
 ```
+
 Builds prompts for each reviewer with file list, diff, properties, and knowledge context. Irrelevant reviewers (based on file extensions) are marked for skipping.
 
 ### Phase 2: Finalize Review
+
 ```
 orchestrator.finalize_review(request, responses, output_dir) -> ReviewResult
 ```
+
 1. Parse subagent responses into findings
 2. Deduplicate findings across reviewers (SHA-256 fingerprinting with +/-3 line tolerance)
 3. Calculate Consensus Score
@@ -54,6 +58,7 @@ CS = (0.5 * R_bar) + (0.3 * R_bar * (k/n)) + (0.2 * R_max)
 ```
 
 Where:
+
 - **R_i** = (severity * confidence) / 10 for each deduplicated finding
 - **R_bar** = mean of all R_i values
 - **k** = total reviewer agreements (sum of per-finding reviewer counts)
@@ -81,6 +86,7 @@ IF R_max >= 8.5 AND k >= 1 AND finding is from security/reliability:
 ## Finding Deduplication
 
 Findings from different reviewers pointing to the same issue are merged:
+
 - **Fingerprint**: SHA-256 of `file:normalized_line:category` (line tolerance +/-3)
 - **Merge**: highest severity wins, all descriptions and remediations preserved
 - **k tracking**: number of reviewers who flagged the same issue (increases CS)
@@ -139,14 +145,17 @@ CS=3.50 (informational): 2 finding(s), review passed.
 ## Integration with WFC
 
 ### Called By
+
 - `wfc-implement` - After agent completes TDD workflow
 
 ### Consumes
+
 - Task files (from git worktree)
 - PROPERTIES.md (formal properties to verify)
 - Git diff content
 
 ### Produces
+
 - Review report (REVIEW-{task_id}.md)
 - Consensus Score decision (pass/fail with tier)
 - Deduplicated findings with reviewer agreement counts
@@ -158,6 +167,7 @@ Reviewers are activated based on change characteristics, not just file extension
 ### Tier 1: Lightweight Review (S complexity, <50 lines changed)
 
 Only 2 reviewers run:
+
 - **Correctness** (always)
 - **Maintainability** (always)
 

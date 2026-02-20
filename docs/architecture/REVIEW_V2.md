@@ -41,10 +41,13 @@ Each reviewer lives at `wfc/references/reviewers/{id}/` with two files:
 | **Reliability** | Resilience, failure handling | Concurrency, error propagation, resource leaks, timeouts |
 
 ### PROMPT.md
+
 Defines the reviewer's identity, analysis checklist, output format (JSON schema), and severity mapping. Under 500 tokens each.
 
 ### KNOWLEDGE.md
+
 Accumulates repository-specific learnings:
+
 - **Patterns Found**: Recurring issues seen in this codebase
 - **False Positives to Avoid**: Things that look like issues but aren't
 - **Codebase Conventions**: Project-specific patterns to respect
@@ -58,6 +61,7 @@ CS = (0.5 * R_bar) + (0.3 * R_bar * (k/n)) + (0.2 * R_max)
 ```
 
 Where:
+
 - **R_i** = `(severity * confidence) / 10` for each deduplicated finding
 - **R_bar** = mean of all R_i values
 - **k** = total reviewer agreements (sum of DeduplicatedFinding.k across all findings)
@@ -98,6 +102,7 @@ Line normalization uses `(line_start // 3) * 3` to create +/-3 line tolerance bu
 ### Merge Rules
 
 When findings share a fingerprint:
+
 - **Severity**: Highest wins
 - **Confidence**: Highest wins
 - **Descriptions**: All unique descriptions preserved
@@ -114,6 +119,7 @@ When findings share a fingerprint:
 ### Auto-Append (knowledge_writer.py)
 
 After each review, new findings are appended to the relevant reviewer's KNOWLEDGE.md with:
+
 - Date stamp `[YYYY-MM-DD]`
 - Category and severity
 - File path reference
@@ -122,6 +128,7 @@ After each review, new findings are appended to the relevant reviewer's KNOWLEDG
 ### Drift Detection (drift_detector.py)
 
 Periodically checks KNOWLEDGE.md health:
+
 - **Staleness**: Entries older than 90 days
 - **Bloat**: Files with >50 entries
 - **Contradictions**: Same file path in both "Patterns Found" and "False Positives"
@@ -140,6 +147,7 @@ wfc review --files app/hotfix.py --emergency-bypass \
 ```
 
 ### Constraints
+
 - Reason must be non-empty
 - Creates immutable record in `BYPASS-AUDIT.json`
 - Records CS at time of bypass
@@ -161,6 +169,7 @@ wfc review --files app/hotfix.py --emergency-bypass \
 ```
 
 ### Exit Codes
+
 - `0`: Review passed (informational or moderate tier)
 - `1`: Review failed (important or critical tier), or validation error
 

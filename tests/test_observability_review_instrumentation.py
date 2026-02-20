@@ -2,8 +2,7 @@
 
 from __future__ import annotations
 
-from pathlib import Path
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock
 
 import pytest
 
@@ -50,9 +49,16 @@ class TestReviewOrchestratorInstrumentation:
         fingerprinter.deduplicate.return_value = []
         scorer = MagicMock()
         scorer.calculate.return_value = MagicMock(
-            cs=3.5, tier="informational", passed=True,
-            minority_protection_applied=False, findings=[], summary="ok",
-            n=5, R_bar=0, R_max=0, k_total=0,
+            cs=3.5,
+            tier="informational",
+            passed=True,
+            minority_protection_applied=False,
+            findings=[],
+            summary="ok",
+            n=5,
+            R_bar=0,
+            R_max=0,
+            k_total=0,
         )
 
         orch = ReviewOrchestrator(reviewer_engine=engine)
@@ -96,9 +102,16 @@ class TestReviewOrchestratorInstrumentation:
         fingerprinter.deduplicate.return_value = []
         scorer = MagicMock()
         scorer.calculate.return_value = MagicMock(
-            cs=2.0, tier="informational", passed=True,
-            minority_protection_applied=False, findings=[], summary="ok",
-            n=5, R_bar=0, R_max=0, k_total=0,
+            cs=2.0,
+            tier="informational",
+            passed=True,
+            minority_protection_applied=False,
+            findings=[],
+            summary="ok",
+            n=5,
+            R_bar=0,
+            R_max=0,
+            k_total=0,
         )
 
         orch = ReviewOrchestrator(reviewer_engine=engine)

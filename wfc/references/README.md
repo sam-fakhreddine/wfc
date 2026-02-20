@@ -18,6 +18,7 @@ references/
 ## Progressive Disclosure
 
 These files are NOT loaded at startup. They're loaded on demand when:
+
 - A skill activates persona review
 - Documentation is referenced
 - Specialized knowledge is needed

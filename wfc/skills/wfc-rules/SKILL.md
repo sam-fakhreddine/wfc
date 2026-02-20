@@ -20,7 +20,7 @@ WFC Rules lets you create custom enforcement rules that run automatically via Pr
 mkdir -p .wfc/rules
 ```
 
-2. Create a rule file:
+1. Create a rule file:
 
 ```markdown
 ---
@@ -38,7 +38,7 @@ Avoid console.log() in production code. Use the project logger instead:
     logger.info('message');
 ```
 
-3. The rule is enforced automatically via the PreToolUse hook.
+1. The rule is enforced automatically via the PreToolUse hook.
 
 ## Rule Format
 

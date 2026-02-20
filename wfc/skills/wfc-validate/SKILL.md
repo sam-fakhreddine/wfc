@@ -106,12 +106,14 @@ Not a naysayer - wants us to succeed with the best approach. Highlights both str
 ## Integration with WFC
 
 ### Can Analyze
+
 - `wfc-plan` outputs (TASKS.md, PROPERTIES.md)
 - `wfc-architecture` outputs (ARCHITECTURE.md)
 - `wfc-security` outputs (THREAT-MODEL.md)
 - Freeform ideas (text input)
 
 ### Produces
+
 - VALIDATE.md report
 - Simpler alternatives
 - Final recommendation

@@ -121,6 +121,7 @@ Orchestrator
 Complete RED-GREEN-REFACTOR cycle with 6 phases:
 
 **UNDERSTAND**
+
 - Read task definition from TASKS.md
 - Read properties from PROPERTIES.md
 - Assess confidence (≥90% to proceed)
@@ -128,28 +129,33 @@ Complete RED-GREEN-REFACTOR cycle with 6 phases:
 - Read existing code
 
 **TEST_FIRST (RED)**
+
 - Write tests BEFORE implementation
 - Tests cover acceptance criteria
 - Tests cover formal properties
 - Run tests → they FAIL (RED phase)
 
 **IMPLEMENT (GREEN)**
+
 - Write minimum code to pass tests
 - Follow ELEGANT principles
 - Run tests → they PASS (GREEN phase)
 
 **REFACTOR**
+
 - Clean up without changing behavior
 - Maintain SOLID & DRY principles
 - Run tests → still PASS
 
 **QUALITY_CHECK**
+
 - Run Trunk.io universal checker (all languages)
 - Falls back to language-specific tools if Trunk unavailable
 - Blocks submission if checks fail
 - Reports fixable issues with commands
 
 **SUBMIT**
+
 - Verify quality check passed (BLOCKS if failed)
 - Final verification of acceptance criteria
 - Produce agent report
@@ -165,6 +171,7 @@ Complete RED-GREEN-REFACTOR cycle with 6 phases:
 - **Token Savings**: 50%+ reduction (fix locally, not in review)
 
 **Checks**:
+
 1. Formatting (black, prettier, etc.)
 2. Linting (ruff, eslint, etc.)
 3. Tests (pytest, jest, etc.)
@@ -175,6 +182,7 @@ Complete RED-GREEN-REFACTOR cycle with 6 phases:
 **SuperClaude Pattern**: Assess confidence BEFORE implementation
 
 **Scoring** (0-100):
+
 - Clear requirements: 30 points
 - Has examples: 20 points
 - Understands architecture: 20 points
@@ -182,6 +190,7 @@ Complete RED-GREEN-REFACTOR cycle with 6 phases:
 - Can verify success: 15 points
 
 **Decision**:
+
 - **≥90%**: Proceed with implementation
 - **70-89%**: Present alternatives, ask clarifying questions
 - **<70%**: STOP - Investigate more, ask user for guidance
@@ -193,10 +202,12 @@ Complete RED-GREEN-REFACTOR cycle with 6 phases:
 **ReflexionMemory Pattern**: Cross-session learning
 
 **Files**:
+
 - `wfc/memory/reflexion.jsonl` - Error learning (task, mistake, evidence, fix, rule)
 - `wfc/memory/workflow_metrics.jsonl` - Performance metrics (tokens, time, success)
 
 **Features**:
+
 - Log errors and fixes for future reference
 - Search past errors before starting work
 - Suggest solutions from similar past mistakes
@@ -205,12 +216,14 @@ Complete RED-GREEN-REFACTOR cycle with 6 phases:
 ### 5. Token Budget Optimization (TASK-009)
 
 **Complexity-Based Budgets**:
+
 - **S (Simple)**: 200 tokens (small changes, bug fixes)
 - **M (Medium)**: 1,000 tokens (features, moderate complexity)
 - **L (Large)**: 2,500 tokens (complex features, refactoring)
 - **XL (Extra Large)**: 5,000 tokens (major features, architecture)
 
 **Features**:
+
 - Usage tracking and warnings (80% threshold)
 - Budget exceeded alerts
 - Historical optimization (20% buffer above average)
@@ -221,6 +234,7 @@ Complete RED-GREEN-REFACTOR cycle with 6 phases:
 **Safety Guarantees**: Main branch always passing
 
 **Workflow**:
+
 1. Rebase agent branch on main
 2. Re-run tests after rebase
 3. Merge to main if tests pass
@@ -228,12 +242,14 @@ Complete RED-GREEN-REFACTOR cycle with 6 phases:
 5. Rollback if integration tests fail
 
 **Rollback Strategy**:
+
 - Automatic rollback on failure
 - Worktree preserved for investigation
 - Recovery plan generated (PLAN-{task_id}.md)
 - Re-queue task (max 2 retries for ERROR severity)
 
 **Failure Severity**:
+
 - **WARNING**: Don't block submission (e.g., linting warnings)
 - **ERROR**: Block but retryable (e.g., test failures)
 - **CRITICAL**: Immediate failure (e.g., security vulnerabilities)
@@ -305,6 +321,7 @@ wfc plan
 ```
 
 This generates:
+
 - `plan/TASKS.md` - Implementation tasks with dependencies
 - `plan/PROPERTIES.md` - Formal properties (SAFETY, LIVENESS, etc.)
 - `plan/TEST-PLAN.md` - Test specifications
@@ -513,6 +530,7 @@ make test-coverage
 **Current**: >80% coverage
 
 **Areas Covered**:
+
 - ✅ Confidence checking (3 tests)
 - ✅ Memory system (5 tests)
 - ✅ Token management (3 tests)
@@ -532,6 +550,7 @@ make test-coverage
 **Symptom**: Agent confidence < 70%
 
 **Solution**:
+
 ```bash
 # Check confidence assessment
 cat .wfc/telemetry.jsonl | grep confidence_assessment | tail -1 | jq
@@ -546,6 +565,7 @@ cat .wfc/telemetry.jsonl | grep confidence_assessment | tail -1 | jq
 **Symptom**: "Quality check failed: 5 issues found"
 
 **Solution**:
+
 ```bash
 # Run Trunk.io manually
 trunk check --fix
@@ -560,6 +580,7 @@ make lint    # ruff check
 **Symptom**: "Rolled back TASK-006: integration tests failed"
 
 **Solution**:
+
 ```bash
 # Investigate worktree
 cd /worktrees/wfc-TASK-006
@@ -579,6 +600,7 @@ cat /plan/PLAN-TASK-006.md
 **Symptom**: "⚠️ BUDGET EXCEEDED: 110% (1,100/1,000 tokens)"
 
 **Solution**:
+
 - Task may be more complex than classified
 - Consider breaking into subtasks
 - Increase budget for task complexity
@@ -589,6 +611,7 @@ cat /plan/PLAN-TASK-006.md
 **Symptom**: "Failed to create worktree: already exists"
 
 **Solution**:
+
 ```bash
 # List worktrees
 git worktree list
@@ -662,6 +685,7 @@ wfc implement --model haiku
 ## Credits
 
 Built with the SuperClaude Framework patterns:
+
 - **ReflexionMemory**: Cross-session learning from mistakes
 - **Confidence-First**: Assess before implementation
 - **Token Budgets**: Historical optimization

@@ -103,6 +103,7 @@ ignore = ["E111", "E114", "E117", "E501", "W191", "E203"]
 run ruff's formatter (`ruff format`) - we use black exclusively.
 
 **Rules**:
+
 - Line length: 88 (black default) - ruff defers to black via E501 ignore
 - No `# fmt: off` / `# fmt: on` unless absolutely unavoidable
 - No single-line compound statements: `if x: return` goes on two lines
@@ -150,6 +151,7 @@ class Builder:
 ```
 
 **Rules**:
+
 - `str | None` not `Optional[str]`
 - `list[int]` not `List[int]`
 - `dict[str, Any]` not `Dict[str, Any]`
@@ -188,6 +190,7 @@ def __dir__() -> list[str]:
 ```
 
 **Rules**:
+
 - Every `__init__.py` should use PEP 562 for non-trivial imports
 - Keep module-level imports to stdlib and lightweight constants
 - Heavy dependencies load lazily through `__getattr__`
@@ -198,6 +201,7 @@ def __dir__() -> list[str]:
 Three-tier, SOLID, composition over inheritance, DRY, 500-line limit, and elegance rules are defined in `wfc-code-standards`. Below is the **Python-specific implementation**.
 
 **Python project structure** (three-tier):
+
 ```
 project/
 ├── api/              # PRESENTATION: FastAPI routes, Pydantic schemas
@@ -214,6 +218,7 @@ project/
 ```
 
 **SOLID in Python** - use `Protocol` for DIP and ISP:
+
 ```python
 from typing import Protocol
 
@@ -236,6 +241,7 @@ class OrderService:
 ```
 
 **Splitting files** - use PEP 562 to re-export:
+
 ```
 utils/
 ├── __init__.py       # PEP 562 re-exports
@@ -330,6 +336,7 @@ except httpx.TimeoutException as exc:
 ```
 
 **Python rules**:
+
 - Exceptions carry structured context (fields, not just strings)
 - Use `from exc` for exception chaining
 - Use `ExceptionGroup` + `except*` for concurrent error handling (3.11+)
@@ -354,6 +361,7 @@ class OrderProcessor:
 ```
 
 **Python rules**:
+
 - Use `Protocol` for polymorphism, not ABC (unless you need `__init_subclass__`)
 - Use `@dataclass(slots=True)` for composed types
 - Mixins only when composition is genuinely awkward (rare)
@@ -432,6 +440,7 @@ class Money:
 ```
 
 **Atomic Writes** (Python implementation):
+
 ```python
 import os
 import tempfile
@@ -454,9 +463,11 @@ def atomic_write(path: Path, content: str | bytes, encoding: str = "utf-8") -> N
 ```
 
 **Rules**:
+
 - Prefer `contextlib.contextmanager` over manual `__enter__`/`__exit__`
 - Implement `__repr__` on all domain objects (dataclass gives this free)
 - Implement `__eq__` and `__hash__` via `frozen=True` dataclass, not manually
+
 ```
 
 ## Preferred Libraries
@@ -482,6 +493,7 @@ DEBUG = os.getenv("DEBUG", "false").lower() == "true"
 ```
 
 **Rules**:
+
 - Always call `load_dotenv()` early in the entry point
 - Always provide sensible defaults for non-secret values
 - Never commit `.env` files - commit `.env.example` with placeholder values
@@ -494,6 +506,7 @@ DEBUG = os.getenv("DEBUG", "false").lower() == "true"
 **When to use**: Any script or tool that needs a command-line interface.
 
 **Pattern**:
+
 ```python
 import fire
 
@@ -506,6 +519,7 @@ if __name__ == "__main__":
 ```
 
 **Class-based CLI**:
+
 ```python
 import fire
 
@@ -523,6 +537,7 @@ if __name__ == "__main__":
 ```
 
 **Rules**:
+
 - Prefer `fire` over `argparse` or `click` for internal tools
 - Use type hints on function signatures - fire uses them
 - Add docstrings - fire uses them for `--help`
@@ -535,6 +550,7 @@ if __name__ == "__main__":
 **When to use**: Tests, seed scripts, development fixtures, demos.
 
 **Pattern**:
+
 ```python
 from faker import Faker
 
@@ -555,6 +571,7 @@ consistent_name = fake.name()  # Same every run
 ```
 
 **Rules**:
+
 - Always seed Faker in tests for reproducibility (`Faker.seed(42)`)
 - Use locale-specific fakers when relevant: `Faker("fr_FR")`
 - Prefer Faker over hand-written test data for realistic edge cases
@@ -567,6 +584,7 @@ consistent_name = fake.name()  # Same every run
 **When to use**: CPU-bound work, batch processing, caching expensive function results.
 
 **Parallel pattern**:
+
 ```python
 from joblib import Parallel, delayed
 
@@ -580,6 +598,7 @@ results = Parallel(n_jobs=-1)(
 ```
 
 **Caching pattern**:
+
 ```python
 from joblib import Memory
 
@@ -592,6 +611,7 @@ def expensive_computation(data):
 ```
 
 **Rules**:
+
 - Use `n_jobs=-1` to use all cores, `n_jobs=-2` to leave one free
 - Use `Parallel` over `multiprocessing.Pool` for simple cases
 - Cache directory (`.cache/`) should be in `.gitignore`
@@ -605,6 +625,7 @@ def expensive_computation(data):
 **When to use**: Any JSON serialization/deserialization, especially with large payloads or high throughput.
 
 **Pattern**:
+
 ```python
 import orjson
 
@@ -629,6 +650,7 @@ orjson.dumps(event)  # Just works
 ```
 
 **Rules**:
+
 - Use `orjson` over stdlib `json` in all WFC Python code
 - `orjson.dumps()` returns `bytes`, not `str` - use `.decode()` when string is needed
 - Use `orjson.OPT_INDENT_2` for human-readable output
@@ -642,6 +664,7 @@ orjson.dumps(event)  # Just works
 **When to use**: All logging in WFC Python projects.
 
 **Pattern**:
+
 ```python
 import structlog
 
@@ -659,6 +682,7 @@ logger.info("request_completed", status=200)
 ```
 
 **Centralized Configuration** - configure once at application startup, never per-module:
+
 ```python
 # app/logging.py - single source of truth for all logging config
 import logging
@@ -705,6 +729,7 @@ def _add_thread_info(
 ```
 
 **Usage in any module** - import structlog, never configure it:
+
 ```python
 # services/order.py
 import structlog
@@ -717,6 +742,7 @@ def process_order(order_id: str) -> None:
 ```
 
 **Thread-aware logging output** - every log line identifies its thread:
+
 ```
 2025-01-15T09:30:01Z [info] processing_order  order_id=abc-123  thread_name=Worker-3  thread_id=140234567890
 2025-01-15T09:30:01Z [info] db_query_complete  table=orders  ms=12  thread_name=Worker-3  thread_id=140234567890
@@ -724,6 +750,7 @@ def process_order(order_id: str) -> None:
 ```
 
 **Rules**:
+
 - **Centralized config**: Call `setup_logging()` exactly once at app entry point - never in library code, never per-module
 - Use `structlog` over stdlib `logging` or `print()` statements
 - Always log key-value pairs, not formatted strings: `log.info("event", key=value)` not `log.info(f"event: {value}")`
@@ -735,6 +762,7 @@ def process_order(order_id: str) -> None:
 - Never call `structlog.configure()` from library/module code - only from the app entry point
 
 **Async context propagation** - bind once in middleware, available everywhere:
+
 ```python
 import structlog
 from contextvars import ContextVar
@@ -755,6 +783,7 @@ class RequestContextMiddleware(BaseHTTPMiddleware):
 ```
 
 **Error logging** - always include the exception chain:
+
 ```python
 log = structlog.get_logger()
 
@@ -773,6 +802,7 @@ except PaymentError as exc:
 ```
 
 **Banned patterns** (CI must fail):
+
 ```python
 # FORBIDDEN - print() for any purpose other than CLI user output
 print(f"Processing order {order_id}")  # BAD
@@ -795,6 +825,7 @@ log.info("order_completed", order_id=order_id)  # GOOD
 **When to use**: API calls, network requests, database connections, any operation that can transiently fail.
 
 **Pattern**:
+
 ```python
 from tenacity import retry, stop_after_attempt, wait_exponential, retry_if_exception_type
 import httpx
@@ -811,6 +842,7 @@ def call_api(url: str) -> dict:
 ```
 
 **With logging**:
+
 ```python
 import logging
 
@@ -828,6 +860,7 @@ def resilient_operation():
 ```
 
 **Rules**:
+
 - Use `tenacity` over hand-rolled retry loops
 - Always set `stop_after_attempt` - never retry forever
 - Use exponential backoff for network calls (`wait_exponential`)
@@ -937,6 +970,7 @@ settings = Settings()  # Reads from env + .env file, fully typed
 ```
 
 **Rules**:
+
 - Use Pydantic models at **system boundaries** (API input, config, external data)
 - Use `pydantic-settings` for typed config (upgrades python-dotenv pattern)
 - Use plain dataclasses for internal domain objects (lighter weight)
@@ -968,6 +1002,7 @@ async def fetch(client: httpx.AsyncClient, url: str) -> dict:
 ```
 
 **Rules**:
+
 - Use `httpx` over `requests` (async support, HTTP/2, modern API)
 - Always set explicit `timeout` - never use default infinite timeout
 - Use `AsyncClient` as context manager for connection pooling
@@ -1005,6 +1040,7 @@ async def get_user(
 ```
 
 **Rules**:
+
 - Use FastAPI for any HTTP API project (not Flask, not Django REST)
 - Use Pydantic models for request/response schemas
 - Use `Depends()` for dependency injection (maps to SOLID DI)
@@ -1114,6 +1150,7 @@ app = FastAPI(lifespan=lifespan)
 The event loop must never be blocked. A single blocking call stalls every concurrent task.
 
 **Forbidden in `async def`**:
+
 ```python
 # BAD: blocks the entire event loop
 async def bad_fetch():
@@ -1130,6 +1167,7 @@ async def bad_file_read():
 ```
 
 **Correct patterns**:
+
 ```python
 import asyncio
 import httpx
@@ -1165,6 +1203,7 @@ async def call_legacy_sdk(params: dict) -> dict:
 ```
 
 **Timeout handling**:
+
 ```python
 # Use asyncio.timeout (3.11+) for deadline enforcement
 async def fetch_with_deadline(url: str) -> dict:
@@ -1181,6 +1220,7 @@ except TimeoutError:
 ```
 
 **Cancellation safety**:
+
 ```python
 # NEVER swallow CancelledError - always re-raise
 async def managed_task() -> None:
@@ -1192,6 +1232,7 @@ async def managed_task() -> None:
 ```
 
 **Async safety rules**:
+
 - **Never use `requests`** in async code - use `httpx.AsyncClient`
 - **Never use `time.sleep()`** in async - use `asyncio.sleep()`
 - **Never use `open()` for large files** in async - use `aiofiles`
@@ -1263,6 +1304,7 @@ def run_workers(tasks: list[Callable[[], None]]) -> None:
 ```
 
 **Thread safety rules**:
+
 - **Name all threads**: Use `name=` in `threading.Thread()` so logs identify the source
 - **Protect shared state**: Use `threading.Lock()` around any mutable shared data
 - **Prefer immutable data**: Frozen dataclasses, tuples, and `frozenset` don't need locks
@@ -1272,6 +1314,7 @@ def run_workers(tasks: list[Callable[[], None]]) -> None:
 - **Prefer `concurrent.futures.ThreadPoolExecutor`** over raw `threading.Thread` for pools
 
 **Rules**:
+
 - Use `asyncio.TaskGroup` (3.11+) over `asyncio.gather` - better error handling
 - Use `except*` to handle errors from concurrent tasks by type
 - Always use `async with` for async clients and connections
@@ -1357,6 +1400,7 @@ from __future__ import annotations
 ```
 
 **Rules**:
+
 - **Triple double quotes** (`"""`) always - never single quotes, never backticks
 - **Summary line**: Imperative mood, one line, ends with period. "Calculate velocity." not "Calculates velocity." or "This function calculates..."
 - **Args/Returns/Raises**: Required on all public functions. Omit sections that don't apply (no empty `Args:` block)
@@ -1488,6 +1532,7 @@ async def test_database_roundtrip() -> None: ...
 ```
 
 **Rules**:
+
 - **pytest only**: `unittest` is forbidden - no `TestCase`, no `setUp`/`tearDown`, no `self.assert*`
 - Test file naming: `test_<module>.py`
 - Test function naming: `test_<what>_<condition>_<expected>`
@@ -1620,6 +1665,7 @@ asyncio_mode = "auto"
 ```
 
 **Grouping rationale**:
+
 - **Core** (always installed): dotenv, orjson, structlog, tenacity, pydantic, httpx
 - **api** (optional): FastAPI + uvicorn - only for web service projects
 - **cli** (optional): fire - only for CLI tools
@@ -1641,6 +1687,7 @@ dependencies = [
 ```
 
 **Rules**:
+
 - **`>=X.Y`** for all deps - set a minimum, let the lockfile pin the exact version
 - **Never use `==`** - it blocks security patches and creates lockfile conflicts
 - **Never omit a lower bound** - reproducibility requires knowing the minimum
@@ -1664,6 +1711,7 @@ uv lock  # regenerate lockfile
 ```
 
 **Rules**:
+
 - **Always commit `uv.lock`** to version control - it ensures deterministic builds
 - **`uv sync --frozen`** in CI and Docker - never regenerate lockfile during builds
 - **`uv lock --check`** in CI - fails if lockfile is out of sync with pyproject.toml
@@ -1687,6 +1735,7 @@ uv run pip-audit --strict --desc
 ```
 
 **Rules**:
+
 - **`pip-audit`** is mandatory in CI - builds fail on known CVEs
 - Add `pip-audit` to dev dependencies: `uv add --dev pip-audit`
 - **Review advisories** before suppressing: `uv run pip-audit --ignore-vuln PYSEC-...` with comment explaining why
@@ -1731,6 +1780,7 @@ CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
 ```
 
 **Rules**:
+
 - Always multi-stage: build with UV, run without UV
 - Copy `pyproject.toml` + `uv.lock` before source for layer caching
 - Use `--frozen` to ensure lockfile is respected
@@ -1784,6 +1834,7 @@ jobs:
 ```
 
 **Rules**:
+
 - All CI commands use `uv run` - no pip, no bare python
 - Format, lint, type check, and test in that order
 - `--cov-fail-under=80` enforces coverage threshold
@@ -1795,6 +1846,7 @@ jobs:
 ### wfc-build / wfc-implement
 
 When building Python features:
+
 1. Use `uv add` to add dependencies, `uv run` to execute everything
 2. Scaffold with preferred libraries + frameworks in pyproject.toml
 3. Use `structlog` for all logging (not print/logging)
@@ -1811,6 +1863,7 @@ When building Python features:
 ### wfc-test
 
 When generating tests for Python code:
+
 1. Use `faker` with `Faker.seed(42)` for reproducible test data
 2. Name tests: `test_<what>_<condition>_<expected>`
 3. Use `conftest.py` for shared fixtures
@@ -1823,12 +1876,14 @@ When generating tests for Python code:
 When reviewing Python code, flag:
 
 **Toolchain violations**:
+
 - `pip install` instead of `uv add`
 - `python script.py` instead of `uv run python script.py`
 - `python -m pytest` instead of `uv run pytest`
 - Any use of pip, pipx, conda, poetry instead of uv
 
 **Library violations**:
+
 - `print()` statements that should use `structlog`
 - f-strings inside log calls (`log.info(f"...")`) - use key-value pairs
 - `import logging` (stdlib) that should use `structlog`
@@ -1842,6 +1897,7 @@ When reviewing Python code, flag:
 - Sequential loops that could use `joblib.Parallel`
 
 **Testing violations**:
+
 - `import unittest` or `TestCase` subclasses (use pytest exclusively)
 - `setUp()`/`tearDown()` methods instead of `@pytest.fixture`
 - `self.assertEqual()` / `self.assertTrue()` instead of bare `assert`
@@ -1849,6 +1905,7 @@ When reviewing Python code, flag:
 - `unittest.mock.patch` as decorator instead of `pytest-mock` `mocker` fixture
 
 **Async safety violations**:
+
 - `requests.get()` / `requests.post()` inside `async def` (blocks event loop)
 - `time.sleep()` inside `async def` (use `asyncio.sleep()`)
 - `open()` for large files inside `async def` (use `aiofiles`)
@@ -1856,18 +1913,21 @@ When reviewing Python code, flag:
 - Missing timeout on async network calls
 
 **Documentation violations**:
+
 - Public function/class without a docstring
 - Non-Google-style docstrings (wrong section names, wrong formatting)
 - Type hints repeated in docstring Args section
 - Missing module-level docstring
 
 **Dependency management violations**:
+
 - `uv.lock` not committed to version control
 - `==` pinned versions in pyproject.toml (use `>=`)
 - No `pip-audit` in dev dependencies or CI
 - `uv sync` without `--frozen` in CI/Docker
 
 **Coding standard violations**:
+
 - Missing type annotations on any function/method
 - Code that fails `mypy --strict`
 - Files exceeding 500 lines
@@ -1899,6 +1959,7 @@ When reviewing Python code, flag:
 These rules apply to all WFC Python projects:
 
 **UV Toolchain (Exclusive)**:
+
 - **Always** use `uv run` to execute Python code
 - **Always** use `uv add` to add dependencies
 - **Always** use `uv sync` to install/sync dependencies
@@ -1909,6 +1970,7 @@ These rules apply to all WFC Python projects:
 - **Never** use `pipx`, `conda`, or `poetry`
 
 **Code Standards**:
+
 - **Always** target Python 3.12+ (`requires-python = ">=3.12"`)
 - **Always** use `black` for formatting (line-length 88, target py312)
 - **Always** use `ruff` for linting
@@ -1931,6 +1993,7 @@ These rules apply to all WFC Python projects:
 - **Never** bare `except:` or silently swallow exceptions
 
 **Logging & Observability**:
+
 - **Always** configure structlog exactly once at app entry point (`setup_logging()`)
 - **Always** include thread-identification processor in structlog config
 - **Always** use `bind()` for request/session context propagation
@@ -1940,6 +2003,7 @@ These rules apply to all WFC Python projects:
 - **Never** use stdlib `logging` (structlog only)
 
 **Thread Safety**:
+
 - **Always** name threads with `name=` parameter
 - **Always** protect shared mutable state with `threading.Lock`
 - **Always** use `atomic_write` + lock for concurrent file writes
@@ -1947,6 +2011,7 @@ These rules apply to all WFC Python projects:
 - **Never** leave threads anonymous - every thread must be identifiable in logs
 
 **Async Safety**:
+
 - **Always** use `httpx.AsyncClient` in async code (never `requests`)
 - **Always** use `asyncio.sleep()` in async (never `time.sleep()`)
 - **Always** use `asyncio.to_thread()` for blocking/CPU-bound calls in async context
@@ -1954,6 +2019,7 @@ These rules apply to all WFC Python projects:
 - **Never** catch `CancelledError` without re-raising
 
 **Testing**:
+
 - **Always** use `pytest` (via `uv run pytest`) - unittest is **forbidden**
 - **Always** use `pytest-asyncio` for async tests (`asyncio_mode = "auto"`)
 - **Always** use `pytest-mock` (`mocker` fixture) for mocking
@@ -1964,6 +2030,7 @@ These rules apply to all WFC Python projects:
 - **Never** use `unittest.TestCase`, `setUp()`, `tearDown()`, or `self.assert*()`
 
 **Dependency Management**:
+
 - **Always** commit `uv.lock` to version control
 - **Always** use `uv sync --frozen` in CI and Docker
 - **Always** use `>=X.Y` version constraints (never `==`)
@@ -1972,6 +2039,7 @@ These rules apply to all WFC Python projects:
 - **Never** use `--upgrade` in CI - only locally
 
 **Preferred Stack**:
+
 - **Always** `httpx` over `requests`
 - **Always** `orjson` over `json`
 - **Always** `structlog` over `logging` / `print`

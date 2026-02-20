@@ -37,21 +37,27 @@ Creates self-contained interactive HTML playgrounds for visual exploration.
 ## Templates
 
 ### Design Playground
+
 Interactive controls for visual design exploration:
+
 - Color pickers, sliders, toggles
 - Live preview panel
 - Generated CSS/config output
 - Copy-to-clipboard
 
 ### Data Explorer
+
 Interactive data visualization and manipulation:
+
 - JSON tree view
 - Filter/search
 - Table/chart views
 - Export options
 
 ### Concept Map
+
 Interactive node-based exploration:
+
 - Draggable nodes
 - Relationship lines
 - Zoom/pan
@@ -60,6 +66,7 @@ Interactive node-based exploration:
 ## Output
 
 Single `.html` file with:
+
 - Left panel: Interactive controls
 - Right panel: Live preview
 - Bottom panel: Generated output with copy button
@@ -72,6 +79,7 @@ User Request -> Template Selection -> Customization -> HTML Generation
 ```
 
 Templates are in `wfc/assets/templates/playground/`:
+
 - `design.html` - Design playground base
 - `data-explorer.html` - Data exploration base
 - `concept-map.html` - Concept mapping base

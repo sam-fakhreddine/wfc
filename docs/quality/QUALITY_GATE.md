@@ -5,6 +5,7 @@
 ## Purpose
 
 The Quality Gate catches simple issues **before** expensive multi-agent review:
+
 - **Token-efficient**: Fix linting locally, not in review comments
 - **Fast feedback**: Agents get immediate feedback vs waiting for review
 - **Quality enforcement**: All code meets minimum standards
@@ -205,6 +206,7 @@ wfc quality-check --no-tests file.py
 ```
 
 **Warning**: Skipping quality checks defeats the purpose. Only use for:
+
 - Generated code that doesn't need style enforcement
 - Emergency hotfixes (but fix afterward)
 - Experimental code in feature branches
@@ -248,17 +250,20 @@ Total: 10k tokens, 1 review cycle
 ## Best Practices
 
 1. **Run locally before commit**
+
    ```bash
    make quality-check
    ```
 
 2. **Fix automatically when possible**
+
    ```bash
    make format  # Auto-fix formatting
    make lint --fix  # Auto-fix linting
    ```
 
 3. **Integrate in pre-commit hooks**
+
    ```yaml
    # .pre-commit-config.yaml
    - repo: local
@@ -268,6 +273,7 @@ Total: 10k tokens, 1 review cycle
    ```
 
 4. **Run in CI/CD**
+
    ```yaml
    # .github/workflows/validate.yml
    - name: Quality Check

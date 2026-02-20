@@ -33,13 +33,15 @@ Injects parallel research into an existing plan without re-running the full plan
 
 ## When to Use
 
-### Use wfc-deepen when:
+### Use wfc-deepen when
+
 - Plan created quickly and needs more research
 - New information discovered after planning
 - Stakeholder feedback requires deeper analysis
 - Security/performance concerns need investigation
 
-### Don't use when:
+### Don't use when
+
 - Plan doesn't exist yet (use /wfc-plan)
 - Requirements changed fundamentally (re-plan instead)
 - Plan already validated with high score (>9.0)
@@ -82,6 +84,7 @@ Injects parallel research into an existing plan without re-running the full plan
 ## Output
 
 Enriched plan files in the same directory:
+
 - `TASKS.md` - Tasks annotated with research findings
 - `PROPERTIES.md` - New properties from security/performance research
 - `TEST-PLAN.md` - Additional test cases from edge case research
@@ -126,15 +129,18 @@ plans/plan_oauth2_auth_20260218_140000/
 ```
 
 Or within /wfc-build for complex features:
+
 ```
 Interview → Plan → Deepen → Implement → Review
 ```
 
 ### Consumed By
+
 - **wfc-implement** - Reads enriched plan with research annotations
 - **wfc-review** - Uses research findings as review context
 
 ### Consumes
+
 - Existing plan files (TASKS.md, PROPERTIES.md, TEST-PLAN.md)
 - `docs/solutions/` knowledge base
 - Codebase patterns (via grep/glob)
