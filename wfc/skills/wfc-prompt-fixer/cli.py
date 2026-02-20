@@ -31,7 +31,30 @@ def main() -> int:
         print("❌ Error: No path provided")
         return 1
 
-    prompt_path = Path(path_args[0])
+    if wfc_mode and no_wfc:
+        print("❌ Error: --wfc and --no-wfc are mutually exclusive")
+        return 1
+
+    path_str = path_args[0]
+
+    if not path_str.strip():
+        print("❌ Error: Path argument is empty")
+        return 1
+
+    MAX_PATH_LENGTH = 4096
+    if len(path_str) > MAX_PATH_LENGTH:
+        print(f"❌ Error: Path exceeds maximum length ({MAX_PATH_LENGTH} characters)")
+        return 1
+
+    try:
+        prompt_path = Path(path_str).resolve()
+    except (ValueError, OSError) as e:
+        print(f"❌ Error: Invalid path '{path_str}': {e}")
+        return 1
+
+    if not batch_mode and not prompt_path.exists():
+        print(f"❌ Error: File does not exist: {prompt_path}")
+        return 1
 
     orchestrator = PromptFixerOrchestrator(cwd=Path.cwd())
 
