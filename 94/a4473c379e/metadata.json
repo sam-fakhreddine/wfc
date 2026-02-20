@@ -1,0 +1,28 @@
+{
+  "cli_version": "0.4.5",
+  "checkpoint_id": "94a4473c379e",
+  "strategy": "manual-commit",
+  "branch": "claude/add-prompt-fixer-and-doctor",
+  "checkpoints_count": 4,
+  "files_touched": [
+    "experiments/task_tool_spike.py",
+    "experiments/task_tool_spike_results.md",
+    "experiments/test_task_tool_spike.py"
+  ],
+  "sessions": [
+    {
+      "metadata": "/94/a4473c379e/0/metadata.json",
+      "transcript": "/94/a4473c379e/0/full.jsonl",
+      "context": "/94/a4473c379e/0/context.md",
+      "content_hash": "/94/a4473c379e/0/content_hash.txt",
+      "prompt": "/94/a4473c379e/0/prompt.txt"
+    }
+  ],
+  "token_usage": {
+    "input_tokens": 725,
+    "cache_creation_tokens": 771867,
+    "cache_read_tokens": 15135429,
+    "output_tokens": 1041,
+    "api_call_count": 149
+  }
+}
