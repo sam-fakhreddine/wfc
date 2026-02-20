@@ -5,16 +5,34 @@ Coordinates 3-agent pipeline: Analyzer → Fixer → Reporter
 CRITICAL: Orchestrator NEVER implements, ONLY coordinates.
 """
 
+import json
+import shutil
+import subprocess
+import time
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from dataclasses import dataclass
 from functools import lru_cache
+from itertools import islice
 from pathlib import Path
 from typing import Dict, List, Optional, Tuple
 
 from .workspace import WorkspaceError, WorkspaceManager
 
-SAFE_GLOB_PREFIXES = ("wfc/", "references/", "./wfc/", "./references/")
+SAFE_GLOB_PREFIXES = ("wfc/", "references/", "./wfc/", "./references/", "./")
 MAX_RECURSIVE_DEPTH = 2
 MAX_GLOB_MATCHES = 1000
+
+AGENT_TIMEOUT_SECONDS = 300
+POLL_INTERVAL_SECONDS = 2
+STATUS_UPDATE_INTERVAL_SECONDS = 30
+
+MAX_RETRY_ATTEMPTS = 2
+MAX_BACKOFF_SECONDS = 30
+
+BATCH_SIZE = 4
+MAX_PARALLEL_WORKERS = 4
+
+SUBPROCESS_TIMEOUT_SECONDS = 30
 
 
 def validate_analysis_schema(analysis: Dict) -> Tuple[bool, List[str]]:
@@ -234,8 +252,8 @@ class PromptFixerOrchestrator:
         self,
         target_path: Path,
         agent_name: str,
-        timeout_seconds: int = 300,
-        poll_interval: int = 2,
+        timeout_seconds: int = AGENT_TIMEOUT_SECONDS,
+        poll_interval: int = POLL_INTERVAL_SECONDS,
     ) -> None:
         """
         Poll for file creation with timeout and progress logging.
@@ -246,14 +264,12 @@ class PromptFixerOrchestrator:
         Args:
             target_path: Path to file being polled
             agent_name: Name of agent (for error messages)
-            timeout_seconds: Maximum wait time in seconds (default 300)
-            poll_interval: Poll frequency in seconds (default 2)
+            timeout_seconds: Maximum wait time in seconds
+            poll_interval: Poll frequency in seconds
 
         Raises:
             TimeoutError: If file doesn't appear within timeout_seconds
         """
-        import time
-
         elapsed = 0
 
         while not target_path.exists():
@@ -264,7 +280,7 @@ class PromptFixerOrchestrator:
                 )
             time.sleep(poll_interval)
             elapsed += poll_interval
-            if elapsed % 30 == 0:
+            if elapsed % STATUS_UPDATE_INTERVAL_SECONDS == 0:
                 print(f"   [Waiting for {agent_name}... {elapsed}s elapsed]")
 
     def fix_prompt(
@@ -371,8 +387,6 @@ class PromptFixerOrchestrator:
         if not is_valid:
             raise ValueError(f"Invalid glob pattern: {error_msg}")
 
-        from itertools import islice
-
         cwd = Path.cwd()
         all_matches = list(islice(cwd.glob(validated_pattern), MAX_GLOB_MATCHES + 1))
 
@@ -391,17 +405,13 @@ class PromptFixerOrchestrator:
 
         print(f"📦 Batch mode: {len(prompt_paths)} prompts")
 
-        from concurrent.futures import ThreadPoolExecutor, as_completed
-
         results = []
-        batch_size = 4
-        max_workers = 4
 
-        for i in range(0, len(prompt_paths), batch_size):
-            batch = prompt_paths[i : i + batch_size]
-            print(f"\n🔄 Processing batch {i // batch_size + 1} ({len(batch)} prompts)")
+        for i in range(0, len(prompt_paths), BATCH_SIZE):
+            batch = prompt_paths[i : i + BATCH_SIZE]
+            print(f"\n🔄 Processing batch {i // BATCH_SIZE + 1} ({len(batch)} prompts)")
 
-            with ThreadPoolExecutor(max_workers=max_workers) as executor:
+            with ThreadPoolExecutor(max_workers=MAX_PARALLEL_WORKERS) as executor:
                 future_to_path = {
                     executor.submit(
                         self.fix_prompt,
@@ -685,12 +695,10 @@ class PromptFixerOrchestrator:
         Raises:
             WorkspaceError: If validation.json not found or invalid schema
         """
-        import json
-        import time
 
         for attempt in range(max_retries + 1):
             if attempt > 0:
-                backoff_seconds = min(2**attempt, 30)
+                backoff_seconds = min(2**attempt, MAX_BACKOFF_SECONDS)
                 print(f"   Retry {attempt}/{max_retries} (waiting {backoff_seconds}s)")
                 time.sleep(backoff_seconds)
 
@@ -842,8 +850,6 @@ class PromptFixerOrchestrator:
             grade_before: Grade before fixing
             grade_after: Grade after fixing
         """
-        import subprocess
-        import time
 
         timestamp = int(time.time())
         branch_name = f"claude/fix-prompt-{prompt_path.stem}-{timestamp}"
@@ -854,15 +860,13 @@ class PromptFixerOrchestrator:
                 check=True,
                 capture_output=True,
                 text=True,
-                timeout=30,
+                timeout=SUBPROCESS_TIMEOUT_SECONDS,
                 bufsize=-1,
             )
             print(f"   Created branch: {branch_name}")
 
             fixed_prompt_path = workspace / "02-fixer" / "fixed_prompt.md"
             if fixed_prompt_path.exists():
-                import shutil
-
                 shutil.copy2(fixed_prompt_path, prompt_path)
                 print(f"   Copied fixed prompt to: {prompt_path}")
 
@@ -871,7 +875,7 @@ class PromptFixerOrchestrator:
                 check=True,
                 capture_output=True,
                 text=True,
-                timeout=30,
+                timeout=SUBPROCESS_TIMEOUT_SECONDS,
                 bufsize=-1,
             )
 
@@ -882,7 +886,7 @@ class PromptFixerOrchestrator:
                 check=True,
                 capture_output=True,
                 text=True,
-                timeout=30,
+                timeout=SUBPROCESS_TIMEOUT_SECONDS,
                 bufsize=-1,
             )
             print(f"   Committed changes: {grade_before} → {grade_after}")
@@ -892,7 +896,7 @@ class PromptFixerOrchestrator:
                 check=True,
                 capture_output=True,
                 text=True,
-                timeout=30,
+                timeout=SUBPROCESS_TIMEOUT_SECONDS,
                 bufsize=-1,
             )
             print(f"   Pushed to origin/{branch_name}")
@@ -922,7 +926,7 @@ Generated with Claude Code.
                 check=True,
                 capture_output=True,
                 text=True,
-                timeout=30,
+                timeout=SUBPROCESS_TIMEOUT_SECONDS,
                 bufsize=-1,
             )
             print(f"   PR created: {pr_title}")
