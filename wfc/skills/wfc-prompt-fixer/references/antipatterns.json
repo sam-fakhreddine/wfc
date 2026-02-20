@@ -1,0 +1,140 @@
+{
+  "antipatterns": [
+    {
+      "id": "AP-01",
+      "name": "Decorative role",
+      "description": "Role assignment adds no behavioral constraint",
+      "example": "You are a helpful, friendly AI assistant",
+      "impact": "Wastes tokens, provides no guidance",
+      "fix": "Replace with functional role that constrains domain, vocabulary, and output format"
+    },
+    {
+      "id": "AP-02",
+      "name": "Vague output spec",
+      "description": "Expected output format not explicitly specified",
+      "example": "Give me a good summary",
+      "impact": "Claude chooses length, format, depth arbitrarily",
+      "fix": "Specify format, length, structure, and concrete success criteria"
+    },
+    {
+      "id": "AP-03",
+      "name": "Contradictory instructions",
+      "description": "Instructions conflict with each other",
+      "example": "Be concise AND Be thorough and comprehensive",
+      "impact": "Claude oscillates or picks one arbitrarily",
+      "fix": "Choose one, or scope them: 'Be concise in explanations, thorough in data coverage'"
+    },
+    {
+      "id": "AP-04",
+      "name": "Missing uncertainty handling",
+      "description": "No instruction for when input is ambiguous",
+      "example": "No guidance on unclear inputs",
+      "impact": "Claude guesses rather than flagging ambiguity",
+      "fix": "Add: 'If the input is ambiguous, state your interpretation before proceeding'"
+    },
+    {
+      "id": "AP-05",
+      "name": "Prose wall",
+      "description": "Instructions buried in paragraphs of prose",
+      "example": "2000-token paragraph with embedded instructions",
+      "impact": "Claude misses instructions buried in prose",
+      "fix": "Break into XML-tagged sections"
+    },
+    {
+      "id": "AP-06",
+      "name": "Hallucination prayer",
+      "description": "Decorative accuracy request with no mechanism",
+      "example": "Do not hallucinate / Be accurate",
+      "impact": "No mechanism to enforce this",
+      "fix": "Replace with grounding: 'Base responses only on provided context. Cite sections. If info missing, say so'"
+    },
+    {
+      "id": "AP-07",
+      "name": "Stateful assumption",
+      "description": "Assumes memory between API calls",
+      "example": "Remember what I said earlier (in API system prompt)",
+      "impact": "API calls are stateless, Claude has no memory",
+      "fix": "Include all necessary context in every call"
+    },
+    {
+      "id": "AP-08",
+      "name": "Implicit inference reliance",
+      "description": "Prompt designed for Claude 3.x inference, underspecified",
+      "example": "Relies on model 'reading between the lines'",
+      "impact": "Claude 4.x is literal, produces underspecified outputs",
+      "fix": "Make every expectation explicit"
+    },
+    {
+      "id": "AP-09",
+      "name": "Example pollution",
+      "description": "Examples contain unwanted patterns",
+      "example": "Examples with filler phrases that Claude replicates",
+      "impact": "Claude 4.x replicates example patterns including bad ones",
+      "fix": "Audit examples for unwanted patterns, add 'do not replicate' note if needed"
+    },
+    {
+      "id": "AP-10",
+      "name": "Sycophancy invitation",
+      "description": "No anti-flattery constraint",
+      "example": "Please help me / I'd really appreciate",
+      "impact": "Claude adds filler praise and excessive hedging",
+      "fix": "Add: 'Do not include filler praise, hedging, or unnecessary caveats'"
+    },
+    {
+      "id": "AP-11",
+      "name": "Missing negative constraints",
+      "description": "Only positive instructions, no scope boundaries",
+      "example": "Only 'do X' instructions",
+      "impact": "Claude doesn't know what's out of scope, may over-deliver",
+      "fix": "Add 'Do not [specific out-of-scope actions]' for likely failure modes"
+    },
+    {
+      "id": "AP-12",
+      "name": "Unreferenced context",
+      "description": "Context block never referenced by instructions",
+      "example": "Large context that no instruction uses",
+      "impact": "Context window pollution, degrades performance",
+      "fix": "Remove unused context or add instructions that reference it"
+    },
+    {
+      "id": "AP-13",
+      "name": "Token bloat",
+      "description": "Redundant instructions, verbose framing",
+      "example": "Excessive preamble, repeated instructions",
+      "impact": "Wastes context window, increases latency and cost",
+      "fix": "Cut to minimum viable instruction set"
+    },
+    {
+      "id": "AP-14",
+      "name": "Missing verification step",
+      "description": "No self-check before output",
+      "example": "No validation checklist",
+      "impact": "Errors in structured output go uncaught",
+      "fix": "Add: 'Before returning, verify: [checklist of output requirements]'"
+    },
+    {
+      "id": "AP-15",
+      "name": "Full file content sent (WFC)",
+      "description": "Entire file content sent instead of file reference",
+      "example": "Prompt includes full 1000-line file",
+      "impact": "Violates WFC token management, wastes context",
+      "fix": "Use file reference architecture: send file path + domain guidance"
+    },
+    {
+      "id": "AP-16",
+      "name": "Missing TEAMCHARTER alignment (WFC)",
+      "description": "No values alignment in task description",
+      "example": "Task has no connection to TEAMCHARTER values",
+      "impact": "Work not aligned with team values and principles",
+      "fix": "Add values alignment: connect task to customer focus, innovation, etc."
+    },
+    {
+      "id": "AP-17",
+      "name": "Invalid Agent Skills frontmatter (WFC)",
+      "description": "YAML frontmatter doesn't match Agent Skills spec",
+      "example": "Has 'user-invocable' or 'disable-model-invocation' fields",
+      "impact": "Skill fails validation, doesn't load correctly",
+      "fix": "Use only: name, description, license. Remove deprecated fields"
+    }
+  ]
+}

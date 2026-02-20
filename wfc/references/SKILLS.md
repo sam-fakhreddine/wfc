@@ -1,6 +1,6 @@
 # WFC Skills Reference
 
-Complete reference for all 30 WFC skills. Use this when choosing which skill to invoke.
+Complete reference for all 32 WFC skills. Use this when choosing which skill to invoke.
 
 ## Quick Decision
 
@@ -43,6 +43,8 @@ Complete reference for all 30 WFC skills. Use this when choosing which skill to 
 | `wfc-security` | `/wfc-security` | STRIDE threat modeling; OWASP LLM Top 10; generates threat model + mitigations |
 | `wfc-gh-debug` | `/wfc-gh-debug` | Fetch failing CI logs via gh CLI → root cause analysis → fix |
 | `wfc-retro` | `/wfc-retro` | Analyse WFC telemetry → patterns, bottlenecks, agent performance trends |
+| `wfc-prompt-fixer` | `/wfc-prompt-fixer` | Fix Claude prompts via 3-agent pipeline (Analyzer → Fixer → Reporter); grades A-F, auto-detects WFC mode |
+| `wfc-doctor` | `/wfc-doctor` | WFC system health checker; validates Agent Skills, prompt quality, settings, hooks, pre-commit |
 
 ## Knowledge & Documentation
 

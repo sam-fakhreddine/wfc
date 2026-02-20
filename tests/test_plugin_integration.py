@@ -317,8 +317,7 @@ class TestConfigLoader:
         """Create a temp .md file with frontmatter, verify parsed correctly."""
         with tempfile.TemporaryDirectory() as tmpdir:
             rule_file = Path(tmpdir) / "my-rule.md"
-            rule_file.write_text(
-                """---
+            rule_file.write_text("""---
 name: my-rule
 action: warn
 event: file
@@ -326,8 +325,7 @@ conditions:
   - field: new_text, operator: contains, value: FIXME
 ---
 Please address FIXME comments before committing.
-"""
-            )
+""")
             rules = load_rules(Path(tmpdir))
             assert len(rules) == 1
             assert rules[0]["name"] == "my-rule"
@@ -338,15 +336,13 @@ Please address FIXME comments before committing.
         """Verify the body (after frontmatter) is captured."""
         with tempfile.TemporaryDirectory() as tmpdir:
             rule_file = Path(tmpdir) / "body-test.md"
-            rule_file.write_text(
-                """---
+            rule_file.write_text("""---
 name: body-test
 action: block
 ---
 This is the body message.
 It spans multiple lines.
-"""
-            )
+""")
             rules = load_rules(Path(tmpdir))
             assert len(rules) == 1
             body = rules[0]["body"]

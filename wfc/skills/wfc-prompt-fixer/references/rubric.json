@@ -1,0 +1,115 @@
+{
+  "categories": {
+    "STRUCTURE": {
+      "weight": "high",
+      "dimensions": {
+        "XML_SEGMENTATION": {
+          "description": "Are distinct instruction types separated into labeled XML blocks?",
+          "rationale": "Claude 4.x parses XML-delimited sections more reliably than prose headers or markdown"
+        },
+        "INSTRUCTION_HIERARCHY": {
+          "description": "Is there a clear priority order? System constraints separated from task guidance?",
+          "rationale": "Conflicts between sections should be absent"
+        },
+        "INFORMATION_ORDERING": {
+          "description": "Does critical context appear before instructions that depend on it?",
+          "rationale": "Claude attends more reliably to instructions that follow their prerequisites"
+        }
+      }
+    },
+    "SPECIFICITY": {
+      "weight": "high",
+      "dimensions": {
+        "TASK_DEFINITION": {
+          "description": "Is the core task unambiguous? Would two people interpret this the same way?",
+          "rationale": "Claude 4.x is literal - vague instructions produce vague output"
+        },
+        "OUTPUT_FORMAT": {
+          "description": "Is expected output format explicitly specified with structure, length, examples?",
+          "rationale": "Missing format specs are the most common source of rework"
+        },
+        "CONSTRAINT_COMPLETENESS": {
+          "description": "Are boundary conditions, edge cases, and 'what NOT to do' instructions present?",
+          "rationale": "Claude 4.x follows explicit negative constraints well but doesn't infer them"
+        },
+        "SUCCESS_CRITERIA": {
+          "description": "Could you objectively evaluate whether output satisfies the prompt?",
+          "rationale": "If not, the prompt is underspecified"
+        }
+      }
+    },
+    "BEHAVIORAL_CONTROL": {
+      "weight": "medium",
+      "dimensions": {
+        "ROLE_UTILITY": {
+          "description": "Does role/persona actually constrain behavior, or is it decorative?",
+          "rationale": "'Helpful assistant' adds nothing. 'Tax attorney reviewing IRS Form 1040' constrains vocabulary, reasoning, output"
+        },
+        "TONE_CALIBRATION": {
+          "description": "Are tone instructions specific enough to be actionable?",
+          "rationale": "'Be professional' is vague. 'Use formal register, no contractions, cite regulation numbers' is actionable"
+        },
+        "GUARDRAILS": {
+          "description": "Are there explicit instructions for uncertainty handling, refusal conditions, scope boundaries?",
+          "rationale": "Without these, Claude will attempt tasks outside its competence rather than flag them"
+        },
+        "VERIFICATION_LOOPS": {
+          "description": "Does the prompt include self-check instructions?",
+          "rationale": "Claude 4.x follows these reliably: 'Before outputting, verify all required fields are present'"
+        }
+      }
+    },
+    "CLAUDE_4X_OPTIMIZATION": {
+      "weight": "high",
+      "dimensions": {
+        "THINKING_GUIDANCE": {
+          "description": "For complex reasoning, does it leverage thinking/chain-of-thought appropriately?",
+          "rationale": "Claude Opus 4.6 uses adaptive thinking. Avoid word 'think' when thinking disabled - use 'consider', 'evaluate', 'reason through'"
+        },
+        "TOOL_INTEGRATION": {
+          "description": "If tools are referenced, are they fully defined with descriptions, parameter schemas, usage examples?",
+          "rationale": "Undefined tools cause failures"
+        },
+        "LITERAL_COMPLIANCE": {
+          "description": "Does the prompt account for Claude 4.x's literal instruction following?",
+          "rationale": "Prompts designed for earlier versions that relied on inference will underperform"
+        },
+        "ANTI_SYCOPHANCY": {
+          "description": "Does it avoid patterns that invite filler praise or hedging?",
+          "rationale": "Instructions like 'honest assessment' or 'do not include caveats unless substantively relevant' reduce padding"
+        }
+      }
+    }
+  },
+  "scoring": {
+    "scale": "0-3 per dimension",
+    "values": {
+      "0": "Not applicable",
+      "1": "Significant issues",
+      "2": "Minor issues",
+      "3": "Well-implemented"
+    }
+  },
+  "grading": {
+    "A": {
+      "threshold": "avg >= 2.5, no critical/major issues",
+      "action": "skip_rewrite"
+    },
+    "B": {
+      "threshold": "avg >= 2.0, no critical issues",
+      "action": "minor_rewrite"
+    },
+    "C": {
+      "threshold": "avg >= 1.5, 1-2 major issues",
+      "action": "partial_rewrite"
+    },
+    "D": {
+      "threshold": "avg < 1.5 or critical issues present",
+      "action": "full_rewrite"
+    },
+    "F": {
+      "threshold": "fundamentally broken - unclear task, contradictory instructions, unusable structure",
+      "action": "full_rewrite_required"
+    }
+  }
+}
