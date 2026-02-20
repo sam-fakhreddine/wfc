@@ -66,9 +66,12 @@ class WorkspaceManager:
         Returns:
             Path to the workspace directory
         """
-        timestamp = datetime.now().strftime("%Y%m%d-%H%M%S")
+        import uuid
+
+        timestamp = datetime.now().strftime("%Y%m%d-%H%M%S%f")
         prompt_name = prompt_path.stem
-        run_id = f"{prompt_name}-{timestamp}"
+        unique_suffix = uuid.uuid4().hex[:8]
+        run_id = f"{prompt_name}-{timestamp}-{unique_suffix}"
 
         workspace = self.base_dir / run_id
         workspace.mkdir(parents=True, exist_ok=True)
