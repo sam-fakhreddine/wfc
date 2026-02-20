@@ -3,10 +3,14 @@
   "checkpoint_id": "d4845445c9b0",
   "strategy": "manual-commit",
   "branch": "claude/sync-main-into-develop-1771560196",
-  "checkpoints_count": 1,
+  "checkpoints_count": 2,
   "files_touched": [
+    ".development/plans/CLAUDE_MD_REMEDIATION_TASKS.md",
+    ".development/scratch/pr35_manifest.json",
     "install-universal.sh",
-    "wfc/scripts/hooks/register_hooks.py"
+    "wfc/references/SKILLS.md",
+    "wfc/scripts/hooks/register_hooks.py",
+    "wfc/scripts/orchestrators/claude_md/schemas.py"
   ],
   "sessions": [
     {
@@ -15,13 +19,20 @@
       "context": "/d4/845445c9b0/0/context.md",
       "content_hash": "/d4/845445c9b0/0/content_hash.txt",
       "prompt": "/d4/845445c9b0/0/prompt.txt"
+    },
+    {
+      "metadata": "/d4/845445c9b0/1/metadata.json",
+      "transcript": "/d4/845445c9b0/1/full.jsonl",
+      "context": "/d4/845445c9b0/1/context.md",
+      "content_hash": "/d4/845445c9b0/1/content_hash.txt",
+      "prompt": "/d4/845445c9b0/1/prompt.txt"
     }
   ],
   "token_usage": {
-    "input_tokens": 71,
-    "cache_creation_tokens": 177735,
-    "cache_read_tokens": 4601123,
-    "output_tokens": 7469,
-    "api_call_count": 56
+    "input_tokens": 179,
+    "cache_creation_tokens": 407997,
+    "cache_read_tokens": 11540041,
+    "output_tokens": 12296,
+    "api_call_count": 134
   }
 }
