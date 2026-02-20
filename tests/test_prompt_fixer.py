@@ -489,3 +489,338 @@ class TestOrchestratorCleanup:
             assert (
                 cleanup_time < 5.0
             ), f"Cleanup took {cleanup_time}s, should be < 5s for small workspace"
+
+
+class TestFixResultSchemaValidation:
+    """Test validate_fix_result_schema() helper function (TASK-004, PROP-006)."""
+
+    def test_valid_fix_result_passes_validation(self):
+        """Test that a valid fix result passes schema validation."""
+        from wfc.skills import wfc_prompt_fixer  # noqa: F401
+        from wfc_prompt_fixer.orchestrator import validate_fix_result_schema
+
+        fix_result = {
+            "verdict": "PASS",
+            "intent_preserved": True,
+            "issues_resolved": {
+                "total_critical_major": 5,
+                "resolved": 5,
+                "unresolved": [],
+                "inadequately_resolved": [],
+            },
+            "regressions": [],
+            "scope_creep": [],
+            "grade_after": "A",
+            "final_recommendation": "ship",
+            "revision_notes": "",
+        }
+
+        is_valid, errors = validate_fix_result_schema(fix_result)
+        assert is_valid is True
+        assert len(errors) == 0
+
+    def test_missing_verdict_field_fails_validation(self):
+        """Test that missing verdict field fails validation."""
+        from wfc.skills import wfc_prompt_fixer  # noqa: F401
+        from wfc_prompt_fixer.orchestrator import validate_fix_result_schema
+
+        fix_result = {
+            "intent_preserved": True,
+            "issues_resolved": {},
+            "regressions": [],
+            "scope_creep": [],
+            "grade_after": "A",
+        }
+
+        is_valid, errors = validate_fix_result_schema(fix_result)
+        assert is_valid is False
+        assert any("verdict" in err.lower() for err in errors)
+
+    def test_invalid_verdict_value_fails_validation(self):
+        """Test that invalid verdict value fails validation."""
+        from wfc.skills import wfc_prompt_fixer  # noqa: F401
+        from wfc_prompt_fixer.orchestrator import validate_fix_result_schema
+
+        fix_result = {
+            "verdict": "INVALID_VERDICT",
+            "intent_preserved": True,
+            "issues_resolved": {},
+            "regressions": [],
+            "scope_creep": [],
+            "grade_after": "A",
+        }
+
+        is_valid, errors = validate_fix_result_schema(fix_result)
+        assert is_valid is False
+        assert any("verdict" in err.lower() for err in errors)
+
+    def test_invalid_grade_after_fails_validation(self):
+        """Test that invalid grade_after value fails validation."""
+        from wfc.skills import wfc_prompt_fixer  # noqa: F401
+        from wfc_prompt_fixer.orchestrator import validate_fix_result_schema
+
+        fix_result = {
+            "verdict": "PASS",
+            "intent_preserved": True,
+            "issues_resolved": {},
+            "regressions": [],
+            "scope_creep": [],
+            "grade_after": "X",
+        }
+
+        is_valid, errors = validate_fix_result_schema(fix_result)
+        assert is_valid is False
+        assert any("grade_after" in err.lower() for err in errors)
+
+    def test_missing_intent_preserved_fails_validation(self):
+        """Test that missing intent_preserved field fails validation."""
+        from wfc.skills import wfc_prompt_fixer  # noqa: F401
+        from wfc_prompt_fixer.orchestrator import validate_fix_result_schema
+
+        fix_result = {
+            "verdict": "PASS",
+            "issues_resolved": {},
+            "regressions": [],
+            "scope_creep": [],
+            "grade_after": "A",
+        }
+
+        is_valid, errors = validate_fix_result_schema(fix_result)
+        assert is_valid is False
+        assert any("intent_preserved" in err.lower() for err in errors)
+
+
+class TestFixerPromptGeneration:
+    """Test _prepare_fixer_prompt() method (TASK-004)."""
+
+    @pytest.fixture
+    def orchestrator(self):
+        """Create orchestrator instance."""
+        from wfc.skills import wfc_prompt_fixer
+
+        return wfc_prompt_fixer.PromptFixerOrchestrator()
+
+    def test_prepare_fixer_prompt_loads_template(self, orchestrator, tmp_path):
+        """Test that _prepare_fixer_prompt loads fixer.md template."""
+        workspace = tmp_path / "workspace"
+        workspace.mkdir()
+
+        prompt = orchestrator._prepare_fixer_prompt(workspace)
+
+        assert isinstance(prompt, str)
+        assert len(prompt) > 0
+        assert "Fixer Agent" in prompt or "fixer" in prompt.lower()
+
+    def test_prepare_fixer_prompt_injects_workspace_path(self, orchestrator, tmp_path):
+        """Test that workspace path is injected into template."""
+        workspace = tmp_path / "workspace"
+        workspace.mkdir()
+
+        prompt = orchestrator._prepare_fixer_prompt(workspace)
+
+        assert str(workspace) in prompt
+
+    def test_prepare_fixer_prompt_template_missing_raises_error(self, orchestrator, tmp_path):
+        """Test that missing fixer.md template raises WorkspaceError."""
+        workspace = tmp_path / "workspace"
+        workspace.mkdir()
+
+        with patch.object(
+            orchestrator, "_get_agent_template_path", return_value=Path("/nonexistent/fixer.md")
+        ):
+            with pytest.raises(Exception, match="Agent template not found"):
+                orchestrator._prepare_fixer_prompt(workspace)
+
+
+class TestFixerRetryLogic:
+    """Test _spawn_fixer_with_retry() retry logic and exponential backoff (TASK-004, PROP-007)."""
+
+    @pytest.fixture
+    def orchestrator(self):
+        """Create orchestrator instance."""
+        from wfc.skills import wfc_prompt_fixer
+
+        return wfc_prompt_fixer.PromptFixerOrchestrator()
+
+    @pytest.fixture
+    def workspace(self, tmp_path):
+        """Create a workspace with analysis.json."""
+        workspace = tmp_path / "workspace"
+        (workspace / "01-analyzer").mkdir(parents=True)
+        (workspace / "02-fixer").mkdir(parents=True)
+
+        analysis = {
+            "classification": {},
+            "scores": {},
+            "issues": [{"severity": "critical", "description": "Test issue"}],
+            "overall_grade": "C",
+            "average_score": 6.0,
+            "rewrite_recommended": True,
+            "rewrite_scope": "full",
+            "wfc_mode": False,
+            "summary": "Test summary",
+        }
+
+        with open(workspace / "01-analyzer" / "analysis.json", "w") as f:
+            json.dump(analysis, f)
+
+        return workspace
+
+    def test_fixer_passes_on_first_attempt(self, orchestrator, workspace):
+        """Test that fixer returns immediately when validation passes on first attempt."""
+        validation_result = {
+            "verdict": "PASS",
+            "intent_preserved": True,
+            "issues_resolved": {
+                "total_critical_major": 1,
+                "resolved": 1,
+                "unresolved": [],
+                "inadequately_resolved": [],
+            },
+            "regressions": [],
+            "scope_creep": [],
+            "grade_after": "A",
+            "final_recommendation": "ship",
+            "revision_notes": "",
+        }
+
+        def mock_write_validation(ws_path):
+            with open(ws_path / "02-fixer" / "validation.json", "w") as f:
+                json.dump(validation_result, f)
+
+        with patch.object(orchestrator, "_prepare_fixer_prompt", return_value="Mock prompt"):
+            with patch.object(orchestrator.workspace_manager, "write_fix"):
+                mock_write_validation(workspace)
+                fix_result = orchestrator._spawn_fixer_with_retry(workspace, max_retries=2)
+
+                assert fix_result["verdict"] == "PASS"
+                assert fix_result["grade_after"] == "A"
+
+    def test_fixer_retries_on_fail_verdict(self, orchestrator, workspace):
+        """Test that fixer retries when validation verdict is FAIL."""
+
+        validation_fail = {
+            "verdict": "FAIL",
+            "intent_preserved": False,
+            "issues_resolved": {
+                "total_critical_major": 1,
+                "resolved": 0,
+                "unresolved": ["TEST-001"],
+                "inadequately_resolved": [],
+            },
+            "regressions": [
+                {"description": "Test regression", "severity": "critical", "location": "test"}
+            ],
+            "scope_creep": [],
+            "grade_after": "C",
+            "final_recommendation": "revise",
+            "revision_notes": "Fix intent preservation issue",
+        }
+
+        validation_pass = {
+            "verdict": "PASS",
+            "intent_preserved": True,
+            "issues_resolved": {
+                "total_critical_major": 1,
+                "resolved": 1,
+                "unresolved": [],
+                "inadequately_resolved": [],
+            },
+            "regressions": [],
+            "scope_creep": [],
+            "grade_after": "A",
+            "final_recommendation": "ship",
+            "revision_notes": "",
+        }
+
+        attempt_count = [0]
+
+        def mock_write_validation(ws_path):
+            attempt_count[0] += 1
+            result = validation_fail if attempt_count[0] == 1 else validation_pass
+            with open(ws_path / "02-fixer" / "validation.json", "w") as f:
+                json.dump(result, f)
+
+        with patch.object(orchestrator, "_prepare_fixer_prompt", return_value="Mock prompt"):
+            with patch.object(orchestrator.workspace_manager, "write_fix"):
+                mock_write_validation(workspace)
+                mock_write_validation(workspace)
+                fix_result = orchestrator._spawn_fixer_with_retry(workspace, max_retries=2)
+
+                assert attempt_count[0] == 2
+                assert fix_result["verdict"] == "PASS"
+
+    def test_fixer_implements_exponential_backoff(self, orchestrator, workspace):
+        """Test that retry logic implements exponential backoff (PROP-007)."""
+
+        validation_fail = {
+            "verdict": "FAIL",
+            "intent_preserved": False,
+            "issues_resolved": {
+                "total_critical_major": 1,
+                "resolved": 0,
+                "unresolved": ["TEST-001"],
+                "inadequately_resolved": [],
+            },
+            "regressions": [],
+            "scope_creep": [],
+            "grade_after": "C",
+            "final_recommendation": "revise",
+            "revision_notes": "Test",
+        }
+
+        with open(workspace / "02-fixer" / "validation.json", "w") as f:
+            json.dump(validation_fail, f)
+
+        with patch.object(orchestrator, "_prepare_fixer_prompt", return_value="Mock prompt"):
+            with patch.object(orchestrator.workspace_manager, "write_fix"):
+                with patch("time.sleep") as mock_sleep:
+                    _result = orchestrator._spawn_fixer_with_retry(workspace, max_retries=2)
+
+                    sleep_calls = [call[0][0] for call in mock_sleep.call_args_list]
+                    assert len(sleep_calls) == 2, "Should have 2 sleep calls for 2 retries"
+                    assert sleep_calls[0] == 2, "First backoff should be 2 seconds"
+                    assert sleep_calls[1] == 4, "Second backoff should be 4 seconds"
+
+    def test_fixer_caps_backoff_at_30_seconds(self, orchestrator, workspace):
+        """Test that exponential backoff caps at 30 seconds (PROP-007)."""
+
+        validation_fail = {
+            "verdict": "FAIL",
+            "intent_preserved": False,
+            "issues_resolved": {},
+            "regressions": [],
+            "scope_creep": [],
+            "grade_after": "C",
+            "final_recommendation": "revise",
+            "revision_notes": "Test",
+        }
+
+        with patch.object(orchestrator, "_prepare_fixer_prompt", return_value="Mock prompt"):
+            with patch.object(orchestrator.workspace_manager, "write_fix"):
+                with patch("time.sleep") as mock_sleep:
+                    for _ in range(3):
+                        with open(workspace / "02-fixer" / "validation.json", "w") as f:
+                            json.dump(validation_fail, f)
+
+                    orchestrator._spawn_fixer_with_retry(workspace, max_retries=2)
+
+                    sleep_calls = [call[0][0] for call in mock_sleep.call_args_list]
+                    for sleep_time in sleep_calls:
+                        assert (
+                            sleep_time <= 30
+                        ), f"Backoff should cap at 30 seconds, got {sleep_time}s"
+
+    def test_fixer_validation_schema_checked(self, orchestrator, workspace):
+        """Test that validation.json is schema-validated before accepting result."""
+        invalid_validation = {
+            "verdict": "INVALID",
+            "grade_after": "Z",
+        }
+
+        with open(workspace / "02-fixer" / "validation.json", "w") as f:
+            json.dump(invalid_validation, f)
+
+        with patch.object(orchestrator, "_prepare_fixer_prompt", return_value="Mock prompt"):
+            with pytest.raises(Exception):
+                orchestrator._spawn_fixer_with_retry(workspace, max_retries=0)

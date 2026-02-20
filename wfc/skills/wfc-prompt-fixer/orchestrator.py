@@ -80,6 +80,66 @@ def validate_analysis_schema(analysis: Dict) -> Tuple[bool, List[str]]:
     return (len(errors) == 0, errors)
 
 
+def validate_fix_result_schema(fix_result: Dict) -> Tuple[bool, List[str]]:
+    """
+    Validate validation.json schema from Fixer agent (PROP-006).
+
+    Required fields:
+    - verdict (str: PASS | FAIL | PASS_WITH_NOTES)
+    - intent_preserved (bool)
+    - issues_resolved (dict)
+    - regressions (list)
+    - scope_creep (list)
+    - grade_after (str: A-F)
+    - final_recommendation (str: ship | revise)
+    - revision_notes (str, optional for PASS verdicts)
+
+    Args:
+        fix_result: Fix result dictionary to validate
+
+    Returns:
+        Tuple of (is_valid, errors)
+        - is_valid: True if schema is valid
+        - errors: List of error messages (empty if valid)
+    """
+    errors = []
+
+    required_fields = [
+        "verdict",
+        "intent_preserved",
+        "issues_resolved",
+        "regressions",
+        "scope_creep",
+        "grade_after",
+        "final_recommendation",
+    ]
+
+    for field in required_fields:
+        if field not in fix_result:
+            errors.append(f"Missing required field: {field}")
+
+    if "verdict" in fix_result:
+        verdict = fix_result["verdict"]
+        if verdict not in ["PASS", "FAIL", "PASS_WITH_NOTES"]:
+            errors.append(f"Invalid verdict: {verdict} (must be PASS, FAIL, or PASS_WITH_NOTES)")
+
+    if "grade_after" in fix_result:
+        grade = fix_result["grade_after"]
+        if grade not in ["A", "B", "C", "D", "F"]:
+            errors.append(f"Invalid grade_after: {grade} (must be A-F)")
+
+    if "final_recommendation" in fix_result:
+        rec = fix_result["final_recommendation"]
+        if rec not in ["ship", "revise"]:
+            errors.append(f"Invalid final_recommendation: {rec} (must be ship or revise)")
+
+    if "intent_preserved" in fix_result:
+        if not isinstance(fix_result["intent_preserved"], bool):
+            errors.append("intent_preserved must be a boolean")
+
+    return (len(errors) == 0, errors)
+
+
 def validate_glob_pattern(pattern: any) -> Tuple[bool, Optional[str], Optional[str]]:
     """
     Validate glob pattern for safety (PROP-003, PROP-011).
@@ -418,6 +478,38 @@ class PromptFixerOrchestrator:
 
         return prompt
 
+    def _prepare_fixer_prompt(self, workspace: Path) -> str:
+        """
+        Prepare fixer agent prompt by loading template and injecting context.
+
+        This implements the "prompt generator" pattern from TASK-003:
+        - Load agent template from agents/fixer.md
+        - Inject workspace path
+        - Return prompt string for Claude to use with Task tool
+
+        Args:
+            workspace: Path to workspace directory
+
+        Returns:
+            Prepared prompt string for Fixer agent
+
+        Raises:
+            WorkspaceError: If fixer.md template file not found
+        """
+        template_path = self._get_agent_template_path("fixer")
+
+        try:
+            template = template_path.read_text()
+        except FileNotFoundError as e:
+            raise WorkspaceError(
+                f"Agent template not found: {template_path}. "
+                f"Expected agents/fixer.md in wfc-prompt-fixer package."
+            ) from e
+
+        prompt = template.replace("{workspace}", str(workspace))
+
+        return prompt
+
     def _spawn_analyzer(self, workspace: Path, wfc_mode: bool) -> dict:
         """
         Spawn Analyzer agent (Router + Diagnostician combined).
@@ -472,39 +564,99 @@ class PromptFixerOrchestrator:
         """
         Spawn Fixer agent with retry loop (Rewriter + Validator combined).
 
-        Retry logic:
-        1. Spawn Fixer
-        2. Fixer validates itself
-        3. If validation FAIL: retry (max 2 times)
-        4. If validation PASS: return
+        ARCHITECTURE (from TASK-003 pattern):
+        This method implements the "prompt generator" pattern with retry logic:
+        1. Prepare agent prompt from agents/fixer.md template
+        2. Print instructions for Claude to invoke Task tool
+        3. Wait for agent to write validation.json to workspace
+        4. Read and validate validation.json schema (PROP-006)
+        5. If verdict is FAIL, retry with exponential backoff (PROP-007)
+        6. Return validation result dict
+
+        Retry logic with exponential backoff (PROP-007):
+        - Attempt 0: no delay
+        - Attempt 1: 2^1 = 2 seconds delay
+        - Attempt 2: 2^2 = 4 seconds delay
+        - Max backoff capped at 30 seconds
+
+        Agent reads:
+        - workspace/input/prompt.md
+        - workspace/01-analyzer/analysis.json
+        - workspace/02-fixer/revision_notes.md (if retry)
+
+        Agent writes:
+        - workspace/02-fixer/fixed_prompt.md
+        - workspace/02-fixer/changelog.md
+        - workspace/02-fixer/unresolved.md
+        - workspace/02-fixer/validation.json
+
+        Args:
+            workspace: Path to workspace directory
+            max_retries: Maximum number of retry attempts (default 2)
 
         Returns:
-            Fix result dict
+            Validation result dict with {verdict, grade_after, intent_preserved, ...}
+
+        Raises:
+            WorkspaceError: If validation.json not found or invalid schema
         """
+        import json
+        import time
+
         for attempt in range(max_retries + 1):
             if attempt > 0:
-                print(f"   Retry {attempt}/{max_retries}")
+                backoff_seconds = min(2**attempt, 30)
+                print(f"   Retry {attempt}/{max_retries} (waiting {backoff_seconds}s)")
+                time.sleep(backoff_seconds)
 
-            # TODO: Implement actual agent spawning
-            print(f"   [TODO: Spawn Fixer subagent (attempt {attempt + 1})]")
+            agent_prompt = self._prepare_fixer_prompt(workspace)
 
-            fix_result = {
-                "verdict": "PASS",
-                "grade_after": "A",
-                "changes": ["Added XML tags", "Fixed vague spec"],
-            }
-
-            self.workspace_manager.write_fix(
-                workspace,
-                fixed_prompt="# Fixed Prompt\n\nMock fixed content",
-                changelog=fix_result["changes"],
-                unresolved=[],
+            # NOTE: In production, Claude will see this message and use Task tool
+            print(f"   [Fixer agent prompt prepared (attempt {attempt + 1})]")
+            print(f"   [Workspace: {workspace}]")
+            print(f"   [Prompt length: {len(agent_prompt)} chars]")
+            print(
+                "   [INSTRUCTION: Use Task tool with subagent_type='general-purpose' "
+                "and the prepared prompt]"
             )
 
-            if fix_result["verdict"] == "PASS":
-                return fix_result
+            validation_path = workspace / "02-fixer" / "validation.json"
+            if not validation_path.exists():
+                raise WorkspaceError(
+                    f"Validation file not found at {validation_path}. "
+                    f"Fixer agent may not have completed successfully."
+                )
 
-        return {"verdict": "FAIL", "grade_after": "C", "changes": []}
+            try:
+                with open(validation_path) as f:
+                    validation_result = json.load(f)
+            except json.JSONDecodeError as e:
+                raise WorkspaceError(
+                    f"Invalid JSON in validation file {validation_path}: {e}. "
+                    f"File may be corrupted."
+                ) from e
+
+            is_valid, errors = validate_fix_result_schema(validation_result)
+            if not is_valid:
+                error_msg = "\n".join(f"  - {err}" for err in errors)
+                raise WorkspaceError(
+                    f"Invalid validation.json schema:\n{error_msg}\n"
+                    f"Validation file may be corrupted or agent failed to generate valid output."
+                )
+
+            verdict = validation_result.get("verdict", "UNKNOWN")
+
+            if verdict == "PASS" or verdict == "PASS_WITH_NOTES":
+                return validation_result
+
+            if attempt < max_retries:
+                revision_notes = validation_result.get("revision_notes", "")
+                if revision_notes:
+                    notes_path = workspace / "02-fixer" / "revision_notes.md"
+                    notes_path.write_text(revision_notes)
+                    print(f"   Validation FAIL. Revision notes written to {notes_path.name}")
+
+        return validation_result
 
     def _skip_to_reporter(self, workspace: Path, no_changes: bool = True) -> Path:
         """Skip to Reporter when no changes needed (grade A)."""
