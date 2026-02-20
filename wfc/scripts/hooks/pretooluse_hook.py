@@ -23,10 +23,35 @@ from __future__ import annotations
 
 import json
 import logging
+import re
 import sys
 import time
 
 logger = logging.getLogger("wfc.hooks.pretooluse")
+
+
+def _extract_pattern_id(reason: str) -> str:
+    """Extract pattern ID from bracket notation in reason string. e.g. '[eval-injection]' -> 'eval-injection'."""
+    m = re.search(r"\[([^\]]+)\]", reason)
+    return m.group(1) if m else ""
+
+
+def _handle_block(result: dict, input_data: dict) -> None:
+    """Emit structured block response and exit 2. Falls back to plain text."""
+    try:
+        from wfc.scripts.security.refusal_agent import emit_and_exit
+
+        reason = result.get("reason", "Blocked")
+        emit_and_exit(
+            reason=reason,
+            pattern_id=_extract_pattern_id(reason),
+            tool_name=input_data.get("tool_name", ""),
+        )
+    except SystemExit:
+        raise
+    except Exception:
+        print(result.get("reason", "Blocked"), file=sys.stderr)
+        sys.exit(2)
 
 
 def main() -> None:
@@ -77,20 +102,18 @@ def _run() -> None:
     security_result = security_check(input_data)
 
     if security_result.get("decision") == "block":
-        print(security_result["reason"], file=sys.stderr)
-        sys.exit(2)
+        _handle_block(security_result, input_data)
 
     if security_result.get("decision") == "warn":
-        print(security_result["reason"], file=sys.stderr)
+        print(security_result.get("reason", ""), file=sys.stderr)
 
     rule_result = rule_evaluate(input_data)
 
     if rule_result.get("decision") == "block":
-        print(rule_result["reason"], file=sys.stderr)
-        sys.exit(2)
+        _handle_block(rule_result, input_data)
 
     if rule_result.get("decision") == "warn":
-        print(rule_result["reason"], file=sys.stderr)
+        print(rule_result.get("reason", ""), file=sys.stderr)
 
     sys.exit(0)
 
