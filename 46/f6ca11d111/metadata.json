@@ -3,7 +3,7 @@
   "checkpoint_id": "46f6ca11d111",
   "strategy": "manual-commit",
   "branch": "claude/trim-claude-md-and-add-skills-ref",
-  "checkpoints_count": 1,
+  "checkpoints_count": 5,
   "files_touched": [
     "CLAUDE.md",
     "wfc/references/SKILLS.md"
@@ -15,13 +15,20 @@
       "context": "/46/f6ca11d111/0/context.md",
       "content_hash": "/46/f6ca11d111/0/content_hash.txt",
       "prompt": "/46/f6ca11d111/0/prompt.txt"
+    },
+    {
+      "metadata": "/46/f6ca11d111/1/metadata.json",
+      "transcript": "/46/f6ca11d111/1/full.jsonl",
+      "context": "/46/f6ca11d111/1/context.md",
+      "content_hash": "/46/f6ca11d111/1/content_hash.txt",
+      "prompt": "/46/f6ca11d111/1/prompt.txt"
     }
   ],
   "token_usage": {
-    "input_tokens": 71,
-    "cache_creation_tokens": 177735,
-    "cache_read_tokens": 4601123,
-    "output_tokens": 7469,
-    "api_call_count": 56
+    "input_tokens": 176,
+    "cache_creation_tokens": 406463,
+    "cache_read_tokens": 11243330,
+    "output_tokens": 11736,
+    "api_call_count": 131
   }
 }

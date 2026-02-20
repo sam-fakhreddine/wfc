@@ -1,0 +1,33 @@
+{
+  "cli_version": "0.4.5",
+  "checkpoint_id": "46f6ca11d111",
+  "session_id": "cd16448f-51eb-48b4-81ad-913778ca7baf",
+  "strategy": "manual-commit",
+  "created_at": "2026-02-20T03:53:41.418885Z",
+  "branch": "claude/trim-claude-md-and-add-skills-ref",
+  "checkpoints_count": 4,
+  "files_touched": [
+    "CLAUDE.md",
+    "wfc/references/SKILLS.md"
+  ],
+  "agent": "Claude Code",
+  "turn_id": "ef7ab7ffc1f3",
+  "transcript_identifier_at_start": "caf97121-87f0-4e9d-8bc6-5772768b6040",
+  "token_usage": {
+    "input_tokens": 105,
+    "cache_creation_tokens": 228728,
+    "cache_read_tokens": 6642207,
+    "output_tokens": 4267,
+    "api_call_count": 75
+  },
+  "initial_attribution": {
+    "calculated_at": "2026-02-20T03:53:41.01717Z",
+    "agent_lines": 32,
+    "human_added": 0,
+    "human_modified": 5,
+    "human_removed": 127,
+    "total_committed": 37,
+    "agent_percentage": 86.48648648648648
+  },
+  "transcript_path": ".claude/projects/-Users-samfakhreddine-repos-wfc/cd16448f-51eb-48b4-81ad-913778ca7baf.jsonl"
+}
