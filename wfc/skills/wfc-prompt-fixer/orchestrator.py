@@ -116,6 +116,7 @@ class PromptFixerOrchestrator:
         prompt_path: Path,
         wfc_mode: Optional[bool] = None,
         auto_pr: bool = False,
+        keep_workspace: bool = False,
     ) -> FixResult:
         """
         Fix a single prompt.
@@ -124,6 +125,7 @@ class PromptFixerOrchestrator:
             prompt_path: Path to the prompt file
             wfc_mode: Enable WFC-specific checks (auto-detect if None)
             auto_pr: Auto-create PR with fixes
+            keep_workspace: Keep workspace on failure for debugging (PROP-002)
 
         Returns:
             FixResult with grade, changes, report path
@@ -134,54 +136,65 @@ class PromptFixerOrchestrator:
         workspace = self.workspace_manager.create(prompt_path, wfc_mode=wfc_mode)
         print(f"📁 Workspace: {workspace}")
 
-        print("\n🔍 Phase 1: Analyzing prompt...")
-        analysis = self._spawn_analyzer(workspace, wfc_mode)
-        grade_before = analysis["grade"]
-        print(f"   Grade: {grade_before}")
+        cleanup_on_failure = not keep_workspace
+        should_cleanup = False
 
-        if grade_before == "A":
-            print("   ✅ No changes needed")
-            report_path = self._skip_to_reporter(workspace, no_changes=True)
+        try:
+            print("\n🔍 Phase 1: Analyzing prompt...")
+            analysis = self._spawn_analyzer(workspace, wfc_mode)
+            grade_before = analysis["grade"]
+            print(f"   Grade: {grade_before}")
+
+            if grade_before == "A":
+                print("   ✅ No changes needed")
+                report_path = self._skip_to_reporter(workspace, no_changes=True)
+                return FixResult(
+                    prompt_name=prompt_path.stem,
+                    prompt_path=prompt_path,
+                    workspace=workspace,
+                    grade_before=grade_before,
+                    grade_after=grade_before,
+                    report_path=report_path,
+                    changes_made=False,
+                    wfc_mode=wfc_mode,
+                )
+
+            print(f"\n🔧 Phase 2: Fixing issues (grade {grade_before})...")
+            fix_result = self._spawn_fixer_with_retry(workspace, max_retries=2)
+            grade_after = fix_result.get("grade_after", grade_before)
+            print(f"   Grade after: {grade_after}")
+
+            print("\n📊 Phase 3: Generating report...")
+            report_path = self._spawn_reporter(workspace)
+            print(f"   Report: {report_path}")
+
+            if auto_pr:
+                print("\n🚀 Creating PR...")
+                self._create_pr(prompt_path, workspace, grade_before, grade_after)
+
             return FixResult(
                 prompt_name=prompt_path.stem,
                 prompt_path=prompt_path,
                 workspace=workspace,
                 grade_before=grade_before,
-                grade_after=grade_before,
+                grade_after=grade_after,
                 report_path=report_path,
-                changes_made=False,
+                changes_made=True,
                 wfc_mode=wfc_mode,
             )
-
-        print(f"\n🔧 Phase 2: Fixing issues (grade {grade_before})...")
-        fix_result = self._spawn_fixer_with_retry(workspace, max_retries=2)
-        grade_after = fix_result.get("grade_after", grade_before)
-        print(f"   Grade after: {grade_after}")
-
-        print("\n📊 Phase 3: Generating report...")
-        report_path = self._spawn_reporter(workspace)
-        print(f"   Report: {report_path}")
-
-        if auto_pr:
-            print("\n🚀 Creating PR...")
-            self._create_pr(prompt_path, workspace, grade_before, grade_after)
-
-        return FixResult(
-            prompt_name=prompt_path.stem,
-            prompt_path=prompt_path,
-            workspace=workspace,
-            grade_before=grade_before,
-            grade_after=grade_after,
-            report_path=report_path,
-            changes_made=True,
-            wfc_mode=wfc_mode,
-        )
+        except Exception:
+            should_cleanup = cleanup_on_failure
+            raise
+        finally:
+            if should_cleanup:
+                self.workspace_manager.cleanup(workspace)
 
     def fix_batch(
         self,
         pattern: str,
         wfc_mode: bool = True,
         auto_pr: bool = False,
+        keep_workspace: bool = False,
     ) -> List[FixResult]:
         """
         Fix multiple prompts in batch (4 parallel).
@@ -190,6 +203,7 @@ class PromptFixerOrchestrator:
             pattern: Glob pattern for prompt files
             wfc_mode: Enable WFC-specific checks
             auto_pr: Auto-create PR with fixes
+            keep_workspace: Keep workspaces on failure for debugging (PROP-002)
 
         Returns:
             List of FixResults
@@ -229,7 +243,12 @@ class PromptFixerOrchestrator:
             # TODO: Spawn parallel agents for this batch
             for prompt_path in batch:
                 try:
-                    result = self.fix_prompt(prompt_path, wfc_mode=wfc_mode, auto_pr=False)
+                    result = self.fix_prompt(
+                        prompt_path,
+                        wfc_mode=wfc_mode,
+                        auto_pr=False,
+                        keep_workspace=keep_workspace,
+                    )
                     results.append(result)
                 except Exception as e:
                     print(f"⚠️  Failed to fix {prompt_path}: {e}")

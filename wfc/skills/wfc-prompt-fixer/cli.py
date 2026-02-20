@@ -13,17 +13,19 @@ def main() -> int:
     if not args or args[0] in ["-h", "--help"]:
         print(__doc__)
         print("\nUsage:")
-        print("  /wfc-prompt-fixer <path>              # Fix single prompt")
-        print("  /wfc-prompt-fixer --batch <pattern>   # Fix multiple prompts")
-        print("  /wfc-prompt-fixer --wfc <path>        # Force WFC mode")
-        print("  /wfc-prompt-fixer --no-wfc <path>     # Disable WFC checks")
-        print("  /wfc-prompt-fixer --auto-pr <path>    # Auto-create PR")
+        print("  /wfc-prompt-fixer <path>                  # Fix single prompt")
+        print("  /wfc-prompt-fixer --batch <pattern>       # Fix multiple prompts")
+        print("  /wfc-prompt-fixer --wfc <path>            # Force WFC mode")
+        print("  /wfc-prompt-fixer --no-wfc <path>         # Disable WFC checks")
+        print("  /wfc-prompt-fixer --auto-pr <path>        # Auto-create PR")
+        print("  /wfc-prompt-fixer --keep-workspace <path> # Keep workspace on failure (debug)")
         return 0
 
     batch_mode = "--batch" in args
     wfc_mode = "--wfc" in args
     no_wfc = "--no-wfc" in args
     auto_pr = "--auto-pr" in args
+    keep_workspace = "--keep-workspace" in args
 
     path_args = [arg for arg in args if not arg.startswith("--")]
 
@@ -65,6 +67,7 @@ def main() -> int:
                 pattern=str(prompt_path),
                 wfc_mode=wfc_mode if wfc_mode else (not no_wfc),
                 auto_pr=auto_pr,
+                keep_workspace=keep_workspace,
             )
             print(f"\n✅ Fixed {len(results)} prompts")
             for result in results:
@@ -75,6 +78,7 @@ def main() -> int:
                 prompt_path=prompt_path,
                 wfc_mode=wfc_mode if wfc_mode else (not no_wfc),
                 auto_pr=auto_pr,
+                keep_workspace=keep_workspace,
             )
             print(f"\n✅ Grade: {result.grade_before} → {result.grade_after}")
             print(f"📄 Report: {result.report_path}")
