@@ -13,35 +13,51 @@ If settings_path is omitted, defaults to ~/.claude/settings.json.
 from __future__ import annotations
 
 import json
+import shutil
 import sys
 from pathlib import Path
 
-WFC_HOOKS = {
-    "PostToolUse": [
-        {
-            "matcher": "Write|Edit",
-            "hooks": [
-                {
-                    "type": "command",
-                    "command": "python ~/.wfc/scripts/hooks/file_checker.py",
-                },
-                {
-                    "type": "command",
-                    "command": "python ~/.wfc/scripts/hooks/tdd_enforcer.py",
-                },
-            ],
-        },
-        {
-            "matcher": "Read|Write|Edit|Bash|Task|Skill|Grep|Glob",
-            "hooks": [
-                {
-                    "type": "command",
-                    "command": "python ~/.wfc/scripts/hooks/context_monitor.py",
-                },
-            ],
-        },
-    ],
-}
+
+def _detect_python() -> str:
+    """Resolve the python interpreter available on this system.
+
+    Prefers python3, falls back to python. Written into settings at install
+    time so hook commands always use the interpreter that was actually found,
+    rather than relying on PATH resolution at hook runtime.
+    """
+    return shutil.which("python3") or shutil.which("python") or "python3"
+
+
+def _build_wfc_hooks() -> dict:
+    """Build the WFC hooks config using the detected python interpreter."""
+    python = _detect_python()
+    return {
+        "PostToolUse": [
+            {
+                "matcher": "Write|Edit",
+                "hooks": [
+                    {
+                        "type": "command",
+                        "command": f"{python} ~/.wfc/scripts/hooks/file_checker.py",
+                    },
+                    {
+                        "type": "command",
+                        "command": f"{python} ~/.wfc/scripts/hooks/tdd_enforcer.py",
+                    },
+                ],
+            },
+            {
+                "matcher": "Read|Write|Edit|Bash|Skill|Grep|Glob",
+                "hooks": [
+                    {
+                        "type": "command",
+                        "command": f"{python} ~/.wfc/scripts/hooks/context_monitor.py",
+                    },
+                ],
+            },
+        ],
+    }
+
 
 WFC_MARKER = "~/.wfc/scripts/hooks/"
 
@@ -74,7 +90,7 @@ def upsert_hooks(settings_path: Path) -> bool:
     hooks = data["hooks"]
     modified = False
 
-    for hook_type, wfc_entries in WFC_HOOKS.items():
+    for hook_type, wfc_entries in _build_wfc_hooks().items():
         if hook_type not in hooks:
             hooks[hook_type] = []
 
