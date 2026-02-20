@@ -9,8 +9,18 @@
     ".clouddevelopment/plans/PHASE-0-DEVIATION-MAP.md",
     ".clouddevelopment/plans/VALIDATE-TIER1.md",
     ".coverage",
+    ".development/README.md",
     ".development/REVIEW-PR-46.md",
+    ".github/workflows/publish.yml",
     "CLAUDE.md",
+    "README.md",
+    "RETRO-REPORT.md",
+    "docs/OWASP_LLM_TOP10_MITIGATIONS.md",
+    "docs/README.md",
+    "docs/architecture/PLANNING.md",
+    "docs/quality/PERSONAS.md",
+    "docs/reference/REGISTRY.json",
+    "docs/workflow/UNIVERSAL_INSTALL.md",
     "experiments/task_tool_spike_results.md",
     "experiments/test_task_tool_spike.py",
     "install-universal.sh",
@@ -30,6 +40,7 @@
     "tests/test_schemas.py",
     "tests/test_workspace_error_handling.py",
     "wfc/references/SKILLS.md",
+    "wfc/scripts/hooks/__init__.py",
     "wfc/scripts/hooks/register_hooks.py",
     "wfc/skills/wfc-prompt-fixer/SKILL.md",
     "wfc/skills/wfc-prompt-fixer/__init__.py",
@@ -55,13 +66,20 @@
       "context": "/70/33fd4cbc2a/1/context.md",
       "content_hash": "/70/33fd4cbc2a/1/content_hash.txt",
       "prompt": "/70/33fd4cbc2a/1/prompt.txt"
+    },
+    {
+      "metadata": "/70/33fd4cbc2a/2/metadata.json",
+      "transcript": "/70/33fd4cbc2a/2/full.jsonl",
+      "context": "/70/33fd4cbc2a/2/context.md",
+      "content_hash": "/70/33fd4cbc2a/2/content_hash.txt",
+      "prompt": "/70/33fd4cbc2a/2/prompt.txt"
     }
   ],
   "token_usage": {
-    "input_tokens": 1678,
-    "cache_creation_tokens": 2304678,
-    "cache_read_tokens": 45577410,
-    "output_tokens": 10442,
-    "api_call_count": 467
+    "input_tokens": 16474,
+    "cache_creation_tokens": 3130629,
+    "cache_read_tokens": 66028643,
+    "output_tokens": 22503,
+    "api_call_count": 656
   }
 }
