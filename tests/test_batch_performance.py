@@ -10,6 +10,8 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
+from wfc.skills import wfc_prompt_fixer  # noqa: F401
+
 from wfc_prompt_fixer.orchestrator import PromptFixerOrchestrator
 from wfc_prompt_fixer.workspace import WorkspaceManager
 
