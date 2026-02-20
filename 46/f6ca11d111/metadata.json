@@ -1,0 +1,27 @@
+{
+  "cli_version": "0.4.5",
+  "checkpoint_id": "46f6ca11d111",
+  "strategy": "manual-commit",
+  "branch": "claude/trim-claude-md-and-add-skills-ref",
+  "checkpoints_count": 1,
+  "files_touched": [
+    "CLAUDE.md",
+    "wfc/references/SKILLS.md"
+  ],
+  "sessions": [
+    {
+      "metadata": "/46/f6ca11d111/0/metadata.json",
+      "transcript": "/46/f6ca11d111/0/full.jsonl",
+      "context": "/46/f6ca11d111/0/context.md",
+      "content_hash": "/46/f6ca11d111/0/content_hash.txt",
+      "prompt": "/46/f6ca11d111/0/prompt.txt"
+    }
+  ],
+  "token_usage": {
+    "input_tokens": 71,
+    "cache_creation_tokens": 177735,
+    "cache_read_tokens": 4601123,
+    "output_tokens": 7469,
+    "api_call_count": 56
+  }
+}
