@@ -131,7 +131,7 @@ index 1234567..abcdefg 100644
 --- a/auth.py
 +++ b/auth.py
 @@ -10,3 +10,3 @@ def authenticate(user, password):
--    if password == "admin":
+-    if password == "admin":  # pragma: allowlist secret
 +    if bcrypt.checkpw(password, user.hash):
          return True
 """
@@ -200,3 +200,79 @@ index 1234567..abcdefg 100644
     assert hunk.change_type == HunkType.DELETION
     assert hunk.added_lines == 0
     assert hunk.removed_lines == 2
+
+
+def test_line_end_pure_deletion():
+    """Test line_end calculation for pure deletion hunks."""
+    diff = """diff --git a/test.py b/test.py
+--- a/test.py
++++ b/test.py
+@@ -10,5 +10,3 @@ def foo():
+     line1
+     line2
+-    line3
+-    line4
+-    line5
+     line6
+"""
+
+    files = parse_diff(diff)
+    assert len(files) == 1
+    hunk = files[0].hunks[0]
+
+    assert hunk.line_start == 10
+    assert hunk.removed_lines == 3
+    assert hunk.added_lines == 0
+    assert hunk.line_end == 12, f"Expected line_end=12 for pure deletion, got {hunk.line_end}"
+
+
+def test_line_end_unequal_modification():
+    """Test line_end calculation when added_lines != removed_lines."""
+    diff = """diff --git a/test.py b/test.py
+--- a/test.py
++++ b/test.py
+@@ -20,2 +20,5 @@ def bar():
+-    old_line1
+-    old_line2
++    new_line1
++    new_line2
++    new_line3
++    new_line4
++    new_line5
+"""
+
+    files = parse_diff(diff)
+    assert len(files) == 1
+    hunk = files[0].hunks[0]
+
+    assert hunk.line_start == 20
+    assert hunk.removed_lines == 2
+    assert hunk.added_lines == 5
+    assert (
+        hunk.line_end == 24
+    ), f"Expected line_end=24 for unequal modification, got {hunk.line_end}"
+
+
+def test_line_end_old_bug_demonstration():
+    """Demonstrate the old bug where line_end only considered added_lines."""
+    diff = """diff --git a/test.py b/test.py
+--- a/test.py
++++ b/test.py
+@@ -30,5 +30,2 @@ def baz():
+-    remove1
+-    remove2
+-    remove3
+-    remove4
+-    remove5
++    add1
++    add2
+"""
+
+    files = parse_diff(diff)
+    assert len(files) == 1
+    hunk = files[0].hunks[0]
+
+    assert hunk.line_start == 30
+    assert hunk.removed_lines == 5
+    assert hunk.added_lines == 2
+    assert hunk.line_end == 34, f"Old bug would give 31, correct value is 34, got {hunk.line_end}"

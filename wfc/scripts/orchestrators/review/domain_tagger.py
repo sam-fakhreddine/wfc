@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import re
+
 from .diff_manifest import ChangeHunk
 
 DOMAIN_KEYWORDS = {
@@ -139,6 +141,11 @@ DOMAIN_KEYWORDS = {
     ],
 }
 
+_DOMAIN_PATTERNS = {
+    domain: re.compile("|".join(re.escape(kw) for kw in keywords), re.IGNORECASE)
+    for domain, keywords in DOMAIN_KEYWORDS.items()
+}
+
 
 def tag_file_domains(file_path: str, hunks: list[ChangeHunk]) -> list[str]:
     """
@@ -177,11 +184,9 @@ def tag_file_domains(file_path: str, hunks: list[ChangeHunk]) -> list[str]:
 
     content_lower = all_content.lower()
 
-    for domain, keywords in DOMAIN_KEYWORDS.items():
-        for keyword in keywords:
-            if keyword in content_lower:
-                domains.add(domain)
-                break
+    for domain, pattern in _DOMAIN_PATTERNS.items():
+        if pattern.search(content_lower):
+            domains.add(domain)
 
     if "import " in all_content or "from " in all_content:
         domains.add("reliability")
