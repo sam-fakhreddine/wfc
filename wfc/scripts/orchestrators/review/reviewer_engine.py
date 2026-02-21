@@ -77,6 +77,7 @@ class ReviewerEngine:
         properties: list[dict] | None = None,
         model_router: Any | None = None,
         single_model: str | None = None,
+        use_diff_manifest: bool = False,
     ) -> list[dict]:
         """
         Phase 1: Prepare task specifications for Claude Code's Task tool.
@@ -110,7 +111,9 @@ class ReviewerEngine:
 
         tasks: list[dict] = []
         for config in configs:
-            prompt = self._build_task_prompt(config, files, diff_content, properties)
+            prompt = self._build_task_prompt(
+                config, files, diff_content, properties, use_diff_manifest
+            )
             token_count = len(prompt) // 4
 
             task_spec = {
@@ -205,11 +208,19 @@ class ReviewerEngine:
         files: list[str],
         diff_content: str,
         properties: list[dict] | None,
+        use_diff_manifest: bool = False,
     ) -> str:
         """
         Build the full prompt for a reviewer task.
 
-        Combines: PROMPT.md content + knowledge context + file list + diff + properties.
+        Combines: PROMPT.md content + knowledge context + file list + diff/manifest + properties.
+
+        Args:
+            config: Reviewer configuration
+            files: List of files to review
+            diff_content: Git diff content
+            properties: Optional properties to verify
+            use_diff_manifest: If True, use structured diff manifest instead of full diff
         """
         _MAX_DIFF_LEN = 50_000
 
@@ -253,11 +264,26 @@ class ReviewerEngine:
             parts.append("No files specified.")
 
         if diff_content:
-            sanitized_diff = _sanitize_embedded_content(diff_content)
-            parts.append("\n# Diff\n")
-            parts.append("```diff")
-            parts.append(sanitized_diff)
-            parts.append("```")
+            if use_diff_manifest:
+                try:
+                    from .diff_manifest import build_diff_manifest, format_manifest_for_reviewer
+
+                    manifest = build_diff_manifest(diff_content, config.id, files)
+                    manifest_text = format_manifest_for_reviewer(manifest, config.id)
+                    parts.append("\n" + manifest_text)
+                except Exception as e:
+                    logger.warning(f"Manifest builder failed, falling back to full diff: {e}")
+                    sanitized_diff = _sanitize_embedded_content(diff_content)
+                    parts.append("\n# Diff\n")
+                    parts.append("```diff")
+                    parts.append(sanitized_diff)
+                    parts.append("```")
+            else:
+                sanitized_diff = _sanitize_embedded_content(diff_content)
+                parts.append("\n# Diff\n")
+                parts.append("```diff")
+                parts.append(sanitized_diff)
+                parts.append("```")
 
         if properties:
             parts.append("\n# Properties to Verify\n")

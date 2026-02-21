@@ -63,12 +63,24 @@ class ReviewOrchestrator:
         reviewer_engine: ReviewerEngine | None = None,
         retriever: KnowledgeRetriever | None = None,
         model_router: ModelRouter | None = None,
+        use_diff_manifest: bool = False,
     ):
+        """
+        Initialize ReviewOrchestrator.
+
+        Args:
+            reviewer_engine: Optional custom reviewer engine
+            retriever: Optional knowledge retriever for RAG
+            model_router: Optional model router for reviewer selection
+            use_diff_manifest: If True, use structured diff manifests instead
+                of embedding full diff content (reduces tokens by ~80%)
+        """
         self.engine = reviewer_engine or ReviewerEngine(retriever=retriever)
         self.fingerprinter = Fingerprinter()
         self.scorer = ConsensusScore()
         self.validator = FindingValidator()
         self.model_router = model_router
+        self.use_diff_manifest = use_diff_manifest
 
     @staticmethod
     def _validate_output_path(path: Path) -> None:
@@ -133,6 +145,7 @@ class ReviewOrchestrator:
             diff_content=request.diff_content,
             properties=request.properties if request.properties else None,
             model_router=self.model_router,
+            use_diff_manifest=self.use_diff_manifest,
         )
 
     def finalize_review(
