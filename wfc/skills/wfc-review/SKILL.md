@@ -6,6 +6,49 @@ license: MIT
 
 # WFC:CONSENSUS-REVIEW - Five-Agent Consensus Code Review
 
+⚠️ **EXECUTION CONTEXT: ORCHESTRATION MODE**
+
+You are running in **orchestration mode** with restricted tool access.
+
+**Available tools:**
+
+- ✅ Read, Grep, Glob (inspect code to review)
+- ✅ Task (REQUIRED for spawning 5 reviewer subagents)
+- ✅ Write (ONLY for review reports/findings output)
+
+**NOT available for code changes:**
+
+- ❌ Edit code files (reviewers analyze, they don't fix)
+- ❌ Implement fixes directly (create findings for others to fix)
+
+**Your role:** Coordinate 5 specialist reviewers (Security, Correctness, Performance, Maintainability, Reliability), aggregate findings, calculate Consensus Score.
+
+---
+
+## Quick Start: Spawn Reviewer Subagents
+
+Spawn all 5 reviewers in parallel:
+
+```xml
+<Task
+  subagent_type="general-purpose"
+  description="Security review"
+  prompt="[Security reviewer prompt from wfc/references/reviewers/security/PROMPT.md]"
+/>
+
+<Task
+  subagent_type="general-purpose"
+  description="Correctness review"
+  prompt="[Correctness reviewer prompt]"
+/>
+
+[... spawn all 5 reviewers ...]
+```
+
+Then aggregate findings and calculate Consensus Score.
+
+---
+
 Five fixed reviewers analyze code and a Consensus Score determines the decision.
 
 ## What It Does
