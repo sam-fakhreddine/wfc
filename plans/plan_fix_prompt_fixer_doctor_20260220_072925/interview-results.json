@@ -1,0 +1,62 @@
+{
+  "goal": "Complete all TODO implementations and fix critical reliability/correctness issues identified in PR #46 consensus review",
+  "context": "PR #46 introduced wfc-prompt-fixer and wfc-doctor skills with good architecture but incomplete implementation (10+ TODOs), missing error handling, no cleanup on failures, and inadequate test coverage. Review consensus score CS=7.8 (Important tier) blocks merge. User confirmed 'fix everything we got time' - full scope implementation.",
+  "users": "WFC developers implementing new skills, CI/CD pipeline validating code quality, end users running wfc-prompt-fixer and wfc-doctor",
+  "core_features": [
+    "Agent spawning via Task tool (Analyzer, Fixer, Reporter)",
+    "Parallel batch processing (4 prompts concurrently)",
+    "Comprehensive error handling for file operations",
+    "Try/finally cleanup on exception paths",
+    "Doctor check module implementations (5 checks)",
+    "Input validation (CLI args, glob patterns)",
+    "Functional test coverage (≥85%)"
+  ],
+  "nice_to_have_features": [
+    "PR creation automation (auto-branch, commit, push, gh pr create)",
+    "Exponential backoff for retry logic",
+    "Subprocess output streaming",
+    "Disk space checks before workspace creation",
+    "Copy verification after file operations"
+  ],
+  "technical_constraints": [
+    "Must use Task tool for agent spawning (not direct subprocess)",
+    "Must preserve orchestrator pattern (coordinate, never implement)",
+    "Must maintain compatibility with existing WFC architecture",
+    "Must pass all existing tests (6 structural tests)",
+    "Cannot change public API signatures"
+  ],
+  "performance_requirements": [
+    "Batch mode must process 4 prompts in ~1.5x time (not 4x sequential)",
+    "Workspace cleanup must complete within 60 seconds",
+    "Agent spawning must timeout within configured limits (300s for Analyzer)",
+    "Test suite must run in < 2 minutes for CI"
+  ],
+  "security_requirements": [
+    "Glob patterns restricted to safe directories (wfc/, references/)",
+    "No path traversal via .. or absolute paths",
+    "File operations must validate permissions before execution",
+    "Subprocess must not leave zombie processes",
+    "CLI must reject malformed inputs before execution"
+  ],
+  "technology_stack": {
+    "language": "Python 3.12+",
+    "framework": "WFC (orchestrator pattern)",
+    "testing": "pytest, pytest-cov, pytest-mock, hypothesis",
+    "tools": "uv for package management, black/ruff for formatting/linting",
+    "agent_framework": "Task tool from Claude Code CLI"
+  },
+  "existing_codebase": true,
+  "testing_approach": "TDD-style with 85% coverage target: unit tests (70%), integration tests (25%), e2e tests (5%)",
+  "coverage_target": 85,
+  "formal_properties": {
+    "safety": 6,
+    "liveness": 3,
+    "invariant": 6,
+    "performance": 2
+  },
+  "priority_order": "Foundation (error handling) → Core features (agent spawning) → Advanced features (parallelism, checks) → Polish (tests, docs)",
+  "estimated_effort_hours": 75,
+  "timeline": "2 weeks for 1 developer",
+  "scope": "Option A - Complete all TODO implementations + fix all review findings",
+  "validation_required": true
+}

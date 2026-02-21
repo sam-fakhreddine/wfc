@@ -1,0 +1,12 @@
+{
+  "hash_algorithm": "sha256",
+  "original_hash": "ca9e4b2f19ceea91fe21a335faa354b8fabbb52bb6015475c8cd15dd4e368160",
+  "validate_score": 6.1,
+  "revision_count": 0,
+  "review_score": null,
+  "final_hash": "ca9e4b2f19ceea91fe21a335faa354b8fabbb52bb6015475c8cd15dd4e368160",
+  "timestamp": "2026-02-21T02:24:59Z",
+  "validated": false,
+  "skipped": false,
+  "notes": "Plan scored 6.1/10 (RECONSIDER verdict). Did not proceed to review gate per wfc-plan validation pipeline. Plan requires need validation before implementation."
+}
