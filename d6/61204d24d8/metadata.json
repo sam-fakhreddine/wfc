@@ -5,15 +5,51 @@
   "branch": "claude/add-prompt-fixer-and-doctor",
   "checkpoints_count": 0,
   "files_touched": [
+    ".ANALYSIS_QUICK_START",
+    "ANALYSIS_SUMMARY.md",
+    "DESIGN_DECISION_MATRIX.md",
+    "DIFF_REPLACEMENT_README.md",
+    "DIFF_REPLACEMENT_STRATEGY.md",
+    "KNOWLEDGE_OPTIMIZATION_EXECUTIVE_SUMMARY.md",
+    "KNOWLEDGE_OPTIMIZATION_INDEX.md",
+    "KNOWLEDGE_OPTIMIZATION_STRATEGY.md",
+    "KNOWLEDGE_OPTIMIZATION_TECHNICAL.md",
+    "KNOWLEDGE_OPTIMIZATION_VISUAL_SUMMARY.txt",
+    "KNOWLEDGE_SUMMARIES_READY.md",
+    "VALIDATE-TOKEN-OPTIMIZATION.md",
+    "VALIDATE.md",
     "plans/HISTORY.json",
     "plans/HISTORY.md",
+    "plans/ORCHESTRATOR_DELEGATION_ROOT_CAUSE.md",
+    "plans/ORCHESTRATOR_DELEGATION_VALIDATION.md",
+    "plans/ORCHESTRATOR_PROMPT_FIX.md",
+    "plans/plan_diff_manifest_integration_20260220/PROPERTIES.md",
+    "plans/plan_diff_manifest_integration_20260220/TASKS.md",
+    "plans/plan_diff_manifest_integration_20260220/TEST-PLAN.md",
     "plans/plan_fix_prompt_fixer_doctor_20260220_072925/PROPERTIES.md",
     "plans/plan_fix_prompt_fixer_doctor_20260220_072925/TASKS.md",
     "plans/plan_fix_prompt_fixer_doctor_20260220_072925/TEST-PLAN.md",
     "plans/plan_fix_prompt_fixer_doctor_20260220_072925/VALIDATE.md",
     "plans/plan_fix_prompt_fixer_doctor_20260220_072925/interview-results.json",
     "plans/plan_fix_prompt_fixer_doctor_20260220_072925/plan-audit_20260220_073200.json",
-    "plans/plan_fix_prompt_fixer_doctor_20260220_072925/revision-log.md"
+    "plans/plan_fix_prompt_fixer_doctor_20260220_072925/revision-log.md",
+    "plans/plan_validate_fixes_20260220/PROPERTIES.md",
+    "plans/plan_validate_fixes_20260220/SUMMARY.md",
+    "plans/plan_validate_fixes_20260220/TASKS.md",
+    "plans/plan_validate_fixes_20260220/TEST-PLAN.md",
+    "plans/plan_validate_fixes_20260220/VALIDATE.md",
+    "plans/plan_validate_fixes_20260220/plan-audit_20260221_022500.json",
+    "plans/plan_validate_fixes_20260220/revision-log.md",
+    "test_token_reduction.py",
+    "tests/orchestrators/review/test_diff_manifest.py",
+    "tests/orchestrators/review/test_diff_parser.py",
+    "tests/orchestrators/review/test_domain_tagger.py",
+    "tests/orchestrators/review/test_orchestrator.py",
+    "wfc/scripts/orchestrators/review/diff_manifest.py",
+    "wfc/scripts/orchestrators/review/diff_parser.py",
+    "wfc/scripts/orchestrators/review/domain_tagger.py",
+    "wfc/scripts/orchestrators/review/orchestrator.py",
+    "wfc/scripts/orchestrators/review/reviewer_engine.py"
   ],
   "sessions": [
     {
@@ -22,13 +58,20 @@
       "context": "/d6/61204d24d8/0/context.md",
       "content_hash": "/d6/61204d24d8/0/content_hash.txt",
       "prompt": "/d6/61204d24d8/0/prompt.txt"
+    },
+    {
+      "metadata": "/d6/61204d24d8/1/metadata.json",
+      "transcript": "/d6/61204d24d8/1/full.jsonl",
+      "context": "/d6/61204d24d8/1/context.md",
+      "content_hash": "/d6/61204d24d8/1/content_hash.txt",
+      "prompt": "/d6/61204d24d8/1/prompt.txt"
     }
   ],
   "token_usage": {
-    "input_tokens": 1843,
-    "cache_creation_tokens": 2397700,
-    "cache_read_tokens": 45050870,
-    "output_tokens": 3111,
-    "api_call_count": 455
+    "input_tokens": 1914,
+    "cache_creation_tokens": 2575435,
+    "cache_read_tokens": 49651993,
+    "output_tokens": 10580,
+    "api_call_count": 511
   }
 }
