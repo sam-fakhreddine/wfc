@@ -1,0 +1,2115 @@
+Base directory for this skill: /Users/samfakhreddine/.claude/skills/wfc-validate
+
+# WFC:VALIDATE - Thoughtful Advisor
+
+The experienced staff engineer who asks "is this the right approach?" before we commit.
+
+## What It Does
+
+Analyzes any WFC artifact (plan, architecture, idea) across 7 dimensions:
+
+1. **Do We Even Need This?** - Real problem vs hypothetical
+2. **Is This the Simplest Approach?** - Avoid over-engineering
+3. **Is the Scope Right?** - Not too much, not too little
+4. **What Are We Trading Off?** - Opportunity cost, maintenance burden
+5. **Have We Seen This Fail Before?** - Anti-patterns, known failure modes
+6. **What's the Blast Radius?** - Risk assessment, rollback plan
+7. **Is the Timeline Realistic?** - Hidden dependencies, prototype first?
+
+Returns balanced assessment with verdict: PROCEED, PROCEED WITH ADJUSTMENTS, RECONSIDER, or DON'T PROCEED.
+
+## Usage
+
+```bash
+# Analyze current plan
+/wfc-validate
+
+# Analyze a freeform idea
+/wfc-validate "rewrite auth system in Rust"
+
+# Analyze specific artifact
+/wfc-validate --plan
+/wfc-validate --architecture
+/wfc-validate --task TASK-005
+```
+
+## Output: VALIDATE.md
+
+```markdown
+# Validation Analysis
+
+## Subject: Rewrite auth system in Rust
+## Verdict: 🟡 PROCEED WITH ADJUSTMENTS
+## Overall Score: 7.5/10
+
+---
+
+## Executive Summary
+
+Overall, this approach shows 12 clear strengths and 8 areas for consideration.
+
+The strongest aspects are: Blast Radius, Need, Simplicity.
+
+Key considerations: Opportunity cost of other features, Integration risks, Consider using existing library.
+
+With an overall score of 7.5/10, this is a solid approach that can move forward with attention to the identified concerns.
+
+---
+
+## Dimension Analysis
+
+### Do We Even Need This? — Score: 8/10
+
+**Strengths:**
+- Addresses clear user need
+- Backed by data/metrics
+
+**Concerns:**
+- Consider if existing solution could be improved instead
+
+**Recommendation:** Need is justified, but validate assumptions
+
+[... 6 more dimensions ...]
+
+---
+
+## Simpler Alternatives
+
+- Start with a simpler MVP and iterate based on feedback
+- Consider using existing solution (e.g., off-the-shelf library)
+- Phase the implementation - deliver core value first
+
+---
+
+## Final Recommendation
+
+Proceed, but address these key concerns first: Opportunity cost of other features; Integration risks may extend timeline; Consider using existing library
+```
+
+## Tone
+
+**Discerning but constructive. Honest but not harsh.**
+
+Not a naysayer - wants us to succeed with the best approach. Highlights both strengths and concerns. Suggests simpler alternatives when appropriate.
+
+## Verdict Logic
+
+- **🟢 PROCEED**: Overall score >= 8.5/10, no critical concerns
+- **🟡 PROCEED WITH ADJUSTMENTS**: Score 7.0-8.4, address concerns first
+- **🟠 RECONSIDER**: Score 5.0-6.9, explore alternatives
+- **🔴 DON'T PROCEED**: Score < 5.0 or any dimension <= 4/10
+
+## Integration with WFC
+
+### Can Analyze
+- `wfc-plan` outputs (TASKS.md, PROPERTIES.md)
+- `wfc-architecture` outputs (ARCHITECTURE.md)
+- `wfc-security` outputs (THREAT-MODEL.md)
+- Freeform ideas (text input)
+
+### Produces
+- VALIDATE.md report
+- Simpler alternatives
+- Final recommendation
+
+## Philosophy
+
+**ELEGANT**: Simple 7-dimension framework, clear logic
+**MULTI-TIER**: Analysis (logic) separated from presentation
+**PARALLEL**: Can analyze multiple artifacts concurrently
+
+
+ARGUMENTS: # Agentic Skill Remediation System
+
+A multi-agent pipeline for diagnosing and fixing Claude Skills at scale. Skills have structural, behavioral, and operational dimensions that raw prompts don't — this system accounts for all three.
+
+---
+
+## How Skills Differ from Prompts
+
+Skills are not just prompts. A skill is a directory containing:
+
+```
+skill-name/
+├── SKILL.md          (required — frontmatter + instructions)
+├── scripts/          (executable code for deterministic tasks)
+├── references/       (docs loaded into context on demand)
+└── assets/           (templates, fonts, images used in output)
+```
+
+Skills have a **three-level loading system**:
+1. **Metadata** (name + description) — always in context (~100 words). This is the trigger mechanism.
+2. **SKILL.md body** — loaded when the skill triggers (<500 lines ideal).
+3. **Bundled resources** — loaded on demand (scripts execute without loading into context).
+
+A skill fixer must evaluate all three levels plus the interactions between them. A perfectly written SKILL.md with a bad description will never trigger. A great description pointing to broken scripts will fail at execution.
+
+---
+
+## Architecture
+
+```
+                    ┌──────────────────┐
+   Skill Dir ───►   │  INVENTORY       │
+                    │  (Cataloger)     │
+                    └──────┬───────────┘
+                           │
+                    ┌──────▼───────────┐
+                    │  DIAGNOSE        │
+                    │  (Skill Analyst) │
+                    └──────┬───────────┘
+                           │
+                    ┌──────▼───────────┐
+                    │  REWRITE         │
+                    │  (Skill Fixer)   │
+                    └──────┬───────────┘
+                           │
+                    ┌──────▼───────────┐
+                    │  VALIDATE        │
+                    │  (Structural QA) │
+                    └──────┬───────────┘
+                           │
+                    ┌──────▼───────────┐  ← optional, requires execution
+                    │  EVAL            │
+                    │  (Functional QA) │
+                    └──────┬───────────┘
+                           │
+                    ┌──────▼───────────┐
+                    │  REPORT          │
+                    │  (Reporter)      │
+                    └──────────────────┘
+```
+
+Six agents. The first five run sequentially; EVAL is optional but recommended for production use. Each agent receives the original skill directory contents plus cumulative prior outputs.
+
+---
+
+## Agent 1: Cataloger
+
+Inventories the skill's structure and produces a manifest. This is the equivalent of the prompt-fixer's Router but must also inspect the filesystem.
+
+```xml
+<s>
+<role>
+Skill cataloger. You inventory a Claude Skill directory and produce a structured manifest of its contents, structure, and metadata. You do not modify anything.
+</role>
+
+<task>
+Given a skill directory path, produce a complete inventory. This manifest will be consumed by all downstream agents.
+</task>
+
+<process>
+1. Read SKILL.md and extract YAML frontmatter.
+2. Parse the markdown body — count sections, identify code blocks, note references to external files.
+3. List all files in scripts/, references/, and assets/ with sizes.
+4. For each file referenced in SKILL.md, verify it exists on disk.
+5. For each file on disk, check if it's referenced in SKILL.md.
+6. Run the structural validator: `python quick_validate.py <skill-path>`
+</process>
+
+<output_format>
+Return a JSON object:
+{
+  "skill_path": "string",
+  "frontmatter": {
+    "name": "string",
+    "description": "string",
+    "description_length": integer,
+    "has_license": boolean,
+    "has_compatibility": boolean,
+    "has_allowed_tools": boolean,
+    "validator_result": "pass | fail",
+    "validator_message": "string"
+  },
+  "body": {
+    "total_lines": integer,
+    "total_sections": integer,
+    "section_names": ["string"],
+    "code_blocks": integer,
+    "code_languages": ["string"],
+    "has_quick_reference": boolean,
+    "has_examples": boolean,
+    "has_output_format_spec": boolean,
+    "has_decision_tree": boolean,
+    "estimated_tokens": integer
+  },
+  "filesystem": {
+    "scripts": [{"path": "string", "size_bytes": integer, "executable": boolean}],
+    "references": [{"path": "string", "size_bytes": integer, "lines": integer}],
+    "assets": [{"path": "string", "size_bytes": integer, "type": "string"}],
+    "other_files": [{"path": "string", "note": "string"}],
+    "total_size_bytes": integer
+  },
+  "cross_references": {
+    "referenced_but_missing": ["string — files mentioned in SKILL.md but not on disk"],
+    "present_but_unreferenced": ["string — files on disk but never mentioned in SKILL.md"],
+    "orphaned_directories": ["string — empty directories"]
+  },
+  "red_flags": ["string array of immediately obvious issues"]
+}
+</output_format>
+
+<red_flag_triggers>
+- SKILL.md exceeds 500 lines
+- Description is empty, contains [TODO], or exceeds 1024 characters
+- Description contains angle brackets (< or >)
+- Name is not kebab-case
+- Scripts referenced in SKILL.md don't exist
+- Scripts exist but aren't executable
+- References exceed 300 lines without a table of contents
+- Assets directory contains files over 10MB
+- SKILL.md contains README-style content (installation guides, changelogs, contributor docs)
+- Frontmatter has unexpected keys
+- Body contains no code blocks for a technical skill
+- No examples section for a skill that transforms input to output
+</red_flag_triggers>
+</s>
+```
+
+---
+
+## Agent 2: Skill Analyst
+
+Deep analysis against a rubric purpose-built for skills. Significantly different from the prompt-fixer Diagnostician because skills have structural, triggering, and operational concerns that prompts don't.
+
+```xml
+<s>
+<role>
+Skill diagnostician. You analyze Claude Skills against a rubric of known failure modes across three dimensions: triggering, instruction quality, and operational integrity. You produce a structured diagnostic report. You do not rewrite skills.
+</role>
+
+<input_context>
+You will receive:
+1. The full SKILL.md content (in <skill_md> tags)
+2. The Cataloger's manifest (in <manifest> tags)
+3. Contents of referenced scripts and reference files if under 200 lines each (in <bundled_files> tags)
+</input_context>
+
+<diagnostic_rubric>
+Score each category 0–3:
+  0 = not applicable
+  1 = significant issues
+  2 = minor issues
+  3 = well-implemented
+
+=== DIMENSION 1: TRIGGERING (weight: critical) ===
+
+The description in frontmatter is the ONLY thing Claude sees when deciding whether to load a skill. If the description fails, the entire skill fails regardless of body quality.
+
+TRIGGER_COVERAGE:
+  Does the description cover all plausible user phrasings that should activate this skill?
+  - Lists specific file types, keywords, and task verbs
+  - Includes synonyms and colloquial phrasing ("Word doc" not just ".docx")
+  - Explicitly states negative triggers ("Do NOT use for PDFs")
+  Bad: "Helps with documents"
+  Good: "Use this skill whenever the user wants to create, read, edit, or manipulate Word documents (.docx files). Triggers include: any mention of 'Word doc', 'word document', '.docx', or requests to produce professional documents. Do NOT use for PDFs, spreadsheets, or Google Docs."
+
+TRIGGER_ASSERTIVENESS:
+  Claude undertriggers skills by default. Is the description assertive enough?
+  - Should lean toward "pushy" — explicitly tell Claude to use the skill even when the user doesn't name it
+  - Should cover adjacent contexts ("even if they don't explicitly ask for a dashboard")
+  Bad: "How to build dashboards"
+  Good: "How to build dashboards. Use this skill whenever the user mentions dashboards, data visualization, internal metrics, or wants to display any kind of data, even if they don't explicitly ask for a 'dashboard.'"
+
+TRIGGER_SPECIFICITY:
+  Is the description specific enough that Claude won't trigger it for unrelated tasks?
+  - Clear scope boundaries
+  - Explicit negative triggers where ambiguity exists
+  Bad: "Use for any writing task" (too broad — will trigger for emails, code comments, etc.)
+  Good: "Use for formal business documents: reports, memos, letters, proposals. Do NOT use for emails, chat messages, or creative writing."
+
+TRIGGER_FORMAT:
+  Does the description follow structural requirements?
+  - Under 1024 characters
+  - No angle brackets
+  - No [TODO] placeholders
+  - Is a string, not a list or object
+
+=== DIMENSION 2: INSTRUCTION QUALITY (weight: high) ===
+
+How well the SKILL.md body tells Claude what to do.
+
+PROGRESSIVE_DISCLOSURE:
+  Does the skill use the three-level loading system effectively?
+  - SKILL.md body contains operational instructions, not reference documentation
+  - Large reference material is in references/ with clear pointers from SKILL.md
+  - Scripts handle deterministic work rather than relying on Claude to follow complex procedures
+  Bad: 800-line SKILL.md that includes full API documentation inline
+  Good: SKILL.md with workflow + pointers like "For full API reference, read references/api.md"
+
+STRUCTURE_PATTERN:
+  Does the body follow an appropriate structural pattern?
+  - Workflow-based (sequential processes): decision tree → steps
+  - Task-based (tool collections): quick reference → task categories
+  - Reference/guidelines (standards): guidelines → specifications
+  - Capabilities-based (integrated systems): core capabilities → features
+  - Pattern matches the skill's purpose
+  Bad: A workflow skill organized as a flat reference document
+  Good: A workflow skill with a decision tree at the top and step-by-step procedures below
+
+ACTIONABILITY:
+  Are instructions concrete enough that Claude can execute them without guessing?
+  - Uses imperative form ("Run this command", not "You might want to run")
+  - Includes exact commands, code snippets, or file paths
+  - Specifies output format when the skill produces files
+  - Handles edge cases explicitly rather than relying on Claude's judgment
+  Bad: "Process the document appropriately"
+  Good: "Extract text with pandoc: `pandoc input.docx -o output.md`. If the file contains tracked changes, add `--track-changes=all`."
+
+EXAMPLE_QUALITY:
+  Are examples present when needed, and do they demonstrate the right patterns?
+  - Input/output examples for transformation skills
+  - Command examples for tooling skills
+  - No examples containing patterns you don't want Claude to replicate
+  - Examples are minimal and representative
+  Bad: Five similar examples that all show the happy path
+  Good: Two examples — one happy path, one edge case — with clear input/output pairs
+
+EXPLANATION_OVER_MANDATE:
+  Does the skill explain WHY rather than just commanding?
+  - Instructions explain the reasoning behind constraints
+  - Uses theory of mind rather than rigid MUST/NEVER directives
+  - Yellow flag: frequent ALWAYS/NEVER in all caps without accompanying rationale
+  Bad: "ALWAYS use docx-js. NEVER use python-docx."
+  Good: "Use docx-js for creation because it produces cleaner XML than python-docx and handles complex formatting (tables of contents, headers) more reliably."
+
+SCOPE_BOUNDARIES:
+  Does the skill clearly define what it does NOT do?
+  - Explicit negative scope prevents Claude from overextending
+  - Adjacent skills are referenced where appropriate ("For PDF operations, use the pdf skill instead")
+  Bad: No mention of boundaries — Claude tries to use this skill for tangentially related tasks
+  Good: "This skill handles .docx creation and editing only. For PDFs, use the pdf skill. For spreadsheets, use the xlsx skill."
+
+ANTI_BLOAT:
+  Is the skill free of content that doesn't belong?
+  - No README-style content (installation guides, changelogs, contributor docs)
+  - No human onboarding material (skills are for AI agents, not humans)
+  - No redundant restatements of instructions already in the description
+  - Body under 500 lines; if approaching limit, uses references/ for overflow
+
+=== DIMENSION 3: OPERATIONAL INTEGRITY (weight: high) ===
+
+Whether the skill's scripts, references, and assets actually work.
+
+FILE_INTEGRITY:
+  Do all cross-references resolve?
+  - Every file mentioned in SKILL.md exists on disk
+  - Every file on disk is referenced in SKILL.md (or has clear purpose)
+  - No orphaned directories
+  - No broken relative paths
+
+SCRIPT_QUALITY:
+  Are scripts well-formed and executable?
+  - Have executable permissions
+  - Have shebangs (#!/usr/bin/env python3)
+  - Import only standard library or commonly available packages
+  - Have basic error handling
+  - Do not duplicate logic that should be in SKILL.md instructions
+  Note: Full script correctness testing is out of scope for this agent. The EVAL agent handles functional testing.
+
+REFERENCE_ORGANIZATION:
+  Are reference files appropriately structured?
+  - Files over 300 lines have a table of contents
+  - Content is organized for selective reading (Claude should be able to read just the relevant section)
+  - No reference file duplicates content from SKILL.md
+  - Clear naming that indicates content without reading the file
+
+ASSET_APPROPRIATENESS:
+  Are assets the right type and size?
+  - Templates are actual template files, not markdown descriptions of templates
+  - No assets over 10MB without justification
+  - Asset types match the skill's purpose
+  - No source code in assets/ (belongs in scripts/)
+</diagnostic_rubric>
+
+<output_format>
+Return a JSON object:
+{
+  "scores": {
+    "TRIGGER_COVERAGE": { "score": int, "evidence": "string" },
+    "TRIGGER_ASSERTIVENESS": { "score": int, "evidence": "string" },
+    ...
+  },
+  "dimension_summaries": {
+    "triggering": { "avg_score": float, "critical_issues": int, "summary": "string" },
+    "instruction_quality": { "avg_score": float, "critical_issues": int, "summary": "string" },
+    "operational_integrity": { "avg_score": float, "critical_issues": int, "summary": "string" }
+  },
+  "issues": [
+    {
+      "id": "SKILL-001",
+      "dimension": "triggering | instruction_quality | operational_integrity",
+      "category": "string",
+      "severity": "critical | major | minor",
+      "description": "What is wrong",
+      "impact": "How this degrades the skill's function",
+      "fix_directive": "Specific instruction for the Fixer agent",
+      "file_affected": "SKILL.md | scripts/X | references/Y | frontmatter"
+    }
+  ],
+  "overall_grade": "A | B | C | D | F",
+  "rewrite_recommended": true | false,
+  "rewrite_scope": "full | partial | cosmetic | description_only | scripts_only"
+}
+
+Grade thresholds:
+  A = No critical/major issues across all dimensions, all averages >= 2.5
+  B = No critical issues, all dimension averages >= 2.0
+  C = 1-2 major issues, or one dimension average below 2.0
+  D = Critical issues present in any dimension, or triggering average below 1.5
+  F = Description empty/broken (skill will never trigger), OR SKILL.md missing/unparseable, OR majority of referenced files missing
+</output_format>
+</s>
+```
+
+---
+
+## Agent 3: Skill Fixer
+
+Rewrites the skill based on the diagnostic report. Can modify SKILL.md, frontmatter, and reference files. Does NOT modify scripts (too risky without execution testing).
+
+```xml
+<s>
+<role>
+Skill fixer. You take a diagnosed Claude Skill and produce fixed versions of affected files. You are conservative — fix what's broken, preserve what works. You never modify scripts; you flag them for human review.
+</role>
+
+<input_context>
+You will receive:
+1. The full SKILL.md content (in <skill_md> tags)
+2. The Cataloger manifest (in <manifest> tags)
+3. The Analyst diagnostic report (in <diagnosis> tags)
+4. Contents of reference files if they need modification (in <bundled_files> tags)
+</input_context>
+
+<rewrite_scope_rules>
+The diagnostic report specifies a rewrite_scope. Follow it strictly:
+- "description_only": Rewrite only the YAML frontmatter description. Do not touch the body.
+- "cosmetic": Formatting, token reduction, and structural reorganization only. No behavioral changes.
+- "partial": Fix only critical and major issues. Leave minor issues and working sections untouched.
+- "full": Address all issues including minor ones. Still do not add capabilities the original didn't have.
+- "scripts_only": Flag script issues for human review. Do not rewrite SKILL.md.
+</rewrite_scope_rules>
+
+<fix_principles>
+
+=== FRONTMATTER / DESCRIPTION FIXES ===
+
+The description is the most critical component. A bad description means the skill never triggers.
+
+COVERAGE EXPANSION:
+- Identify all plausible user phrasings that should trigger this skill
+- Include file type mentions (.docx, "Word doc", "word document")
+- Include task verbs (create, edit, read, convert, fix, modify)
+- Include colloquial terms users actually say
+- Add explicit negative triggers for adjacent skills
+
+ASSERTIVENESS BOOST:
+- Add "even if the user doesn't explicitly ask for [X]" clauses
+- Add context-based triggers ("when the user mentions [adjacent concept]")
+- Do not make the description so broad it triggers on unrelated tasks — assertive is not the same as indiscriminate
+
+FORMAT COMPLIANCE:
+- Under 1024 characters
+- No angle brackets
+- No [TODO] placeholders
+- Valid YAML string (escape quotes properly)
+
+=== SKILL.MD BODY FIXES ===
+
+STRUCTURAL REORGANIZATION:
+- Choose the appropriate structural pattern (workflow, task-based, reference, capabilities) based on what the skill does
+- Add a Quick Reference table if the skill supports multiple operations
+- Add a decision tree if the skill has conditional workflows
+- Move reference material exceeding ~100 lines into references/ files with clear pointers
+
+INSTRUCTION IMPROVEMENT:
+- Convert passive/suggestive language to imperative: "You might want to run" → "Run"
+- Add exact commands, code blocks, and file paths where the original is vague
+- Add edge case handling where the original only covers the happy path
+- Replace ALWAYS/NEVER mandates with explanations of why the constraint exists
+- Add output format specifications for skills that produce files
+
+EXAMPLE ADDITION/IMPROVEMENT:
+- Add input/output examples for transformation skills that lack them
+- Ensure examples don't contain patterns you don't want Claude to replicate
+- Keep examples minimal — one happy path, one edge case is usually sufficient
+- Use the skill-creator's example format: "Example 1: Input: [X] Output: [Y]"
+
+BLOAT REMOVAL:
+- Remove README-style content (installation guides, changelogs, contributor docs)
+- Remove human onboarding material
+- Remove redundant restatements of the description
+- Remove unused sections
+
+PROGRESSIVE DISCLOSURE:
+- If SKILL.md exceeds 500 lines after fixes, extract reference material into references/ files
+- Add clear pointers: "For [topic], read references/[file].md"
+- Ensure extracted references have tables of contents if over 300 lines
+
+=== REFERENCE FILE FIXES ===
+
+- Add tables of contents to files over 300 lines
+- Reorganize for selective reading (Claude should be able to read just the relevant section)
+- Remove content that duplicates SKILL.md
+- Rename files to clearly indicate content
+
+=== SCRIPT FIXES ===
+
+Do NOT rewrite scripts. Instead, produce a list of script issues for human review:
+- Missing shebangs
+- Missing executable permissions
+- Import failures (if detectable from static analysis)
+- Scripts that duplicate SKILL.md instruction logic
+
+=== CROSS-REFERENCE FIXES ===
+
+- Add references in SKILL.md for files that exist but aren't mentioned
+- Flag files mentioned in SKILL.md that don't exist as [FILE MISSING — create or remove reference]
+- Remove empty directories
+</fix_principles>
+
+<output_format>
+Return your response in this exact structure:
+
+<rewritten_files>
+  <file path="SKILL.md">
+  [Complete rewritten SKILL.md including frontmatter]
+  </file>
+
+  <file path="references/new_or_modified_file.md">
+  [Content, only if a reference file was created or modified]
+  </file>
+</rewritten_files>
+
+<changelog>
+1. [SKILL-001] Expanded description from 45 to 380 characters with trigger phrases for "Word doc", ".docx", "report", "memo", "letter".
+2. [SKILL-003] Moved 200-line API reference from SKILL.md body into references/api.md with pointer.
+3. [SKILL-005] Added Quick Reference table at top of body.
+4. [NEW] Added edge case example for tracked changes handling.
+...
+</changelog>
+
+<script_issues>
+- scripts/convert.py: Missing shebang line. Add #!/usr/bin/env python3 as first line.
+- scripts/validate.sh: Not executable. Run chmod +x.
+- scripts/helper.py: Imports 'pandas' which may not be available. Verify dependency.
+</script_issues>
+
+<unresolved>
+- [FILE MISSING] SKILL.md references "references/api_guide.md" but file does not exist. Create the file or remove the reference.
+- [CLARIFICATION NEEDED] Skill references "our internal template" but no template is included in assets/.
+</unresolved>
+</output_format>
+
+<meta_constraints>
+- Do not add capabilities the original skill didn't have.
+- Do not merge separate skills or split a skill into multiple skills.
+- Do not modify scripts — only flag issues.
+- Preserve the original skill's domain and purpose exactly.
+- When intent is ambiguous, flag with [CLARIFICATION NEEDED] rather than guessing.
+- If the diagnostic grade is A, produce no changes and state "No rewrite needed."
+</meta_constraints>
+</s>
+```
+
+---
+
+## Agent 4: Structural QA
+
+Validates the rewritten skill against structural requirements and the diagnostic report. Does NOT execute the skill.
+
+```xml
+<s>
+<role>
+Skill QA validator. You verify that a rewritten skill correctly addresses all diagnosed issues without introducing regressions. You check structural correctness, cross-reference integrity, and adherence to the skill specification. You are adversarial.
+</role>
+
+<input_context>
+You will receive:
+1. The original SKILL.md (in <original_skill> tags)
+2. The Cataloger manifest (in <manifest> tags)
+3. The Analyst diagnostic report (in <diagnosis> tags)
+4. The Fixer output (in <rewrite> tags)
+</input_context>
+
+<validation_checks>
+
+FRONTMATTER VALIDATION (blocker)
+- Run quick_validate.py logic mentally: name is kebab-case, description is string under 1024 chars, no angle brackets, no unexpected keys, no [TODO]
+- Description is not empty
+- Name matches the directory name from the manifest
+
+INTENT PRESERVATION (blocker)
+- Does the rewritten skill serve the same purpose as the original?
+- Were any operational capabilities removed?
+- Were any new capabilities added that the original didn't have?
+- Does the trigger description still target the same user tasks?
+
+ISSUE RESOLUTION (required)
+- For each critical/major issue: is it resolved?
+- Does the changelog reference every critical/major issue ID?
+- Are fixes substantive? (e.g., did the Fixer just rephrase a vague trigger with a different vague trigger?)
+
+STRUCTURAL INTEGRITY (required)
+- SKILL.md body under 500 lines (or justified if over)
+- All file references in SKILL.md resolve to files in the manifest or newly created files in <rewritten_files>
+- No orphaned files (every file on disk is referenced somewhere)
+- Reference files over 300 lines have tables of contents
+- Appropriate structural pattern used for the skill type
+
+PROGRESSIVE DISCLOSURE (required)
+- SKILL.md body contains operational instructions, not dumped reference material
+- Reference material is in references/ with clear pointers
+- No duplication between SKILL.md body and reference files
+
+REGRESSION CHECK (required)
+- Does the rewrite introduce any new antipatterns from the rubric?
+- Are there new contradictions?
+- Did structural reorganization break the information flow?
+- Did trigger description changes make it too broad or too narrow?
+
+TOKEN EFFICIENCY (advisory)
+- Is the rewritten SKILL.md shorter than or equal to the original?
+- If longer, is the increase justified?
+- Were any unnecessary additions made?
+</validation_checks>
+
+<output_format>
+{
+  "verdict": "PASS | FAIL | PASS_WITH_NOTES",
+  "frontmatter_valid": true | false,
+  "intent_preserved": true | false,
+  "issues_resolved": {
+    "total_critical_major": int,
+    "resolved": int,
+    "unresolved": ["SKILL-XXX"],
+    "inadequately_resolved": ["SKILL-XXX — reason"]
+  },
+  "regressions": [
+    {
+      "description": "string",
+      "severity": "critical | major | minor",
+      "location": "frontmatter | body_section_name | references/filename"
+    }
+  ],
+  "structural_issues": [
+    {
+      "description": "string",
+      "severity": "critical | major | minor"
+    }
+  ],
+  "line_count": { "original": int, "rewritten": int },
+  "description_length": { "original": int, "rewritten": int },
+  "final_recommendation": "ship | revise | escalate_to_human",
+  "revision_notes": "string — only if 'revise'"
+}
+</output_format>
+
+<failure_conditions>
+Automatically FAIL if:
+- frontmatter_valid is false
+- intent_preserved is false
+- Any regression with severity "critical"
+- More than 50% of critical/major issues unresolved
+- SKILL.md body exceeds 700 lines (hard ceiling with margin)
+- Description exceeds 1024 characters
+</failure_conditions>
+</s>
+```
+
+---
+
+## Agent 5: Functional QA (Optional)
+
+Executes the rewritten skill against test cases and compares output quality to the original. This is the step that catches behavioral regressions that structural validation can't detect.
+
+```xml
+<s>
+<role>
+Skill functional evaluator. You run both the original and rewritten skill against test prompts and compare output quality. You determine whether the rewrite improves, maintains, or degrades functional performance.
+</role>
+
+<input_context>
+You will receive:
+1. The original skill directory path (in <original_path> tags)
+2. The rewritten skill files (in <rewritten_files> tags)
+3. Test cases (in <test_cases> tags) — either from evals/evals.json or generated by this agent
+</input_context>
+
+<process>
+1. If no test cases are provided, generate 2-3 representative test prompts based on the skill's description and body. Include one happy path and one edge case.
+
+2. For each test case:
+   a. Execute the prompt using the ORIGINAL skill. Record the output.
+   b. Execute the prompt using the REWRITTEN skill. Record the output.
+   c. Compare outputs blindly (do not look at which is original vs. rewritten while comparing).
+
+3. For each comparison, score on:
+   - Task completion: Did the skill accomplish the requested task? (0-3)
+   - Output quality: Is the output well-formed and correct? (0-3)
+   - Instruction adherence: Did Claude follow the skill's instructions or deviate? (0-3)
+   - Edge case handling: Did the skill handle non-obvious inputs gracefully? (0-3)
+
+4. Aggregate scores. The rewrite passes functional QA if:
+   - Average score across test cases is equal to or better than the original
+   - No individual test case scores worse than the original by more than 1 point on any dimension
+   - No test case that previously passed now fails
+</process>
+
+<output_format>
+{
+  "test_cases_run": int,
+  "test_cases_source": "provided | generated",
+  "results": [
+    {
+      "test_case_id": "string",
+      "prompt": "string",
+      "original_scores": { "task_completion": int, "output_quality": int, "instruction_adherence": int, "edge_case_handling": int },
+      "rewritten_scores": { "task_completion": int, "output_quality": int, "instruction_adherence": int, "edge_case_handling": int },
+      "winner": "original | rewritten | tie",
+      "notes": "string"
+    }
+  ],
+  "aggregate": {
+    "original_avg": float,
+    "rewritten_avg": float,
+    "regressions": int,
+    "improvements": int,
+    "ties": int
+  },
+  "verdict": "PASS | FAIL | INCONCLUSIVE",
+  "failure_reason": "string — only if FAIL"
+}
+</output_format>
+
+<constraints>
+- Run each test case once for structural QA. For production benchmarking, use 3 runs per case (handled by the skill-creator's benchmark mode, not this agent).
+- If execution fails for a test case (tool error, timeout), mark it INCONCLUSIVE rather than FAIL.
+- Do not count improvements in areas the diagnostic report didn't flag as evidence of success — they may be accidental and unstable.
+</constraints>
+</s>
+```
+
+---
+
+## Agent 6: Reporter
+
+Produces the final deliverable. Identical pattern to the prompt-fixer Reporter but with skill-specific sections.
+
+```xml
+<s>
+<role>
+Technical report writer for skill remediation. You produce a concise, scannable summary for human review.
+</role>
+
+<output_format>
+## Summary
+- Skill: [name]
+- Original grade: [letter] → Final grade: [letter]
+- Structural verdict: [PASS | PASS_WITH_NOTES | FAIL]
+- Functional verdict: [PASS | FAIL | INCONCLUSIVE | NOT_RUN]
+- Line count: [original] → [rewritten]
+- Description length: [original] → [rewritten] chars
+
+## Triggering Changes
+[What changed in the description and why. This is the highest-impact section for most skills.]
+
+## Structural Changes
+[Numbered list of body/reference changes, max 5 items.]
+
+## Script Issues (Human Action Required)
+[List of script problems that need manual fixes. Empty if none.]
+
+## Unresolved Items
+[Anything requiring human decision.]
+
+## Rewritten Files
+[The final SKILL.md and any modified reference files, ready to deploy.]
+
+If the verdict is FAIL, state: "Rewrite failed validation. Original skill preserved. See revision notes above."
+</output_format>
+
+<constraints>
+- No commentary beyond the report format.
+- If functional QA was not run, note it: "Functional QA: NOT_RUN. Recommend running evals before deploying."
+- Always surface script issues prominently — these require human action.
+</constraints>
+</s>
+```
+
+---
+
+## Antipattern Reference: Skills
+
+Failure modes specific to skills that don't apply to raw prompts.
+
+| ID | Antipattern | Where | Impact | Fix |
+|----|-------------|-------|--------|-----|
+| SK-01 | Empty/TODO description | Frontmatter | Skill never triggers. Total failure. | Write a complete description with trigger phrases, task verbs, and negative triggers. |
+| SK-02 | Timid description | Frontmatter | Skill undertriggers — Claude doesn't load it when it should. | Add assertive trigger phrases: "even if the user doesn't explicitly ask for X." |
+| SK-03 | Overbroad description | Frontmatter | Skill triggers on unrelated tasks, confusing Claude and the user. | Add explicit negative triggers and scope boundaries. |
+| SK-04 | Body as reference dump | SKILL.md | 800+ line SKILL.md that Claude loads entirely into context. Wastes tokens, degrades attention. | Extract reference material into references/ with pointers. Keep body under 500 lines. |
+| SK-05 | Missing quick reference | SKILL.md | For multi-operation skills, Claude has to read the entire body to find the right procedure. | Add a Quick Reference table at the top mapping tasks to approaches. |
+| SK-06 | Passive instructions | SKILL.md | "You might want to consider running..." — Claude treats these as optional suggestions. | Use imperative form: "Run X. If Y, do Z." |
+| SK-07 | MUST/NEVER without WHY | SKILL.md | Rigid mandates without reasoning. Claude follows them but can't adapt to edge cases the mandates didn't anticipate. | Explain the reasoning. "Use docx-js because it produces cleaner XML than python-docx for complex formatting." |
+| SK-08 | Phantom file references | SKILL.md + filesystem | SKILL.md says "run scripts/convert.py" but the file doesn't exist. Claude errors out. | Verify all cross-references. Create missing files or remove broken references. |
+| SK-09 | Orphaned files | Filesystem | Scripts or references exist on disk but are never mentioned. Dead weight and confusion. | Reference them in SKILL.md or remove them. |
+| SK-10 | Non-executable scripts | scripts/ | Script exists but chmod wasn't set. Claude can't run it. | chmod +x on all scripts in scripts/. |
+| SK-11 | README in disguise | SKILL.md | Installation guides, changelogs, contributor docs. Skills are for AI agents, not human onboarding. | Remove all human-facing documentation. |
+| SK-12 | Description/body mismatch | Frontmatter vs body | Description promises capabilities the body doesn't deliver, or body contains capabilities the description doesn't trigger on. | Align description triggers with actual body capabilities. |
+| SK-13 | Monolithic reference file | references/ | 500+ line reference with no ToC or section structure. Claude reads the entire thing even when it only needs one section. | Add ToC. Restructure for selective reading. Consider splitting into domain-specific files. |
+| SK-14 | Source code in assets | assets/ | Executable code placed in assets/ instead of scripts/. Claude may not know to execute it. | Move to scripts/. Assets are for templates, images, and fonts. |
+| SK-15 | Example pollution | SKILL.md | Examples contain filler, hedging, or sycophantic patterns. Claude 4.x replicates example patterns faithfully. | Audit examples for unwanted patterns. Keep examples clean and minimal. |
+| SK-16 | No examples for transformation skills | SKILL.md | Skill transforms input to output but provides no input/output examples. Claude guesses the format. | Add at least one input/output example pair. |
+
+---
+
+## Orchestration
+
+### Sequential Pipeline
+
+```python
+def fix_skill(skill_path: str, run_functional_qa: bool = False) -> dict:
+    manifest = call_agent("cataloger", skill_path)
+
+    # Read SKILL.md and bundled files for downstream agents
+    skill_content = read_file(f"{skill_path}/SKILL.md")
+    bundled = read_bundled_files(skill_path, manifest)
+
+    diagnosis = call_agent("analyst", skill_content, manifest, bundled)
+
+    if diagnosis["overall_grade"] == "A":
+        return {"status": "no_changes", "grade": "A", "skill_path": skill_path}
+
+    rewrite = call_agent("fixer", skill_content, manifest, diagnosis, bundled)
+    validation = call_agent("structural_qa", skill_content, manifest, diagnosis, rewrite)
+
+    retries = 0
+    while validation["verdict"] == "FAIL" and retries < 2:
+        rewrite = call_agent("fixer", skill_content, manifest, diagnosis, bundled,
+                             revision_notes=validation["revision_notes"])
+        validation = call_agent("structural_qa", skill_content, manifest, diagnosis, rewrite)
+        retries += 1
+
+    functional = None
+    if run_functional_qa and validation["verdict"] != "FAIL":
+        test_cases = load_evals(f"{skill_path}/evals/evals.json")  # may be None
+        functional = call_agent("functional_qa", skill_path, rewrite, test_cases)
+
+    report = call_agent("reporter", skill_content, manifest, diagnosis,
+                        rewrite, validation, functional)
+    return report
+```
+
+### Batch Processing
+
+```python
+AGENT_MODELS = {
+    "cataloger":      "claude-haiku-4-5-20251001",    # Fast filesystem inventory
+    "analyst":        "claude-sonnet-4-5-20250929",    # Deep rubric analysis
+    "fixer":          "claude-sonnet-4-5-20250929",    # Careful rewriting
+    "structural_qa":  "claude-sonnet-4-5-20250929",    # Adversarial validation
+    "functional_qa":  "claude-sonnet-4-5-20250929",    # Execution + comparison
+    "reporter":       "claude-haiku-4-5-20251001",     # Formatting
+}
+# Escalate to Opus for skills with complexity == "multi_agent"
+# or when functional QA shows regressions that need deeper analysis
+```
+
+### Priority ordering for batch runs:
+1. **Grade F** — skills that never trigger or are unparseable. Fix these first.
+2. **Grade D with triggering issues** — skills that exist but Claude doesn't use them.
+3. **Grade D with operational issues** — broken file references, missing scripts.
+4. **Grade C** — working but underperforming.
+5. **Grade B** — minor polish.
+
+---
+
+## Differences from the Prompt Fixer
+
+| Concern | Prompt Fixer | Skill Fixer |
+|---------|-------------|-------------|
+| Trigger mechanism | N/A — prompts are always delivered | Critical — description determines if skill loads at all |
+| Filesystem | N/A | Must inventory and validate scripts, references, assets |
+| Progressive disclosure | N/A | Three-level loading must be balanced |
+| Script modification | N/A | Explicitly forbidden — flag for human review |
+| Functional testing | Not included | Optional Agent 5 runs skill against test cases |
+| Cross-reference integrity | N/A | Files referenced in SKILL.md must exist and vice versa |
+| Token budget | Context window only | SKILL.md body competes with user prompt for context space |
+| Structural patterns | XML tags | Workflow / task-based / reference / capabilities patterns |
+
+---
+
+## Extending
+
+**Domain-specific rules**: Add a `<domain_rules>` section to the Analyst keyed to the skill's domain from the manifest. Example: "All data-processing skills must include a validation step after file creation."
+
+**Skill-to-skill dependency checking**: For skill libraries with cross-references (e.g., "use the pdf skill for PDF operations"), add a pre-pipeline step that builds a dependency graph and verifies all referenced skills exist.
+
+**Automated eval generation**: If a skill lacks evals/evals.json, the Functional QA agent generates test cases from the description. For production use, have a human review and approve generated test cases before they become the regression suite.
+
+**Integration with skill-creator**: The skill-creator's Improve mode can consume this pipeline's diagnostic report as input, treating identified issues as improvement targets for its iterate-grade-compare loop.
+
+---
+
+also its for claude code not SDK so is it optimized for that?
+
+---
+
+please update CLAUDE.md to always follow the WFC rules and workflow. Please put in claude.md we are working on the WFC codebase and to not get confused.
+
+and then RERUN WITH SUBAGENTS AS PER THE DAMN RULES
+
+---
+
+ok have an agent rework so that it fixes Dimensions 7,5,6
+clear your context before you start the agents and make sure you have enough context to keep going
+
+---
+
+Base directory for this skill: /Users/samfakhreddine/.claude/skills/wfc-plan
+
+# WFC:PLAN - Adaptive Planning with Formal Properties
+
+Converts requirements into structured implementation plans through adaptive interviewing.
+
+## What It Does
+
+1. **Adaptive Interview** - Asks intelligent questions that adapt based on answers
+2. **Task Generation** - Breaks down requirements into structured TASKS.md with dependencies
+3. **Property Extraction** - Identifies formal properties (SAFETY, LIVENESS, INVARIANT, PERFORMANCE)
+4. **Test Planning** - Creates comprehensive TEST-PLAN.md linked to requirements and properties
+
+## Usage
+
+```bash
+# Default (creates timestamped plan with history)
+/wfc-plan
+# → Generates: plans/plan_oauth2_authentication_20260211_143022/
+#              plans/HISTORY.md
+#              plans/HISTORY.json
+
+# Custom output directory (disables history)
+/wfc-plan path/to/output
+
+# With options (future)
+/wfc-plan --interactive  # Step through interview
+/wfc-plan --from-file requirements.md  # Import requirements
+
+# Skip validation (not recommended)
+/wfc-plan --skip-validation
+```
+
+## Plan History
+
+**Each plan gets a unique timestamped directory.**
+
+### Directory Structure
+
+```
+plans/
+├── HISTORY.md                                    # Human-readable history
+├── HISTORY.json                                  # Machine-readable index
+├── plan_oauth2_authentication_20260211_143022/  # Timestamped plan
+│   ├── TASKS.md
+│   ├── PROPERTIES.md
+│   ├── TEST-PLAN.md
+│   ├── interview-results.json
+│   ├── revision-log.md
+│   └── plan-audit_20260211_143022.json
+├── plan_caching_layer_20260211_150135/
+│   ├── TASKS.md
+│   ├── PROPERTIES.md
+│   ├── TEST-PLAN.md
+│   ├── interview-results.json
+│   ├── revision-log.md
+│   └── plan-audit_20260211_150135.json
+└── plan_user_dashboard_20260212_091523/
+    ├── TASKS.md
+    ├── PROPERTIES.md
+    ├── TEST-PLAN.md
+    ├── interview-results.json
+    ├── revision-log.md
+    └── plan-audit_20260212_091523.json
+```
+
+### History File
+
+**plans/HISTORY.md** contains a searchable record:
+
+```markdown
+# Plan History
+
+**Total Plans:** 3
+
+---
+
+## plan_user_dashboard_20260212_091523
+- **Created:** 2026-02-12T09:15:23
+- **Goal:** Build user analytics dashboard
+- **Context:** Product team needs visibility into user behavior
+- **Directory:** `plans/plan_user_dashboard_20260212_091523`
+- **Tasks:** 7
+- **Properties:** 4
+- **Tests:** 15
+- **Validated:** yes (score: 8.7)
+
+## plan_caching_layer_20260211_150135
+- **Created:** 2026-02-11T15:01:35
+- **Goal:** Implement caching layer for API
+- **Context:** Reduce database load and improve response times
+- **Directory:** `plans/plan_caching_layer_20260211_150135`
+- **Tasks:** 3
+- **Properties:** 2
+- **Tests:** 8
+- **Validated:** skipped
+```
+
+### Benefits
+
+- **Version control** - Never lose old plans
+- **Searchable** - Find plans by goal or date
+- **Traceable** - See evolution of project planning
+- **Reference** - Compare approaches across time
+
+## Architecture Design Phase
+
+After the interview, WFC generates 2-3 architecture approaches:
+
+### Option 1: Minimal Changes
+- Smallest diff, maximum code reuse
+- Lowest risk, fastest to implement
+- Best for simple features or hotfixes
+
+### Option 2: Clean Architecture
+- Proper abstractions, maintainability-first
+- Best long-term design
+- Higher initial effort
+
+### Option 3: Pragmatic Balance
+- Speed + quality tradeoff
+- Addresses key concerns without over-engineering
+- Best for most features
+
+The approaches are saved to `ARCHITECTURE-OPTIONS.md` for reference.
+
+## Interview Process
+
+The adaptive interview gathers:
+
+### Core Understanding
+- What are you building? (goal)
+- Why are you building it? (context)
+- Who will use it? (users)
+
+### Requirements
+- Core features (must-have)
+- Nice-to-have features
+- Technical constraints
+- Performance requirements
+- Security requirements
+
+### Technical Details
+- Technology stack
+- Existing codebase or new project
+- Testing approach
+- Coverage targets
+
+### Formal Properties
+- Safety properties (what must never happen)
+- Liveness properties (what must eventually happen)
+- Invariants (what must always be true)
+- Performance properties (time/resource bounds)
+
+## Outputs
+
+### 1. TASKS.md
+Structured implementation tasks with:
+- Unique IDs (TASK-001, TASK-002, ...)
+- Complexity ratings (S, M, L, XL)
+- Dependency graph (DAG)
+- Properties to satisfy
+- Files likely affected
+- Acceptance criteria
+
+Example:
+```markdown
+## TASK-001: Setup project structure
+- **Complexity**: S
+- **Dependencies**: []
+- **Properties**: []
+- **Files**: README.md, pyproject.toml
+- **Description**: Create initial project structure
+- **Acceptance Criteria**:
+  - [ ] Project structure follows best practices
+  - [ ] Dependencies documented
+```
+
+### 2. PROPERTIES.md
+Formal properties with:
+- Type (SAFETY, LIVENESS, INVARIANT, PERFORMANCE)
+- Formal statement
+- Rationale
+- Priority
+- Suggested observables
+
+Example:
+```markdown
+## PROP-001: SAFETY
+- **Statement**: Unauthenticated user must never access protected endpoints
+- **Rationale**: Security: prevent unauthorized data access
+- **Priority**: critical
+- **Observables**: auth_failures, unauthorized_access_attempts
+```
+
+### 3. TEST-PLAN.md
+Test strategy and cases:
+- Testing approach (unit, integration, e2e)
+- Coverage targets
+- Specific test cases linked to tasks and properties
+- Test steps and expected outcomes
+
+Example:
+```markdown
+### TEST-001: Verify SAFETY property
+- **Type**: integration
+- **Related Task**: TASK-003
+- **Related Property**: PROP-001
+- **Description**: Test that unauthenticated users cannot access protected endpoints
+- **Steps**:
+  1. Attempt access without authentication
+  2. Verify 401 response
+- **Expected**: Access denied
+```
+
+## Architecture
+
+### MULTI-TIER Design
+```
+┌─────────────────────────────┐
+│  PRESENTATION (cli.py)      │  User interaction, output formatting
+└──────────────┬──────────────┘
+               │
+┌──────────────▼──────────────┐
+│  LOGIC (orchestrator.py)    │  Interview → Generate → Save
+│  - interview.py             │
+│  - tasks_generator.py       │
+│  - properties_generator.py  │
+│  - test_plan_generator.py   │
+└──────────────┬──────────────┘
+               │
+┌──────────────▼──────────────┐
+│  DATA (filesystem)          │  Save markdown and JSON
+└─────────────────────────────┘
+```
+
+## Living Plan Documents
+
+Plans are living documents that track progress during implementation, not static artifacts.
+
+### YAML Frontmatter
+
+Every TASKS.md includes frontmatter for machine-readable status tracking:
+
+```yaml
+---
+title: OAuth2 Authentication
+status: active          # active | in_progress | completed | abandoned
+created: 2026-02-18T14:30:00Z
+updated: 2026-02-18T16:45:00Z
+tasks_total: 5
+tasks_completed: 0
+complexity: M
+---
+```
+
+### Checkbox Progress
+
+Each acceptance criterion uses markdown checkboxes. wfc-implement updates these as tasks complete:
+
+```markdown
+## TASK-001: Setup project structure
+- **Status**: completed
+- **Acceptance Criteria**:
+  - [x] Project structure follows best practices
+  - [x] Dependencies documented
+
+## TASK-002: Implement JWT auth
+- **Status**: in_progress
+- **Acceptance Criteria**:
+  - [x] Token generation works
+  - [ ] Token refresh implemented
+  - [ ] Rate limiting on auth endpoints
+```
+
+### Status Lifecycle
+
+```
+active → in_progress → completed
+                    ↘ abandoned (with reason)
+```
+
+- **active**: Plan created, not yet started
+- **in_progress**: wfc-implement is executing tasks
+- **completed**: All tasks done, tests passing, PR merged
+- **abandoned**: Scope changed, plan no longer relevant (reason recorded)
+
+### Divergence Tracking
+
+When implementation diverges from the plan, wfc-implement records it:
+
+```markdown
+## Divergence Log
+
+### TASK-003: Redis caching layer
+- **Planned**: Use Redis Cluster with 3 nodes
+- **Actual**: Switched to single Redis instance (sufficient for current scale)
+- **Reason**: Over-engineered for <1000 req/s
+- **Impact**: TASK-004 dependency removed (cluster config no longer needed)
+```
+
+### Knowledge Integration
+
+Plans automatically search `docs/solutions/` (via wfc-compound) during generation:
+
+```markdown
+## TASK-005: Connection pool configuration
+- **Known pitfall**: docs/solutions/performance-issues/redis-pool-exhaustion.md
+  - Size pools relative to worker count, not static
+  - Monitor utilization > 80%
+```
+
+## Integration with WFC
+
+### Produces (consumed by wfc-implement, wfc-deepen, wfc-lfg)
+- `plan/TASKS.md` → Task orchestration (living document)
+- `plan/PROPERTIES.md` → TDD test requirements
+- `plan/TEST-PLAN.md` → Test strategy
+
+### Consumes
+- `docs/solutions/` → Past solutions for pitfall warnings (via wfc-compound)
+- `wfc-architecture` → Architecture analysis
+- `wfc-security` → Threat model properties
+
+## Configuration
+
+```json
+{
+  "plan": {
+    "output_dir": "./plan",
+    "interview_mode": "adaptive",
+    "task_complexity_model": "auto",
+    "generate_diagram": true
+  }
+}
+```
+
+## What to Do
+
+1. **If `the above VALIDATE.md` contains `--skip-validation`**, set `skip_validation = true` and remove the flag from arguments
+2. **If `the above VALIDATE.md` is provided** (after flag removal), use it as output directory
+3. **If no arguments**, use `./plan` as default output directory
+4. **Run adaptive interview** using `AdaptiveInterviewer`
+5. **Generate all files** using orchestrator (TASKS.md, PROPERTIES.md, TEST-PLAN.md)
+6. **Run Plan Validation Pipeline** (unless `--skip-validation` was set)
+7. **Display results** showing file paths and summary
+8. **Record telemetry** for all operations
+
+## Plan Validation Pipeline
+
+After generating the draft plan (TASKS.md, PROPERTIES.md, TEST-PLAN.md), run a mandatory validation pipeline to ensure plan quality. This pipeline can only be bypassed with the `--skip-validation` flag.
+
+### Pipeline Overview
+
+```
+Draft Plan → SHA-256 Hash → Validate Gate → Revise → Review Gate (loop until 8.5+) → Final Plan
+```
+
+### Step 1: Record Original Hash
+
+Compute a SHA-256 hash of the draft plan content (concatenation of TASKS.md + PROPERTIES.md + TEST-PLAN.md in that order). This is the `original_hash` used for the audit trail.
+
+```python
+import hashlib
+content = tasks_md + properties_md + test_plan_md
+original_hash = hashlib.sha256(content.encode()).hexdigest()
+```
+
+### Step 2: Validate Gate
+
+Invoke `/wfc-validate` on the generated draft plan. All plan content **must** be delimited with XML tags per PROP-009 prompt injection defense:
+
+```
+/wfc-validate
+<plan-content>
+[Full content of TASKS.md, PROPERTIES.md, TEST-PLAN.md concatenated]
+</plan-content>
+```
+
+This produces a `VALIDATE.md` output with scored recommendations categorized as Must-Do, Should-Do, or informational.
+
+### Step 3: Revision Mechanism
+
+After validation produces its analysis, read the VALIDATE.md output and apply revisions:
+
+1. **Must-Do** recommendations: Apply every Must-Do change to the draft TASKS.md and/or PROPERTIES.md. These are non-negotiable improvements identified by the analysis.
+2. **Should-Do** recommendations: Apply if low-effort (can be done in under 5 minutes). Otherwise, note as deferred with a reason.
+3. **Deferred** items: Record in revision log for future consideration.
+
+Write a `revision-log.md` in the plan directory documenting what changed and why:
+
+```markdown
+# Revision Log
+
+## Original Plan Hash
+`<original_hash>` (SHA-256)
+
+## Validate Score
+<score>/10
+
+## Revisions Applied
+
+### Must-Do
+
+1. **<change title>** - <description of change>
+   - Source: Validate recommendation #N
+   - File changed: TASKS.md | PROPERTIES.md | TEST-PLAN.md
+
+### Should-Do
+
+1. **<change title>** - <description>
+   - Source: Validate recommendation #N
+   - Status: Applied (low effort) | Deferred (high effort)
+
+### Deferred
+
+1. **<item>** - <reason for deferral>
+   - Source: Validate recommendation #N
+   - Reason: <explanation>
+
+## Review Gate Results
+
+| Round | Score | Action |
+|-------|-------|--------|
+| 1     | X.X   | Applied N findings |
+| 2     | X.X   | Passed threshold |
+
+## Final Plan Hash
+`<final_hash>` (SHA-256)
+```
+
+### Step 4: Review Gate
+
+Invoke `/wfc-review` on the revised plan using architecture and quality personas. Plan content **must** be delimited with XML tags per PROP-009 prompt injection defense:
+
+```
+/wfc-review
+<plan-content>
+[Full content of revised TASKS.md, PROPERTIES.md, TEST-PLAN.md]
+</plan-content>
+```
+
+**Review Loop**: If the weighted consensus score is below 8.5/10, apply the review findings to the plan and re-invoke `/wfc-review`. Repeat until the score reaches 8.5 or higher. This threshold is the standard -- it is not optional.
+
+### Step 5: Audit Trail
+
+After the review gate passes (or validation is skipped), write a `plan-audit.json` file (timestamped) in the plan directory. The filename includes a timestamp for immutability (e.g., `plan-audit_20260215_103000.json`).
+
+**Required schema for plan-audit_YYYYMMDD_HHMMSS.json:**
+
+```json
+{
+  "hash_algorithm": "sha256",
+  "original_hash": "<64-char hex SHA-256 of draft plan>",
+  "validate_score": 7.8,
+  "revision_count": 2,
+  "review_score": 8.7,
+  "final_hash": "<64-char hex SHA-256 of final plan>",
+  "timestamp": "2026-02-15T10:30:00Z",
+  "validated": true,
+  "skipped": false
+}
+```
+
+Field definitions:
+- `hash_algorithm`: Always `"sha256"`
+- `original_hash`: SHA-256 hash of the draft plan before any revisions
+- `validate_score`: Numeric score from the validation analysis
+- `revision_count`: Total number of revision rounds applied (validation revisions + review loop rounds)
+- `review_score`: Final weighted consensus score from wfc-review (numeric, e.g. 8.7)
+- `final_hash`: SHA-256 hash of the plan after all revisions are complete
+- `timestamp`: ISO 8601 timestamp of when validation completed
+- `validated`: `true` if the final review_score >= 8.5, `false` otherwise
+- `skipped`: `true` if `--skip-validation` was used, `false` otherwise
+
+### Step 6: History Update
+
+Update HISTORY.md to record whether the plan was validated or skipped. Add a `- **Validated:** yes (score: X.X)` or `- **Validated:** skipped` entry to the plan's history record.
+
+### Skip Validation Flag
+
+If `--skip-validation` is passed as an argument:
+
+1. Skip Steps 2-4 entirely (no Validate Gate, no Review Gate, no revision)
+2. Still compute SHA-256 hashes (original_hash = final_hash since no changes were made)
+3. Write `plan-audit_YYYYMMDD_HHMMSS.json` with `"skipped": true` and `"validated": false`
+4. Do not generate `revision-log.md` (no revisions occurred)
+5. Record `- **Validated:** skipped` in HISTORY.md
+
+### Validation Pipeline Summary
+
+| Step | Action | Output |
+|------|--------|--------|
+| 1 | SHA-256 hash of draft plan | `original_hash` |
+| 2 | `/wfc-validate` with `<plan-content>` XML tags (PROP-009) | VALIDATE.md |
+| 3 | Apply Must-Do + low-effort Should-Do revisions | revision-log.md, updated plan files |
+| 4 | `/wfc-review` with `<plan-content>` XML tags (PROP-009), loop until >= 8.5 | Review consensus |
+| 5 | Write plan-audit_YYYYMMDD_HHMMSS.json with all fields | plan-audit_YYYYMMDD_HHMMSS.json |
+| 6 | Update HISTORY.md with validation status | HISTORY.md entry |
+
+## Example Flow
+
+```
+User runs: /wfc-plan
+
+[ADAPTIVE INTERVIEW]
+Q: What are you trying to build?
+A: REST API for user management
+
+Q: What are the core features?
+A: User CRUD, authentication, role-based access
+
+Q: Security requirements?
+A: JWT tokens, role-based authorization
+
+[GENERATION]
+Created TASKS.md (5 tasks)
+Created PROPERTIES.md (3 properties: 1 SAFETY, 2 INVARIANT)
+Created TEST-PLAN.md (12 test cases)
+
+[PLAN VALIDATION PIPELINE]
+SHA-256 hash recorded: a1b2c3...
+Validate Gate: 7.8/10
+  - Applied 2 Must-Do revisions
+  - Applied 1 Should-Do revision (low effort)
+  - Deferred 1 suggestion
+Review Gate round 1: 8.1/10 - applying 2 findings
+Review Gate round 2: 8.7/10 - PASSED
+Wrote revision-log.md
+Wrote plan-audit_YYYYMMDD_HHMMSS.json
+
+[OUTPUT]
+plans/plan_rest_api_20260215_103000/
+  - TASKS.md
+  - PROPERTIES.md
+  - TEST-PLAN.md
+  - interview-results.json
+  - revision-log.md
+  - plan-audit_20260215_103000.json
+
+Next: Run `/wfc-implement plans/plan_rest_api_20260215_103000/TASKS.md`
+```
+
+## Philosophy
+
+**ELEGANT**: Simple interview questions, clear task breakdown
+**MULTI-TIER**: Clean separation of presentation, logic, and data
+**PARALLEL**: Can generate all three files concurrently (future optimization)
+
+---
+
+Base directory for this skill: /Users/samfakhreddine/.claude/skills/wfc-plan
+
+# WFC:PLAN - Adaptive Planning with Formal Properties
+
+Converts requirements into structured implementation plans through adaptive interviewing.
+
+## What It Does
+
+1. **Adaptive Interview** - Asks intelligent questions that adapt based on answers
+2. **Task Generation** - Breaks down requirements into structured TASKS.md with dependencies
+3. **Property Extraction** - Identifies formal properties (SAFETY, LIVENESS, INVARIANT, PERFORMANCE)
+4. **Test Planning** - Creates comprehensive TEST-PLAN.md linked to requirements and properties
+
+## Usage
+
+```bash
+# Default (creates timestamped plan with history)
+/wfc-plan
+# → Generates: plans/plan_oauth2_authentication_20260211_143022/
+#              plans/HISTORY.md
+#              plans/HISTORY.json
+
+# Custom output directory (disables history)
+/wfc-plan path/to/output
+
+# With options (future)
+/wfc-plan --interactive  # Step through interview
+/wfc-plan --from-file requirements.md  # Import requirements
+
+# Skip validation (not recommended)
+/wfc-plan --skip-validation
+```
+
+## Plan History
+
+**Each plan gets a unique timestamped directory.**
+
+### Directory Structure
+
+```
+plans/
+├── HISTORY.md                                    # Human-readable history
+├── HISTORY.json                                  # Machine-readable index
+├── plan_oauth2_authentication_20260211_143022/  # Timestamped plan
+│   ├── TASKS.md
+│   ├── PROPERTIES.md
+│   ├── TEST-PLAN.md
+│   ├── interview-results.json
+│   ├── revision-log.md
+│   └── plan-audit_20260211_143022.json
+├── plan_caching_layer_20260211_150135/
+│   ├── TASKS.md
+│   ├── PROPERTIES.md
+│   ├── TEST-PLAN.md
+│   ├── interview-results.json
+│   ├── revision-log.md
+│   └── plan-audit_20260211_150135.json
+└── plan_user_dashboard_20260212_091523/
+    ├── TASKS.md
+    ├── PROPERTIES.md
+    ├── TEST-PLAN.md
+    ├── interview-results.json
+    ├── revision-log.md
+    └── plan-audit_20260212_091523.json
+```
+
+### History File
+
+**plans/HISTORY.md** contains a searchable record:
+
+```markdown
+# Plan History
+
+**Total Plans:** 3
+
+---
+
+## plan_user_dashboard_20260212_091523
+- **Created:** 2026-02-12T09:15:23
+- **Goal:** Build user analytics dashboard
+- **Context:** Product team needs visibility into user behavior
+- **Directory:** `plans/plan_user_dashboard_20260212_091523`
+- **Tasks:** 7
+- **Properties:** 4
+- **Tests:** 15
+- **Validated:** yes (score: 8.7)
+
+## plan_caching_layer_20260211_150135
+- **Created:** 2026-02-11T15:01:35
+- **Goal:** Implement caching layer for API
+- **Context:** Reduce database load and improve response times
+- **Directory:** `plans/plan_caching_layer_20260211_150135`
+- **Tasks:** 3
+- **Properties:** 2
+- **Tests:** 8
+- **Validated:** skipped
+```
+
+### Benefits
+
+- **Version control** - Never lose old plans
+- **Searchable** - Find plans by goal or date
+- **Traceable** - See evolution of project planning
+- **Reference** - Compare approaches across time
+
+## Architecture Design Phase
+
+After the interview, WFC generates 2-3 architecture approaches:
+
+### Option 1: Minimal Changes
+- Smallest diff, maximum code reuse
+- Lowest risk, fastest to implement
+- Best for simple features or hotfixes
+
+### Option 2: Clean Architecture
+- Proper abstractions, maintainability-first
+- Best long-term design
+- Higher initial effort
+
+### Option 3: Pragmatic Balance
+- Speed + quality tradeoff
+- Addresses key concerns without over-engineering
+- Best for most features
+
+The approaches are saved to `ARCHITECTURE-OPTIONS.md` for reference.
+
+## Interview Process
+
+The adaptive interview gathers:
+
+### Core Understanding
+- What are you building? (goal)
+- Why are you building it? (context)
+- Who will use it? (users)
+
+### Requirements
+- Core features (must-have)
+- Nice-to-have features
+- Technical constraints
+- Performance requirements
+- Security requirements
+
+### Technical Details
+- Technology stack
+- Existing codebase or new project
+- Testing approach
+- Coverage targets
+
+### Formal Properties
+- Safety properties (what must never happen)
+- Liveness properties (what must eventually happen)
+- Invariants (what must always be true)
+- Performance properties (time/resource bounds)
+
+## Outputs
+
+### 1. TASKS.md
+Structured implementation tasks with:
+- Unique IDs (TASK-001, TASK-002, ...)
+- Complexity ratings (S, M, L, XL)
+- Dependency graph (DAG)
+- Properties to satisfy
+- Files likely affected
+- Acceptance criteria
+
+Example:
+```markdown
+## TASK-001: Setup project structure
+- **Complexity**: S
+- **Dependencies**: []
+- **Properties**: []
+- **Files**: README.md, pyproject.toml
+- **Description**: Create initial project structure
+- **Acceptance Criteria**:
+  - [ ] Project structure follows best practices
+  - [ ] Dependencies documented
+```
+
+### 2. PROPERTIES.md
+Formal properties with:
+- Type (SAFETY, LIVENESS, INVARIANT, PERFORMANCE)
+- Formal statement
+- Rationale
+- Priority
+- Suggested observables
+
+Example:
+```markdown
+## PROP-001: SAFETY
+- **Statement**: Unauthenticated user must never access protected endpoints
+- **Rationale**: Security: prevent unauthorized data access
+- **Priority**: critical
+- **Observables**: auth_failures, unauthorized_access_attempts
+```
+
+### 3. TEST-PLAN.md
+Test strategy and cases:
+- Testing approach (unit, integration, e2e)
+- Coverage targets
+- Specific test cases linked to tasks and properties
+- Test steps and expected outcomes
+
+Example:
+```markdown
+### TEST-001: Verify SAFETY property
+- **Type**: integration
+- **Related Task**: TASK-003
+- **Related Property**: PROP-001
+- **Description**: Test that unauthenticated users cannot access protected endpoints
+- **Steps**:
+  1. Attempt access without authentication
+  2. Verify 401 response
+- **Expected**: Access denied
+```
+
+## Architecture
+
+### MULTI-TIER Design
+```
+┌─────────────────────────────┐
+│  PRESENTATION (cli.py)      │  User interaction, output formatting
+└──────────────┬──────────────┘
+               │
+┌──────────────▼──────────────┐
+│  LOGIC (orchestrator.py)    │  Interview → Generate → Save
+│  - interview.py             │
+│  - tasks_generator.py       │
+│  - properties_generator.py  │
+│  - test_plan_generator.py   │
+└──────────────┬──────────────┘
+               │
+┌──────────────▼──────────────┐
+│  DATA (filesystem)          │  Save markdown and JSON
+└─────────────────────────────┘
+```
+
+## Living Plan Documents
+
+Plans are living documents that track progress during implementation, not static artifacts.
+
+### YAML Frontmatter
+
+Every TASKS.md includes frontmatter for machine-readable status tracking:
+
+```yaml
+---
+title: OAuth2 Authentication
+status: active          # active | in_progress | completed | abandoned
+created: 2026-02-18T14:30:00Z
+updated: 2026-02-18T16:45:00Z
+tasks_total: 5
+tasks_completed: 0
+complexity: M
+---
+```
+
+### Checkbox Progress
+
+Each acceptance criterion uses markdown checkboxes. wfc-implement updates these as tasks complete:
+
+```markdown
+## TASK-001: Setup project structure
+- **Status**: completed
+- **Acceptance Criteria**:
+  - [x] Project structure follows best practices
+  - [x] Dependencies documented
+
+## TASK-002: Implement JWT auth
+- **Status**: in_progress
+- **Acceptance Criteria**:
+  - [x] Token generation works
+  - [ ] Token refresh implemented
+  - [ ] Rate limiting on auth endpoints
+```
+
+### Status Lifecycle
+
+```
+active → in_progress → completed
+                    ↘ abandoned (with reason)
+```
+
+- **active**: Plan created, not yet started
+- **in_progress**: wfc-implement is executing tasks
+- **completed**: All tasks done, tests passing, PR merged
+- **abandoned**: Scope changed, plan no longer relevant (reason recorded)
+
+### Divergence Tracking
+
+When implementation diverges from the plan, wfc-implement records it:
+
+```markdown
+## Divergence Log
+
+### TASK-003: Redis caching layer
+- **Planned**: Use Redis Cluster with 3 nodes
+- **Actual**: Switched to single Redis instance (sufficient for current scale)
+- **Reason**: Over-engineered for <1000 req/s
+- **Impact**: TASK-004 dependency removed (cluster config no longer needed)
+```
+
+### Knowledge Integration
+
+Plans automatically search `docs/solutions/` (via wfc-compound) during generation:
+
+```markdown
+## TASK-005: Connection pool configuration
+- **Known pitfall**: docs/solutions/performance-issues/redis-pool-exhaustion.md
+  - Size pools relative to worker count, not static
+  - Monitor utilization > 80%
+```
+
+## Integration with WFC
+
+### Produces (consumed by wfc-implement, wfc-deepen, wfc-lfg)
+- `plan/TASKS.md` → Task orchestration (living document)
+- `plan/PROPERTIES.md` → TDD test requirements
+- `plan/TEST-PLAN.md` → Test strategy
+
+### Consumes
+- `docs/solutions/` → Past solutions for pitfall warnings (via wfc-compound)
+- `wfc-architecture` → Architecture analysis
+- `wfc-security` → Threat model properties
+
+## Configuration
+
+```json
+{
+  "plan": {
+    "output_dir": "./plan",
+    "interview_mode": "adaptive",
+    "task_complexity_model": "auto",
+    "generate_diagram": true
+  }
+}
+```
+
+## What to Do
+
+1. **If `Implement the three critical fixes from VALIDATE.md:
+
+1. Dimension 7 Fix: Claude Code orchestration redesign (2/10 → 9/10)
+   - Two-phase orchestrator pattern (prepare → Task tool → finalize)
+   - File-based workspace in .development/validate-{timestamp}/
+   - Agent prompt templates in wfc/skills/wfc-validate/agents/
+   - Follow wfc-review pattern from wfc/scripts/orchestrators/review/orchestrator.py
+
+2. Dimension 5 Fix: Analyzer content analysis (4/10 → 9/10)
+   - Replace hardcoded scores with pattern detection
+   - Detect 24 patterns across 13 categories
+   - Check against 11 known failure modes
+   - Dynamic scoring 2-10 based on content
+
+3. Dimension 6 Fix: Blast radius mitigations (6/10 → 9/10)
+   - Atomic batch semantics with dry-run mode
+   - Git rollback plan generator
+   - Batch summary report
+
+Context: This is for the wfc-validate skill remediation system. All design documents are in .development/ directory. Total implementation time: 15-19 hours across 3 components.
+
+Technology stack: Python, Claude Code Task tool, file-based state management
+Testing: pytest, mock agents, schema validation
+Coverage target: 85%` contains `--skip-validation`**, set `skip_validation = true` and remove the flag from arguments
+2. **If `Implement the three critical fixes from VALIDATE.md:
+
+1. Dimension 7 Fix: Claude Code orchestration redesign (2/10 → 9/10)
+   - Two-phase orchestrator pattern (prepare → Task tool → finalize)
+   - File-based workspace in .development/validate-{timestamp}/
+   - Agent prompt templates in wfc/skills/wfc-validate/agents/
+   - Follow wfc-review pattern from wfc/scripts/orchestrators/review/orchestrator.py
+
+2. Dimension 5 Fix: Analyzer content analysis (4/10 → 9/10)
+   - Replace hardcoded scores with pattern detection
+   - Detect 24 patterns across 13 categories
+   - Check against 11 known failure modes
+   - Dynamic scoring 2-10 based on content
+
+3. Dimension 6 Fix: Blast radius mitigations (6/10 → 9/10)
+   - Atomic batch semantics with dry-run mode
+   - Git rollback plan generator
+   - Batch summary report
+
+Context: This is for the wfc-validate skill remediation system. All design documents are in .development/ directory. Total implementation time: 15-19 hours across 3 components.
+
+Technology stack: Python, Claude Code Task tool, file-based state management
+Testing: pytest, mock agents, schema validation
+Coverage target: 85%` is provided** (after flag removal), use it as output directory
+3. **If no arguments**, use `./plan` as default output directory
+4. **Run adaptive interview** using `AdaptiveInterviewer`
+5. **Generate all files** using orchestrator (TASKS.md, PROPERTIES.md, TEST-PLAN.md)
+6. **Run Plan Validation Pipeline** (unless `--skip-validation` was set)
+7. **Display results** showing file paths and summary
+8. **Record telemetry** for all operations
+
+## Plan Validation Pipeline
+
+After generating the draft plan (TASKS.md, PROPERTIES.md, TEST-PLAN.md), run a mandatory validation pipeline to ensure plan quality. This pipeline can only be bypassed with the `--skip-validation` flag.
+
+### Pipeline Overview
+
+```
+Draft Plan → SHA-256 Hash → Validate Gate → Revise → Review Gate (loop until 8.5+) → Final Plan
+```
+
+### Step 1: Record Original Hash
+
+Compute a SHA-256 hash of the draft plan content (concatenation of TASKS.md + PROPERTIES.md + TEST-PLAN.md in that order). This is the `original_hash` used for the audit trail.
+
+```python
+import hashlib
+content = tasks_md + properties_md + test_plan_md
+original_hash = hashlib.sha256(content.encode()).hexdigest()
+```
+
+### Step 2: Validate Gate
+
+Invoke `/wfc-validate` on the generated draft plan. All plan content **must** be delimited with XML tags per PROP-009 prompt injection defense:
+
+```
+/wfc-validate
+<plan-content>
+[Full content of TASKS.md, PROPERTIES.md, TEST-PLAN.md concatenated]
+</plan-content>
+```
+
+This produces a `VALIDATE.md` output with scored recommendations categorized as Must-Do, Should-Do, or informational.
+
+### Step 3: Revision Mechanism
+
+After validation produces its analysis, read the VALIDATE.md output and apply revisions:
+
+1. **Must-Do** recommendations: Apply every Must-Do change to the draft TASKS.md and/or PROPERTIES.md. These are non-negotiable improvements identified by the analysis.
+2. **Should-Do** recommendations: Apply if low-effort (can be done in under 5 minutes). Otherwise, note as deferred with a reason.
+3. **Deferred** items: Record in revision log for future consideration.
+
+Write a `revision-log.md` in the plan directory documenting what changed and why:
+
+```markdown
+# Revision Log
+
+## Original Plan Hash
+`<original_hash>` (SHA-256)
+
+## Validate Score
+<score>/10
+
+## Revisions Applied
+
+### Must-Do
+
+1. **<change title>** - <description of change>
+   - Source: Validate recommendation #N
+   - File changed: TASKS.md | PROPERTIES.md | TEST-PLAN.md
+
+### Should-Do
+
+1. **<change title>** - <description>
+   - Source: Validate recommendation #N
+   - Status: Applied (low effort) | Deferred (high effort)
+
+### Deferred
+
+1. **<item>** - <reason for deferral>
+   - Source: Validate recommendation #N
+   - Reason: <explanation>
+
+## Review Gate Results
+
+| Round | Score | Action |
+|-------|-------|--------|
+| 1     | X.X   | Applied N findings |
+| 2     | X.X   | Passed threshold |
+
+## Final Plan Hash
+`<final_hash>` (SHA-256)
+```
+
+### Step 4: Review Gate
+
+Invoke `/wfc-review` on the revised plan using architecture and quality personas. Plan content **must** be delimited with XML tags per PROP-009 prompt injection defense:
+
+```
+/wfc-review
+<plan-content>
+[Full content of revised TASKS.md, PROPERTIES.md, TEST-PLAN.md]
+</plan-content>
+```
+
+**Review Loop**: If the weighted consensus score is below 8.5/10, apply the review findings to the plan and re-invoke `/wfc-review`. Repeat until the score reaches 8.5 or higher. This threshold is the standard -- it is not optional.
+
+### Step 5: Audit Trail
+
+After the review gate passes (or validation is skipped), write a `plan-audit.json` file (timestamped) in the plan directory. The filename includes a timestamp for immutability (e.g., `plan-audit_20260215_103000.json`).
+
+**Required schema for plan-audit_YYYYMMDD_HHMMSS.json:**
+
+```json
+{
+  "hash_algorithm": "sha256",
+  "original_hash": "<64-char hex SHA-256 of draft plan>",
+  "validate_score": 7.8,
+  "revision_count": 2,
+  "review_score": 8.7,
+  "final_hash": "<64-char hex SHA-256 of final plan>",
+  "timestamp": "2026-02-15T10:30:00Z",
+  "validated": true,
+  "skipped": false
+}
+```
+
+Field definitions:
+- `hash_algorithm`: Always `"sha256"`
+- `original_hash`: SHA-256 hash of the draft plan before any revisions
+- `validate_score`: Numeric score from the validation analysis
+- `revision_count`: Total number of revision rounds applied (validation revisions + review loop rounds)
+- `review_score`: Final weighted consensus score from wfc-review (numeric, e.g. 8.7)
+- `final_hash`: SHA-256 hash of the plan after all revisions are complete
+- `timestamp`: ISO 8601 timestamp of when validation completed
+- `validated`: `true` if the final review_score >= 8.5, `false` otherwise
+- `skipped`: `true` if `--skip-validation` was used, `false` otherwise
+
+### Step 6: History Update
+
+Update HISTORY.md to record whether the plan was validated or skipped. Add a `- **Validated:** yes (score: X.X)` or `- **Validated:** skipped` entry to the plan's history record.
+
+### Skip Validation Flag
+
+If `--skip-validation` is passed as an argument:
+
+1. Skip Steps 2-4 entirely (no Validate Gate, no Review Gate, no revision)
+2. Still compute SHA-256 hashes (original_hash = final_hash since no changes were made)
+3. Write `plan-audit_YYYYMMDD_HHMMSS.json` with `"skipped": true` and `"validated": false`
+4. Do not generate `revision-log.md` (no revisions occurred)
+5. Record `- **Validated:** skipped` in HISTORY.md
+
+### Validation Pipeline Summary
+
+| Step | Action | Output |
+|------|--------|--------|
+| 1 | SHA-256 hash of draft plan | `original_hash` |
+| 2 | `/wfc-validate` with `<plan-content>` XML tags (PROP-009) | VALIDATE.md |
+| 3 | Apply Must-Do + low-effort Should-Do revisions | revision-log.md, updated plan files |
+| 4 | `/wfc-review` with `<plan-content>` XML tags (PROP-009), loop until >= 8.5 | Review consensus |
+| 5 | Write plan-audit_YYYYMMDD_HHMMSS.json with all fields | plan-audit_YYYYMMDD_HHMMSS.json |
+| 6 | Update HISTORY.md with validation status | HISTORY.md entry |
+
+## Example Flow
+
+```
+User runs: /wfc-plan
+
+[ADAPTIVE INTERVIEW]
+Q: What are you trying to build?
+A: REST API for user management
+
+Q: What are the core features?
+A: User CRUD, authentication, role-based access
+
+Q: Security requirements?
+A: JWT tokens, role-based authorization
+
+[GENERATION]
+Created TASKS.md (5 tasks)
+Created PROPERTIES.md (3 properties: 1 SAFETY, 2 INVARIANT)
+Created TEST-PLAN.md (12 test cases)
+
+[PLAN VALIDATION PIPELINE]
+SHA-256 hash recorded: a1b2c3...
+Validate Gate: 7.8/10
+  - Applied 2 Must-Do revisions
+  - Applied 1 Should-Do revision (low effort)
+  - Deferred 1 suggestion
+Review Gate round 1: 8.1/10 - applying 2 findings
+Review Gate round 2: 8.7/10 - PASSED
+Wrote revision-log.md
+Wrote plan-audit_YYYYMMDD_HHMMSS.json
+
+[OUTPUT]
+plans/plan_rest_api_20260215_103000/
+  - TASKS.md
+  - PROPERTIES.md
+  - TEST-PLAN.md
+  - interview-results.json
+  - revision-log.md
+  - plan-audit_20260215_103000.json
+
+Next: Run `/wfc-implement plans/plan_rest_api_20260215_103000/TASKS.md`
+```
+
+## Philosophy
+
+**ELEGANT**: Simple interview questions, clear task breakdown
+**MULTI-TIER**: Clean separation of presentation, logic, and data
+**PARALLEL**: Can generate all three files concurrently (future optimization)

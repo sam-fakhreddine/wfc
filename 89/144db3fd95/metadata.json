@@ -3,7 +3,7 @@
   "checkpoint_id": "89144db3fd95",
   "strategy": "manual-commit",
   "branch": "claude/add-prompt-fixer-and-doctor",
-  "checkpoints_count": 1,
+  "checkpoints_count": 5,
   "files_touched": [
     "wfc/skills/wfc-build/SKILL.md",
     "wfc/skills/wfc-implement/SKILL.md",
@@ -24,13 +24,20 @@
       "context": "/89/144db3fd95/1/context.md",
       "content_hash": "/89/144db3fd95/1/content_hash.txt",
       "prompt": "/89/144db3fd95/1/prompt.txt"
+    },
+    {
+      "metadata": "/89/144db3fd95/2/metadata.json",
+      "transcript": "/89/144db3fd95/2/full.jsonl",
+      "context": "/89/144db3fd95/2/context.md",
+      "content_hash": "/89/144db3fd95/2/content_hash.txt",
+      "prompt": "/89/144db3fd95/2/prompt.txt"
     }
   ],
   "token_usage": {
-    "input_tokens": 1914,
-    "cache_creation_tokens": 2575435,
-    "cache_read_tokens": 49651993,
-    "output_tokens": 10580,
-    "api_call_count": 511
+    "input_tokens": 2866,
+    "cache_creation_tokens": 2956218,
+    "cache_read_tokens": 52696480,
+    "output_tokens": 10839,
+    "api_call_count": 544
   }
 }
