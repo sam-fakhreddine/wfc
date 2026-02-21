@@ -3,7 +3,7 @@
   "checkpoint_id": "a9a434584edd",
   "strategy": "manual-commit",
   "branch": "claude/fix-consensus-review-critical-issues-1771647949",
-  "checkpoints_count": 12,
+  "checkpoints_count": 13,
   "files_touched": [
     "ba/BA-multi-tenant-wfc.md",
     "ba/VALIDATE.md",
@@ -78,13 +78,20 @@
       "context": "/a9/a434584edd/3/context.md",
       "content_hash": "/a9/a434584edd/3/content_hash.txt",
       "prompt": "/a9/a434584edd/3/prompt.txt"
+    },
+    {
+      "metadata": "/a9/a434584edd/4/metadata.json",
+      "transcript": "/a9/a434584edd/4/full.jsonl",
+      "context": "/a9/a434584edd/4/context.md",
+      "content_hash": "/a9/a434584edd/4/content_hash.txt",
+      "prompt": "/a9/a434584edd/4/prompt.txt"
     }
   ],
   "token_usage": {
-    "input_tokens": 10496,
-    "cache_creation_tokens": 4552695,
-    "cache_read_tokens": 84180054,
-    "output_tokens": 12086,
-    "api_call_count": 856
+    "input_tokens": 19510,
+    "cache_creation_tokens": 5510309,
+    "cache_read_tokens": 101674432,
+    "output_tokens": 13736,
+    "api_call_count": 1056
   }
 }
