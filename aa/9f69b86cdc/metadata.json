@@ -3,7 +3,7 @@
   "checkpoint_id": "aa9f69b86cdc",
   "strategy": "manual-commit",
   "branch": "feat/rest-api-implementation",
-  "checkpoints_count": 2,
+  "checkpoints_count": 3,
   "files_touched": [
     "docker-compose.rest-api.yml",
     "docs/REST_API.md"
@@ -22,13 +22,20 @@
       "context": "/aa/9f69b86cdc/1/context.md",
       "content_hash": "/aa/9f69b86cdc/1/content_hash.txt",
       "prompt": "/aa/9f69b86cdc/1/prompt.txt"
+    },
+    {
+      "metadata": "/aa/9f69b86cdc/2/metadata.json",
+      "transcript": "/aa/9f69b86cdc/2/full.jsonl",
+      "context": "/aa/9f69b86cdc/2/context.md",
+      "content_hash": "/aa/9f69b86cdc/2/content_hash.txt",
+      "prompt": "/aa/9f69b86cdc/2/prompt.txt"
     }
   ],
   "token_usage": {
-    "input_tokens": 8000,
-    "cache_creation_tokens": 2043336,
-    "cache_read_tokens": 43826235,
-    "output_tokens": 9412,
-    "api_call_count": 457
+    "input_tokens": 9008,
+    "cache_creation_tokens": 2503419,
+    "cache_read_tokens": 47671605,
+    "output_tokens": 9726,
+    "api_call_count": 501
   }
 }
