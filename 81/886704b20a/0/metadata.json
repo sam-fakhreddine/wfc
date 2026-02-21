@@ -1,0 +1,32 @@
+{
+  "cli_version": "0.4.5",
+  "checkpoint_id": "81886704b20a",
+  "session_id": "558241d6-1b1a-49db-9a64-d522165180eb",
+  "strategy": "manual-commit",
+  "created_at": "2026-02-21T19:58:26.656165Z",
+  "branch": "feat/multi-tenant-wfc-architecture",
+  "checkpoints_count": 1,
+  "files_touched": [
+    "tests/tier0/test_token_bucket.py"
+  ],
+  "agent": "Claude Code",
+  "turn_id": "18c495b58a91",
+  "transcript_identifier_at_start": "91a4c66e-e97f-4d6d-b04e-d73ab1a8fd57",
+  "token_usage": {
+    "input_tokens": 7739,
+    "cache_creation_tokens": 1660340,
+    "cache_read_tokens": 35435758,
+    "output_tokens": 1618,
+    "api_call_count": 356
+  },
+  "initial_attribution": {
+    "calculated_at": "2026-02-21T19:58:24.586556Z",
+    "agent_lines": 0,
+    "human_added": 0,
+    "human_modified": 1,
+    "human_removed": 0,
+    "total_committed": 0,
+    "agent_percentage": 0
+  },
+  "transcript_path": ".claude/projects/-Users-samfakhreddine-repos-wfc/558241d6-1b1a-49db-9a64-d522165180eb.jsonl"
+}

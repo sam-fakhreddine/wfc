@@ -1,0 +1,26 @@
+{
+  "cli_version": "0.4.5",
+  "checkpoint_id": "81886704b20a",
+  "strategy": "manual-commit",
+  "branch": "feat/multi-tenant-wfc-architecture",
+  "checkpoints_count": 1,
+  "files_touched": [
+    "tests/tier0/test_token_bucket.py"
+  ],
+  "sessions": [
+    {
+      "metadata": "/81/886704b20a/0/metadata.json",
+      "transcript": "/81/886704b20a/0/full.jsonl",
+      "context": "/81/886704b20a/0/context.md",
+      "content_hash": "/81/886704b20a/0/content_hash.txt",
+      "prompt": "/81/886704b20a/0/prompt.txt"
+    }
+  ],
+  "token_usage": {
+    "input_tokens": 7739,
+    "cache_creation_tokens": 1660340,
+    "cache_read_tokens": 35435758,
+    "output_tokens": 1618,
+    "api_call_count": 356
+  }
+}
