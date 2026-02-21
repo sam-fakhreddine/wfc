@@ -1,0 +1,29 @@
+{
+  "cli_version": "0.4.5",
+  "checkpoint_id": "e0ae4b533269",
+  "strategy": "manual-commit",
+  "branch": "claude/fix-consensus-review-critical-issues-1771647949",
+  "checkpoints_count": 1,
+  "files_touched": [
+    "run_real_consensus_review.py",
+    "test_consensus_review.py",
+    "tests/orchestrators/review/test_diff_parser.py",
+    "wfc/scripts/orchestrators/review/reviewer_engine.py"
+  ],
+  "sessions": [
+    {
+      "metadata": "/e0/ae4b533269/0/metadata.json",
+      "transcript": "/e0/ae4b533269/0/full.jsonl",
+      "context": "/e0/ae4b533269/0/context.md",
+      "content_hash": "/e0/ae4b533269/0/content_hash.txt",
+      "prompt": "/e0/ae4b533269/0/prompt.txt"
+    }
+  ],
+  "token_usage": {
+    "input_tokens": 1843,
+    "cache_creation_tokens": 2397700,
+    "cache_read_tokens": 45050870,
+    "output_tokens": 3111,
+    "api_call_count": 455
+  }
+}
