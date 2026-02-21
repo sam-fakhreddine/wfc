@@ -4,7 +4,7 @@ services:
       context: .
       dockerfile: Dockerfile.rest_api
     ports:
-      - "8000:8000"
+      - "9950:8000"
     volumes:
       - ./wfc:/app/wfc:ro
       - wfc-data:/root/.wfc

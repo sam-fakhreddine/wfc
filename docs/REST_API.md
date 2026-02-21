@@ -7,7 +7,7 @@ Multi-tenant code review and project management API.
 ### 1. Start the Server
 
 ```bash
-uv run uvicorn wfc.servers.rest_api.main:app --host 0.0.0.0 --port 8000
+uv run uvicorn wfc.servers.rest_api.main:app --host 0.0.0.0 --port 9950
 ```
 
 Or with Docker:
@@ -19,7 +19,7 @@ docker compose -f docker-compose.rest-api.yml up
 ### 2. Create a Project
 
 ```bash
-curl -X POST http://localhost:8000/v1/projects/ \
+curl -X POST http://localhost:9950/v1/projects/ \
   -H "Content-Type: application/json" \
   -d '{
     "project_id": "my-project",
@@ -43,7 +43,7 @@ Response (201 Created):
 ### 3. Submit a Code Review
 
 ```bash
-curl -X POST http://localhost:8000/v1/reviews/ \
+curl -X POST http://localhost:9950/v1/reviews/ \
   -H "Content-Type: application/json" \
   -H "X-Project-ID: my-project" \
   -H "Authorization: Bearer <api-key>" \
@@ -67,7 +67,7 @@ Response (202 Accepted):
 ### 4. Check Review Status
 
 ```bash
-curl -X GET http://localhost:8000/v1/reviews/<review-id> \
+curl -X GET http://localhost:9950/v1/reviews/<review-id> \
   -H "X-Project-ID: my-project" \
   -H "Authorization: Bearer <api-key>"
 ```
@@ -170,6 +170,6 @@ All errors follow this format:
 
 Interactive API docs are available at:
 
-- Swagger UI: `http://localhost:8000/docs`
-- ReDoc: `http://localhost:8000/redoc`
-- OpenAPI JSON: `http://localhost:8000/openapi.json`
+- Swagger UI: `http://localhost:9950/docs`
+- ReDoc: `http://localhost:9950/redoc`
+- OpenAPI JSON: `http://localhost:9950/openapi.json`
