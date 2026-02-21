@@ -3,7 +3,7 @@
   "checkpoint_id": "840f6a4f70a5",
   "strategy": "manual-commit",
   "branch": "feat/multi-tenant-wfc-architecture",
-  "checkpoints_count": 1,
+  "checkpoints_count": 2,
   "files_touched": [
     ".github/workflows/ci.yml",
     "pyproject.toml"
@@ -22,13 +22,20 @@
       "context": "/84/0f6a4f70a5/1/context.md",
       "content_hash": "/84/0f6a4f70a5/1/content_hash.txt",
       "prompt": "/84/0f6a4f70a5/1/prompt.txt"
+    },
+    {
+      "metadata": "/84/0f6a4f70a5/2/metadata.json",
+      "transcript": "/84/0f6a4f70a5/2/full.jsonl",
+      "context": "/84/0f6a4f70a5/2/context.md",
+      "content_hash": "/84/0f6a4f70a5/2/content_hash.txt",
+      "prompt": "/84/0f6a4f70a5/2/prompt.txt"
     }
   ],
   "token_usage": {
-    "input_tokens": 7758,
-    "cache_creation_tokens": 1785497,
-    "cache_read_tokens": 38381393,
-    "output_tokens": 8872,
-    "api_call_count": 388
+    "input_tokens": 8766,
+    "cache_creation_tokens": 2245580,
+    "cache_read_tokens": 42226763,
+    "output_tokens": 9186,
+    "api_call_count": 432
   }
 }
