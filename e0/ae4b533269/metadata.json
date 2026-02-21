@@ -3,7 +3,7 @@
   "checkpoint_id": "e0ae4b533269",
   "strategy": "manual-commit",
   "branch": "claude/fix-consensus-review-critical-issues-1771647949",
-  "checkpoints_count": 2,
+  "checkpoints_count": 3,
   "files_touched": [
     "run_real_consensus_review.py",
     "test_consensus_review.py",
@@ -31,13 +31,20 @@
       "context": "/e0/ae4b533269/2/context.md",
       "content_hash": "/e0/ae4b533269/2/content_hash.txt",
       "prompt": "/e0/ae4b533269/2/prompt.txt"
+    },
+    {
+      "metadata": "/e0/ae4b533269/3/metadata.json",
+      "transcript": "/e0/ae4b533269/3/full.jsonl",
+      "context": "/e0/ae4b533269/3/context.md",
+      "content_hash": "/e0/ae4b533269/3/content_hash.txt",
+      "prompt": "/e0/ae4b533269/3/prompt.txt"
     }
   ],
   "token_usage": {
-    "input_tokens": 2922,
-    "cache_creation_tokens": 3035518,
-    "cache_read_tokens": 53497363,
-    "output_tokens": 10894,
-    "api_call_count": 555
+    "input_tokens": 11906,
+    "cache_creation_tokens": 3987098,
+    "cache_read_tokens": 70508308,
+    "output_tokens": 12530,
+    "api_call_count": 747
   }
 }
