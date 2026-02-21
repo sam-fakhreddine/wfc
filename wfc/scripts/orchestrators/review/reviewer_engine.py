@@ -286,9 +286,11 @@ class ReviewerEngine:
                     )
 
                     logger.info(
-                        f"Token reduction for {config.id}: "
-                        f"{full_diff_tokens} → {manifest_tokens} tokens "
-                        f"({reduction_pct:.1f}% reduction)"
+                        "Token reduction for %s: %s → %s tokens (%.1f%% reduction)",
+                        config.id,
+                        full_diff_tokens,
+                        manifest_tokens,
+                        reduction_pct,
                     )
 
                     token_metrics = {
