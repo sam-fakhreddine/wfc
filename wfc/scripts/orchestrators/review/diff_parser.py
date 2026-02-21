@@ -6,6 +6,9 @@ import re
 
 from .diff_manifest import ChangeHunk, ChangeType, FileChange, HunkType
 
+_DIFF_GIT_PATTERN = re.compile(r"^diff --git a/(.+?) b/(.+?)$")
+_HUNK_HEADER_PATTERN = re.compile(r"@@ -(\d+)(?:,(\d+))? \+(\d+)(?:,(\d+))? @@([^\n]*)")
+
 
 def parse_diff(diff_content: str) -> list[FileChange]:
     """
@@ -41,7 +44,7 @@ def parse_diff(diff_content: str) -> list[FileChange]:
             if current_file:
                 file_changes.append(current_file)
 
-            match = re.search(r"a/(.*?) b/(.*?)$", line)
+            match = _DIFF_GIT_PATTERN.search(line)
             if match:
                 path = match.group(2)
                 current_file = FileChange(path=path, change_type=ChangeType.MODIFIED)
@@ -63,10 +66,10 @@ def parse_diff(diff_content: str) -> list[FileChange]:
                 _finalize_hunk(current_hunk, current_hunk_lines, current_file)
                 current_file.hunks.append(current_hunk)
 
-            match = re.search(r"@@ -(\d+),?\d* \+(\d+),?\d* @@(.*)", line)
+            match = _HUNK_HEADER_PATTERN.search(line)
             if match:
-                line_start = int(match.group(2))
-                context_hint = match.group(3).strip()
+                line_start = int(match.group(3))
+                context_hint = match.group(5).strip()
 
                 current_hunk = ChangeHunk(
                     line_start=line_start,
@@ -116,7 +119,7 @@ def _finalize_hunk(hunk: ChangeHunk, hunk_lines: list[str], file_change: FileCha
         hunk_lines: Raw diff lines for this hunk
         file_change: Parent file change
     """
-    hunk.line_end = hunk.line_start + max(hunk.added_lines, 1) - 1
+    hunk.line_end = hunk.line_start + max(hunk.added_lines, hunk.removed_lines, 1) - 1
 
     if hunk.added_lines > 0 and hunk.removed_lines == 0:
         hunk.change_type = HunkType.ADDITION

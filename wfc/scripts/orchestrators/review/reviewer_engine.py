@@ -279,7 +279,11 @@ class ReviewerEngine:
 
                     full_diff_tokens = len(diff_content) // 4
                     manifest_tokens = manifest.get_token_estimate()
-                    reduction_pct = ((full_diff_tokens - manifest_tokens) / full_diff_tokens) * 100
+                    reduction_pct = (
+                        ((full_diff_tokens - manifest_tokens) / full_diff_tokens) * 100
+                        if full_diff_tokens > 0
+                        else 0.0
+                    )
 
                     logger.info(
                         f"Token reduction for {config.id}: "
