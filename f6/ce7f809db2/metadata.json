@@ -1,0 +1,31 @@
+{
+  "cli_version": "0.4.2",
+  "checkpoint_id": "f6ce7f809db2",
+  "strategy": "manual-commit",
+  "branch": "main",
+  "checkpoints_count": 1,
+  "files_touched": [
+    "CHANGELOG.md",
+    "QUICKSTART.md",
+    "wfc/cli/metrics.py",
+    "wfc/shared/telemetry_auto.py",
+    "wfc/skills/review/CHECKLIST.md",
+    "wfc/skills/review/SKILL.md"
+  ],
+  "sessions": [
+    {
+      "metadata": "/f6/ce7f809db2/0/metadata.json",
+      "transcript": "/f6/ce7f809db2/0/full.jsonl",
+      "context": "/f6/ce7f809db2/0/context.md",
+      "content_hash": "/f6/ce7f809db2/0/content_hash.txt",
+      "prompt": "/f6/ce7f809db2/0/prompt.txt"
+    }
+  ],
+  "token_usage": {
+    "input_tokens": 137,
+    "cache_creation_tokens": 18695,
+    "cache_read_tokens": 2748031,
+    "output_tokens": 1347,
+    "api_call_count": 19
+  }
+}

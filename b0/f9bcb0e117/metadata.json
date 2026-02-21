@@ -1,0 +1,54 @@
+{
+  "cli_version": "0.4.5",
+  "checkpoint_id": "b0f9bcb0e117",
+  "strategy": "manual-commit",
+  "branch": "claude/add-prompt-fixer-and-doctor",
+  "checkpoints_count": 1,
+  "files_touched": [
+    "tests/test_batch_performance.py"
+  ],
+  "sessions": [
+    {
+      "metadata": "/b0/f9bcb0e117/0/metadata.json",
+      "transcript": "/b0/f9bcb0e117/0/full.jsonl",
+      "context": "/b0/f9bcb0e117/0/context.md",
+      "content_hash": "/b0/f9bcb0e117/0/content_hash.txt",
+      "prompt": "/b0/f9bcb0e117/0/prompt.txt"
+    },
+    {
+      "metadata": "/b0/f9bcb0e117/1/metadata.json",
+      "transcript": "/b0/f9bcb0e117/1/full.jsonl",
+      "context": "/b0/f9bcb0e117/1/context.md",
+      "content_hash": "/b0/f9bcb0e117/1/content_hash.txt",
+      "prompt": "/b0/f9bcb0e117/1/prompt.txt"
+    },
+    {
+      "metadata": "/b0/f9bcb0e117/2/metadata.json",
+      "transcript": "/b0/f9bcb0e117/2/full.jsonl",
+      "context": "/b0/f9bcb0e117/2/context.md",
+      "content_hash": "/b0/f9bcb0e117/2/content_hash.txt",
+      "prompt": "/b0/f9bcb0e117/2/prompt.txt"
+    },
+    {
+      "metadata": "/b0/f9bcb0e117/3/metadata.json",
+      "transcript": "/b0/f9bcb0e117/3/full.jsonl",
+      "context": "/b0/f9bcb0e117/3/context.md",
+      "content_hash": "/b0/f9bcb0e117/3/content_hash.txt",
+      "prompt": "/b0/f9bcb0e117/3/prompt.txt"
+    },
+    {
+      "metadata": "/b0/f9bcb0e117/4/metadata.json",
+      "transcript": "/b0/f9bcb0e117/4/full.jsonl",
+      "context": "/b0/f9bcb0e117/4/context.md",
+      "content_hash": "/b0/f9bcb0e117/4/content_hash.txt",
+      "prompt": "/b0/f9bcb0e117/4/prompt.txt"
+    }
+  ],
+  "token_usage": {
+    "input_tokens": 16871,
+    "cache_creation_tokens": 4185637,
+    "cache_read_tokens": 98930741,
+    "output_tokens": 59751,
+    "api_call_count": 941
+  }
+}

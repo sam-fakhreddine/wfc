@@ -1,0 +1,32 @@
+{
+  "cli_version": "0.4.2",
+  "checkpoint_id": "f96ba14291fd",
+  "session_id": "ce9b467e-c414-447f-b9f2-fe807be3000f",
+  "strategy": "manual-commit",
+  "created_at": "2026-02-19T02:25:16.396583Z",
+  "branch": "claude/enhance-workflow-plugin-c25hS",
+  "checkpoints_count": 1,
+  "files_touched": [
+    "install-universal.sh"
+  ],
+  "agent": "Claude Code",
+  "transcript_identifier_at_start": "e3a94ae2-96a2-431b-ae7d-4e8624486cca",
+  "checkpoint_transcript_start": 1227,
+  "transcript_lines_at_start": 1227,
+  "token_usage": {
+    "input_tokens": 53,
+    "cache_creation_tokens": 142576,
+    "cache_read_tokens": 4678307,
+    "output_tokens": 2363,
+    "api_call_count": 39
+  },
+  "initial_attribution": {
+    "calculated_at": "2026-02-19T02:25:16.265784Z",
+    "agent_lines": 0,
+    "human_added": 139,
+    "human_modified": 0,
+    "human_removed": 0,
+    "total_committed": 139,
+    "agent_percentage": 0
+  }
+}

@@ -1,0 +1,238 @@
+Implement the following plan:
+
+# Documentation Agent: Workflow Integration Plan
+
+## Context
+
+The user requested a permanent "Documentation Agent" workflow step that:
+- **Reads** changed files from a review request
+- **Determines** which existing docs need updating (analysis only)
+- **Never writes** to docs or commits anything
+- **Always runs** as part of the review workflow (non-blocking)
+
+This is triggered by: after every `finalize_review()` call, produce a `DOC-AUDIT-{task_id}.md` report listing what docs need human attention.
+
+---
+
+## Implementation
+
+### Wave 2 Status (before we start)
+- ✅ TASK-007 (AST→Findings): Complete
+- ✅ TASK-011 (EvalJudge): Complete (67 tests)
+- ✅ TASK-014 (ModelRouter wiring): Complete (4 new tests)
+- 🔄 TASK-004 (Validation wiring, aa58be0): Still running — modifies orchestrator.py
+
+**Doc Agent task must wait for aa58be0 to complete** (both touch orchestrator.py).
+
+---
+
+## New File: `wfc/scripts/skills/review/doc_auditor.py`
+
+### Dataclasses
+
+```python
+@dataclass
+class DocGap:
+    """A documentation item that may need updating."""
+    doc_file: str        # Path to doc file (e.g. "docs/workflow/WFC_IMPLEMENTATION.md")
+    reason: str          # Why it may need updating
+    changed_file: str    # Which changed file triggered this
+    confidence: str      # "high" | "medium" | "low"
+
+@dataclass
+class DocAuditReport:
+    """Result of documentation gap analysis."""
+    task_id: str
+    gaps: list[DocGap]          # Docs that need updating
+    missing_docstrings: list[str]  # Functions/classes without docstrings (from AST)
+    summary: str                 # Human-readable summary
+    report_path: Path            # DOC-AUDIT-{task_id}.md
+```
+
+### DocAuditor Class
+
+```python
+class DocAuditor:
+    """Analyze changed files to determine which docs need updating.
+
+    Analysis-only: never modifies files, never blocks review.
+    """
+
+    DOCS_ROOT = Path("docs/")
+    KEY_DOCS = ["CLAUDE.md", "docs/README.md"]
+
+    def analyze(
+        self,
+        task_id: str,
+        files: list[str],
+        diff_content: str,
+        output_dir: Path,
+    ) -> DocAuditReport:
+        """Run doc gap analysis. Always returns a result (fail-open)."""
+        try:
+            gaps = self._find_doc_gaps(files, diff_content)
+            missing_ds = self._find_missing_docstrings(files, diff_content)
+            report_path = self._write_report(task_id, gaps, missing_ds, output_dir)
+            summary = self._build_summary(gaps, missing_ds)
+        except Exception:
+            # Fail-open: never block review on doc audit failure
+            gaps, missing_ds = [], []
+            report_path = output_dir / f"DOC-AUDIT-{task_id}.md"
+            summary = "Doc audit unavailable (fail-open)."
+        return DocAuditReport(task_id, gaps, missing_ds, summary, report_path)
+
+    def _find_doc_gaps(self, files: list[str], diff_content: str) -> list[DocGap]:
+        """For each changed file, search docs/ for mentions of its module name."""
+        # Extract module names from file paths (e.g. "review/orchestrator" from path)
+        # Search docs/*.md for those module names via substring match
+        # Also check CLAUDE.md and docs/README.md
+        # Return DocGap for each hit (confidence="high" if exact path match, "medium" otherwise)
+
+    def _find_missing_docstrings(self, files: list[str], diff_content: str) -> list[str]:
+        """Use ASTAnalyzer to find functions/classes added in diff without docstrings."""
+        # Parse diff for "+" lines that define functions/classes
+        # Cross-reference with ASTAnalyzer output for those files
+        # Return list of "file:line: def function_name" strings
+
+    def _write_report(self, ...) -> Path:
+        """Write DOC-AUDIT-{task_id}.md report."""
+        # Markdown format with sections:
+        # ## Documentation Gaps (N items)
+        # | Doc File | Changed File | Reason | Confidence |
+        # ## Missing Docstrings (N items)
+        # - file:line: function_name
+        # ## Summary
+```
+
+---
+
+## Integration: `ReviewOrchestrator.finalize_review()`
+
+**File**: `wfc/scripts/skills/review/orchestrator.py`
+
+After the existing report is generated, call `DocAuditor.analyze()`:
+
+```python
+# In finalize_review(), after generating the review report:
+doc_auditor = DocAuditor()
+doc_report = doc_auditor.analyze(
+    task_id=request.task_id,
+    files=request.files,
+    diff_content=request.diff_content or "",
+    output_dir=output_dir,
+)
+
+return ReviewResult(
+    task_id=request.task_id,
+    consensus=cs_result,
+    report_path=report_path,
+    passed=cs_result.passed,
+    doc_audit=doc_report,   # NEW field
+)
+```
+
+**ReviewResult** gets one new field:
+
+```python
+@dataclass
+class ReviewResult:
+    task_id: str
+    consensus: ConsensusScoreResult
+    report_path: Path
+    passed: bool
+    doc_audit: DocAuditReport | None = None  # NEW
+```
+
+Also add a **"## Documentation Audit"** section to `REVIEW-{task_id}.md` that shows:
+- N doc files may need updating (link to DOC-AUDIT report)
+- N docstrings missing
+
+---
+
+## Tests: `tests/test_doc_auditor.py`
+
+TDD approach — 20+ tests across:
+
+```
+TestDocGapDataclass         (3 tests) - fields, defaults
+TestDocAuditReportDataclass (3 tests) - fields
+TestFindDocGaps             (5 tests):
+  - changed file with matching doc → DocGap returned
+  - changed file with no matching doc → no gap
+  - module name extracted from path correctly
+  - confidence=high for exact path match, medium for keyword
+  - multiple changed files → gaps for each
+TestFindMissingDocstrings   (4 tests):
+  - new function in diff without docstring → reported
+  - new function in diff WITH docstring → not reported
+  - non-Python file → skipped
+  - empty diff → empty result
+TestAnalyzeFailOpen         (3 tests):
+  - exception in _find_doc_gaps → still returns DocAuditReport
+  - invalid files list → still returns
+  - output_dir not writable → still returns with error summary
+TestOrchestratorIntegration (4 tests):
+  - finalize_review returns ReviewResult with doc_audit field
+  - review report contains "## Documentation Audit" section
+  - doc_audit.gaps populated for known-matching files
+  - doc_audit never blocks review (passed field unchanged)
+```
+
+---
+
+## Critical Files
+
+- **New**: `wfc/scripts/skills/review/doc_auditor.py`
+- **New**: `tests/test_doc_auditor.py`
+- **Modify**: `wfc/scripts/skills/review/orchestrator.py` (add DocAuditor call + ReviewResult.doc_audit field)
+- **Reuse**: `wfc/scripts/skills/review/ast_analyzer.py` (ASTAnalyzer for docstring detection)
+
+---
+
+## Sequencing
+
+1. Wait for aa58be0 (TASK-004) to complete (modifies orchestrator.py)
+2. Then launch parallel agents for:
+   - Doc Agent (this plan)
+   - TASK-005 (validation metrics, depends on TASK-004)
+   - TASK-008 (AST in pipeline, depends on TASK-007 ✅)
+   - TASK-012 (eval runner, depends on TASK-011 ✅)
+3. Then TASK-009 (impact graph, depends on TASK-008)
+4. Final: commit checkpoint + PR
+
+---
+
+## Verification
+
+```bash
+# Run new doc auditor tests
+uv run pytest tests/test_doc_auditor.py -v
+
+# Run orchestrator integration tests (confirm doc_audit in ReviewResult)
+uv run pytest tests/test_orchestrator_integration.py -v
+
+# Confirm full suite not broken
+uv run pytest tests/ -v --ignore=tests/test_rag_pipeline.py --ignore=tests/test_retriever.py -q
+
+# Check generated DOC-AUDIT report exists after review
+# (inspect via tmp_path in test)
+```
+
+
+If you need specific details from before exiting plan mode (like exact code snippets, error messages, or content you generated), read the full transcript at: /Users/samfakhreddine/.REDACTED.jsonl
+
+---
+
+3
+
+---
+
+ok where do we stand?
+
+---
+
+commit what we have, gonna run out of credits
+
+---
+
+creatr a draft PR

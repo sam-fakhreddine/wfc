@@ -1,0 +1,73 @@
+{
+  "cli_version": "0.4.2",
+  "checkpoint_id": "5ccf3b4edf78",
+  "strategy": "manual-commit",
+  "branch": "feat/devcontainer",
+  "checkpoints_count": 12,
+  "files_touched": [
+    ".devcontainer/.dockerignore",
+    ".devcontainer/.env",
+    ".devcontainer/.env.example",
+    ".devcontainer/Dockerfile",
+    ".devcontainer/devcontainer.json",
+    ".devcontainer/docker-compose.override.yml.example",
+    ".devcontainer/docker-compose.yml",
+    ".devcontainer/scripts/analyze-firewall-logs.sh",
+    ".devcontainer/scripts/init-firewall.sh",
+    ".devcontainer/scripts/lib/colors.sh",
+    ".devcontainer/scripts/lib/config.sh",
+    ".devcontainer/scripts/lib/docker.sh",
+    ".devcontainer/scripts/lib/mounts.sh",
+    ".devcontainer/scripts/lib/validate.sh",
+    ".devcontainer/scripts/post-create.sh",
+    ".devcontainer/scripts/post-start.sh",
+    ".devcontainer/scripts/quick-start.sh",
+    ".devcontainer/scripts/start.sh",
+    ".devcontainer/scripts/verify-container.sh",
+    ".devcontainer/setup.sh",
+    ".development/scratch/ISTHISSMART-firewalld.md",
+    ".gitignore",
+    "CLAUDE.md",
+    "Makefile",
+    "install-universal.sh",
+    "scripts/pre-commit.sh",
+    "wfc/skills/wfc-architecture/SKILL.md",
+    "wfc/skills/wfc-build/SKILL.md",
+    "wfc/skills/wfc-build/cli.py",
+    "wfc/skills/wfc-build/orchestrator.py",
+    "wfc/skills/wfc-implement/SKILL.md",
+    "wfc/skills/wfc-isthissmart/SKILL.md",
+    "wfc/skills/wfc-newskill/SKILL.md",
+    "wfc/skills/wfc-observe/SKILL.md",
+    "wfc/skills/wfc-plan/SKILL.md",
+    "wfc/skills/wfc-pr-comments/SKILL.md",
+    "wfc/skills/wfc-retro/SKILL.md",
+    "wfc/skills/wfc-review/SKILL.md",
+    "wfc/skills/wfc-safeclaude/SKILL.md",
+    "wfc/skills/wfc-security/SKILL.md",
+    "wfc/skills/wfc-test/SKILL.md"
+  ],
+  "sessions": [
+    {
+      "metadata": "/5c/cf3b4edf78/0/metadata.json",
+      "transcript": "/5c/cf3b4edf78/0/full.jsonl",
+      "context": "/5c/cf3b4edf78/0/context.md",
+      "content_hash": "/5c/cf3b4edf78/0/content_hash.txt",
+      "prompt": "/5c/cf3b4edf78/0/prompt.txt"
+    },
+    {
+      "metadata": "/5c/cf3b4edf78/1/metadata.json",
+      "transcript": "/5c/cf3b4edf78/1/full.jsonl",
+      "context": "/5c/cf3b4edf78/1/context.md",
+      "content_hash": "/5c/cf3b4edf78/1/content_hash.txt",
+      "prompt": "/5c/cf3b4edf78/1/prompt.txt"
+    }
+  ],
+  "token_usage": {
+    "input_tokens": 2196,
+    "cache_creation_tokens": 883681,
+    "cache_read_tokens": 34712580,
+    "output_tokens": 19583,
+    "api_call_count": 323
+  }
+}

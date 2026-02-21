@@ -1,0 +1,30 @@
+{
+  "cli_version": "0.4.2",
+  "checkpoint_id": "d88ba5a2164e",
+  "strategy": "manual-commit",
+  "branch": "feat/plugin-integration-7-features",
+  "checkpoints_count": 1,
+  "files_touched": [
+    ".gitignore",
+    "docs/OWASP_LLM_TOP10_MITIGATIONS.md",
+    "install-universal.sh",
+    "tests/test_plugin_integration.py",
+    "wfc/scripts/hooks/__init__.py"
+  ],
+  "sessions": [
+    {
+      "metadata": "/d8/8ba5a2164e/0/metadata.json",
+      "transcript": "/d8/8ba5a2164e/0/full.jsonl",
+      "context": "/d8/8ba5a2164e/0/context.md",
+      "content_hash": "/d8/8ba5a2164e/0/content_hash.txt",
+      "prompt": "/d8/8ba5a2164e/0/prompt.txt"
+    }
+  ],
+  "token_usage": {
+    "input_tokens": 12,
+    "cache_creation_tokens": 3732,
+    "cache_read_tokens": 1610313,
+    "output_tokens": 280,
+    "api_call_count": 10
+  }
+}

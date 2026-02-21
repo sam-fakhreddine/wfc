@@ -1,0 +1,29 @@
+ok I run wfc local and this is the development code.
+I want to remove the "installed" version of wfc without losing my development data because I want to get to the version we have in `main` right now. Understood?
+
+---
+
+what do you mean unstaged?
+
+---
+
+.development should move to ~/.wfc/development (thats the new pattern)
+same with test-results and validation
+and then we deep dive on docs and skills
+
+---
+
+yes nothing lost just moved
+
+---
+
+tell me what is unstaged and why
+
+---
+
+ok lets drop anything that is duplicated.
+and lets compare to what is in main right now because I merged a large PR an hour ago
+
+---
+
+gonna need to rbanch because you cant push to main but #1

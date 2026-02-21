@@ -1,0 +1,61 @@
+{
+  "cli_version": "0.4.5",
+  "checkpoint_id": "c172af8bdda4",
+  "strategy": "manual-commit",
+  "branch": "claude/add-prompt-fixer-and-doctor",
+  "checkpoints_count": 1,
+  "files_touched": [
+    "tests/test_doctor_types.py",
+    "wfc/skills/wfc-doctor/checks/hooks_check.py",
+    "wfc/skills/wfc-doctor/checks/precommit_check.py",
+    "wfc/skills/wfc-doctor/checks/prompts_check.py",
+    "wfc/skills/wfc-doctor/checks/settings_check.py",
+    "wfc/skills/wfc-doctor/checks/skills_check.py",
+    "wfc/skills/wfc-doctor/orchestrator.py",
+    "wfc/skills/wfc-doctor/types.py"
+  ],
+  "sessions": [
+    {
+      "metadata": "/c1/72af8bdda4/0/metadata.json",
+      "transcript": "/c1/72af8bdda4/0/full.jsonl",
+      "context": "/c1/72af8bdda4/0/context.md",
+      "content_hash": "/c1/72af8bdda4/0/content_hash.txt",
+      "prompt": "/c1/72af8bdda4/0/prompt.txt"
+    },
+    {
+      "metadata": "/c1/72af8bdda4/1/metadata.json",
+      "transcript": "/c1/72af8bdda4/1/full.jsonl",
+      "context": "/c1/72af8bdda4/1/context.md",
+      "content_hash": "/c1/72af8bdda4/1/content_hash.txt",
+      "prompt": "/c1/72af8bdda4/1/prompt.txt"
+    },
+    {
+      "metadata": "/c1/72af8bdda4/2/metadata.json",
+      "transcript": "/c1/72af8bdda4/2/full.jsonl",
+      "context": "/c1/72af8bdda4/2/context.md",
+      "content_hash": "/c1/72af8bdda4/2/content_hash.txt",
+      "prompt": "/c1/72af8bdda4/2/prompt.txt"
+    },
+    {
+      "metadata": "/c1/72af8bdda4/3/metadata.json",
+      "transcript": "/c1/72af8bdda4/3/full.jsonl",
+      "context": "/c1/72af8bdda4/3/context.md",
+      "content_hash": "/c1/72af8bdda4/3/content_hash.txt",
+      "prompt": "/c1/72af8bdda4/3/prompt.txt"
+    },
+    {
+      "metadata": "/c1/72af8bdda4/4/metadata.json",
+      "transcript": "/c1/72af8bdda4/4/full.jsonl",
+      "context": "/c1/72af8bdda4/4/context.md",
+      "content_hash": "/c1/72af8bdda4/4/content_hash.txt",
+      "prompt": "/c1/72af8bdda4/4/prompt.txt"
+    }
+  ],
+  "token_usage": {
+    "input_tokens": 16240,
+    "cache_creation_tokens": 3176247,
+    "cache_read_tokens": 79458488,
+    "output_tokens": 58212,
+    "api_call_count": 758
+  }
+}

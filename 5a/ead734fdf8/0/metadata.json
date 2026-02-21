@@ -1,0 +1,31 @@
+{
+  "cli_version": "0.4.5",
+  "checkpoint_id": "5aead734fdf8",
+  "session_id": "42155349-b9de-4688-89ea-fe461e5a8298",
+  "strategy": "manual-commit",
+  "created_at": "2026-02-20T22:03:59.078062Z",
+  "branch": "claude/add-prompt-fixer-and-doctor",
+  "checkpoints_count": 1,
+  "files_touched": [
+    "wfc/skills/wfc-doctor/SKILL.md"
+  ],
+  "agent": "Claude Code",
+  "turn_id": "2c08e01df319",
+  "token_usage": {
+    "input_tokens": 1252,
+    "cache_creation_tokens": 1726022,
+    "cache_read_tokens": 28030043,
+    "output_tokens": 2064,
+    "api_call_count": 288
+  },
+  "initial_attribution": {
+    "calculated_at": "2026-02-20T22:03:56.421322Z",
+    "agent_lines": 0,
+    "human_added": 14,
+    "human_modified": 6,
+    "human_removed": 0,
+    "total_committed": 14,
+    "agent_percentage": 0
+  },
+  "transcript_path": ".claude/projects/-Users-samfakhreddine-repos-wfc/42155349-b9de-4688-89ea-fe461e5a8298.jsonl"
+}

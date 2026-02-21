@@ -1,0 +1,37 @@
+{
+  "cli_version": "0.4.2",
+  "checkpoint_id": "f6ce7f809db2",
+  "session_id": "6d5a8a79-7e82-412f-9d18-7751ea72dcc0",
+  "strategy": "manual-commit",
+  "created_at": "2026-02-12T03:24:28.198519Z",
+  "branch": "main",
+  "checkpoints_count": 1,
+  "files_touched": [
+    "CHANGELOG.md",
+    "QUICKSTART.md",
+    "wfc/cli/metrics.py",
+    "wfc/shared/telemetry_auto.py",
+    "wfc/skills/review/CHECKLIST.md",
+    "wfc/skills/review/SKILL.md"
+  ],
+  "agent": "Claude Code",
+  "transcript_identifier_at_start": "6a166e5c-8dbf-48f3-b9ff-99f91f9c993e",
+  "checkpoint_transcript_start": 4473,
+  "transcript_lines_at_start": 4473,
+  "token_usage": {
+    "input_tokens": 137,
+    "cache_creation_tokens": 18695,
+    "cache_read_tokens": 2748031,
+    "output_tokens": 1347,
+    "api_call_count": 19
+  },
+  "initial_attribution": {
+    "calculated_at": "2026-02-12T03:24:27.361497Z",
+    "agent_lines": 1068,
+    "human_added": 785,
+    "human_modified": 0,
+    "human_removed": 0,
+    "total_committed": 1853,
+    "agent_percentage": 57.63626551538047
+  }
+}

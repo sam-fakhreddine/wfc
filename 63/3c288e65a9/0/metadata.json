@@ -1,0 +1,33 @@
+{
+  "cli_version": "0.4.2",
+  "checkpoint_id": "633c288e65a9",
+  "session_id": "6d5a8a79-7e82-412f-9d18-7751ea72dcc0",
+  "strategy": "manual-commit",
+  "created_at": "2026-02-12T02:01:13.066651Z",
+  "branch": "main",
+  "checkpoints_count": 1,
+  "files_touched": [
+    "docs/UNIVERSAL_INSTALL.md",
+    "install-universal.sh"
+  ],
+  "agent": "Claude Code",
+  "transcript_identifier_at_start": "1044306a-709b-41ba-aa06-3284324c4dbd",
+  "checkpoint_transcript_start": 3671,
+  "transcript_lines_at_start": 3671,
+  "token_usage": {
+    "input_tokens": 114,
+    "cache_creation_tokens": 8327,
+    "cache_read_tokens": 1945271,
+    "output_tokens": 1683,
+    "api_call_count": 14
+  },
+  "initial_attribution": {
+    "calculated_at": "2026-02-12T02:01:12.389557Z",
+    "agent_lines": 242,
+    "human_added": 111,
+    "human_modified": 0,
+    "human_removed": 0,
+    "total_committed": 353,
+    "agent_percentage": 68.55524079320114
+  }
+}

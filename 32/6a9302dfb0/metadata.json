@@ -1,0 +1,55 @@
+{
+  "cli_version": "0.4.5",
+  "checkpoint_id": "326a9302dfb0",
+  "strategy": "manual-commit",
+  "branch": "claude/add-prompt-fixer-and-doctor",
+  "checkpoints_count": 1,
+  "files_touched": [
+    ".coverage",
+    ".github/workflows/quick-check.yml"
+  ],
+  "sessions": [
+    {
+      "metadata": "/32/6a9302dfb0/0/metadata.json",
+      "transcript": "/32/6a9302dfb0/0/full.jsonl",
+      "context": "/32/6a9302dfb0/0/context.md",
+      "content_hash": "/32/6a9302dfb0/0/content_hash.txt",
+      "prompt": "/32/6a9302dfb0/0/prompt.txt"
+    },
+    {
+      "metadata": "/32/6a9302dfb0/1/metadata.json",
+      "transcript": "/32/6a9302dfb0/1/full.jsonl",
+      "context": "/32/6a9302dfb0/1/context.md",
+      "content_hash": "/32/6a9302dfb0/1/content_hash.txt",
+      "prompt": "/32/6a9302dfb0/1/prompt.txt"
+    },
+    {
+      "metadata": "/32/6a9302dfb0/2/metadata.json",
+      "transcript": "/32/6a9302dfb0/2/full.jsonl",
+      "context": "/32/6a9302dfb0/2/context.md",
+      "content_hash": "/32/6a9302dfb0/2/content_hash.txt",
+      "prompt": "/32/6a9302dfb0/2/prompt.txt"
+    },
+    {
+      "metadata": "/32/6a9302dfb0/3/metadata.json",
+      "transcript": "/32/6a9302dfb0/3/full.jsonl",
+      "context": "/32/6a9302dfb0/3/context.md",
+      "content_hash": "/32/6a9302dfb0/3/content_hash.txt",
+      "prompt": "/32/6a9302dfb0/3/prompt.txt"
+    },
+    {
+      "metadata": "/32/6a9302dfb0/4/metadata.json",
+      "transcript": "/32/6a9302dfb0/4/full.jsonl",
+      "context": "/32/6a9302dfb0/4/context.md",
+      "content_hash": "/32/6a9302dfb0/4/content_hash.txt",
+      "prompt": "/32/6a9302dfb0/4/prompt.txt"
+    }
+  ],
+  "token_usage": {
+    "input_tokens": 17330,
+    "cache_creation_tokens": 4715767,
+    "cache_read_tokens": 108813065,
+    "output_tokens": 60270,
+    "api_call_count": 1057
+  }
+}

@@ -1,0 +1,29 @@
+{
+  "cli_version": "0.4.2",
+  "checkpoint_id": "a13cd8e1140b",
+  "strategy": "manual-commit",
+  "branch": "feat/devcontainer",
+  "checkpoints_count": 3,
+  "files_touched": [
+    ".devcontainer/scripts/ci-checks.sh",
+    ".github/workflows/ci.yml",
+    ".github/workflows/quick-check.yml",
+    ".github/workflows/validate.yml"
+  ],
+  "sessions": [
+    {
+      "metadata": "/a1/3cd8e1140b/0/metadata.json",
+      "transcript": "/a1/3cd8e1140b/0/full.jsonl",
+      "context": "/a1/3cd8e1140b/0/context.md",
+      "content_hash": "/a1/3cd8e1140b/0/content_hash.txt",
+      "prompt": "/a1/3cd8e1140b/0/prompt.txt"
+    }
+  ],
+  "token_usage": {
+    "input_tokens": 3450,
+    "cache_creation_tokens": 79685,
+    "cache_read_tokens": 2295664,
+    "output_tokens": 735,
+    "api_call_count": 30
+  }
+}

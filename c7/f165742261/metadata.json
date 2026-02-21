@@ -1,0 +1,28 @@
+{
+  "cli_version": "0.4.2",
+  "checkpoint_id": "c7f165742261",
+  "strategy": "manual-commit",
+  "branch": "main",
+  "checkpoints_count": 1,
+  "files_touched": [
+    "QUICKSTART.md",
+    "docs/examples/orchestrator_delegation_demo.md",
+    "wfc/skills/implement/executor.py"
+  ],
+  "sessions": [
+    {
+      "metadata": "/c7/f165742261/0/metadata.json",
+      "transcript": "/c7/f165742261/0/full.jsonl",
+      "context": "/c7/f165742261/0/context.md",
+      "content_hash": "/c7/f165742261/0/content_hash.txt",
+      "prompt": "/c7/f165742261/0/prompt.txt"
+    }
+  ],
+  "token_usage": {
+    "input_tokens": 188,
+    "cache_creation_tokens": 66448,
+    "cache_read_tokens": 2438481,
+    "output_tokens": 753,
+    "api_call_count": 23
+  }
+}

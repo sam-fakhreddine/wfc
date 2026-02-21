@@ -1,0 +1,55 @@
+{
+  "cli_version": "0.4.5",
+  "checkpoint_id": "c69682ff8735",
+  "strategy": "manual-commit",
+  "branch": "claude/add-prompt-fixer-and-doctor",
+  "checkpoints_count": 1,
+  "files_touched": [
+    "tests/skills/wfc-prompt-fixer/test_analyzer_spawning.py",
+    "wfc/skills/wfc-prompt-fixer/orchestrator.py"
+  ],
+  "sessions": [
+    {
+      "metadata": "/c6/9682ff8735/0/metadata.json",
+      "transcript": "/c6/9682ff8735/0/full.jsonl",
+      "context": "/c6/9682ff8735/0/context.md",
+      "content_hash": "/c6/9682ff8735/0/content_hash.txt",
+      "prompt": "/c6/9682ff8735/0/prompt.txt"
+    },
+    {
+      "metadata": "/c6/9682ff8735/1/metadata.json",
+      "transcript": "/c6/9682ff8735/1/full.jsonl",
+      "context": "/c6/9682ff8735/1/context.md",
+      "content_hash": "/c6/9682ff8735/1/content_hash.txt",
+      "prompt": "/c6/9682ff8735/1/prompt.txt"
+    },
+    {
+      "metadata": "/c6/9682ff8735/2/metadata.json",
+      "transcript": "/c6/9682ff8735/2/full.jsonl",
+      "context": "/c6/9682ff8735/2/context.md",
+      "content_hash": "/c6/9682ff8735/2/content_hash.txt",
+      "prompt": "/c6/9682ff8735/2/prompt.txt"
+    },
+    {
+      "metadata": "/c6/9682ff8735/3/metadata.json",
+      "transcript": "/c6/9682ff8735/3/full.jsonl",
+      "context": "/c6/9682ff8735/3/context.md",
+      "content_hash": "/c6/9682ff8735/3/content_hash.txt",
+      "prompt": "/c6/9682ff8735/3/prompt.txt"
+    },
+    {
+      "metadata": "/c6/9682ff8735/4/metadata.json",
+      "transcript": "/c6/9682ff8735/4/full.jsonl",
+      "context": "/c6/9682ff8735/4/context.md",
+      "content_hash": "/c6/9682ff8735/4/content_hash.txt",
+      "prompt": "/c6/9682ff8735/4/prompt.txt"
+    }
+  ],
+  "token_usage": {
+    "input_tokens": 16871,
+    "cache_creation_tokens": 4183004,
+    "cache_read_tokens": 98311451,
+    "output_tokens": 59695,
+    "api_call_count": 937
+  }
+}

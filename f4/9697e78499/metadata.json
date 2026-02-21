@@ -1,0 +1,28 @@
+{
+  "cli_version": "0.4.2",
+  "checkpoint_id": "f49697e78499",
+  "strategy": "manual-commit",
+  "branch": "main",
+  "checkpoints_count": 1,
+  "files_touched": [
+    "docs/GIT_SAFETY_POLICY.md",
+    "wfc/skills/build/SKILL.md",
+    "wfc/skills/implement/SKILL.md"
+  ],
+  "sessions": [
+    {
+      "metadata": "/f4/9697e78499/0/metadata.json",
+      "transcript": "/f4/9697e78499/0/full.jsonl",
+      "context": "/f4/9697e78499/0/context.md",
+      "content_hash": "/f4/9697e78499/0/content_hash.txt",
+      "prompt": "/f4/9697e78499/0/prompt.txt"
+    }
+  ],
+  "token_usage": {
+    "input_tokens": 124,
+    "cache_creation_tokens": 18587,
+    "cache_read_tokens": 1772670,
+    "output_tokens": 526,
+    "api_call_count": 15
+  }
+}

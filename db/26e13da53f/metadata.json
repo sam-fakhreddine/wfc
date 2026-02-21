@@ -1,0 +1,27 @@
+{
+  "cli_version": "0.4.2",
+  "checkpoint_id": "db26e13da53f",
+  "strategy": "manual-commit",
+  "branch": "feat/plugin-integration-7-features",
+  "checkpoints_count": 1,
+  "files_touched": [
+    ".development/README.md",
+    "CLAUDE.md"
+  ],
+  "sessions": [
+    {
+      "metadata": "/db/26e13da53f/0/metadata.json",
+      "transcript": "/db/26e13da53f/0/full.jsonl",
+      "context": "/db/26e13da53f/0/context.md",
+      "content_hash": "/db/26e13da53f/0/content_hash.txt",
+      "prompt": "/db/26e13da53f/0/prompt.txt"
+    }
+  ],
+  "token_usage": {
+    "input_tokens": 12,
+    "cache_creation_tokens": 3591,
+    "cache_read_tokens": 1644419,
+    "output_tokens": 151,
+    "api_call_count": 10
+  }
+}

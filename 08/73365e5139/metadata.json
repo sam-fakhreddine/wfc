@@ -1,0 +1,29 @@
+{
+  "cli_version": "0.4.2",
+  "checkpoint_id": "0873365e5139",
+  "strategy": "manual-commit",
+  "branch": "claude/integrate-develop-to-main",
+  "checkpoints_count": 1,
+  "files_touched": [
+    "tests/test_observability_providers.py",
+    "wfc/observability/providers/file_provider.py",
+    "wfc/scripts/github/gh_helpers.py",
+    "wfc/scripts/github/pr_threads.py"
+  ],
+  "sessions": [
+    {
+      "metadata": "/08/73365e5139/0/metadata.json",
+      "transcript": "/08/73365e5139/0/full.jsonl",
+      "context": "/08/73365e5139/0/context.md",
+      "content_hash": "/08/73365e5139/0/content_hash.txt",
+      "prompt": "/08/73365e5139/0/prompt.txt"
+    }
+  ],
+  "token_usage": {
+    "input_tokens": 48,
+    "cache_creation_tokens": 84707,
+    "cache_read_tokens": 4197947,
+    "output_tokens": 495,
+    "api_call_count": 35
+  }
+}

@@ -1,0 +1,27 @@
+{
+  "cli_version": "0.4.2",
+  "checkpoint_id": "26e7d26846da",
+  "strategy": "manual-commit",
+  "branch": "feat/plugin-integration-7-features",
+  "checkpoints_count": 1,
+  "files_touched": [
+    "Makefile",
+    "scripts/pre-commit.sh"
+  ],
+  "sessions": [
+    {
+      "metadata": "/26/e7d26846da/0/metadata.json",
+      "transcript": "/26/e7d26846da/0/full.jsonl",
+      "context": "/26/e7d26846da/0/context.md",
+      "content_hash": "/26/e7d26846da/0/content_hash.txt",
+      "prompt": "/26/e7d26846da/0/prompt.txt"
+    }
+  ],
+  "token_usage": {
+    "input_tokens": 21,
+    "cache_creation_tokens": 12540,
+    "cache_read_tokens": 1394599,
+    "output_tokens": 248,
+    "api_call_count": 17
+  }
+}

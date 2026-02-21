@@ -1,0 +1,39 @@
+{
+  "cli_version": "0.4.2",
+  "checkpoint_id": "59f3619c22f2",
+  "strategy": "manual-commit",
+  "branch": "claude/integrate-develop-to-main",
+  "checkpoints_count": 1,
+  "files_touched": [
+    ".development/housekeeping/keep-list.json",
+    ".gitignore",
+    "CLAUDE.md",
+    "README.md",
+    "install-universal.sh",
+    "tests/test_hooks_security.py",
+    "tests/test_hooks_whitelist.py",
+    "tests/test_observability_edge_cases.py",
+    "tests/test_persona_deletion.py",
+    "tests/test_rag_pipeline.py",
+    "tests/test_reviewer_engine.py",
+    "wfc/scripts/knowledge/knowledge_writer.py",
+    "wfc/scripts/orchestrators/review/orchestrator.py",
+    "wfc/scripts/orchestrators/review/reviewer_loader.py"
+  ],
+  "sessions": [
+    {
+      "metadata": "/59/f3619c22f2/0/metadata.json",
+      "transcript": "/59/f3619c22f2/0/full.jsonl",
+      "context": "/59/f3619c22f2/0/context.md",
+      "content_hash": "/59/f3619c22f2/0/content_hash.txt",
+      "prompt": "/59/f3619c22f2/0/prompt.txt"
+    }
+  ],
+  "token_usage": {
+    "input_tokens": 120,
+    "cache_creation_tokens": 130144,
+    "cache_read_tokens": 12418355,
+    "output_tokens": 5588,
+    "api_call_count": 109
+  }
+}

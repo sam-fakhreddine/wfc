@@ -1,0 +1,55 @@
+{
+  "cli_version": "0.4.5",
+  "checkpoint_id": "dff3d9888c93",
+  "strategy": "manual-commit",
+  "branch": "claude/add-prompt-fixer-and-doctor",
+  "checkpoints_count": 1,
+  "files_touched": [
+    "tests/test_prompt_fixer.py",
+    "wfc/skills/wfc-prompt-fixer/orchestrator.py"
+  ],
+  "sessions": [
+    {
+      "metadata": "/df/f3d9888c93/0/metadata.json",
+      "transcript": "/df/f3d9888c93/0/full.jsonl",
+      "context": "/df/f3d9888c93/0/context.md",
+      "content_hash": "/df/f3d9888c93/0/content_hash.txt",
+      "prompt": "/df/f3d9888c93/0/prompt.txt"
+    },
+    {
+      "metadata": "/df/f3d9888c93/1/metadata.json",
+      "transcript": "/df/f3d9888c93/1/full.jsonl",
+      "context": "/df/f3d9888c93/1/context.md",
+      "content_hash": "/df/f3d9888c93/1/content_hash.txt",
+      "prompt": "/df/f3d9888c93/1/prompt.txt"
+    },
+    {
+      "metadata": "/df/f3d9888c93/2/metadata.json",
+      "transcript": "/df/f3d9888c93/2/full.jsonl",
+      "context": "/df/f3d9888c93/2/context.md",
+      "content_hash": "/df/f3d9888c93/2/content_hash.txt",
+      "prompt": "/df/f3d9888c93/2/prompt.txt"
+    },
+    {
+      "metadata": "/df/f3d9888c93/3/metadata.json",
+      "transcript": "/df/f3d9888c93/3/full.jsonl",
+      "context": "/df/f3d9888c93/3/context.md",
+      "content_hash": "/df/f3d9888c93/3/content_hash.txt",
+      "prompt": "/df/f3d9888c93/3/prompt.txt"
+    },
+    {
+      "metadata": "/df/f3d9888c93/4/metadata.json",
+      "transcript": "/df/f3d9888c93/4/full.jsonl",
+      "context": "/df/f3d9888c93/4/context.md",
+      "content_hash": "/df/f3d9888c93/4/content_hash.txt",
+      "prompt": "/df/f3d9888c93/4/prompt.txt"
+    }
+  ],
+  "token_usage": {
+    "input_tokens": 16336,
+    "cache_creation_tokens": 3393252,
+    "cache_read_tokens": 81898289,
+    "output_tokens": 58365,
+    "api_call_count": 780
+  }
+}

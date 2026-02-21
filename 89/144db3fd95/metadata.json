@@ -1,0 +1,71 @@
+{
+  "cli_version": "0.4.5",
+  "checkpoint_id": "89144db3fd95",
+  "strategy": "manual-commit",
+  "branch": "claude/add-prompt-fixer-and-doctor",
+  "checkpoints_count": 8,
+  "files_touched": [
+    "wfc/skills/wfc-build/SKILL.md",
+    "wfc/skills/wfc-implement/SKILL.md",
+    "wfc/skills/wfc-plan/SKILL.md",
+    "wfc/skills/wfc-review/SKILL.md"
+  ],
+  "sessions": [
+    {
+      "metadata": "/89/144db3fd95/0/metadata.json",
+      "transcript": "/89/144db3fd95/0/full.jsonl",
+      "context": "/89/144db3fd95/0/context.md",
+      "content_hash": "/89/144db3fd95/0/content_hash.txt",
+      "prompt": "/89/144db3fd95/0/prompt.txt"
+    },
+    {
+      "metadata": "/89/144db3fd95/1/metadata.json",
+      "transcript": "/89/144db3fd95/1/full.jsonl",
+      "context": "/89/144db3fd95/1/context.md",
+      "content_hash": "/89/144db3fd95/1/content_hash.txt",
+      "prompt": "/89/144db3fd95/1/prompt.txt"
+    },
+    {
+      "metadata": "/89/144db3fd95/2/metadata.json",
+      "transcript": "/89/144db3fd95/2/full.jsonl",
+      "context": "/89/144db3fd95/2/context.md",
+      "content_hash": "/89/144db3fd95/2/content_hash.txt",
+      "prompt": "/89/144db3fd95/2/prompt.txt"
+    },
+    {
+      "metadata": "/89/144db3fd95/3/metadata.json",
+      "transcript": "/89/144db3fd95/3/full.jsonl",
+      "context": "/89/144db3fd95/3/context.md",
+      "content_hash": "/89/144db3fd95/3/content_hash.txt",
+      "prompt": "/89/144db3fd95/3/prompt.txt"
+    },
+    {
+      "metadata": "/89/144db3fd95/4/metadata.json",
+      "transcript": "/89/144db3fd95/4/full.jsonl",
+      "context": "/89/144db3fd95/4/context.md",
+      "content_hash": "/89/144db3fd95/4/content_hash.txt",
+      "prompt": "/89/144db3fd95/4/prompt.txt"
+    },
+    {
+      "metadata": "/89/144db3fd95/5/metadata.json",
+      "transcript": "/89/144db3fd95/5/full.jsonl",
+      "context": "/89/144db3fd95/5/context.md",
+      "content_hash": "/89/144db3fd95/5/content_hash.txt",
+      "prompt": "/89/144db3fd95/5/prompt.txt"
+    },
+    {
+      "metadata": "/89/144db3fd95/6/metadata.json",
+      "transcript": "/89/144db3fd95/6/full.jsonl",
+      "context": "/89/144db3fd95/6/context.md",
+      "content_hash": "/89/144db3fd95/6/content_hash.txt",
+      "prompt": "/89/144db3fd95/6/prompt.txt"
+    }
+  ],
+  "token_usage": {
+    "input_tokens": 20363,
+    "cache_creation_tokens": 5346358,
+    "cache_read_tokens": 113710541,
+    "output_tokens": 60589,
+    "api_call_count": 1115
+  }
+}

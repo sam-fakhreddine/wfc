@@ -1,0 +1,26 @@
+{
+  "cli_version": "0.4.2",
+  "checkpoint_id": "c604273e5924",
+  "strategy": "manual-commit",
+  "branch": "chore/housekeeping-import-cleanup",
+  "checkpoints_count": 1,
+  "files_touched": [
+    "README.md"
+  ],
+  "sessions": [
+    {
+      "metadata": "/c6/04273e5924/0/metadata.json",
+      "transcript": "/c6/04273e5924/0/full.jsonl",
+      "context": "/c6/04273e5924/0/context.md",
+      "content_hash": "/c6/04273e5924/0/content_hash.txt",
+      "prompt": "/c6/04273e5924/0/prompt.txt"
+    }
+  ],
+  "token_usage": {
+    "input_tokens": 26,
+    "cache_creation_tokens": 13470,
+    "cache_read_tokens": 801133,
+    "output_tokens": 4404,
+    "api_call_count": 14
+  }
+}

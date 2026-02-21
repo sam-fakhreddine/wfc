@@ -1,0 +1,6 @@
+I want to apply this prompt fixer guideline and turn it into a new skill
+Read our Claude.md and understand it and come back with questions 
+Branch from develop always (,put that in Claude.md)
+
+User uploaded files:
+- prompt-fixer-claude-code.md (30.8 KB, text/markdown): /Users/samfakhreddine/.REDACTED.md

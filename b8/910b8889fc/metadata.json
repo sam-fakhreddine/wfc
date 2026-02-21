@@ -1,0 +1,28 @@
+{
+  "cli_version": "0.4.2",
+  "checkpoint_id": "b8910b8889fc",
+  "strategy": "manual-commit",
+  "branch": "main",
+  "checkpoints_count": 1,
+  "files_touched": [
+    "wfc/shared/extended_thinking.py",
+    "wfc/skills/build/orchestrator.py",
+    "wfc/skills/implement/executor.py"
+  ],
+  "sessions": [
+    {
+      "metadata": "/b8/910b8889fc/0/metadata.json",
+      "transcript": "/b8/910b8889fc/0/full.jsonl",
+      "context": "/b8/910b8889fc/0/context.md",
+      "content_hash": "/b8/910b8889fc/0/content_hash.txt",
+      "prompt": "/b8/910b8889fc/0/prompt.txt"
+    }
+  ],
+  "token_usage": {
+    "input_tokens": 160,
+    "cache_creation_tokens": 16474,
+    "cache_read_tokens": 2983353,
+    "output_tokens": 851,
+    "api_call_count": 19
+  }
+}

@@ -1,0 +1,48 @@
+{
+  "cli_version": "0.4.2",
+  "checkpoint_id": "0b2d26a43824",
+  "strategy": "manual-commit",
+  "branch": "main",
+  "checkpoints_count": 3,
+  "files_touched": [
+    "plan-vibe/PROPERTIES.md",
+    "plan-vibe/TASKS.md",
+    "plan-vibe/TEST-PLAN.md",
+    "plan-vibe/interview-results.json",
+    "tests/test_vibe_detector.py",
+    "tests/test_vibe_session.py",
+    "wfc/scripts/skills/vibe/__init__.py",
+    "wfc/scripts/skills/vibe/detector.py",
+    "wfc/scripts/skills/vibe/session.py",
+    "wfc/wfc-tools/gitwork/README.md",
+    "wfc/wfc-tools/gitwork/TOOL.md",
+    "wfc/wfc-tools/gitwork/__init__.py",
+    "wfc/wfc-tools/gitwork/api/__init__.py",
+    "wfc/wfc-tools/gitwork/api/branch.py",
+    "wfc/wfc-tools/gitwork/api/commit.py",
+    "wfc/wfc-tools/gitwork/api/history.py",
+    "wfc/wfc-tools/gitwork/api/hooks.py",
+    "wfc/wfc-tools/gitwork/api/merge.py",
+    "wfc/wfc-tools/gitwork/api/rollback.py",
+    "wfc/wfc-tools/gitwork/api/semver.py",
+    "wfc/wfc-tools/gitwork/api/worktree.py",
+    "wfc/wfc-tools/gitwork/config.py",
+    "wfc/wfc-tools/gitwork/router.py"
+  ],
+  "sessions": [
+    {
+      "metadata": "/0b/2d26a43824/0/metadata.json",
+      "transcript": "/0b/2d26a43824/0/full.jsonl",
+      "context": "/0b/2d26a43824/0/context.md",
+      "content_hash": "/0b/2d26a43824/0/content_hash.txt",
+      "prompt": "/0b/2d26a43824/0/prompt.txt"
+    }
+  ],
+  "token_usage": {
+    "input_tokens": 114,
+    "cache_creation_tokens": 31891,
+    "cache_read_tokens": 1786225,
+    "output_tokens": 7417,
+    "api_call_count": 15
+  }
+}

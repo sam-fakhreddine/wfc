@@ -1,0 +1,51 @@
+{
+  "cli_version": "0.4.2",
+  "checkpoint_id": "74a5ee5d8460",
+  "strategy": "manual-commit",
+  "branch": "claude/act-integration-1771475571",
+  "checkpoints_count": 2,
+  "files_touched": [
+    ".development/housekeeping/keep-list.json",
+    ".development/plans/plan_act_integration_20260219/PROPERTIES.md",
+    ".development/plans/plan_act_integration_20260219/TASKS.md",
+    ".development/plans/plan_act_integration_20260219/TEST-PLAN.md",
+    ".development/plans/plan_act_integration_20260219/VALIDATE.md",
+    ".github/workflows/ci.yml",
+    ".github/workflows/validate.yml",
+    ".pre-commit-config.yaml",
+    "install-universal.sh",
+    "scripts/doctor.py",
+    "scripts/housekeeping-git.sh",
+    "scripts/wfc-tools.sh",
+    "tests/test_observability_providers.py",
+    "wfc/gitwork/api/worktree.py",
+    "wfc/observability/__init__.py",
+    "wfc/observability/instrument.py",
+    "wfc/observability/metrics.py",
+    "wfc/observability/providers/file_provider.py",
+    "wfc/scripts/github/pr_threads.py"
+  ],
+  "sessions": [
+    {
+      "metadata": "/74/a5ee5d8460/0/metadata.json",
+      "transcript": "/74/a5ee5d8460/0/full.jsonl",
+      "context": "/74/a5ee5d8460/0/context.md",
+      "content_hash": "/74/a5ee5d8460/0/content_hash.txt",
+      "prompt": "/74/a5ee5d8460/0/prompt.txt"
+    },
+    {
+      "metadata": "/74/a5ee5d8460/1/metadata.json",
+      "transcript": "/74/a5ee5d8460/1/full.jsonl",
+      "context": "/74/a5ee5d8460/1/context.md",
+      "content_hash": "/74/a5ee5d8460/1/content_hash.txt",
+      "prompt": "/74/a5ee5d8460/1/prompt.txt"
+    }
+  ],
+  "token_usage": {
+    "input_tokens": 116,
+    "cache_creation_tokens": 206402,
+    "cache_read_tokens": 9324909,
+    "output_tokens": 9163,
+    "api_call_count": 92
+  }
+}

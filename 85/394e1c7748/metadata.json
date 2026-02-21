@@ -1,0 +1,55 @@
+{
+  "cli_version": "0.4.5",
+  "checkpoint_id": "85394e1c7748",
+  "strategy": "manual-commit",
+  "branch": "claude/fix-installer-hooks-verbosity",
+  "checkpoints_count": 1,
+  "files_touched": [
+    "install-universal.sh",
+    "wfc/scripts/hooks/register_hooks.py"
+  ],
+  "sessions": [
+    {
+      "metadata": "/85/394e1c7748/0/metadata.json",
+      "transcript": "/85/394e1c7748/0/full.jsonl",
+      "context": "/85/394e1c7748/0/context.md",
+      "content_hash": "/85/394e1c7748/0/content_hash.txt",
+      "prompt": "/85/394e1c7748/0/prompt.txt"
+    },
+    {
+      "metadata": "/85/394e1c7748/1/metadata.json",
+      "transcript": "/85/394e1c7748/1/full.jsonl",
+      "context": "/85/394e1c7748/1/context.md",
+      "content_hash": "/85/394e1c7748/1/content_hash.txt",
+      "prompt": "/85/394e1c7748/1/prompt.txt"
+    },
+    {
+      "metadata": "/85/394e1c7748/2/metadata.json",
+      "transcript": "/85/394e1c7748/2/full.jsonl",
+      "context": "/85/394e1c7748/2/context.md",
+      "content_hash": "/85/394e1c7748/2/content_hash.txt",
+      "prompt": "/85/394e1c7748/2/prompt.txt"
+    },
+    {
+      "metadata": "/85/394e1c7748/3/metadata.json",
+      "transcript": "/85/394e1c7748/3/full.jsonl",
+      "context": "/85/394e1c7748/3/context.md",
+      "content_hash": "/85/394e1c7748/3/content_hash.txt",
+      "prompt": "/85/394e1c7748/3/prompt.txt"
+    },
+    {
+      "metadata": "/85/394e1c7748/4/metadata.json",
+      "transcript": "/85/394e1c7748/4/full.jsonl",
+      "context": "/85/394e1c7748/4/context.md",
+      "content_hash": "/85/394e1c7748/4/content_hash.txt",
+      "prompt": "/85/394e1c7748/4/prompt.txt"
+    }
+  ],
+  "token_usage": {
+    "input_tokens": 15532,
+    "cache_creation_tokens": 2238972,
+    "cache_read_tokens": 65847519,
+    "output_tokens": 54396,
+    "api_call_count": 626
+  }
+}

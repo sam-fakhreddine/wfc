@@ -1,0 +1,55 @@
+{
+  "cli_version": "0.4.5",
+  "checkpoint_id": "274530103976",
+  "strategy": "manual-commit",
+  "branch": "claude/sync-develop-into-main-1771560645",
+  "checkpoints_count": 1,
+  "files_touched": [
+    "CLAUDE.md",
+    "wfc/references/SKILLS.md"
+  ],
+  "sessions": [
+    {
+      "metadata": "/27/4530103976/0/metadata.json",
+      "transcript": "/27/4530103976/0/full.jsonl",
+      "context": "/27/4530103976/0/context.md",
+      "content_hash": "/27/4530103976/0/content_hash.txt",
+      "prompt": "/27/4530103976/0/prompt.txt"
+    },
+    {
+      "metadata": "/27/4530103976/1/metadata.json",
+      "transcript": "/27/4530103976/1/full.jsonl",
+      "context": "/27/4530103976/1/context.md",
+      "content_hash": "/27/4530103976/1/content_hash.txt",
+      "prompt": "/27/4530103976/1/prompt.txt"
+    },
+    {
+      "metadata": "/27/4530103976/2/metadata.json",
+      "transcript": "/27/4530103976/2/full.jsonl",
+      "context": "/27/4530103976/2/context.md",
+      "content_hash": "/27/4530103976/2/content_hash.txt",
+      "prompt": "/27/4530103976/2/prompt.txt"
+    },
+    {
+      "metadata": "/27/4530103976/3/metadata.json",
+      "transcript": "/27/4530103976/3/full.jsonl",
+      "context": "/27/4530103976/3/context.md",
+      "content_hash": "/27/4530103976/3/content_hash.txt",
+      "prompt": "/27/4530103976/3/prompt.txt"
+    },
+    {
+      "metadata": "/27/4530103976/4/metadata.json",
+      "transcript": "/27/4530103976/4/full.jsonl",
+      "context": "/27/4530103976/4/context.md",
+      "content_hash": "/27/4530103976/4/content_hash.txt",
+      "prompt": "/27/4530103976/4/prompt.txt"
+    }
+  ],
+  "token_usage": {
+    "input_tokens": 15515,
+    "cache_creation_tokens": 2377197,
+    "cache_read_tokens": 64373876,
+    "output_tokens": 57271,
+    "api_call_count": 616
+  }
+}

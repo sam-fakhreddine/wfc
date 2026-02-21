@@ -1,0 +1,50 @@
+{
+  "cli_version": "0.4.5",
+  "checkpoint_id": "c7745847e12a",
+  "session_id": "baa00a70-b04c-4275-a923-1c55921c548d",
+  "strategy": "manual-commit",
+  "created_at": "2026-02-19T17:12:41.957813Z",
+  "branch": "claude/formatting-cleanup-and-typo-fixes",
+  "checkpoints_count": 3,
+  "files_touched": [
+    ".development/BRANDING.md",
+    ".development/ENTIRE_IO.md",
+    ".development/summaries/PHASE-1-COMPLETE.md",
+    ".development/summaries/RETRO-REPORT.md",
+    ".development/summaries/SUPERCLAUDE_LEARNINGS.md",
+    ".development/summaries/WFC_MAX.md",
+    ".gitignore",
+    "test-results/Dockerfile.alpine:latest",
+    "test-results/Dockerfile.archlinux:base",
+    "test-results/Dockerfile.debian:12",
+    "test-results/Dockerfile.fedora:41",
+    "test-results/Dockerfile.ubuntu:24.04",
+    "test-results/clean-summary.txt",
+    "test-results/final-summary.txt",
+    "test-results/summary-report.txt",
+    "tests/test_observability_hook_instrumentation.py",
+    "validation/VALIDATION-REPORT.md",
+    "validation/collect_metrics.py",
+    "validation/metrics.json"
+  ],
+  "agent": "Claude Code",
+  "turn_id": "e8289384801d",
+  "transcript_identifier_at_start": "c8fe6b70-0299-4eac-b3ba-e01c147decea",
+  "token_usage": {
+    "input_tokens": 51,
+    "cache_creation_tokens": 65223,
+    "cache_read_tokens": 2453250,
+    "output_tokens": 709,
+    "api_call_count": 37
+  },
+  "initial_attribution": {
+    "calculated_at": "2026-02-19T17:12:41.82327Z",
+    "agent_lines": 0,
+    "human_added": 928,
+    "human_modified": 161,
+    "human_removed": 0,
+    "total_committed": 928,
+    "agent_percentage": 0
+  },
+  "transcript_path": ".claude/projects/-Users-samfakhreddine-repos-wfc/baa00a70-b04c-4275-a923-1c55921c548d.jsonl"
+}

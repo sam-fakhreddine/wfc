@@ -1,0 +1,117 @@
+hey look ato ur install-universal.sh it doesnt look right:
+
+🪝 Registering PostToolUse quality hooks...
+
+    ├─ file_checker.py
+    ├─ tdd_enforcer.py
+    ├─ context_monitor.py
+    ├─ _util.py
+    ├─ register_hooks.py
+    ├─ _checkers/__init__.py
+    ├─ _checkers/python.py
+    ├─ _checkers/typescript.py
+    ├─ _checkers/go.py
+  ✓ Quality hooks installed to ~/.wfc/scripts/hooks/
+  • Registering hooks in ~/.claude/settings.json (upsert)...
+WFC hooks registered in /Users/samfakhreddine/.claude/settings.json
+  ✓ Hooks registered (existing settings preserved)
+
+✓ Installation complete!
+
+📋 Installation Summary
+
+Source: /Users/samfakhreddine/.wfc
+
+Symlinked to:
+  • OpenAI Codex: /Users/samfakhreddine/.codex/skills/wfc-*
+  • Claude Code: /Users/samfakhreddine/.claude/skills/wfc-*
+  • VS Code: /Users/samfakhreddine/.vscode/skills/wfc-*
+  • Cursor: /Users/samfakhreddine/.cursor/skills/wfc-*
+  • Kiro: /Users/samfakhreddine/.kiro/skills/wfc-*
+  • OpenCode: /Users/samfakhreddine/.opencode/skills/wfc-*
+
+Note: Updates to /Users/samfakhreddine/.wfc automatically sync to all platforms
+
+🎯 Available Skills
+
+  • \033[0;36m/wfc-review\033[0m       - Multi-agent consensus code review
+  • \033[0;36m/wfc-implement\033[0m    - Parallel TDD implementation
+  • \033[0;36m/wfc-plan\033[0m         - Structured task breakdown
+  • \033[0;36m/wfc-test\033[0m         - Property-based test generation
+  • \033[0;36m/wfc-security\033[0m     - STRIDE threat modeling
+  • \033[0;36m/wfc-architecture\033[0m - C4 diagrams & ADRs
+  • \033[0;36m/wfc-observe\033[0m      - Observability instrumentation
+  • \033[0;36m/wfc-retro\033[0m        - AI-powered retrospectives
+  • \033[0;36m/wfc-safeclaude\033[0m   - Safe command allowlist
+  • \033[0;36m/wfc-safeguard\033[0m    - Real-time security hooks
+  • \033[0;36m/wfc-rules\033[0m        - Custom enforcement rules
+  • \033[0;36m/wfc-playground\033[0m   - Interactive HTML playgrounds
+  • \033[0;36m/wfc-validate\033[0m     - Critical thinking advisor
+  • \033[0;36m/wfc-pr-comments\033[0m - PR comment triage & fix
+  • \033[0;36m/wfc-newskill\033[0m     - Create new WFC skills
+  • \033[0;36m/wfc-init\033[0m        - Project initialization tool
+  • \033[0;36m/wfc-vibe\033[0m         - Natural brainstorming mode
+  • \033[0;36m/wfc-sync\033[0m        - Sync rules & discover patterns
+  • \033[0;36m/wfc-agentic\033[0m     - GitHub Agentic Workflows (gh-aw)
+  • \033[0;36m/wfc-ba\033[0m          - Business analysis & requirements
+
+🚀 Next Steps
+
+  OpenAI Codex:
+    codex
+    /wfc-review
+
+  Claude Code:
+    claude
+    /wfc-review
+
+  VS Code:
+    code .
+    /wfc-review
+
+  Cursor:
+    Open Cursor
+    /wfc-review
+
+  Kiro:
+    kiro
+    /wfc-review
+
+  OpenCode:
+    opencode
+    /wfc-review
+
+📚 Documentation
+
+  • README:    https://github.com/sam-fakhreddine/wfc
+  • Install:   REDACTED.md
+  • Personas:  REDACTED.md
+
+This is World Fucking Class. 🏆
+Universal. Compatible. Performance-optimized.
+
+
+I need to be able to get the LATEST from the branch i am in to the system we are working in but hte isntaller seems wrong
+
+---
+
+ok and --ci mode should ensure we dont clobbber settings but we refresh all the actual application
+
+---
+
+and we dont need the verbosity of the all the skill copies its too much
+
+---
+
+888 -
+      889 -    echo ""
+      864  fi
+      865
+      866  # Success!
+  ⎿  PostToolUse:Edit hook error
+  ⎿  PostToolUse:Edit hook error
+  ⎿  PostToolUse:Edit hook error
+
+---
+
+ok branch and pr please.

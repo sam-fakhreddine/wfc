@@ -1,0 +1,55 @@
+{
+  "cli_version": "0.4.5",
+  "checkpoint_id": "46f6ca11d111",
+  "strategy": "manual-commit",
+  "branch": "claude/trim-claude-md-and-add-skills-ref",
+  "checkpoints_count": 5,
+  "files_touched": [
+    "CLAUDE.md",
+    "wfc/references/SKILLS.md"
+  ],
+  "sessions": [
+    {
+      "metadata": "/46/f6ca11d111/0/metadata.json",
+      "transcript": "/46/f6ca11d111/0/full.jsonl",
+      "context": "/46/f6ca11d111/0/context.md",
+      "content_hash": "/46/f6ca11d111/0/content_hash.txt",
+      "prompt": "/46/f6ca11d111/0/prompt.txt"
+    },
+    {
+      "metadata": "/46/f6ca11d111/1/metadata.json",
+      "transcript": "/46/f6ca11d111/1/full.jsonl",
+      "context": "/46/f6ca11d111/1/context.md",
+      "content_hash": "/46/f6ca11d111/1/content_hash.txt",
+      "prompt": "/46/f6ca11d111/1/prompt.txt"
+    },
+    {
+      "metadata": "/46/f6ca11d111/2/metadata.json",
+      "transcript": "/46/f6ca11d111/2/full.jsonl",
+      "context": "/46/f6ca11d111/2/context.md",
+      "content_hash": "/46/f6ca11d111/2/content_hash.txt",
+      "prompt": "/46/f6ca11d111/2/prompt.txt"
+    },
+    {
+      "metadata": "/46/f6ca11d111/3/metadata.json",
+      "transcript": "/46/f6ca11d111/3/full.jsonl",
+      "context": "/46/f6ca11d111/3/context.md",
+      "content_hash": "/46/f6ca11d111/3/content_hash.txt",
+      "prompt": "/46/f6ca11d111/3/prompt.txt"
+    },
+    {
+      "metadata": "/46/f6ca11d111/4/metadata.json",
+      "transcript": "/46/f6ca11d111/4/full.jsonl",
+      "context": "/46/f6ca11d111/4/context.md",
+      "content_hash": "/46/f6ca11d111/4/content_hash.txt",
+      "prompt": "/46/f6ca11d111/4/prompt.txt"
+    }
+  ],
+  "token_usage": {
+    "input_tokens": 15606,
+    "cache_creation_tokens": 2548720,
+    "cache_read_tokens": 70640521,
+    "output_tokens": 61428,
+    "api_call_count": 679
+  }
+}

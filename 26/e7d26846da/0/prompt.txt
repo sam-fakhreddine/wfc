@@ -1,0 +1,221 @@
+Implement the following plan:
+
+# wfc-pr-comments — Intelligent PR Comment Triage & Fix Skill
+
+## Context
+
+When PRs get review comments (from humans, Copilot, CodeRabbit, etc.), addressing them is currently manual: read each comment, decide if it's valid, categorize, implement fixes, commit, push. We just did this with 16 Copilot comments on PR #4 — it took significant effort to triage and spawn 3 parallel fix agents. This skill automates the entire workflow.
+
+## What It Does
+
+1. **Fetch** PR comments via `gh api`
+2. **Triage** each comment against 5 validity criteria
+3. **Present** triage summary to user for approval
+4. **Fix** valid comments in parallel (subagents by category)
+5. **Commit & push** fixes to the PR branch
+
+---
+
+## Files to Create
+
+### 1. `wfc/skills/wfc-pr-comments/SKILL.md` (the skill — prompt-driven, no Python)
+
+This is a prompt-only skill like wfc-isthissmart or wfc-build. All logic lives in the SKILL.md instructions that Claude Code follows. No Python orchestrator needed — Claude Code IS the orchestrator.
+
+### 2. `install-universal.sh` update — register the new skill in the installer
+
+### 3. `CLAUDE.md` update — add to skill table
+
+---
+
+## SKILL.md Design
+
+### Frontmatter
+
+```yaml
+---
+name: wfc-pr-comments
+description: Intelligent PR comment triage and fix system. Fetches PR review comments via gh CLI, evaluates each against architectural validity, scope, correctness, and codebase conventions, then fixes valid comments in parallel via subagents. Use when a PR has review comments to address. Triggers on "address PR comments", "fix PR feedback", "handle review comments", or explicit /wfc-pr-comments. Ideal for PRs with multiple review comments from humans or bots. Not for creating PRs (use wfc-build) or code review (use wfc-review).
+license: MIT
+---
+```
+
+### Workflow (what the SKILL.md instructs Claude to do)
+
+```
+Step 1: DETECT PR
+  → Auto-detect current branch's PR via `gh pr view --json number,url,headRefName`
+  → Or accept PR number/URL as argument
+  → Fail gracefully if no PR found
+
+Step 2: FETCH COMMENTS
+  → `gh api repos/{owner}/{repo}/pulls/{number}/comments`
+  → Also fetch review comments: `gh api repos/{owner}/{repo}/pulls/{number}/reviews`
+  → Parse: author, body, path, line, diff_hunk, created_at
+  → Deduplicate (same file+line+message = one comment)
+  → Group by file
+
+Step 3: TRIAGE (the core intelligence)
+  For each comment, evaluate 5 dimensions:
+
+  1. ARCHITECTURAL VALIDITY (does this align with project patterns?)
+     - Read the file being commented on
+     - Check if the suggestion follows existing conventions
+     - Consider CLAUDE.md / PLANNING.md rules
+
+  2. SCOPE CHECK (is this in scope for this PR?)
+     - Is it about code IN this PR's diff?
+     - Or is it asking for unrelated refactoring?
+     - Feature requests disguised as review comments → SKIP
+
+  3. CORRECTNESS (is the suggested fix actually right?)
+     - Would implementing it introduce bugs?
+     - Does it handle edge cases the reviewer missed?
+     - Is the reviewer wrong about the issue?
+
+  4. SEVERITY ASSESSMENT
+     - Critical: security, data loss, crashes → always FIX
+     - High: bugs, logic errors → FIX
+     - Medium: code quality, patterns → FIX if valid
+     - Low: style, preferences → FIX if trivial, SKIP if opinionated
+     - Info: questions, suggestions → RESPOND only
+
+  5. EFFORT vs VALUE
+     - Trivial fix (1-2 lines) → always FIX
+     - Medium fix (function-level) → FIX if high value
+     - Large fix (multi-file refactor) → SKIP, create follow-up issue
+
+  Verdict per comment: FIX | SKIP (with reason) | RESPOND (reply only)
+
+Step 4: PRESENT TRIAGE TO USER
+  Show markdown table:
+  | # | File | Comment | Verdict | Reason |
+  |---|------|---------|---------|--------|
+  | 1 | security_hook.py | Add lru_cache | FIX | Valid perf improvement |
+  | 2 | orchestrator.py | Rewrite auth | SKIP | Out of scope |
+  | 3 | README.md | Typo | FIX | Trivial |
+
+  Summary: "12 FIX, 3 SKIP, 1 RESPOND. Proceed?"
+  → User approves or adjusts
+
+Step 5: CATEGORIZE & DELEGATE
+  Group FIX comments into categories:
+  - Lint (unused imports, formatting)
+  - Code Quality (caching, error handling, type safety)
+  - Design (architecture, API changes, patterns)
+  - Docs (typos, missing docs, outdated info)
+  - Security (vulnerabilities, hardcoded secrets)
+
+  Spawn 1 subagent per category via Task tool (parallel):
+  - Each agent gets: list of comments, file paths, diff context
+  - Each agent: reads file → applies fix → verifies no regressions
+  - Agents run tests relevant to their changes
+
+Step 6: COMMIT & PUSH
+  - Stage all fixed files
+  - Single commit: "fix: address N PR review comments"
+  - Body lists each fix briefly
+  - Push to PR branch
+
+Step 7: REPORT
+  - Summary of what was fixed
+  - Summary of what was skipped (with reasons)
+  - Optionally reply to skipped comments on GitHub explaining why
+```
+
+### Subagent Prompt Template
+
+Each fix subagent receives:
+
+```
+You are fixing PR review comments in category: {category}
+
+Comments to address:
+{for each comment:}
+  - File: {path}:{line}
+  - Comment: {body}
+  - Diff context: {diff_hunk}
+{end for}
+
+Instructions:
+1. Read each file mentioned
+2. Apply the fix described in each comment
+3. Verify the fix is correct (no regressions)
+4. Run relevant tests if they exist
+5. Do NOT fix anything not in the comment list
+```
+
+---
+
+## Key Design Decisions
+
+1. **Prompt-only skill** — No Python orchestrator. Claude Code follows SKILL.md instructions directly. This is the same pattern as wfc-isthissmart and wfc-build. Simpler, faster to build, easier to maintain.
+
+2. **User approval gate** — Always present triage before fixing. Never auto-fix without confirmation. User can override any verdict.
+
+3. **Single commit** — One commit with all fixes, message lists what was addressed. Matches the pattern we used on PR #4.
+
+4. **`gh` CLI only** — No GitHub API tokens or custom HTTP calls. `gh` handles auth.
+
+5. **Category-based parallelism** — Group by type (lint/quality/design/docs/security), not by file. This lets each agent have focused expertise and avoids conflicts.
+
+---
+
+## Verification
+
+```bash
+# Test with existing PR
+/wfc-pr-comments 4
+
+# Test with auto-detection (on a branch with an open PR)
+/wfc-pr-comments
+
+# Test with URL
+/wfc-pr-comments https://github.com/sam-fakhreddine/wfc/pull/4
+
+# Verify skill validates
+make validate
+```
+
+---
+
+## Integration
+
+- **Fits after**: `wfc-build` or `wfc-implement` (which create PRs)
+- **Complements**: `wfc-review` (internal review before PR) vs `wfc-pr-comments` (external feedback after PR)
+- **Workflow**: Build → Push PR → Get comments → `/wfc-pr-comments` → Push fixes → Merge
+
+
+If you need specific details from before exiting plan mode (like exact code snippets, error messages, or content you generated), read the full transcript at: /Users/samfakhreddine/.REDACTED.jsonl
+
+---
+
+[Request interrupted by user]
+
+---
+
+Let me also note that the existing wfc-isthissmart and wfc-build skills have those invalid frontmatter fields but that's a pre-existing issue, not something introduced here. fix those
+
+---
+
+to the branch!
+
+---
+
+you didnt lint before you pushed, where in the skill did that fai;
+
+---
+
+fix thre lint errors
+
+---
+
+and there are unresolved comments on the PR still, only grab unresolved
+
+---
+
+please run black against our entire folder
+
+---
+
+make lint should run black.
