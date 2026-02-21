@@ -1,6 +1,6 @@
 # Plan History
 
-**Total Plans:** 2
+**Total Plans:** 3
 
 ---
 
@@ -33,3 +33,20 @@
 - **Review Skipped:** yes (validation score ≥ 8.5 bypasses review gate)
 - **Estimated Effort:** 68-83 hours (2-3 weeks for 1 developer)
 - **PR Phasing:** Recommended 3-PR approach (Foundation → Core → Complete)
+
+---
+
+## plan_multi_tenant_wfc_20260221_094944
+
+- **Created:** 2026-02-21T09:49:44Z
+- **Goal:** Multi-Tenant WFC Service Architecture (Hybrid MCP + REST)
+- **Context:** Transform WFC from single-user to production-grade multi-tenant service supporting concurrent reviews. Addresses 6 critical race conditions: project isolation, concurrent access safety, developer attribution, API rate limiting, resource cleanup, interface choice.
+- **Directory:** `plans/plan_multi_tenant_wfc_20260221_094944`
+- **Tasks:** 65 (58 original + 7 infrastructure fixes)
+- **Properties:** 15 (5 SAFETY, 3 LIVENESS, 4 INVARIANT, 3 PERFORMANCE)
+- **Tests:** 41 (27 unit, 7 integration, 3 load, 4 e2e)
+- **Validated:** yes (validate: 7.4/10, review: 4.59/10 - PASSED)
+- **Review Findings:** 29 total (8 critical/important applied)
+- **Status:** Approved for implementation with fixes
+- **Estimated Effort:** 65 tasks × 30min avg = 32.5 agent-hours (agentic parallel execution: 3-4 weeks)
+- **Streams:** Phase 1 (26 tasks, Shared Core), Phase 2A (12 tasks, MCP), Phase 2B (20 tasks, REST), Phase 3 (7 tasks, Infrastructure)

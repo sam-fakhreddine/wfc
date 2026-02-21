@@ -10,7 +10,7 @@ requires-python = ">=3.12"
 license = {text = "MIT"}
 
 dependencies = [
-    # Core dependencies (none required)
+    "filelock>=3.13.0",  # File locking for concurrent writes (multi-tenant safety)
 ]
 
 [project.scripts]
@@ -36,9 +36,14 @@ validation = [
     "pydantic>=2.0",
 ]
 
+# MCP server support
+mcp = [
+    "mcp>=1.0.0",
+]
+
 # All optional features
 all = [
-    "wfc[tokens,dev,validation]",
+    "wfc[tokens,dev,validation,mcp]",
 ]
 
 [build-system]

@@ -20,7 +20,6 @@ from .validators import has_path_traversal, is_flag_injection
 _SCRIPT_DIR = Path(__file__).parent.parent / "scripts"
 _MANAGER_SCRIPT = _SCRIPT_DIR / "worktree-manager.sh"
 
-# Unsafe git ref characters: ~, ^, :, whitespace, null/control bytes
 _UNSAFE_REF_RE = re.compile(r"[~^:\s\x00-\x1f]")
 
 
@@ -87,15 +86,21 @@ class WorktreeOperations:
     - wfc/ branch prefix enforcement
     """
 
-    def __init__(self, worktree_dir: str = ".worktrees"):
+    def __init__(self, worktree_dir: str = ".worktrees", project_id: Optional[str] = None):
         self.worktree_dir = worktree_dir
+        self.project_id = project_id
 
     def _worktree_path(self, task_id: str) -> Path:
         """Return the absolute path for a task's worktree, anchored to repo root."""
         root = _repo_root()
         if root:
-            return Path(root) / self.worktree_dir / f"wfc-{task_id}"
-        # Fall back to relative path if git command fails
+            if self.project_id:
+                return Path(root) / self.worktree_dir / self.project_id / f"wfc-{task_id}"
+            else:
+                return Path(root) / self.worktree_dir / f"wfc-{task_id}"
+
+        if self.project_id:
+            return Path(self.worktree_dir) / self.project_id / f"wfc-{task_id}"
         return Path(self.worktree_dir) / f"wfc-{task_id}"
 
     def create(self, task_id: str, base_ref: str = "develop") -> Dict:
@@ -115,7 +120,11 @@ class WorktreeOperations:
             }
 
         worktree_path = self._worktree_path(task_id)
-        branch_name = f"wfc/{task_id}"
+
+        if self.project_id:
+            branch_name = f"wfc/{self.project_id}/{task_id}"
+        else:
+            branch_name = f"wfc/{task_id}"
 
         if _MANAGER_SCRIPT.exists():
             result = _run_manager(["create", task_id, base_ref])

@@ -12,8 +12,29 @@ Design principles:
 
 import copy
 import json
+import re
+from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Dict, Optional
+
+
+@dataclass
+class ProjectContext:
+    """Project isolation context for multi-tenant WFC."""
+
+    project_id: str
+    developer_id: str
+    repo_path: Path
+    worktree_dir: Path
+    metrics_dir: Path
+    output_dir: Path
+
+    def __post_init__(self):
+        """Ensure all paths are absolute."""
+        self.repo_path = Path(self.repo_path).resolve()
+        self.worktree_dir = Path(self.worktree_dir).resolve()
+        self.metrics_dir = Path(self.metrics_dir).resolve()
+        self.output_dir = Path(self.output_dir).resolve()
 
 
 class WFCConfig:
@@ -230,6 +251,50 @@ class WFCConfig:
             current = current[key]
 
         current[keys[-1]] = value
+
+    def create_project_context(
+        self, project_id: str, developer_id: str, repo_path: Optional[Path] = None
+    ) -> ProjectContext:
+        """
+        Create ProjectContext with namespaced paths for multi-tenant isolation.
+
+        Args:
+            project_id: Project identifier (must match ^[a-zA-Z0-9_-]{1,64}$)
+            developer_id: Developer identifier (must match ^[a-zA-Z0-9_-]{1,64}$)
+            repo_path: Optional repository root path (defaults to project_root)
+
+        Returns:
+            ProjectContext with namespaced worktree/metrics/output directories
+
+        Raises:
+            ValueError: If project_id or developer_id contains invalid characters
+
+        Example:
+            >>> config = WFCConfig()
+            >>> ctx = config.create_project_context("proj1", "alice")
+            >>> ctx.worktree_dir
+            PosixPath('/path/to/repo/.worktrees/proj1')
+        """
+        if not re.match(r"^[a-zA-Z0-9_-]{1,64}$", project_id):
+            raise ValueError(f"Invalid project_id: {project_id}")
+        if not re.match(r"^[a-zA-Z0-9_-]{1,64}$", developer_id):
+            raise ValueError(f"Invalid developer_id: {developer_id}")
+
+        if repo_path is None:
+            repo_path = self.project_root
+
+        base_metrics_dir = Path(
+            self.get("metrics.directory", str(Path.home() / ".wfc" / "metrics"))
+        )
+
+        return ProjectContext(
+            project_id=project_id,
+            developer_id=developer_id,
+            repo_path=Path(repo_path),
+            worktree_dir=Path(repo_path) / ".worktrees" / project_id,
+            metrics_dir=base_metrics_dir / project_id,
+            output_dir=Path(repo_path) / ".wfc" / "output" / project_id,
+        )
 
     def _load_file(self, path: Path) -> Optional[Dict[str, Any]]:
         """Load JSON config file if it exists."""
