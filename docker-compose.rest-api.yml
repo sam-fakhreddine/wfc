@@ -1,0 +1,21 @@
+services:
+  wfc-rest-api:
+    build:
+      context: .
+      dockerfile: Dockerfile.rest_api
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./wfc:/app/wfc:ro
+      - wfc-data:/root/.wfc
+    environment:
+      - LOG_LEVEL=info
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 5s
+
+volumes:
+  wfc-data:
