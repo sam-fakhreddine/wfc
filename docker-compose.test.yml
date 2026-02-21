@@ -1,0 +1,93 @@
+version: '3.8'
+
+# Test Environment
+# - 2 WFC instances (load balancing testing)
+# - Test data isolation
+# - Integration test friendly
+# - Port 9951 (test)
+# - Seeded test data
+
+services:
+  traefik:
+    image: traefik:v3.0
+    container_name: wfc-traefik-test
+    restart: unless-stopped
+    ports:
+      - "9951:9951"   # Test API
+      - "8081:8080"   # Dashboard
+    command:
+      - "--providers.docker=true"
+      - "--providers.docker.exposedbydefault=false"
+      - "--entrypoints.wfc-test.address=:9951"
+      - "--api.dashboard=true"
+      - "--api.insecure=true"
+      - "--accesslog=true"
+      - "--log.level=INFO"
+      - "--metrics.prometheus=true"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    networks:
+      - wfc-test-network
+
+  wfc-rest-api:
+    build:
+      context: .
+      dockerfile: Dockerfile.rest_api
+    restart: unless-stopped
+    expose:
+      - "8000"
+    volumes:
+      - ./wfc:/app/wfc:ro
+      - wfc-test-data:/root/.wfc
+      - ./tests/fixtures:/app/fixtures:ro  # Test fixtures
+    environment:
+      - LOG_LEVEL=info
+      - ENV=test
+      - SEED_DATA=true  # Auto-seed test projects
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 5s
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.wfc-api-test.rule=PathPrefix(`/`)"
+      - "traefik.http.routers.wfc-api-test.entrypoints=wfc-test"
+      - "traefik.http.services.wfc-api-test.loadbalancer.server.port=8000"
+      - "traefik.http.services.wfc-api-test.loadbalancer.healthcheck.path=/"
+    networks:
+      - wfc-test-network
+    deploy:
+      replicas: 2  # Test load balancing
+
+  # Test database seeder (runs once on startup)
+  test-seeder:
+    build:
+      context: .
+      dockerfile: Dockerfile.rest_api
+    container_name: wfc-test-seeder
+    entrypoint: /bin/sh
+    command:
+      - -c
+      - |
+        echo "Seeding test data..."
+        sleep 5  # Wait for API to be ready
+        curl -X POST http://wfc-rest-api:8000/v1/projects/ \
+          -H "Content-Type: application/json" \
+          -d '{"project_id":"test-project-1","developer_id":"alice","repo_path":"/tmp/repo1"}'
+        curl -X POST http://wfc-rest-api:8000/v1/projects/ \
+          -H "Content-Type: application/json" \
+          -d '{"project_id":"test-project-2","developer_id":"bob","repo_path":"/tmp/repo2"}'
+        echo "Test data seeded successfully"
+    networks:
+      - wfc-test-network
+    depends_on:
+      - wfc-rest-api
+
+volumes:
+  wfc-test-data:
+
+networks:
+  wfc-test-network:
+    driver: bridge
