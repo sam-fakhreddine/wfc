@@ -30,42 +30,35 @@ class TaskMetrics:
     """Metrics for a single task execution"""
 
     task_id: str
-    complexity: str  # S, M, L, XL
-    status: str  # success, failed, in_progress
+    complexity: str
+    status: str
     timestamp: str
 
-    # Extended thinking metrics
     thinking_budget_allocated: int
     thinking_budget_used: int
     thinking_truncated: bool
-    thinking_mode: str  # normal, extended, unlimited
+    thinking_mode: str
 
-    # Retry metrics
     retry_count: int
     max_retries: int = 4
 
-    # Debugging metrics (optional)
     debugging_time_min: Optional[float] = None
     root_cause_documented: Optional[bool] = None
     bugs_fixed: int = 0
 
-    # Performance metrics
     duration_seconds: Optional[float] = None
     tokens_input: int = 0
     tokens_output: int = 0
     tokens_total: int = 0
 
-    # Quality metrics
     tests_run: int = 0
     tests_passed: int = 0
     tests_failed: int = 0
     coverage_percent: Optional[float] = None
 
-    # Review metrics (if reviewed)
     review_score: Optional[float] = None
     review_passed: Optional[bool] = None
 
-    # Properties satisfied
     properties: Optional[List[str]] = field(default=None)
     properties_satisfied: Optional[Dict[str, bool]] = field(default=None)
 
@@ -84,21 +77,23 @@ class AutoTelemetry:
     Developer can view metrics anytime.
     """
 
-    def __init__(self, storage_dir: Optional[Path] = None):
-        """Initialize auto telemetry with storage directory"""
+    def __init__(self, storage_dir: Optional[Path] = None, project_id: Optional[str] = None):
+        """Initialize auto telemetry with storage directory and optional project_id"""
         if storage_dir is None:
-            # Default: ~/.wfc/telemetry/
-            storage_dir = Path.home() / ".wfc" / "telemetry"
+            base_dir = Path.home() / ".wfc" / "telemetry"
+            if project_id:
+                storage_dir = base_dir / project_id
+            else:
+                storage_dir = base_dir
 
+        self.project_id = project_id
         self.storage_dir = Path(storage_dir)
         self.storage_dir.mkdir(parents=True, exist_ok=True)
 
-        # Metrics file for current session
         self.session_file = (
             self.storage_dir / f"session-{datetime.now().strftime('%Y%m%d-%H%M%S')}.jsonl"
         )
 
-        # Aggregated metrics file
         self.aggregate_file = self.storage_dir / "aggregate.json"
 
     def log_task_start(
@@ -129,7 +124,7 @@ class AutoTelemetry:
     def log_task_complete(
         self,
         task_id: str,
-        status: str,  # success or failed
+        status: str,
         thinking_budget_used: int,
         thinking_truncated: bool,
         retry_count: int,
@@ -149,11 +144,9 @@ class AutoTelemetry:
     ) -> None:
         """Log task completion - updates metrics entry"""
 
-        # Read existing metrics for this task (if any)
         existing = self._find_task_metrics(task_id)
 
         if existing:
-            # Update existing entry
             metrics = existing
             metrics.status = status
             metrics.thinking_budget_used = thinking_budget_used
@@ -175,10 +168,9 @@ class AutoTelemetry:
             if properties_satisfied:
                 metrics.properties_satisfied = properties_satisfied
         else:
-            # Create new entry (task_start wasn't called)
             metrics = TaskMetrics(
                 task_id=task_id,
-                complexity="M",  # Default
+                complexity="M",
                 status=status,
                 timestamp=datetime.now().isoformat(),
                 thinking_budget_allocated=0,
@@ -205,7 +197,6 @@ class AutoTelemetry:
         self._append_metrics(metrics)
         self._update_aggregate(metrics)
 
-        # Print summary
         self._print_task_summary(metrics)
 
     def _append_metrics(self, metrics: TaskMetrics) -> None:
@@ -215,7 +206,6 @@ class AutoTelemetry:
 
     def _update_aggregate(self, metrics: TaskMetrics) -> None:
         """Update aggregated metrics file"""
-        # Load existing aggregate
         if self.aggregate_file.exists():
             with open(self.aggregate_file) as f:
                 aggregate = json.load(f)
@@ -231,7 +221,6 @@ class AutoTelemetry:
                 "tasks": [],
             }
 
-        # Update aggregate stats
         aggregate["total_tasks"] += 1
         if metrics.status == "success":
             aggregate["successful_tasks"] += 1
@@ -244,12 +233,10 @@ class AutoTelemetry:
         if metrics.thinking_truncated:
             aggregate["truncation_count"] += 1
 
-        # Recalculate avg retries
         total_retries = sum(t.get("retry_count", 0) for t in aggregate["tasks"])
         total_retries += metrics.retry_count
         aggregate["avg_retries"] = total_retries / aggregate["total_tasks"]
 
-        # Add/update task in aggregate list
         task_entry = {
             "task_id": metrics.task_id,
             "complexity": metrics.complexity,
@@ -260,14 +247,11 @@ class AutoTelemetry:
             "tokens": metrics.tokens_total,
         }
 
-        # Remove old entry if exists
         aggregate["tasks"] = [t for t in aggregate["tasks"] if t["task_id"] != metrics.task_id]
         aggregate["tasks"].append(task_entry)
 
-        # Keep only last 100 tasks in aggregate
         aggregate["tasks"] = aggregate["tasks"][-100:]
 
-        # Save aggregate
         with open(self.aggregate_file, "w") as f:
             json.dump(aggregate, f, indent=2)
 
@@ -276,7 +260,6 @@ class AutoTelemetry:
         if not self.session_file.exists():
             return None
 
-        # Read all lines and find matching task_id (last occurrence)
         matching = None
         with open(self.session_file) as f:
             for line in f:
@@ -305,7 +288,7 @@ class AutoTelemetry:
         )
         print(f"  Truncated: {'⚠️ YES' if metrics.thinking_truncated else '✅ No'}")
         print(
-            f"  Utilization: {(metrics.thinking_budget_used/metrics.thinking_budget_allocated*100):.1f}%"
+            f"  Utilization: {(metrics.thinking_budget_used / metrics.thinking_budget_allocated * 100):.1f}%"
             if metrics.thinking_budget_allocated > 0
             else "  Utilization: N/A"
         )
@@ -365,7 +348,7 @@ class AutoTelemetry:
         print("=" * 60)
         print(f"Total Tasks: {aggregate['total_tasks']}")
         print(
-            f"Success Rate: {(aggregate['successful_tasks']/aggregate['total_tasks']*100):.1f}%"
+            f"Success Rate: {(aggregate['successful_tasks'] / aggregate['total_tasks'] * 100):.1f}%"
             if aggregate["total_tasks"] > 0
             else "Success Rate: N/A"
         )
@@ -375,7 +358,7 @@ class AutoTelemetry:
         print(f"Truncation Events: {aggregate['truncation_count']}")
         print(f"Total Tokens Used: {aggregate['total_tokens']:,}")
         print(
-            f"Total Duration: {aggregate['total_duration_seconds']/60:.1f} min"
+            f"Total Duration: {aggregate['total_duration_seconds'] / 60:.1f} min"
             if aggregate["total_duration_seconds"] > 0
             else "Total Duration: N/A"
         )
@@ -384,19 +367,19 @@ class AutoTelemetry:
         return aggregate
 
 
-# Global instance for easy access
-_telemetry = None
+_telemetry_instances: Dict[str, AutoTelemetry] = {}
 
 
-def get_telemetry() -> AutoTelemetry:
-    """Get global telemetry instance"""
-    global _telemetry
-    if _telemetry is None:
-        _telemetry = AutoTelemetry()
-    return _telemetry
+def get_telemetry(project_id: Optional[str] = None) -> AutoTelemetry:
+    """Get telemetry instance for project (or global if project_id=None)"""
+    key = project_id or "_global"
+
+    if key not in _telemetry_instances:
+        _telemetry_instances[key] = AutoTelemetry(project_id=project_id)
+
+    return _telemetry_instances[key]
 
 
-# Convenience functions
 def log_task_start(
     task_id: str, complexity: str, properties: List[str], thinking_budget: int, thinking_mode: str
 ):
@@ -444,7 +427,6 @@ def view_metrics(task_id: Optional[str] = None):
         return telemetry.view_aggregate_metrics()
 
 
-# Generic event logging for hooks, PR creation, etc.
 def log_event(event_type: str, data: Dict[str, Any]) -> None:
     """
     Log generic event to telemetry (NEW in Phase 6).
@@ -470,19 +452,16 @@ def log_event(event_type: str, data: Dict[str, Any]) -> None:
     try:
         telemetry = get_telemetry()
 
-        # Create event entry
         event = {
             "event": event_type,
             "timestamp": datetime.now().isoformat(),
             **data,
         }
 
-        # Append to events file
         events_file = telemetry.storage_dir / "events.jsonl"
         with open(events_file, "a") as f:
             f.write(json.dumps(event) + "\n")
     except Exception:
-        # Telemetry failure should not break workflow - fail silently
         pass
 
 
@@ -516,7 +495,6 @@ def get_workflow_metrics(days: int = 30) -> Dict[str, Any]:
             "hook_warnings": [],
         }
 
-    # Parse events
     from datetime import datetime, timedelta
 
     cutoff = datetime.now() - timedelta(days=days)
@@ -544,7 +522,6 @@ def get_workflow_metrics(days: int = 30) -> Dict[str, Any]:
     except Exception:
         pass
 
-    # Calculate metrics
     total_prs = len(pr_events)
     successful_prs = sum(1 for e in pr_events if e.get("success", False))
 
@@ -569,7 +546,7 @@ def get_workflow_metrics(days: int = 30) -> Dict[str, Any]:
         "force_pushes": force_pushes,
         "conventional_commits": conventional_commits,
         "total_commits": total_commits,
-        "hook_warnings": hook_warnings[:20],  # Last 20
+        "hook_warnings": hook_warnings[:20],
     }
 
 
@@ -586,24 +563,21 @@ def print_workflow_metrics(days: int = 30) -> None:
     print(f"📊 WFC WORKFLOW METRICS (Last {days} Days)")
     print(f"{'=' * 60}")
 
-    # PR Creation
     print("\nPR Creation:")
     print(f"  Total PRs: {metrics['total_prs']}")
     print(f"  Successful: {metrics['successful_prs']}")
     print(f"  Success Rate: {metrics['pr_creation_success_rate']:.1f}%")
 
-    # Workflow Compliance
     print("\nWorkflow Compliance:")
     print(f"  Direct Main Commits: {metrics['direct_main_commits']} warnings")
     print(f"  Force Pushes: {metrics['force_pushes']} warnings")
     print(
         f"  Conventional Commits: {metrics['conventional_commits']}/{metrics['total_commits']} "
-        f"({metrics['conventional_commits']/metrics['total_commits']*100:.1f}%)"
+        f"({metrics['conventional_commits'] / metrics['total_commits'] * 100:.1f}%)"
         if metrics["total_commits"] > 0
         else "  Conventional Commits: N/A"
     )
 
-    # Recent Warnings
     if metrics["hook_warnings"]:
         print(f"\nRecent Hook Warnings ({len(metrics['hook_warnings'])}):")
         for warning in metrics["hook_warnings"][:5]:
@@ -614,7 +588,6 @@ def print_workflow_metrics(days: int = 30) -> None:
     print(f"{'=' * 60}\n")
 
 
-# CLI entry point
 if __name__ == "__main__":
     import sys
 
