@@ -6,7 +6,7 @@ permissions:
 # Fast validation workflow - runs on every push
 # Optimized for speed: ~30 seconds vs full CI ~3-5 minutes
 
-on:
+"on":
   push:
     branches: ["*"]
   pull_request:
@@ -53,8 +53,10 @@ jobs:
 
       - name: Quick smoke tests (fast tests only)
         run: |
-          # Run only fast unit tests (skip integration/e2e)
-          pytest tests/ -m "not slow and not e2e" -v --tb=short || true
+          # Run subset of critical tests for quick validation
+          pytest tests/test_confidence_checker.py \
+            tests/test_memory_manager.py \
+            tests/test_token_manager.py -v --tb=short || true
         continue-on-error: true
 
       - name: Check imports
