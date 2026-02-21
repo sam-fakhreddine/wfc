@@ -6,6 +6,61 @@ license: MIT
 
 # wfc-implement - Multi-Agent Parallel Implementation Engine
 
+⚠️ **EXECUTION CONTEXT: ORCHESTRATION MODE**
+
+You are running in **orchestration mode** with restricted tool access.
+
+**Available tools:**
+
+- ✅ Read, Grep, Glob (read TASKS.md, inspect code)
+- ✅ Task (REQUIRED for spawning implementation agents)
+- ✅ Bash (git worktree operations, coordination)
+
+**NOT available in this context:**
+
+- ❌ Write (use Task → spawn agent per task in worktree)
+- ❌ Edit (use Task → spawn agent per task in worktree)
+- ❌ NotebookEdit (use Task → spawn agent per task in worktree)
+
+**Your role:** Read TASKS.md, spawn parallel Task agents (one per task), coordinate their work, route through review, merge results.
+
+---
+
+## Quick Start: Spawn Implementation Agents
+
+For each task in TASKS.md:
+
+```xml
+<Task
+  subagent_type="general-purpose"
+  description="Implement TASK-001"
+  prompt="
+Task: [from TASKS.md]
+
+Worktree: [isolated git worktree path]
+
+Requirements:
+- [from TASKS.md]
+
+Properties to verify:
+- [from PROPERTIES.md if exists]
+
+Follow TDD:
+1. Write tests FIRST
+2. Implement to pass tests
+3. Refactor
+4. Quality checks
+
+Deliverables:
+- Implementation in worktree
+- Passing tests
+- Quality gates passing
+"
+/>
+```
+
+---
+
 **Core skill #3** - Reads TASKS.md, orchestrates N agents in isolated worktrees, enforces TDD, routes through review, auto-merges, handles rollbacks.
 
 ## Status

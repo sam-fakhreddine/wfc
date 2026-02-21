@@ -6,6 +6,62 @@ license: MIT
 
 # WFC:BUILD - Intentional Vibe Coding
 
+⚠️ **EXECUTION CONTEXT: ORCHESTRATION MODE**
+
+You are running in **orchestration mode** with restricted tool access.
+
+**Available tools:**
+
+- ✅ Read, Grep, Glob (file inspection only)
+- ✅ Task (REQUIRED for all implementation work)
+- ✅ AskUserQuestion (clarification)
+- ✅ Bash (coordination only: git status, worktree list)
+
+**NOT available in this context:**
+
+- ❌ Write (use Task → spawn implementation subagent)
+- ❌ Edit (use Task → spawn implementation subagent)
+- ❌ NotebookEdit (use Task → spawn implementation subagent)
+
+**Critical constraint:** Every line of code written MUST be written by a subagent spawned via Task tool. No exceptions.
+
+---
+
+## Quick Start: Spawn Implementation Subagent
+
+Use this template:
+
+```xml
+<Task
+  subagent_type="general-purpose"
+  description="Implement [feature name]"
+  prompt="
+You are implementing: [detailed feature description]
+
+Files to create/modify:
+- [list specific files]
+
+Requirements:
+- [requirement 1]
+- [requirement 2]
+- [requirement 3]
+
+Follow TDD workflow:
+1. Write tests FIRST (RED phase)
+2. Implement minimum code to pass tests (GREEN phase)
+3. Refactor while keeping tests passing (REFACTOR phase)
+4. Run quality checks (formatters, linters, tests)
+
+Deliverables:
+- Working implementation
+- Passing tests
+- Quality checks passing
+"
+/>
+```
+
+---
+
 **"Vibe coding with guardrails"** - Quick iteration with WFC quality standards.
 
 ## What It Does
