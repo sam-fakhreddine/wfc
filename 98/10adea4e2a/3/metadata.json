@@ -1,0 +1,33 @@
+{
+  "cli_version": "0.4.5",
+  "checkpoint_id": "9810adea4e2a",
+  "session_id": "cc88c2e0-9a11-47d9-b91a-f45218fc3099",
+  "strategy": "manual-commit",
+  "created_at": "2026-02-21T04:14:32.802634Z",
+  "branch": "claude/add-prompt-fixer-and-doctor",
+  "checkpoints_count": 2,
+  "files_touched": [
+    "wfc/scripts/orchestrators/review/diff_parser.py",
+    "wfc/scripts/orchestrators/review/domain_tagger.py",
+    "wfc/scripts/orchestrators/review/reviewer_engine.py"
+  ],
+  "agent": "Claude Code",
+  "turn_id": "117b9dce3f5e",
+  "token_usage": {
+    "input_tokens": 8790,
+    "cache_creation_tokens": 876166,
+    "cache_read_tokens": 15525352,
+    "output_tokens": 1437,
+    "api_call_count": 158
+  },
+  "initial_attribution": {
+    "calculated_at": "2026-02-21T04:14:31.378094Z",
+    "agent_lines": 23,
+    "human_added": 0,
+    "human_modified": 0,
+    "human_removed": 0,
+    "total_committed": 23,
+    "agent_percentage": 100
+  },
+  "transcript_path": ".claude/projects/-Users-samfakhreddine-repos-wfc/cc88c2e0-9a11-47d9-b91a-f45218fc3099.jsonl"
+}
