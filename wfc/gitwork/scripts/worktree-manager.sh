@@ -20,6 +20,28 @@ fi
 
 WORKTREE_DIR="$GIT_ROOT/.worktrees"
 
+# Multi-tenant support (optional)
+PROJECT_ID=""
+DEVELOPER_ID=""
+
+# Parse flags before command
+while [[ $# -gt 0 && "$1" == --* ]]; do
+  case $1 in
+    --project-id)
+      PROJECT_ID="$2"
+      shift 2
+      ;;
+    --developer-id)
+      DEVELOPER_ID="$2"
+      shift 2
+      ;;
+    *)
+      echo -e "${RED}Unknown flag: $1${NC}"
+      exit 1
+      ;;
+  esac
+done
+
 # --- Helpers ---
 
 ensure_gitignore() {
@@ -131,6 +153,13 @@ cmd_create() {
   local wfc_branch="wfc/$branch_name"
   git worktree add "$worktree_path" -b "$wfc_branch" "origin/$from_branch" 2>/dev/null \
     || git worktree add "$worktree_path" -b "$wfc_branch" "$from_branch"
+
+  # Set git author for developer attribution (if provided)
+  if [[ -n "$DEVELOPER_ID" ]]; then
+    git -C "$worktree_path" config user.name "WFC Agent ($DEVELOPER_ID)"
+    git -C "$worktree_path" config user.email "wfc+$DEVELOPER_ID@localhost"
+    echo -e "  ${GREEN}+ Developer attribution: $DEVELOPER_ID${NC}"
+  fi
 
   echo -e "${BLUE}Syncing environment...${NC}"
   copy_env_files "$worktree_path"

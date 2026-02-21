@@ -1,0 +1,30 @@
+{
+  "mcpServers": {
+    "wfc": {
+      "command": "uv",
+      "args": [
+        "run",
+        "python",
+        "-m",
+        "wfc.servers.mcp_server"
+      ],
+      "env": {
+        "WFC_LOG_LEVEL": "INFO"
+      },
+      "description": "WFC Multi-Tenant Code Review Server"
+    }
+  },
+  "server": {
+    "name": "wfc-mcp",
+    "version": "1.0.0",
+    "description": "WFC Model Context Protocol server for multi-tenant code review",
+    "worktree_pool": {
+      "max_worktrees": 10,
+      "orphan_timeout_hours": 24
+    },
+    "rate_limiting": {
+      "capacity": 10,
+      "refill_rate": 10.0
+    }
+  }
+}
