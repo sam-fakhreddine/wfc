@@ -1,0 +1,34 @@
+{
+  "cli_version": "0.4.5",
+  "checkpoint_id": "d661204d24d8",
+  "strategy": "manual-commit",
+  "branch": "claude/add-prompt-fixer-and-doctor",
+  "checkpoints_count": 0,
+  "files_touched": [
+    "plans/HISTORY.json",
+    "plans/HISTORY.md",
+    "plans/plan_fix_prompt_fixer_doctor_20260220_072925/PROPERTIES.md",
+    "plans/plan_fix_prompt_fixer_doctor_20260220_072925/TASKS.md",
+    "plans/plan_fix_prompt_fixer_doctor_20260220_072925/TEST-PLAN.md",
+    "plans/plan_fix_prompt_fixer_doctor_20260220_072925/VALIDATE.md",
+    "plans/plan_fix_prompt_fixer_doctor_20260220_072925/interview-results.json",
+    "plans/plan_fix_prompt_fixer_doctor_20260220_072925/plan-audit_20260220_073200.json",
+    "plans/plan_fix_prompt_fixer_doctor_20260220_072925/revision-log.md"
+  ],
+  "sessions": [
+    {
+      "metadata": "/d6/61204d24d8/0/metadata.json",
+      "transcript": "/d6/61204d24d8/0/full.jsonl",
+      "context": "/d6/61204d24d8/0/context.md",
+      "content_hash": "/d6/61204d24d8/0/content_hash.txt",
+      "prompt": "/d6/61204d24d8/0/prompt.txt"
+    }
+  ],
+  "token_usage": {
+    "input_tokens": 1843,
+    "cache_creation_tokens": 2397700,
+    "cache_read_tokens": 45050870,
+    "output_tokens": 3111,
+    "api_call_count": 455
+  }
+}
