@@ -3,7 +3,10 @@
 import sys
 from pathlib import Path
 
-from .orchestrator import PromptFixerOrchestrator
+try:
+    from .orchestrator import PromptFixerOrchestrator
+except ImportError:
+    from orchestrator import PromptFixerOrchestrator
 
 
 def main() -> int:
