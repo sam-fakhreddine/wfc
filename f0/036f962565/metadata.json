@@ -1,0 +1,56 @@
+{
+  "cli_version": "0.4.5",
+  "checkpoint_id": "f0036f962565",
+  "strategy": "manual-commit",
+  "branch": "feat/rest-api-implementation",
+  "checkpoints_count": 1,
+  "files_touched": [
+    "Dockerfile.rest_api",
+    "docker-compose.rest-api.yml",
+    "docs/REST_API.md",
+    "plans/HISTORY.md",
+    "plans/plan_rest_api_20260221_143551/.original_hash",
+    "plans/plan_rest_api_20260221_143551/PROPERTIES.md",
+    "plans/plan_rest_api_20260221_143551/REVIEW.md",
+    "plans/plan_rest_api_20260221_143551/TASKS.md",
+    "plans/plan_rest_api_20260221_143551/TEST-PLAN.md",
+    "plans/plan_rest_api_20260221_143551/VALIDATE.md",
+    "plans/plan_rest_api_20260221_143551/plan-audit_20260221_143551.json",
+    "plans/plan_rest_api_20260221_143551/revision-log.md",
+    "pyproject.toml",
+    "tests/rest_api/__init__.py",
+    "tests/rest_api/conftest.py",
+    "tests/rest_api/test_auth.py",
+    "tests/rest_api/test_background.py",
+    "tests/rest_api/test_dependencies.py",
+    "tests/rest_api/test_main.py",
+    "tests/rest_api/test_models.py",
+    "tests/rest_api/test_project_endpoints.py",
+    "tests/rest_api/test_resource_endpoints.py",
+    "tests/rest_api/test_review_endpoints.py",
+    "tests/rest_api/test_routes.py",
+    "wfc/servers/rest_api/__init__.py",
+    "wfc/servers/rest_api/auth.py",
+    "wfc/servers/rest_api/background.py",
+    "wfc/servers/rest_api/dependencies.py",
+    "wfc/servers/rest_api/main.py",
+    "wfc/servers/rest_api/models.py",
+    "wfc/servers/rest_api/routes.py"
+  ],
+  "sessions": [
+    {
+      "metadata": "/f0/036f962565/0/metadata.json",
+      "transcript": "/f0/036f962565/0/full.jsonl",
+      "context": "/f0/036f962565/0/context.md",
+      "content_hash": "/f0/036f962565/0/content_hash.txt",
+      "prompt": "/f0/036f962565/0/prompt.txt"
+    }
+  ],
+  "token_usage": {
+    "input_tokens": 7865,
+    "cache_creation_tokens": 1763521,
+    "cache_read_tokens": 37682994,
+    "output_tokens": 1773,
+    "api_call_count": 386
+  }
+}
