@@ -3,7 +3,7 @@
   "checkpoint_id": "1ba73371f4c2",
   "strategy": "manual-commit",
   "branch": "claude/add-prompt-fixer-and-doctor",
-  "checkpoints_count": 1,
+  "checkpoints_count": 2,
   "files_touched": [
     "CLAUDE.md"
   ],
@@ -21,13 +21,20 @@
       "context": "/1b/a73371f4c2/1/context.md",
       "content_hash": "/1b/a73371f4c2/1/content_hash.txt",
       "prompt": "/1b/a73371f4c2/1/prompt.txt"
+    },
+    {
+      "metadata": "/1b/a73371f4c2/2/metadata.json",
+      "transcript": "/1b/a73371f4c2/2/full.jsonl",
+      "context": "/1b/a73371f4c2/2/context.md",
+      "content_hash": "/1b/a73371f4c2/2/content_hash.txt",
+      "prompt": "/1b/a73371f4c2/2/prompt.txt"
     }
   ],
   "token_usage": {
-    "input_tokens": 1914,
-    "cache_creation_tokens": 2575435,
-    "cache_read_tokens": 49651993,
-    "output_tokens": 10580,
-    "api_call_count": 511
+    "input_tokens": 2922,
+    "cache_creation_tokens": 3035518,
+    "cache_read_tokens": 53497363,
+    "output_tokens": 10894,
+    "api_call_count": 555
   }
 }
