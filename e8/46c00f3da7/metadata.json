@@ -1,0 +1,36 @@
+{
+  "cli_version": "0.4.5",
+  "checkpoint_id": "e846c00f3da7",
+  "strategy": "manual-commit",
+  "branch": "feat/rest-api-implementation",
+  "checkpoints_count": 1,
+  "files_touched": [
+    ".env.dev.example",
+    ".env.prod.example",
+    ".env.test.example",
+    "docker-compose.dev.yml",
+    "docker-compose.prod.yml",
+    "docker-compose.test.yml",
+    "docker-compose.traefik.yml",
+    "docs/MULTI_ENVIRONMENT.md",
+    "docs/TRAEFIK_DEPLOYMENT.md",
+    "prometheus.yml",
+    "wfc-deploy.sh"
+  ],
+  "sessions": [
+    {
+      "metadata": "/e8/46c00f3da7/0/metadata.json",
+      "transcript": "/e8/46c00f3da7/0/full.jsonl",
+      "context": "/e8/46c00f3da7/0/context.md",
+      "content_hash": "/e8/46c00f3da7/0/content_hash.txt",
+      "prompt": "/e8/46c00f3da7/0/prompt.txt"
+    }
+  ],
+  "token_usage": {
+    "input_tokens": 7949,
+    "cache_creation_tokens": 1890544,
+    "cache_read_tokens": 41464729,
+    "output_tokens": 2189,
+    "api_call_count": 419
+  }
+}
