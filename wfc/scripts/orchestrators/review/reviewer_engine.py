@@ -111,7 +111,7 @@ class ReviewerEngine:
 
         tasks: list[dict] = []
         for config in configs:
-            prompt = self._build_task_prompt(
+            prompt, token_metrics = self._build_task_prompt(
                 config, files, diff_content, properties, use_diff_manifest
             )
             token_count = len(prompt) // 4
@@ -124,6 +124,8 @@ class ReviewerEngine:
                 "relevant": config.relevant,
                 "token_count": token_count,
             }
+            if token_metrics:
+                task_spec["token_metrics"] = token_metrics
             if single_model:
                 task_spec["model"] = single_model
             elif model_router is not None:
@@ -209,7 +211,7 @@ class ReviewerEngine:
         diff_content: str,
         properties: list[dict] | None,
         use_diff_manifest: bool = False,
-    ) -> str:
+    ) -> tuple[str, dict | None]:
         """
         Build the full prompt for a reviewer task.
 
@@ -221,6 +223,9 @@ class ReviewerEngine:
             diff_content: Git diff content
             properties: Optional properties to verify
             use_diff_manifest: If True, use structured diff manifest instead of full diff
+
+        Returns:
+            Tuple of (prompt_text, token_metrics_dict or None)
         """
         _MAX_DIFF_LEN = 50_000
 
@@ -237,6 +242,7 @@ class ReviewerEngine:
             return text
 
         parts: list[str] = []
+        token_metrics: dict | None = None
 
         parts.append(config.prompt)
 
@@ -270,6 +276,23 @@ class ReviewerEngine:
 
                     manifest = build_diff_manifest(diff_content, config.id, files)
                     manifest_text = format_manifest_for_reviewer(manifest, config.id)
+
+                    full_diff_tokens = len(diff_content) // 4
+                    manifest_tokens = manifest.get_token_estimate()
+                    reduction_pct = ((full_diff_tokens - manifest_tokens) / full_diff_tokens) * 100
+
+                    logger.info(
+                        f"Token reduction for {config.id}: "
+                        f"{full_diff_tokens} → {manifest_tokens} tokens "
+                        f"({reduction_pct:.1f}% reduction)"
+                    )
+
+                    token_metrics = {
+                        "full_diff_tokens": full_diff_tokens,
+                        "manifest_tokens": manifest_tokens,
+                        "reduction_pct": reduction_pct,
+                    }
+
                     parts.append("\n" + manifest_text)
                 except Exception as e:
                     logger.warning(f"Manifest builder failed, falling back to full diff: {e}")
@@ -302,7 +325,7 @@ class ReviewerEngine:
             "`SUMMARY:` and a score line starting with `SCORE:` (0-10)."
         )
 
-        return "\n".join(parts)
+        return "\n".join(parts), token_metrics
 
     def _parse_findings(self, response: str) -> list[dict]:
         """
