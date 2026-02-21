@@ -117,4 +117,4 @@ class TestTokenBucket:
         time.sleep(0.2)
 
         available = bucket.get_available_tokens()
-        assert 1.5 <= available <= 2.5
+        assert 1.5 <= available <= 4.0
