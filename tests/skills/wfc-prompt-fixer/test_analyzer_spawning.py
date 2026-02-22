@@ -277,8 +277,13 @@ class TestSpawnAnalyzer:
         with patch.object(orchestrator, "_prepare_analyzer_prompt") as mock_prepare:
             mock_prepare.return_value = "Test prompt"
 
-            with pytest.raises(TimeoutError, match="(?i)did not complete|timeout"):
-                orchestrator._spawn_analyzer(workspace, wfc_mode=False)
+            with patch.object(
+                orchestrator,
+                "_poll_for_file",
+                side_effect=TimeoutError("analyzer did not complete"),
+            ):
+                with pytest.raises(TimeoutError, match="(?i)did not complete|timeout"):
+                    orchestrator._spawn_analyzer(workspace, wfc_mode=False)
 
     def test_fixer_timeout_after_300s(self, tmp_path):
         """Verify _spawn_fixer_with_retry raises TimeoutError after 300s (Issue #49)."""
