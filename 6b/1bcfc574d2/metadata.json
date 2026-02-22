@@ -3,7 +3,7 @@
   "checkpoint_id": "6b1bcfc574d2",
   "strategy": "manual-commit",
   "branch": "feat/ci-phase2-pragmatic",
-  "checkpoints_count": 2,
+  "checkpoints_count": 3,
   "files_touched": [
     "uv.lock"
   ],
@@ -28,13 +28,20 @@
       "context": "/6b/1bcfc574d2/2/context.md",
       "content_hash": "/6b/1bcfc574d2/2/content_hash.txt",
       "prompt": "/6b/1bcfc574d2/2/prompt.txt"
+    },
+    {
+      "metadata": "/6b/1bcfc574d2/3/metadata.json",
+      "transcript": "/6b/1bcfc574d2/3/full.jsonl",
+      "context": "/6b/1bcfc574d2/3/context.md",
+      "content_hash": "/6b/1bcfc574d2/3/content_hash.txt",
+      "prompt": "/6b/1bcfc574d2/3/prompt.txt"
     }
   ],
   "token_usage": {
-    "input_tokens": 15875,
-    "cache_creation_tokens": 1463769,
-    "cache_read_tokens": 28897726,
-    "output_tokens": 19844,
-    "api_call_count": 289
+    "input_tokens": 19819,
+    "cache_creation_tokens": 2924937,
+    "cache_read_tokens": 61774050,
+    "output_tokens": 22900,
+    "api_call_count": 626
   }
 }
