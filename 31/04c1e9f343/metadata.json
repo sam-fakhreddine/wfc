@@ -1,0 +1,32 @@
+{
+  "cli_version": "0.4.5",
+  "checkpoint_id": "3104c1e9f343",
+  "strategy": "manual-commit",
+  "branch": "feat/rest-api-implementation",
+  "checkpoints_count": 2,
+  "files_touched": [
+    ".github/workflows/agent-dispatch.yml",
+    ".secrets.baseline",
+    "ATTACK-SURFACE.md",
+    "THREAT-MODEL.md",
+    "VULNERABILITIES.md",
+    "docs/roadmap/COMING-SOON.md",
+    "plans/hardened-runner-requirements.md"
+  ],
+  "sessions": [
+    {
+      "metadata": "/31/04c1e9f343/0/metadata.json",
+      "transcript": "/31/04c1e9f343/0/full.jsonl",
+      "context": "/31/04c1e9f343/0/context.md",
+      "content_hash": "/31/04c1e9f343/0/content_hash.txt",
+      "prompt": "/31/04c1e9f343/0/prompt.txt"
+    }
+  ],
+  "token_usage": {
+    "input_tokens": 8148,
+    "cache_creation_tokens": 2386483,
+    "cache_read_tokens": 47323772,
+    "output_tokens": 2634,
+    "api_call_count": 467
+  }
+}
