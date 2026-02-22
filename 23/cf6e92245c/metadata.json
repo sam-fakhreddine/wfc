@@ -5,14 +5,18 @@
   "branch": "feat/rest-api-implementation",
   "checkpoints_count": 1,
   "files_touched": [
+    "docs/API_CONTRACT.md",
     "docs/MULTI_ENVIRONMENT.md",
     "docs/TRAEFIK_DEPLOYMENT.md",
+    "openapi.json",
     "plans/plan_rest_api_20260221_143551/PROPERTIES.md",
     "plans/plan_rest_api_20260221_143551/REVIEW.md",
     "plans/plan_rest_api_20260221_143551/TASKS.md",
     "plans/plan_rest_api_20260221_143551/TEST-PLAN.md",
     "plans/plan_rest_api_20260221_143551/VALIDATE.md",
     "plans/plan_rest_api_20260221_143551/revision-log.md",
+    "scripts/generate-openapi.py",
+    "swagger.json",
     "uv.lock"
   ],
   "sessions": [
@@ -22,13 +26,20 @@
       "context": "/23/cf6e92245c/0/context.md",
       "content_hash": "/23/cf6e92245c/0/content_hash.txt",
       "prompt": "/23/cf6e92245c/0/prompt.txt"
+    },
+    {
+      "metadata": "/23/cf6e92245c/1/metadata.json",
+      "transcript": "/23/cf6e92245c/1/full.jsonl",
+      "context": "/23/cf6e92245c/1/context.md",
+      "content_hash": "/23/cf6e92245c/1/content_hash.txt",
+      "prompt": "/23/cf6e92245c/1/prompt.txt"
     }
   ],
   "token_usage": {
-    "input_tokens": 8100,
-    "cache_creation_tokens": 2184990,
-    "cache_read_tokens": 46331634,
-    "output_tokens": 2562,
-    "api_call_count": 453
+    "input_tokens": 8171,
+    "cache_creation_tokens": 2362725,
+    "cache_read_tokens": 50932757,
+    "output_tokens": 10031,
+    "api_call_count": 509
   }
 }
