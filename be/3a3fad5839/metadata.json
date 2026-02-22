@@ -3,7 +3,7 @@
   "checkpoint_id": "be3a3fad5839",
   "strategy": "manual-commit",
   "branch": "feat/ci-phase2-pragmatic",
-  "checkpoints_count": 2,
+  "checkpoints_count": 3,
   "files_touched": [
     "tests/skills/wfc-prompt-fixer/test_analyzer_spawning.py"
   ],
@@ -28,13 +28,20 @@
       "context": "/be/3a3fad5839/2/context.md",
       "content_hash": "/be/3a3fad5839/2/content_hash.txt",
       "prompt": "/be/3a3fad5839/2/prompt.txt"
+    },
+    {
+      "metadata": "/be/3a3fad5839/3/metadata.json",
+      "transcript": "/be/3a3fad5839/3/full.jsonl",
+      "context": "/be/3a3fad5839/3/context.md",
+      "content_hash": "/be/3a3fad5839/3/content_hash.txt",
+      "prompt": "/be/3a3fad5839/3/prompt.txt"
     }
   ],
   "token_usage": {
-    "input_tokens": 15875,
-    "cache_creation_tokens": 1463769,
-    "cache_read_tokens": 28897726,
-    "output_tokens": 19844,
-    "api_call_count": 289
+    "input_tokens": 19921,
+    "cache_creation_tokens": 2992978,
+    "cache_read_tokens": 63075821,
+    "output_tokens": 22973,
+    "api_call_count": 644
   }
 }
