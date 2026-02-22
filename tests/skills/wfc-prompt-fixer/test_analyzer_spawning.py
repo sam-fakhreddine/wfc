@@ -264,6 +264,7 @@ class TestSpawnAnalyzer:
             with pytest.raises(WorkspaceError, match="(?i)schema|invalid|validation"):
                 orchestrator._spawn_analyzer(workspace, wfc_mode=False)
 
+    @pytest.mark.timeout(30)
     def test_spawn_analyzer_raises_error_if_analysis_not_found(self, tmp_path):
         """Test that _spawn_analyzer raises error if analysis.json doesn't exist."""
         orchestrator = PromptFixerOrchestrator(cwd=tmp_path)
