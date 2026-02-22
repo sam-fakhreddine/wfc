@@ -3,7 +3,7 @@
   "checkpoint_id": "23cf6e92245c",
   "strategy": "manual-commit",
   "branch": "feat/rest-api-implementation",
-  "checkpoints_count": 1,
+  "checkpoints_count": 2,
   "files_touched": [
     "docs/API_CONTRACT.md",
     "docs/MULTI_ENVIRONMENT.md",
@@ -33,13 +33,20 @@
       "context": "/23/cf6e92245c/1/context.md",
       "content_hash": "/23/cf6e92245c/1/content_hash.txt",
       "prompt": "/23/cf6e92245c/1/prompt.txt"
+    },
+    {
+      "metadata": "/23/cf6e92245c/2/metadata.json",
+      "transcript": "/23/cf6e92245c/2/full.jsonl",
+      "context": "/23/cf6e92245c/2/context.md",
+      "content_hash": "/23/cf6e92245c/2/content_hash.txt",
+      "prompt": "/23/cf6e92245c/2/prompt.txt"
     }
   ],
   "token_usage": {
-    "input_tokens": 8171,
-    "cache_creation_tokens": 2362725,
-    "cache_read_tokens": 50932757,
-    "output_tokens": 10031,
-    "api_call_count": 509
+    "input_tokens": 9179,
+    "cache_creation_tokens": 2822808,
+    "cache_read_tokens": 54778127,
+    "output_tokens": 10345,
+    "api_call_count": 553
   }
 }

@@ -1,0 +1,43 @@
+{
+  "cli_version": "0.4.5",
+  "checkpoint_id": "23cf6e92245c",
+  "session_id": "c3500f56-5305-4381-926e-9a7423c9e94d",
+  "strategy": "manual-commit",
+  "created_at": "2026-02-22T01:57:47.480344Z",
+  "branch": "feat/rest-api-implementation",
+  "checkpoints_count": 1,
+  "files_touched": [
+    "plans/plan_rest_api_20260221_143551/TEST-PLAN.md",
+    "plans/plan_rest_api_20260221_143551/VALIDATE.md",
+    "swagger.json",
+    "uv.lock",
+    "docs/MULTI_ENVIRONMENT.md",
+    "plans/plan_rest_api_20260221_143551/PROPERTIES.md",
+    "plans/plan_rest_api_20260221_143551/REVIEW.md",
+    "plans/plan_rest_api_20260221_143551/revision-log.md",
+    "scripts/generate-openapi.py",
+    "docs/API_CONTRACT.md",
+    "docs/TRAEFIK_DEPLOYMENT.md",
+    "openapi.json",
+    "plans/plan_rest_api_20260221_143551/TASKS.md"
+  ],
+  "agent": "Claude Code",
+  "turn_id": "2fa230894363",
+  "token_usage": {
+    "input_tokens": 1008,
+    "cache_creation_tokens": 460083,
+    "cache_read_tokens": 3845370,
+    "output_tokens": 314,
+    "api_call_count": 44
+  },
+  "initial_attribution": {
+    "calculated_at": "2026-02-22T01:57:46.492307Z",
+    "agent_lines": 511,
+    "human_added": 2490,
+    "human_modified": 0,
+    "human_removed": 0,
+    "total_committed": 3001,
+    "agent_percentage": 17.027657447517495
+  },
+  "transcript_path": ".claude/projects/-Users-samfakhreddine-repos-wfc/c3500f56-5305-4381-926e-9a7423c9e94d.jsonl"
+}
