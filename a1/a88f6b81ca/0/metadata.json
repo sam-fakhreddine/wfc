@@ -1,0 +1,35 @@
+{
+  "cli_version": "0.4.5",
+  "checkpoint_id": "a1a88f6b81ca",
+  "session_id": "bf9607d2-0692-422b-812d-809b12eae44f",
+  "strategy": "manual-commit",
+  "created_at": "2026-02-22T11:47:59.250656Z",
+  "branch": "feat/rest-api-implementation",
+  "checkpoints_count": 1,
+  "files_touched": [
+    "wfc/servers/rest_api/main.py",
+    "wfc/servers/rest_api/routes.py",
+    ".secrets.baseline",
+    "wfc/servers/rest_api/auth.py"
+  ],
+  "agent": "Claude Code",
+  "turn_id": "372bbd868164",
+  "transcript_identifier_at_start": "226a784b-1340-4ef2-823a-6af6cbc48aa8",
+  "token_usage": {
+    "input_tokens": 71,
+    "cache_creation_tokens": 177735,
+    "cache_read_tokens": 4601123,
+    "output_tokens": 7469,
+    "api_call_count": 56
+  },
+  "initial_attribution": {
+    "calculated_at": "2026-02-22T11:47:58.972274Z",
+    "agent_lines": 34,
+    "human_added": 0,
+    "human_modified": 2,
+    "human_removed": 0,
+    "total_committed": 36,
+    "agent_percentage": 94.44444444444444
+  },
+  "transcript_path": ".claude/projects/-Users-samfakhreddine-repos-wfc/bf9607d2-0692-422b-812d-809b12eae44f.jsonl"
+}

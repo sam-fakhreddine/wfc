@@ -1,0 +1,29 @@
+{
+  "cli_version": "0.4.5",
+  "checkpoint_id": "a1a88f6b81ca",
+  "strategy": "manual-commit",
+  "branch": "feat/rest-api-implementation",
+  "checkpoints_count": 1,
+  "files_touched": [
+    ".secrets.baseline",
+    "wfc/servers/rest_api/auth.py",
+    "wfc/servers/rest_api/main.py",
+    "wfc/servers/rest_api/routes.py"
+  ],
+  "sessions": [
+    {
+      "metadata": "/a1/a88f6b81ca/0/metadata.json",
+      "transcript": "/a1/a88f6b81ca/0/full.jsonl",
+      "context": "/a1/a88f6b81ca/0/context.md",
+      "content_hash": "/a1/a88f6b81ca/0/content_hash.txt",
+      "prompt": "/a1/a88f6b81ca/0/prompt.txt"
+    }
+  ],
+  "token_usage": {
+    "input_tokens": 71,
+    "cache_creation_tokens": 177735,
+    "cache_read_tokens": 4601123,
+    "output_tokens": 7469,
+    "api_call_count": 56
+  }
+}
