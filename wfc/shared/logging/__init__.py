@@ -73,18 +73,19 @@ def get_logger(name: str) -> logging.Logger:
     level = getattr(logging, config.log_level)
     logger.setLevel(level)
 
-    logger.propagate = False
+    logger.propagate = True
 
-    handler = logging.StreamHandler()
-    handler.setLevel(level)
+    if not logger.handlers:
+        handler = logging.StreamHandler()
+        handler.setLevel(level)
 
-    if config.log_format == "json":
-        formatter = JSONFormatter()
-    else:
-        formatter = ConsoleFormatter()
+        if config.log_format == "json":
+            formatter = JSONFormatter()
+        else:
+            formatter = ConsoleFormatter()
 
-    handler.setFormatter(formatter)
-    logger.addHandler(handler)
+        handler.setFormatter(formatter)
+        logger.addHandler(handler)
 
     logger.addFilter(RequestIDFilter())
 
