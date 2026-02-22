@@ -3,7 +3,7 @@
   "checkpoint_id": "18a404582014",
   "strategy": "manual-commit",
   "branch": "feat/wfc2-platform",
-  "checkpoints_count": 2,
+  "checkpoints_count": 3,
   "files_touched": [
     "CLAUDE.md"
   ],
@@ -28,13 +28,20 @@
       "context": "/18/a404582014/2/context.md",
       "content_hash": "/18/a404582014/2/content_hash.txt",
       "prompt": "/18/a404582014/2/prompt.txt"
+    },
+    {
+      "metadata": "/18/a404582014/3/metadata.json",
+      "transcript": "/18/a404582014/3/full.jsonl",
+      "context": "/18/a404582014/3/context.md",
+      "content_hash": "/18/a404582014/3/content_hash.txt",
+      "prompt": "/18/a404582014/3/prompt.txt"
     }
   ],
   "token_usage": {
-    "input_tokens": 15875,
-    "cache_creation_tokens": 1463769,
-    "cache_read_tokens": 28897726,
-    "output_tokens": 19844,
-    "api_call_count": 289
+    "input_tokens": 20036,
+    "cache_creation_tokens": 3102532,
+    "cache_read_tokens": 67103242,
+    "output_tokens": 23114,
+    "api_call_count": 682
   }
 }
