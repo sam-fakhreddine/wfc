@@ -264,6 +264,7 @@ class TestSpawnAnalyzer:
             with pytest.raises(WorkspaceError, match="(?i)schema|invalid|validation"):
                 orchestrator._spawn_analyzer(workspace, wfc_mode=False)
 
+    @pytest.mark.timeout(30)
     def test_spawn_analyzer_raises_error_if_analysis_not_found(self, tmp_path):
         """Test that _spawn_analyzer raises error if analysis.json doesn't exist."""
         orchestrator = PromptFixerOrchestrator(cwd=tmp_path)
@@ -276,9 +277,15 @@ class TestSpawnAnalyzer:
         with patch.object(orchestrator, "_prepare_analyzer_prompt") as mock_prepare:
             mock_prepare.return_value = "Test prompt"
 
-            with pytest.raises(TimeoutError, match="(?i)did not complete|timeout"):
-                orchestrator._spawn_analyzer(workspace, wfc_mode=False)
+            with patch.object(
+                orchestrator,
+                "_poll_for_file",
+                side_effect=TimeoutError("analyzer did not complete"),
+            ):
+                with pytest.raises(TimeoutError, match="(?i)did not complete|timeout"):
+                    orchestrator._spawn_analyzer(workspace, wfc_mode=False)
 
+    @pytest.mark.timeout(30)
     def test_fixer_timeout_after_300s(self, tmp_path):
         """Verify _spawn_fixer_with_retry raises TimeoutError after 300s (Issue #49)."""
         from wfc_prompt_fixer.orchestrator import PromptFixerOrchestrator
@@ -294,9 +301,13 @@ class TestSpawnAnalyzer:
         with patch.object(orchestrator, "_prepare_fixer_prompt") as mock_prepare:
             mock_prepare.return_value = "Test prompt"
 
-            with pytest.raises(TimeoutError, match="(?i)did not complete|timeout"):
-                orchestrator._spawn_fixer_with_retry(workspace)
+            with patch.object(
+                orchestrator, "_poll_for_file", side_effect=TimeoutError("fixer did not complete")
+            ):
+                with pytest.raises(TimeoutError, match="(?i)did not complete|timeout"):
+                    orchestrator._spawn_fixer_with_retry(workspace)
 
+    @pytest.mark.timeout(30)
     def test_reporter_timeout_after_300s(self, tmp_path):
         """Verify _spawn_reporter raises TimeoutError after 300s (Issue #49)."""
         from wfc_prompt_fixer.orchestrator import PromptFixerOrchestrator
@@ -312,9 +323,15 @@ class TestSpawnAnalyzer:
         with patch.object(orchestrator, "_prepare_reporter_prompt") as mock_prepare:
             mock_prepare.return_value = "Test prompt"
 
-            with pytest.raises(TimeoutError, match="(?i)did not complete|timeout"):
-                orchestrator._spawn_reporter(workspace)
+            with patch.object(
+                orchestrator,
+                "_poll_for_file",
+                side_effect=TimeoutError("reporter did not complete"),
+            ):
+                with pytest.raises(TimeoutError, match="(?i)did not complete|timeout"):
+                    orchestrator._spawn_reporter(workspace)
 
+    @pytest.mark.timeout(30)
     def test_skip_reporter_timeout_after_300s(self, tmp_path):
         """Verify _skip_to_reporter raises TimeoutError after 300s (Issue #49)."""
         from wfc_prompt_fixer.orchestrator import PromptFixerOrchestrator
@@ -330,5 +347,10 @@ class TestSpawnAnalyzer:
         with patch.object(orchestrator, "_prepare_reporter_prompt") as mock_prepare:
             mock_prepare.return_value = "Test prompt"
 
-            with pytest.raises(TimeoutError, match="(?i)did not complete|timeout"):
-                orchestrator._skip_to_reporter(workspace, no_changes=True)
+            with patch.object(
+                orchestrator,
+                "_poll_for_file",
+                side_effect=TimeoutError("reporter did not complete"),
+            ):
+                with pytest.raises(TimeoutError, match="(?i)did not complete|timeout"):
+                    orchestrator._skip_to_reporter(workspace, no_changes=True)

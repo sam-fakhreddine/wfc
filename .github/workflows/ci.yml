@@ -6,6 +6,12 @@ name: CI
   pull_request:
     branches: [main, develop]
 
+# Cancel in-progress runs when new commits are pushed
+# This prevents wasted CI time when you push multiple commits rapidly
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 permissions:
   contents: read
 
@@ -80,7 +86,12 @@ jobs:
 
       - name: Run tests
         run: |
-          uv run pytest tests/ -v --cov=wfc --cov-report=xml --ignore=tests/test_installer_docker.py
+          # Skip coverage on PRs for faster feedback (2-4 min savings)
+          if [ "${{ github.event_name }}" == "pull_request" ]; then
+            uv run pytest tests/ -v --ignore=tests/test_installer_docker.py
+          else
+            uv run pytest tests/ -v --cov=wfc --cov-report=xml --ignore=tests/test_installer_docker.py
+          fi
 
       - name: Upload coverage
         if: matrix.python-version == '3.12' && matrix.os == 'ubuntu-latest'

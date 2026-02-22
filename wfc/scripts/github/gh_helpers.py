@@ -19,11 +19,14 @@ Usage as CLI (quick diagnostics):
 from __future__ import annotations
 
 import json
+import logging
 import subprocess
 import sys
 import time
 from dataclasses import dataclass
 from typing import Any, Optional
+
+logger = logging.getLogger(__name__)
 
 
 class GHError(RuntimeError):
@@ -327,10 +330,7 @@ def wait_for_checks(
         pending = [c for c in checks if c.status in ("queued", "in_progress")]
         if not pending:
             return checks
-        print(
-            f"  ⏳ {len(pending)} check(s) still running… (waiting {poll_interval}s)",
-            file=sys.stderr,
-        )
+        logger.info(f"⏳ {len(pending)} check(s) still running… (waiting {poll_interval}s)")
         time.sleep(poll_interval)
 
     return get_pr_checks(pr_number, repo=repo)
@@ -427,6 +427,7 @@ def add_labels(
 
 
 def _cmd_info(_args) -> None:
+    """CLI command: show repo and PR info (user-facing output)."""
     repo = detect_repo()
     pr = get_pr_info()
     print(f"Repo:      {repo.full_name}")
@@ -438,6 +439,7 @@ def _cmd_info(_args) -> None:
 
 
 def _cmd_checks(args) -> None:
+    """CLI command: show check status (user-facing output)."""
     pr_number = int(args.pr) if getattr(args, "pr", None) else None
     checks = get_pr_checks(pr_number)
     failed = [c for c in checks if c.conclusion == "failure"]
@@ -456,6 +458,7 @@ def _cmd_checks(args) -> None:
 
 
 def _cmd_request_review(args) -> None:
+    """CLI command: request review (user-facing output)."""
     reviewer = args.reviewer
     request_review(reviewer)
     display = COPILOT_REVIEWER if reviewer.lower() == "copilot" else reviewer
@@ -463,6 +466,7 @@ def _cmd_request_review(args) -> None:
 
 
 def _cmd_comment(args) -> None:
+    """CLI command: add comment (user-facing output)."""
     url = add_pr_comment(args.body)
     print(f"✅ Comment posted: {url}")
 
