@@ -11,7 +11,7 @@ import logging
 import time
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Optional
 
 from .consensus_score import ConsensusScore, ConsensusScoreResult
 from .doc_auditor import DocAuditor, DocAuditReport
@@ -21,6 +21,7 @@ from .reviewer_engine import ReviewerEngine
 
 if TYPE_CHECKING:
     from wfc.scripts.knowledge.retriever import KnowledgeRetriever
+    from wfc.shared.config.wfc_config import ProjectContext, WFCConfig
 
     from .model_router import ModelRouter
     from .reviewer_engine import ReviewerResult
@@ -63,12 +64,53 @@ class ReviewOrchestrator:
         reviewer_engine: ReviewerEngine | None = None,
         retriever: KnowledgeRetriever | None = None,
         model_router: ModelRouter | None = None,
+        use_diff_manifest: bool = False,
+        config: Optional[WFCConfig] = None,
+        project_context: Optional[ProjectContext] = None,
     ):
+        """
+        Initialize ReviewOrchestrator.
+
+        Args:
+            reviewer_engine: Optional custom reviewer engine
+            retriever: Optional knowledge retriever for RAG
+            model_router: Optional model router for reviewer selection
+            use_diff_manifest: If True, use structured diff manifests instead
+                of embedding full diff content (reduces tokens by ~80%)
+            config: Optional WFCConfig instance
+            project_context: Optional ProjectContext for multi-tenant isolation
+        """
         self.engine = reviewer_engine or ReviewerEngine(retriever=retriever)
         self.fingerprinter = Fingerprinter()
         self.scorer = ConsensusScore()
         self.validator = FindingValidator()
         self.model_router = model_router
+        self.use_diff_manifest = use_diff_manifest
+        self.config = config
+        self.project_context = project_context
+
+        if project_context:
+            self.output_dir = project_context.output_dir
+        elif config:
+            self.output_dir = config.project_root / ".wfc" / "output"
+        else:
+            self.output_dir = Path(".wfc/output")
+
+    def _create_worktree_operations(self):
+        """Create WorktreeOperations with project namespacing if available."""
+        from wfc.gitwork.api.worktree import WorktreeOperations
+
+        if self.project_context:
+            return WorktreeOperations(project_id=self.project_context.project_id)
+        else:
+            return WorktreeOperations()
+
+    def _get_report_filename(self) -> str:
+        """Get report filename with project_id if available."""
+        if self.project_context:
+            return f"REVIEW-{self.project_context.project_id}.md"
+        else:
+            return "REVIEW-global.md"
 
     @staticmethod
     def _validate_output_path(path: Path) -> None:
@@ -133,6 +175,7 @@ class ReviewOrchestrator:
             diff_content=request.diff_content,
             properties=request.properties if request.properties else None,
             model_router=self.model_router,
+            use_diff_manifest=self.use_diff_manifest,
         )
 
     def finalize_review(

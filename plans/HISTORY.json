@@ -1,0 +1,18 @@
+{
+  "total_plans": 1,
+  "plans": [
+    {
+      "directory": "plan_fix_prompt_fixer_doctor_20260220_072925",
+      "created": "2026-02-20T07:29:25Z",
+      "goal": "Complete all TODO implementations and fix critical reliability/correctness issues identified in PR #46 consensus review",
+      "context": "PR #46 introduced wfc-prompt-fixer and wfc-doctor skills with good architecture but incomplete implementation",
+      "tasks_total": 19,
+      "properties_total": 17,
+      "tests_total": 34,
+      "validated": true,
+      "validation_score": 8.8,
+      "review_skipped": true,
+      "estimated_hours": 76
+    }
+  ]
+}

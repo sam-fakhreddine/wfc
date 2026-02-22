@@ -1,0 +1,12 @@
+{
+  "hash_algorithm": "sha256",
+  "original_hash": "25de33f7c3c67ffb0cae17939c0bfe2e82b72f22373de5a7bd9a77e0b8336c80",
+  "validate_score": 8.8,
+  "revision_count": 1,
+  "review_score": null,
+  "final_hash": "4506f6089969a26b7e9ab10e83462306d662d72a0ea60e7b209ca5c56b160e56",
+  "timestamp": "2026-02-20T07:32:00Z",
+  "validated": true,
+  "skipped": false,
+  "notes": "Validation score 8.8/10 (PROCEED verdict) exceeds 8.5 threshold. Applied 5 recommendations (2 Must-Do, 3 Should-Do). Review gate skipped per validation pipeline rules - scores >= 8.5 bypass review loop."
+}

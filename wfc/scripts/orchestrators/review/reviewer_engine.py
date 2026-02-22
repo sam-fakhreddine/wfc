@@ -77,6 +77,7 @@ class ReviewerEngine:
         properties: list[dict] | None = None,
         model_router: Any | None = None,
         single_model: str | None = None,
+        use_diff_manifest: bool = False,
     ) -> list[dict]:
         """
         Phase 1: Prepare task specifications for Claude Code's Task tool.
@@ -110,7 +111,9 @@ class ReviewerEngine:
 
         tasks: list[dict] = []
         for config in configs:
-            prompt = self._build_task_prompt(config, files, diff_content, properties)
+            prompt, token_metrics = self._build_task_prompt(
+                config, files, diff_content, properties, use_diff_manifest
+            )
             token_count = len(prompt) // 4
 
             task_spec = {
@@ -121,6 +124,8 @@ class ReviewerEngine:
                 "relevant": config.relevant,
                 "token_count": token_count,
             }
+            if token_metrics:
+                task_spec["token_metrics"] = token_metrics
             if single_model:
                 task_spec["model"] = single_model
             elif model_router is not None:
@@ -205,11 +210,22 @@ class ReviewerEngine:
         files: list[str],
         diff_content: str,
         properties: list[dict] | None,
-    ) -> str:
+        use_diff_manifest: bool = False,
+    ) -> tuple[str, dict | None]:
         """
         Build the full prompt for a reviewer task.
 
-        Combines: PROMPT.md content + knowledge context + file list + diff + properties.
+        Combines: PROMPT.md content + knowledge context + file list + diff/manifest + properties.
+
+        Args:
+            config: Reviewer configuration
+            files: List of files to review
+            diff_content: Git diff content
+            properties: Optional properties to verify
+            use_diff_manifest: If True, use structured diff manifest instead of full diff
+
+        Returns:
+            Tuple of (prompt_text, token_metrics_dict or None)
         """
         _MAX_DIFF_LEN = 50_000
 
@@ -226,6 +242,7 @@ class ReviewerEngine:
             return text
 
         parts: list[str] = []
+        token_metrics: dict | None = None
 
         parts.append(config.prompt)
 
@@ -253,11 +270,49 @@ class ReviewerEngine:
             parts.append("No files specified.")
 
         if diff_content:
-            sanitized_diff = _sanitize_embedded_content(diff_content)
-            parts.append("\n# Diff\n")
-            parts.append("```diff")
-            parts.append(sanitized_diff)
-            parts.append("```")
+            if use_diff_manifest:
+                try:
+                    from .diff_manifest import build_diff_manifest, format_manifest_for_reviewer
+
+                    manifest = build_diff_manifest(diff_content, config.id, files)
+                    manifest_text = format_manifest_for_reviewer(manifest, config.id)
+
+                    full_diff_tokens = len(diff_content) // 4
+                    manifest_tokens = manifest.get_token_estimate()
+                    reduction_pct = (
+                        ((full_diff_tokens - manifest_tokens) / full_diff_tokens) * 100
+                        if full_diff_tokens > 0
+                        else 0.0
+                    )
+
+                    logger.info(
+                        "Token reduction for %s: %s → %s tokens (%.1f%% reduction)",
+                        config.id,
+                        full_diff_tokens,
+                        manifest_tokens,
+                        reduction_pct,
+                    )
+
+                    token_metrics = {
+                        "full_diff_tokens": full_diff_tokens,
+                        "manifest_tokens": manifest_tokens,
+                        "reduction_pct": reduction_pct,
+                    }
+
+                    parts.append("\n" + manifest_text)
+                except Exception as e:
+                    logger.warning(f"Manifest builder failed, falling back to full diff: {e}")
+                    sanitized_diff = _sanitize_embedded_content(diff_content)
+                    parts.append("\n# Diff\n")
+                    parts.append("```diff")
+                    parts.append(sanitized_diff)
+                    parts.append("```")
+            else:
+                sanitized_diff = _sanitize_embedded_content(diff_content)
+                parts.append("\n# Diff\n")
+                parts.append("```diff")
+                parts.append(sanitized_diff)
+                parts.append("```")
 
         if properties:
             parts.append("\n# Properties to Verify\n")
@@ -276,7 +331,7 @@ class ReviewerEngine:
             "`SUMMARY:` and a score line starting with `SCORE:` (0-10)."
         )
 
-        return "\n".join(parts)
+        return "\n".join(parts), token_metrics
 
     def _parse_findings(self, response: str) -> list[dict]:
         """

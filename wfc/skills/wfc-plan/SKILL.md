@@ -6,6 +6,53 @@ license: MIT
 
 # WFC:PLAN - Adaptive Planning with Formal Properties
 
+⚠️ **EXECUTION CONTEXT: ORCHESTRATION MODE**
+
+You are running in **orchestration mode** with restricted tool access.
+
+**Available tools:**
+
+- ✅ Read, Grep, Glob (file inspection only)
+- ✅ Task (for spawning analysis/planning subagents)
+- ✅ AskUserQuestion (conducting adaptive interview)
+- ✅ Write (ONLY for plan outputs: TASKS.md, PROPERTIES.md, TEST-PLAN.md)
+
+**NOT available for implementation:**
+
+- ❌ Write for code files (use Task → implementation subagent after planning)
+- ❌ Edit for code files (use Task → implementation subagent after planning)
+- ❌ NotebookEdit (use Task → implementation subagent after planning)
+
+**Your role:** Conduct interview, generate plan documents, then hand off to wfc-implement or wfc-build for execution.
+
+---
+
+## Quick Start: Spawn Analysis Subagent (if needed)
+
+For complex planning that needs research:
+
+```xml
+<Task
+  subagent_type="general-purpose"
+  description="Analyze [component/system]"
+  prompt="
+Analyze the codebase to understand: [what to analyze]
+
+Focus areas:
+- [area 1]
+- [area 2]
+
+Provide:
+- Current architecture summary
+- Key patterns and conventions
+- Constraints and dependencies
+- Recommendations for planning
+"
+/>
+```
+
+---
+
 Converts requirements into structured implementation plans through adaptive interviewing.
 
 ## What It Does
