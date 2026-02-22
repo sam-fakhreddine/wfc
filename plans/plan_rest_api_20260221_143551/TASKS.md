@@ -1172,7 +1172,7 @@ if __name__ == "__main__":
 
 ---
 
-#### TASK-010: Add __init__.py exports for REST API module
+#### TASK-010: Add **init**.py exports for REST API module
 
 - **File**: `/Users/samfakhreddine/repos/wfc/wfc/servers/rest_api/__init__.py`
 - **Complexity**: XS (< 10 lines)
@@ -1974,6 +1974,7 @@ curl -X POST http://localhost:8000/v1/projects/ \
 ```
 
 Response:
+
 ```json
 {
   "project_id": "my-project",
@@ -1998,6 +1999,7 @@ curl -X POST http://localhost:8000/v1/reviews/ \
 ```
 
 Response (202 Accepted):
+
 ```json
 {
   "review_id": "uuid-here",
@@ -2016,6 +2018,7 @@ curl -X GET http://localhost:8000/v1/reviews/<review-id> \
 ```
 
 Response:
+
 ```json
 {
   "review_id": "uuid",
@@ -2084,6 +2087,7 @@ Common status codes:
 - 409 Conflict: Duplicate project
 - 429 Too Many Requests: Rate limit exceeded
 - 500 Internal Server Error: Server error
+
 ```
 
 **Acceptance Criteria**:
@@ -2125,6 +2129,7 @@ curl -X POST http://localhost:8000/v1/reviews/ ...
 ```
 
 See [REST API Documentation](docs/REST_API.md) for full details.
+
 ```
 
 **Acceptance Criteria**:
@@ -2225,7 +2230,7 @@ volumes:
 **Acceptance Criteria**:
 
 - [ ] docker-compose up starts server
-- [ ] API accessible at http://localhost:8000
+- [ ] API accessible at <http://localhost:8000>
 - [ ] Data persisted in volume
 
 ---
@@ -2501,11 +2506,13 @@ def get_metrics() -> Response:
 **Total Tasks**: 25 (core implementation) + 17 (testing/docs/deployment) = 42 tasks
 
 **Estimated Timeline**:
+
 - Week 1: Core implementation (PHASE 0-3)
 - Week 2: Routes, testing, docs (PHASE 4-7)
 - Week 3: Security, performance, monitoring (PHASE 8-10)
 
 **Key Deliverables**:
+
 1. Production-ready FastAPI REST server
 2. Multi-tenant authentication/authorization
 3. Async review execution with status tracking
@@ -2514,6 +2521,7 @@ def get_metrics() -> Response:
 6. Prometheus metrics for observability
 
 **Dependencies**:
+
 - FastAPI 0.115+
 - uvicorn 0.32+
 - pydantic 2.9+
@@ -2522,6 +2530,7 @@ def get_metrics() -> Response:
 - filelock (already used)
 
 **Backward Compatibility**:
+
 - Reuses existing ReviewOrchestrator, ProjectContext, WorktreePool, TokenBucket
 - MCP server continues to work independently
 - No breaking changes to existing code

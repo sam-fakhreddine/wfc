@@ -136,6 +136,7 @@ docker compose -f docker-compose.traefik.yml --env-file .env up -d
 ### SSL/TLS Certificates
 
 **Automatic (Let's Encrypt):**
+
 - Traefik automatically provisions certs for `api.wfc.example.com`
 - Stored in `traefik-letsencrypt` volume
 - Auto-renewal every 60 days
@@ -192,6 +193,7 @@ Traefik automatically discovers new instances and load balances across all healt
 Access at `http://localhost:8080/dashboard/`
 
 Shows:
+
 - Active routers, services, middlewares
 - Backend health status
 - Request rates and errors
@@ -202,6 +204,7 @@ Shows:
 Access at `http://localhost:9090`
 
 **Traefik metrics:**
+
 - `traefik_entrypoint_requests_total` - Total requests per entrypoint
 - `traefik_service_requests_total` - Requests per service
 - `traefik_service_request_duration_seconds` - Latency histogram
@@ -224,6 +227,7 @@ rate(traefik_service_requests_total{service="wfc-api@docker",code=~"5.."}[5m])
 Access at `http://localhost:3000` (default: admin/admin)
 
 **Import Traefik dashboard:**
+
 1. Go to Dashboards → Import
 2. Use dashboard ID: `17346` (Official Traefik dashboard)
 3. Select Prometheus data source
@@ -239,6 +243,7 @@ docker cp wfc-traefik:/var/log/traefik/access.log ./access.log
 ```
 
 **Log format:**
+
 ```
 IP - - [timestamp] "METHOD /path HTTP/1.1" status size "referer" "user-agent" latency
 ```
@@ -252,6 +257,7 @@ All HTTP traffic (port 80) is automatically redirected to HTTPS (port 443).
 ### Security Headers
 
 Applied via middleware (lines 91-97):
+
 - `X-Robots-Tag: noindex,nofollow` - Prevent search indexing
 - `Strict-Transport-Security` - Force HTTPS for 1 year
 - SSL redirect enabled
@@ -261,6 +267,7 @@ Applied via middleware (lines 91-97):
 WFC API authentication is **unchanged** (API key via `Authorization: Bearer <key>`).
 
 Traefik handles:
+
 - TLS termination
 - Rate limiting (IP-based)
 - Access logging
@@ -284,6 +291,7 @@ deploy:
 ```
 
 **Deploy process:**
+
 1. Pull new image: `docker compose -f docker-compose.traefik.yml pull`
 2. Update: `docker compose -f docker-compose.traefik.yml up -d`
 3. Traefik health checks ensure traffic only goes to healthy instances
@@ -367,11 +375,13 @@ Ensure health check endpoint returns 200.
 **Problem:** High latency
 
 **Check:**
+
 1. Backend health: `curl http://localhost:9950/`
 2. Traefik metrics: `http://localhost:8080/dashboard/`
 3. Prometheus P95 latency query
 
 **Optimize:**
+
 - Increase replicas: `--scale wfc-rest-api=5`
 - Enable HTTP/2: `--entrypoints.websecure.http2.maxconcurrentstreams=250`
 - Tune rate limits based on actual load
@@ -434,6 +444,6 @@ docker run --rm -v traefik-letsencrypt:/data -v $(pwd):/backup alpine \
 
 ## Support
 
-- **Traefik docs**: https://doc.traefik.io/traefik/
+- **Traefik docs**: <https://doc.traefik.io/traefik/>
 - **WFC REST API docs**: [docs/REST_API.md](REST_API.md)
-- **Issues**: https://github.com/sam-fakhreddine/wfc/issues
+- **Issues**: <https://github.com/sam-fakhreddine/wfc/issues>

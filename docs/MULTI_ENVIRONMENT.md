@@ -84,6 +84,7 @@ curl https://api.wfc.example.com/  # Prod (HTTPS)
 **Purpose:** Local development with instant feedback
 
 **Features:**
+
 - Single instance (no load balancing)
 - Hot reload on code changes
 - Debug logging enabled
@@ -91,11 +92,13 @@ curl https://api.wfc.example.com/  # Prod (HTTPS)
 - No HTTPS (localhost only)
 
 **Start:**
+
 ```bash
 ./wfc-deploy.sh dev up
 ```
 
 **Usage:**
+
 ```bash
 # API
 curl http://localhost:9950/v1/projects/
@@ -108,6 +111,7 @@ open http://localhost:8080/dashboard/
 ```
 
 **Code Changes:**
+
 - Mounted volumes: `./wfc:/app/wfc:rw`
 - Changes take effect immediately (uvicorn --reload)
 
@@ -116,6 +120,7 @@ open http://localhost:8080/dashboard/
 **Purpose:** Integration testing and load testing
 
 **Features:**
+
 - 2 instances with load balancing
 - Auto-seeded test data
 - Health checks enabled
@@ -123,6 +128,7 @@ open http://localhost:8080/dashboard/
 - Prometheus metrics
 
 **Start:**
+
 ```bash
 ./wfc-deploy.sh test up -d
 
@@ -131,6 +137,7 @@ docker logs wfc-test-seeder
 ```
 
 **Usage:**
+
 ```bash
 # API (load balanced)
 curl http://localhost:9951/v1/projects/
@@ -141,6 +148,7 @@ curl http://localhost:9951/v1/projects/
 ```
 
 **Load Testing:**
+
 ```bash
 # Using ab (ApacheBench)
 ab -n 1000 -c 50 http://localhost:9951/
@@ -154,6 +162,7 @@ locust -f tests/load/locustfile.py --host http://localhost:9951
 **Purpose:** Production deployment with full security and observability
 
 **Features:**
+
 - 3+ instances with auto-scaling
 - HTTPS with Let's Encrypt
 - Full observability (Prometheus, Grafana, Alertmanager)
@@ -162,6 +171,7 @@ locust -f tests/load/locustfile.py --host http://localhost:9951
 - Zero-downtime deploys
 
 **Start:**
+
 ```bash
 # First time: configure .env.prod
 vim .env.prod
@@ -171,6 +181,7 @@ vim .env.prod
 ```
 
 **Usage:**
+
 ```bash
 # HTTPS (primary)
 curl https://api.wfc.example.com/v1/projects/

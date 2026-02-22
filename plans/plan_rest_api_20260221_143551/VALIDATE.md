@@ -1,7 +1,9 @@
 # VALIDATION ANALYSIS - REST API FOR MULTI-TENANT WFC
 
 ## Subject: REST API Implementation Plan (42 tasks, 3-week timeline)
+
 ## Verdict: 🟢 PROCEED
+
 ## Overall Score: 8.7/10
 
 ---
@@ -23,12 +25,14 @@ With an overall score of **8.7/10**, this is a **well-designed, production-ready
 ### 1. Do We Even Need This? — Score: 9/10
 
 **Strengths:**
+
 - **Clear user need**: Phase 2A (MCP server) completed, REST API is natural next step for team deployment
 - **Validated demand**: Multi-tenant infrastructure already built (ProjectContext, WorktreePool, TokenBucket, 103/103 tests passing)
 - **Complements existing**: Adds HTTP interface while preserving MCP server (two access modes for different use cases)
 - **Enables new use cases**: Team-wide code review, CI/CD integration, external tool integration
 
 **Concerns:**
+
 - **MCP already functional**: Could teams use MCP server directly? Plan doesn't justify why REST is needed vs. just documenting MCP usage
 - **Alternative: Enhance MCP docs**: Could achieve team deployment by writing comprehensive MCP client examples for different languages
 
@@ -41,6 +45,7 @@ With an overall score of **8.7/10**, this is a **well-designed, production-ready
 ### 2. Is This the Simplest Approach? — Score: 9/10
 
 **Strengths:**
+
 - **Reuses existing infrastructure**: ReviewOrchestrator, ProjectContext, WorktreePool, TokenBucket unchanged (backward compatible)
 - **File-based storage**: No database dependency, simple JSON files with file locking (appropriate for MVP)
 - **Standard framework**: FastAPI is Pythonic, async-first, well-documented, excellent OpenAPI support
@@ -48,6 +53,7 @@ With an overall score of **8.7/10**, this is a **well-designed, production-ready
 - **Clear separation**: API layer separated from business logic (orchestrators remain independent)
 
 **Concerns:**
+
 - **File-based scaling**: Plan acknowledges "may not scale beyond 1000 projects" but no migration path to database
 - **Background task execution**: Uses FastAPI BackgroundTasks, which is process-scoped (lost on server restart). Consider adding task queue (Celery, RQ) mention in "future enhancements"
 
@@ -60,12 +66,14 @@ With an overall score of **8.7/10**, this is a **well-designed, production-ready
 ### 3. Is the Scope Right? — Score: 8/10
 
 **Strengths:**
+
 - **Well-bounded**: 42 tasks, 3 weeks, clear phases (Prerequisites → Models → Auth → Routes → Testing → Deployment)
 - **Appropriate features**: Core CRUD (create project, submit review, check status, monitor resources) - nothing extraneous
 - **Comprehensive testing**: 95%+ coverage target, property-based tests, load tests, security tests
 - **Production-ready**: Includes Docker, monitoring (Prometheus), security hardening, performance optimization
 
 **Concerns:**
+
 - **Missing features**: No review cancellation, no pagination for GET /v1/projects/, no webhook notifications on review completion
 - **API versioning**: Uses /v1/ prefix but no discussion of versioning strategy for future breaking changes
 - **Observability gaps**: Prometheus metrics defined (TASK-025) but no discussion of logging (structured logs, log levels, log aggregation)
@@ -79,11 +87,13 @@ With an overall score of **8.7/10**, this is a **well-designed, production-ready
 ### 4. What Are We Trading Off? — Score: 8/10
 
 **Strengths:**
+
 - **Low opportunity cost**: REST API is foundational (enables many future features: CI/CD integration, dashboards, third-party tools)
 - **Backward compatible**: MCP server continues to work, existing code unchanged
 - **Minimal maintenance burden**: FastAPI is stable, async Python is mature, file-based storage is simple
 
 **Concerns:**
+
 - **3 weeks = 120 hours**: Could this time be spent on higher-value features? (e.g., improving review quality, adding new reviewers, enhancing test generation)
 - **Operational complexity**: Now maintaining two servers (MCP + REST), two authentication systems (MCP has different auth than REST API keys)
 - **File-based storage technical debt**: Will need database migration eventually, delaying increases migration cost
@@ -97,6 +107,7 @@ With an overall score of **8.7/10**, this is a **well-designed, production-ready
 ### 5. Have We Seen This Fail Before? — Score: 9/10
 
 **Strengths:**
+
 - **Avoids common pitfalls**:
   - ✅ API key hashing (not plaintext)
   - ✅ Constant-time comparison (no timing attacks)
@@ -108,6 +119,7 @@ With an overall score of **8.7/10**, this is a **well-designed, production-ready
 - **Testing strategy**: Property-based tests catch edge cases, load tests verify performance SLAs
 
 **Concerns:**
+
 - **Background task resilience**: FastAPI BackgroundTasks are ephemeral (lost on restart). Known failure mode: reviews stuck in IN_PROGRESS after server crash.
   - **Mitigation in plan**: TASK-013 mentions "orphan detection (>24h)" but no automatic recovery
   - **Better approach**: Add review timeout (10 min) and automatic FAILED transition, or use persistent task queue
@@ -121,6 +133,7 @@ With an overall score of **8.7/10**, this is a **well-designed, production-ready
 ### 6. What's the Blast Radius? — Score: 9/10
 
 **Strengths:**
+
 - **Isolated deployment**: REST API is new component, doesn't modify existing MCP server or orchestrators
 - **Gradual rollout**: Can deploy to subset of users, roll back without affecting existing MCP users
 - **Clear rollback plan**: Dockerfile + docker-compose enable clean uninstall (just stop container)
@@ -128,6 +141,7 @@ With an overall score of **8.7/10**, this is a **well-designed, production-ready
 - **Backward compatibility**: Zero changes to existing ReviewOrchestrator, ProjectContext, or multi-tenant infrastructure
 
 **Concerns:**
+
 - **Shared resources**: REST API and MCP server share WorktreePool and TokenBucket. If REST API has bug causing resource leaks, could impact MCP server users.
   - **Mitigation**: Plan includes resource monitoring (GET /v1/resources/pool) and orphan cleanup
 - **API key store corruption**: If APIKeyStore has bug, all projects unable to authenticate. No mention of backup/restore for ~/.wfc/api_keys.json
@@ -141,12 +155,14 @@ With an overall score of **8.7/10**, this is a **well-designed, production-ready
 ### 7. Is the Timeline Realistic? — Score: 8/10
 
 **Strengths:**
+
 - **Granular tasks**: 42 tasks, each <30 minutes, clear dependencies
 - **Appropriate estimates**: XS (5min), S (15min), M (25min), L (30min) - realistic for experienced developer
 - **Buffer built in**: 3 weeks for ~21 hours of coding (42 tasks × 30min) = ~15% time spent coding, rest for testing/debugging/review
 - **Phased approach**: Can deliver incrementally (Phase 1-3 = MVP, Phase 4-7 = production hardening, Phase 8-10 = optimization)
 
 **Concerns:**
+
 - **Hidden dependencies**:
   - TASK-023 "Make ReviewOrchestrator async-compatible" - plan says "30min" but this could uncover threading issues in ReviewOrchestrator
   - Integration testing may reveal auth edge cases (e.g., expired API keys, concurrent project creation)
@@ -162,13 +178,16 @@ With an overall score of **8.7/10**, this is a **well-designed, production-ready
 ## Simpler Alternatives
 
 ### Alternative 1: Enhance MCP Server with HTTP Transport
+
 Instead of separate REST API, extend MCP server to support HTTP transport (MCP protocol already supports SSE, could add HTTP).
 
 **Pros:**
+
 - One server, one authentication system, simpler deployment
 - MCP protocol has richer semantics (tools, resources, prompts)
 
 **Cons:**
+
 - MCP protocol less familiar to developers than REST
 - Harder to integrate with existing HTTP tools (curl, Postman, Swagger UI)
 
@@ -177,13 +196,16 @@ Instead of separate REST API, extend MCP server to support HTTP transport (MCP p
 ---
 
 ### Alternative 2: GraphQL API Instead of REST
+
 Use GraphQL for more flexible querying (e.g., fetch review + project + pool status in one request).
 
 **Pros:**
+
 - Single endpoint, richer query language
 - Better for complex nested data
 
 **Cons:**
+
 - Overkill for simple CRUD operations
 - Steeper learning curve, more complex implementation
 - Harder to cache (REST has URL-based caching)
@@ -193,13 +215,16 @@ Use GraphQL for more flexible querying (e.g., fetch review + project + pool stat
 ---
 
 ### Alternative 3: Use Existing Framework (Django REST Framework)
+
 Switch from FastAPI to Django REST Framework for more batteries-included approach.
 
 **Pros:**
+
 - Built-in ORM, admin panel, authentication, pagination
 - More mature, larger ecosystem
 
 **Cons:**
+
 - Heavier framework, slower startup
 - Synchronous by default (FastAPI async is better for I/O-bound tasks)
 - Would require Django dependency (WFC currently uses Flask/FastAPI style)

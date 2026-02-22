@@ -5,6 +5,7 @@
 Comprehensive test strategy for REST API implementation targeting **95%+ code coverage** and **100% property coverage** from PROPERTIES.md.
 
 **Test Pyramid**:
+
 - Unit tests: 60% (fast, isolated, property-focused)
 - Integration tests: 30% (async client, full request/response cycle)
 - Load tests: 10% (performance properties, concurrent behavior)
@@ -61,6 +62,7 @@ tests/
 **Test Classes**:
 
 #### TestReviewSubmitRequest
+
 ```python
 def test_valid_request()
 def test_empty_diff_content_fails()
@@ -71,6 +73,7 @@ def test_max_diff_size_enforced()
 ```
 
 #### TestReviewStatusResponse
+
 ```python
 def test_status_enum_validation()
 def test_consensus_score_range_0_to_10()
@@ -79,6 +82,7 @@ def test_findings_list_validation()
 ```
 
 #### TestProjectCreateRequest
+
 ```python
 def test_valid_project_id_alphanumeric_dash_underscore()
 def test_invalid_project_id_special_chars()
@@ -89,6 +93,7 @@ def test_absolute_repo_path_passes()
 ```
 
 #### TestReviewFinding
+
 ```python
 def test_confidence_range_0_to_100()
 def test_confidence_out_of_range_fails()
@@ -126,6 +131,7 @@ def test_files_accepts_list_of_strings(files):
 **Test Classes**:
 
 #### TestAPIKeyStore
+
 ```python
 def test_create_api_key_generates_unique_key()
 def test_api_key_length_greater_than_30()
@@ -225,6 +231,7 @@ def test_concurrent_create_api_key_uses_file_locking(tmp_store):
 **Test Classes**:
 
 #### TestReviewStatusStore
+
 ```python
 def test_create_review_generates_uuid()
 def test_get_review_returns_pending_status()
@@ -357,6 +364,7 @@ Integration tests use `httpx.AsyncClient` to test full request/response cycles.
 **Test Classes**:
 
 #### TestReviewSubmission
+
 ```python
 @pytest.mark.asyncio
 async def test_submit_review_returns_202_with_review_id(client, setup_project):
@@ -406,6 +414,7 @@ async def test_submit_review_with_invalid_api_key_returns_401(client, setup_proj
 ```
 
 #### TestReviewStatusQuery
+
 ```python
 @pytest.mark.asyncio
 async def test_get_review_status_returns_pending(client, setup_project):
@@ -465,6 +474,7 @@ async def test_get_review_status_other_project_returns_403(client, setup_two_pro
 ```
 
 #### TestRateLimiting
+
 ```python
 @pytest.mark.asyncio
 async def test_rate_limiting_enforced(client, setup_project):
@@ -525,6 +535,7 @@ async def test_rate_limit_refills_over_time(client, setup_project):
 **Test Classes**:
 
 #### TestProjectCreation
+
 ```python
 @pytest.mark.asyncio
 async def test_create_project_returns_201_with_api_key(client):
@@ -563,6 +574,7 @@ async def test_create_duplicate_project_returns_409(client):
 ```
 
 #### TestProjectListing
+
 ```python
 @pytest.mark.asyncio
 async def test_list_projects_returns_all_projects(client):
@@ -614,6 +626,7 @@ async def test_list_projects_does_not_expose_api_keys(client):
 **Test Classes**:
 
 #### TestPoolStatus
+
 ```python
 @pytest.mark.asyncio
 async def test_get_pool_status_returns_metrics(client, setup_project):
@@ -641,6 +654,7 @@ async def test_pool_status_requires_auth(client):
 ```
 
 #### TestRateLimitStatus
+
 ```python
 @pytest.mark.asyncio
 async def test_get_rate_limit_status_returns_metrics(client, setup_project):
@@ -1208,22 +1222,26 @@ jobs:
 **Total Test Files**: 9 unit + 3 integration + 2 load = 14 files
 
 **Test Count Estimate**: ~150 tests total
+
 - Unit tests: ~90 tests
 - Integration tests: ~45 tests
 - Load tests: ~15 tests
 
 **Coverage Targets**:
+
 - Code coverage: 95%+
 - Property coverage: 100% (all 14 properties)
 - Endpoint coverage: 100% (all routes tested)
 
 **Test Execution Time**:
+
 - Unit tests: <10 seconds
 - Integration tests: <30 seconds
 - Load tests: ~5 minutes
 - Total: ~6 minutes
 
 **Key Quality Gates**:
+
 1. All properties verified (SAFETY, LIVENESS, INVARIANT, PERFORMANCE)
 2. 95%+ code coverage
 3. 0 security vulnerabilities
