@@ -1,0 +1,26 @@
+{
+  "cli_version": "0.4.5",
+  "checkpoint_id": "be3a3fad5839",
+  "strategy": "manual-commit",
+  "branch": "feat/ci-phase2-pragmatic",
+  "checkpoints_count": 1,
+  "files_touched": [
+    "tests/skills/wfc-prompt-fixer/test_analyzer_spawning.py"
+  ],
+  "sessions": [
+    {
+      "metadata": "/be/3a3fad5839/0/metadata.json",
+      "transcript": "/be/3a3fad5839/0/full.jsonl",
+      "context": "/be/3a3fad5839/0/context.md",
+      "content_hash": "/be/3a3fad5839/0/content_hash.txt",
+      "prompt": "/be/3a3fad5839/0/prompt.txt"
+    }
+  ],
+  "token_usage": {
+    "input_tokens": 71,
+    "cache_creation_tokens": 177735,
+    "cache_read_tokens": 4601123,
+    "output_tokens": 7469,
+    "api_call_count": 56
+  }
+}
