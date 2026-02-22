@@ -1,0 +1,31 @@
+{
+  "cli_version": "0.4.5",
+  "checkpoint_id": "4f65b0db6006",
+  "session_id": "c3500f56-5305-4381-926e-9a7423c9e94d",
+  "strategy": "manual-commit",
+  "created_at": "2026-02-22T15:05:07.007688Z",
+  "branch": "feat/ci-optimization",
+  "checkpoints_count": 1,
+  "files_touched": [
+    ".github/workflows/ci.yml"
+  ],
+  "agent": "Claude Code",
+  "turn_id": "2fa230894363",
+  "token_usage": {
+    "input_tokens": 1008,
+    "cache_creation_tokens": 460083,
+    "cache_read_tokens": 3845370,
+    "output_tokens": 314,
+    "api_call_count": 44
+  },
+  "initial_attribution": {
+    "calculated_at": "2026-02-22T15:05:06.087049Z",
+    "agent_lines": 24,
+    "human_added": 3104,
+    "human_modified": 0,
+    "human_removed": 0,
+    "total_committed": 3128,
+    "agent_percentage": 0.7672634271099744
+  },
+  "transcript_path": ".claude/projects/-Users-samfakhreddine-repos-wfc/c3500f56-5305-4381-926e-9a7423c9e94d.jsonl"
+}
