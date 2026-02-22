@@ -3,7 +3,7 @@
   "checkpoint_id": "da487abf47e8",
   "strategy": "manual-commit",
   "branch": "claude/ast-metrics-integration-1771804600",
-  "checkpoints_count": 2,
+  "checkpoints_count": 10,
   "files_touched": [
     "docs/concepts/AST_CONTEXT.md",
     "plans/HISTORY.md",
@@ -68,13 +68,20 @@
       "context": "/da/487abf47e8/5/context.md",
       "content_hash": "/da/487abf47e8/5/content_hash.txt",
       "prompt": "/da/487abf47e8/5/prompt.txt"
+    },
+    {
+      "metadata": "/da/487abf47e8/6/metadata.json",
+      "transcript": "/da/487abf47e8/6/full.jsonl",
+      "context": "/da/487abf47e8/6/context.md",
+      "content_hash": "/da/487abf47e8/6/content_hash.txt",
+      "prompt": "/da/487abf47e8/6/prompt.txt"
     }
   ],
   "token_usage": {
-    "input_tokens": 31803,
-    "cache_creation_tokens": 5347444,
-    "cache_read_tokens": 110748365,
-    "output_tokens": 45427,
-    "api_call_count": 1104
+    "input_tokens": 32353,
+    "cache_creation_tokens": 5923839,
+    "cache_read_tokens": 131343735,
+    "output_tokens": 46959,
+    "api_call_count": 1315
   }
 }
