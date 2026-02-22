@@ -1,6 +1,6 @@
 # Plan History
 
-**Total Plans:** 3
+**Total Plans:** 4
 
 ---
 
@@ -50,3 +50,24 @@
 - **Status:** Approved for implementation with fixes
 - **Estimated Effort:** 65 tasks × 30min avg = 32.5 agent-hours (agentic parallel execution: 3-4 weeks)
 - **Streams:** Phase 1 (26 tasks, Shared Core), Phase 2A (12 tasks, MCP), Phase 2B (20 tasks, REST), Phase 3 (7 tasks, Infrastructure)
+
+---
+
+## plan_rest_api_20260221_143551
+
+- **Created:** 2026-02-21T14:35:51Z
+- **Goal:** REST API for Multi-Tenant WFC - HTTP endpoints for code review, project management, and resource monitoring
+- **Context:** Phase 2A (MCP server) completed with 103/103 tests passing. REST API provides HTTP interface for team deployment, CI/CD integration, and external tool access. Complements existing MCP server (two access modes for different use cases).
+- **Directory:** `plans/plan_rest_api_20260221_143551`
+- **Tasks:** 43 (42 original + 1 prototype task)
+- **Properties:** 14 (4 SAFETY, 2 LIVENESS, 4 INVARIANT, 4 PERFORMANCE)
+- **Tests:** ~150 tests (90 unit, 45 integration, 15 load)
+- **Validated:** yes (score: 8.7/10, PROCEED verdict)
+- **Review:** CS=4.84/10 (moderate tier, PASSED - 5/5 reviewers approved)
+- **Review Findings:** 7 total (3 moderate duplicates, 4 unique enhancements applied)
+- **Status:** ✅ Approved for implementation
+- **Estimated Effort:** 3.5 weeks (3 weeks implementation + 2 days prototype)
+- **Key Features:** FastAPI server, API key authentication, file-based storage (MVP), async review execution, background tasks, resource monitoring, Prometheus metrics, Docker deployment
+- **Architecture Decisions:** File-based storage (JSON + filelock), API key hashing (SHA-256), project isolation (dependency injection), backward compatible (reuses ReviewOrchestrator, ProjectContext, WorktreePool, TokenBucket)
+- **Enhancements Applied:** Async ReviewOrchestrator prototype (TASK-022a), review timeout mechanism (10 min), database migration path docs, API key backup strategy, structured logging, API versioning strategy
+- **Backlog:** API key rotation endpoint, persistent task queue (Celery/RQ), review cancellation, pagination

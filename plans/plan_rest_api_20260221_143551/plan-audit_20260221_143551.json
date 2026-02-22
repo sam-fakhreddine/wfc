@@ -1,0 +1,321 @@
+{
+  "plan_metadata": {
+    "plan_name": "REST API for Multi-Tenant WFC",
+    "plan_directory": "plans/plan_rest_api_20260221_143551",
+    "created_at": "2026-02-21T14:35:51Z",
+    "created_by": "wfc-plan",
+    "original_hash": "84e9b95102c024e17002d0aec4e8eb3add2817d32eb5d1771e23d37ed8f197be",
+    "artifacts": [
+      "TASKS.md",
+      "PROPERTIES.md",
+      "TEST-PLAN.md"
+    ]
+  },
+  "validation_results": {
+    "tool": "wfc-validate",
+    "version": "1.0",
+    "timestamp": "2026-02-21T14:40:00Z",
+    "overall_score": 8.7,
+    "verdict": "PROCEED",
+    "dimension_scores": {
+      "need": 9.0,
+      "simplicity": 9.0,
+      "scope": 8.0,
+      "tradeoffs": 8.0,
+      "past_failures": 9.0,
+      "blast_radius": 9.0,
+      "timeline": 8.0
+    },
+    "strengths": [
+      "Clear user need validated by Phase 2A completion",
+      "Reuses existing multi-tenant infrastructure",
+      "File-based storage appropriate for MVP",
+      "Standard FastAPI framework",
+      "Comprehensive testing strategy (95%+ coverage)",
+      "Production-ready (Docker, Prometheus, security hardening)",
+      "Well-bounded scope (42 tasks, 3 weeks)",
+      "Low opportunity cost (foundational feature)",
+      "Avoids common security pitfalls",
+      "Excellent failure mode awareness",
+      "Isolated deployment with clear rollback plan",
+      "Granular tasks with realistic estimates"
+    ],
+    "concerns": [
+      "Timeline assumes no ReviewOrchestrator integration issues",
+      "File-based storage may not scale beyond 1000 projects",
+      "No database migration path documented",
+      "Background task resilience gap (ephemeral)",
+      "No prototype phase for async integration",
+      "API key backup strategy missing"
+    ],
+    "recommendations": {
+      "must_do": [
+        "Add 2-day prototype for async ReviewOrchestrator integration (TASK-022a)",
+        "Add 10-minute review timeout mechanism (enhance TASK-005)",
+        "Document database migration path (enhance TASK-017)",
+        "Add API key backup strategy (enhance TASK-003)"
+      ],
+      "should_do": [
+        "Add structured logging documentation (enhance TASK-021)",
+        "Document API versioning strategy (enhance TASK-017)"
+      ],
+      "nice_to_have": [
+        "API key rotation endpoint",
+        "Persistent task queue (Celery/RQ)",
+        "Review cancellation endpoint",
+        "Pagination for project listing"
+      ]
+    }
+  },
+  "review_results": {
+    "tool": "wfc-review",
+    "version": "3.0",
+    "timestamp": "2026-02-21T14:45:00Z",
+    "consensus_score": 4.84,
+    "decision": "PASSED",
+    "tier": "moderate",
+    "reviewers": [
+      {
+        "name": "Security",
+        "score": 9.0,
+        "vote": "PASS",
+        "findings": 1,
+        "key_concern": "Missing API key rotation mechanism"
+      },
+      {
+        "name": "Correctness",
+        "score": 9.5,
+        "vote": "PASS",
+        "findings": 1,
+        "key_concern": "TASK-023 async conversion risk not fully mitigated"
+      },
+      {
+        "name": "Performance",
+        "score": 8.5,
+        "vote": "PASS",
+        "findings": 2,
+        "key_concern": "Background task resilience gap"
+      },
+      {
+        "name": "Maintainability",
+        "score": 9.0,
+        "vote": "PASS",
+        "findings": 2,
+        "key_concern": "Observability gaps (structured logging)"
+      },
+      {
+        "name": "Reliability",
+        "score": 8.5,
+        "vote": "PASS",
+        "findings": 1,
+        "key_concern": "Background task persistence issue"
+      }
+    ],
+    "findings": [
+      {
+        "id": 1,
+        "category": "security",
+        "severity": 6.0,
+        "confidence": 8.0,
+        "r_i": 4.8,
+        "title": "Missing API key rotation mechanism",
+        "reviewers": ["Security"],
+        "agreement_count": 1,
+        "impact": "Cannot rotate compromised keys without project recreation",
+        "remediation": "Add POST /v1/projects/{id}/rotate-key endpoint with grace period"
+      },
+      {
+        "id": 2,
+        "category": "performance_scalability",
+        "severity": 5.0,
+        "confidence": 9.0,
+        "r_i": 4.5,
+        "title": "File-based storage scalability",
+        "reviewers": ["Performance", "Maintainability"],
+        "agreement_count": 2,
+        "impact": "No migration path to database documented",
+        "remediation": "Document migration triggers and progression (JSON → SQLite → PostgreSQL)"
+      },
+      {
+        "id": 3,
+        "category": "reliability",
+        "severity": 7.0,
+        "confidence": 8.0,
+        "r_i": 5.6,
+        "title": "Background task resilience gap",
+        "reviewers": ["Performance", "Reliability"],
+        "agreement_count": 2,
+        "impact": "Reviews lost on server restart, stuck in IN_PROGRESS",
+        "remediation": "Add 10-minute timeout, startup scan for stale reviews"
+      },
+      {
+        "id": 4,
+        "category": "maintainability_operations",
+        "severity": 4.0,
+        "confidence": 7.0,
+        "r_i": 2.8,
+        "title": "Observability gaps",
+        "reviewers": ["Maintainability"],
+        "agreement_count": 1,
+        "impact": "No structured logging strategy defined",
+        "remediation": "Add JSON logging with log levels, event types, request_id tracing"
+      },
+      {
+        "id": 5,
+        "category": "correctness_integration",
+        "severity": 5.0,
+        "confidence": 6.0,
+        "r_i": 3.0,
+        "title": "TASK-023 async conversion risk",
+        "reviewers": ["Correctness"],
+        "agreement_count": 1,
+        "impact": "30-minute estimate may be optimistic, integration issues possible",
+        "remediation": "Add 2-day prototype task (TASK-022a) before async conversion"
+      },
+      {
+        "id": 6,
+        "category": "maintainability",
+        "severity": 3.0,
+        "confidence": 7.0,
+        "r_i": 2.1,
+        "title": "Missing API versioning strategy",
+        "reviewers": ["Maintainability"],
+        "agreement_count": 1,
+        "impact": "No documented process for evolving API",
+        "remediation": "Document versioning approach, deprecation policy, breaking vs. non-breaking changes"
+      }
+    ],
+    "consensus_calculation": {
+      "r_bar": 3.8,
+      "k": 8,
+      "n": 5,
+      "r_max": 5.6,
+      "mpr_triggered": false,
+      "formula": "CS = (0.5 * 3.8) + (0.3 * 3.8 * 8/5) + (0.2 * 5.6) = 4.84"
+    }
+  },
+  "revisions": {
+    "total_revisions": 2,
+    "applied_changes": 7,
+    "backlog_items": 4,
+    "changes": [
+      {
+        "revision": 1,
+        "source": "wfc-validate",
+        "date": "2026-02-21T14:40:00Z",
+        "type": "high_priority",
+        "description": "Added TASK-022a: Prototype async ReviewOrchestrator integration (2 days)",
+        "status": "applied"
+      },
+      {
+        "revision": 1,
+        "source": "wfc-validate",
+        "date": "2026-02-21T14:40:00Z",
+        "type": "high_priority",
+        "description": "Enhanced TASK-005: Add review timeout mechanism (10 minutes)",
+        "status": "applied"
+      },
+      {
+        "revision": 1,
+        "source": "wfc-validate",
+        "date": "2026-02-21T14:40:00Z",
+        "type": "high_priority",
+        "description": "Enhanced TASK-017: Document database migration path",
+        "status": "applied"
+      },
+      {
+        "revision": 1,
+        "source": "wfc-validate",
+        "date": "2026-02-21T14:40:00Z",
+        "type": "high_priority",
+        "description": "Enhanced TASK-003: Add daily API key backup strategy",
+        "status": "applied"
+      },
+      {
+        "revision": 2,
+        "source": "wfc-review",
+        "date": "2026-02-21T14:45:00Z",
+        "type": "must_address",
+        "description": "Enhanced TASK-021: Add structured logging with JSON formatter",
+        "status": "applied"
+      },
+      {
+        "revision": 2,
+        "source": "wfc-review",
+        "date": "2026-02-21T14:45:00Z",
+        "type": "must_address",
+        "description": "Enhanced TASK-017: Document API versioning strategy",
+        "status": "applied"
+      },
+      {
+        "revision": 2,
+        "source": "wfc-review",
+        "date": "2026-02-21T14:45:00Z",
+        "type": "should_address",
+        "description": "Enhanced TASK-021: Document log aggregation options",
+        "status": "applied"
+      }
+    ],
+    "backlog": [
+      {
+        "item": "API key rotation endpoint",
+        "priority": "medium",
+        "source": "wfc-review",
+        "description": "POST /v1/projects/{id}/rotate-key with 24-hour grace period"
+      },
+      {
+        "item": "Persistent task queue",
+        "priority": "medium",
+        "source": "wfc-validate",
+        "description": "Celery or RQ for production-grade background task resilience"
+      },
+      {
+        "item": "Review cancellation endpoint",
+        "priority": "low",
+        "source": "wfc-validate",
+        "description": "POST /v1/reviews/{id}/cancel to transition IN_PROGRESS → FAILED"
+      },
+      {
+        "item": "Pagination for project listing",
+        "priority": "low",
+        "source": "wfc-validate",
+        "description": "Add ?limit=50&offset=0 query params to GET /v1/projects/"
+      }
+    ]
+  },
+  "final_status": {
+    "approval": "APPROVED",
+    "ready_for_implementation": true,
+    "conditions_met": true,
+    "timeline": {
+      "original": "3 weeks",
+      "revised": "3.5 weeks",
+      "additional_time": "2 days (prototype)",
+      "start_date": null,
+      "estimated_completion": null
+    },
+    "risk_assessment": {
+      "before_revisions": {
+        "high": ["Async conversion risk"],
+        "medium": ["Background task resilience", "File storage migration"],
+        "low": []
+      },
+      "after_revisions": {
+        "high": [],
+        "medium": [],
+        "low": ["All risks mitigated via prototype, timeout, and documentation"]
+      }
+    }
+  },
+  "quality_gates": {
+    "validation_passed": true,
+    "validation_score": 8.7,
+    "validation_threshold": 8.5,
+    "review_passed": true,
+    "consensus_score": 4.84,
+    "consensus_threshold": 4.0,
+    "all_must_do_applied": true,
+    "must_do_count": 6,
+    "applied_count": 7
+  }
+}

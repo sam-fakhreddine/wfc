@@ -42,9 +42,17 @@ mcp = [
     "mcp>=1.0.0",
 ]
 
+# REST API server
+api = [
+    "fastapi>=0.115.0",
+    "uvicorn[standard]>=0.32.0",
+    "pydantic>=2.9.0",
+    "httpx>=0.27.0",
+]
+
 # All optional features
 all = [
-    "wfc[tokens,dev,validation,mcp]",
+    "wfc[tokens,dev,validation,mcp,api]",
 ]
 
 [build-system]

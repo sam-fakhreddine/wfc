@@ -2,6 +2,8 @@
 WFC MCP Server - Multi-tenant Model Context Protocol server.
 
 Exposes WFC orchestrators via MCP protocol for Claude Code integration.
+
+Security: Issue #64 - Implements authentication via API keys and audit logging.
 """
 
 import json
@@ -13,6 +15,8 @@ from mcp.server import Server
 from mcp.types import Resource, TextContent, Tool
 
 from wfc.scripts.orchestrators.review.orchestrator import ReviewOrchestrator
+from wfc.servers.rest_api.audit import AuthAuditor
+from wfc.servers.rest_api.auth import APIKeyStore
 from wfc.shared.config.wfc_config import ProjectContext
 from wfc.shared.resource_pool import TokenBucket, WorktreePool
 
@@ -33,6 +37,8 @@ class WFCMCPServer:
         max_worktrees: int = 10,
         rate_limit_capacity: int = 10,
         rate_limit_refill: float = 10.0,
+        api_keys_path: Optional[Path] = None,
+        audit_log_path: Optional[Path] = None,
     ):
         """
         Initialize WFC MCP server.
@@ -42,11 +48,16 @@ class WFCMCPServer:
             max_worktrees: Maximum concurrent worktrees
             rate_limit_capacity: Token bucket capacity
             rate_limit_refill: Token bucket refill rate (tokens/second)
+            api_keys_path: Path to API keys store (Issue #64)
+            audit_log_path: Path to audit log (Issue #64)
         """
         self.app = Server("wfc-mcp")
         self.pool_dir = pool_dir or Path(".worktrees")
         self.worktree_pool = WorktreePool(pool_dir=self.pool_dir, max_worktrees=max_worktrees)
         self.rate_limiter = TokenBucket(capacity=rate_limit_capacity, refill_rate=rate_limit_refill)
+
+        self.api_key_store = APIKeyStore(store_path=api_keys_path)
+        self.auth_auditor = AuthAuditor(audit_log_path=audit_log_path)
 
         self._register_handlers()
 
@@ -89,7 +100,11 @@ class WFCMCPServer:
                     "properties": {
                         "project_id": {
                             "type": "string",
-                            "description": "Project identifier for multi-tenant isolation",
+                            "description": "Project identifier for multi-tenant isolation (required for auth)",
+                        },
+                        "api_key": {
+                            "type": "string",
+                            "description": "API key for authentication (required, see Issue #64)",
                         },
                         "developer_id": {
                             "type": "string",
@@ -105,7 +120,7 @@ class WFCMCPServer:
                             "description": "List of files to review",
                         },
                     },
-                    "required": ["diff_content"],
+                    "required": ["project_id", "api_key", "diff_content"],
                 },
             )
         ]
@@ -153,11 +168,66 @@ class WFCMCPServer:
         Handle review_code tool call.
 
         Args:
-            arguments: Tool arguments containing project_id, developer_id, diff_content, files
+            arguments: Tool arguments containing project_id, developer_id, diff_content, files, api_key
 
         Returns:
             List containing review result as TextContent
+
+        Security: Issue #64 - Validates API key before processing request
         """
+        project_id = arguments.get("project_id")
+        api_key = arguments.get("api_key")
+        ip_address = arguments.get("_ip_address", "127.0.0.1")
+
+        if not project_id:
+            error_msg = "project_id is required for authentication"
+            self.auth_auditor.log_auth_attempt(
+                project_id="unknown",
+                outcome="failure",
+                ip_address=ip_address,
+                failure_reason="missing_project_id",
+            )
+            return [
+                TextContent(
+                    type="text",
+                    text=json.dumps({"error": error_msg, "authentication_required": True}),
+                )
+            ]
+
+        if not api_key:
+            error_msg = "API key required. Set 'api_key' in request arguments."
+            self.auth_auditor.log_auth_attempt(
+                project_id=project_id,
+                outcome="failure",
+                ip_address=ip_address,
+                failure_reason="missing_api_key",
+            )
+            return [
+                TextContent(
+                    type="text",
+                    text=json.dumps({"error": error_msg, "authentication_required": True}),
+                )
+            ]
+
+        if not self.api_key_store.validate_api_key(project_id, api_key):
+            error_msg = "Authentication failed. Invalid API key for project."
+            self.auth_auditor.log_auth_attempt(
+                project_id=project_id,
+                outcome="failure",
+                ip_address=ip_address,
+                failure_reason="invalid_api_key",
+            )
+            return [
+                TextContent(
+                    type="text",
+                    text=json.dumps({"error": error_msg, "authentication_failed": True}),
+                )
+            ]
+
+        self.auth_auditor.log_auth_attempt(
+            project_id=project_id, outcome="success", ip_address=ip_address
+        )
+
         if not self.rate_limiter.acquire(tokens=1, timeout=5.0):
             return [
                 TextContent(
@@ -171,7 +241,6 @@ class WFCMCPServer:
                 )
             ]
 
-        project_id = arguments.get("project_id")
         developer_id = arguments.get("developer_id")
         diff_content = arguments.get("diff_content", "")
         files = arguments.get("files", [])
