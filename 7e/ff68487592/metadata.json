@@ -3,7 +3,7 @@
   "checkpoint_id": "7eff68487592",
   "strategy": "manual-commit",
   "branch": "feat/wfc2-platform",
-  "checkpoints_count": 1,
+  "checkpoints_count": 2,
   "files_touched": [
     ".github/WFC2-ROADMAP.md",
     "ba/BA-mcp-gateway-integration.md",
@@ -16,13 +16,20 @@
       "context": "/7e/ff68487592/0/context.md",
       "content_hash": "/7e/ff68487592/0/content_hash.txt",
       "prompt": "/7e/ff68487592/0/prompt.txt"
+    },
+    {
+      "metadata": "/7e/ff68487592/1/metadata.json",
+      "transcript": "/7e/ff68487592/1/full.jsonl",
+      "context": "/7e/ff68487592/1/context.md",
+      "content_hash": "/7e/ff68487592/1/content_hash.txt",
+      "prompt": "/7e/ff68487592/1/prompt.txt"
     }
   ],
   "token_usage": {
-    "input_tokens": 71,
-    "cache_creation_tokens": 177735,
-    "cache_read_tokens": 4601123,
-    "output_tokens": 7469,
-    "api_call_count": 56
+    "input_tokens": 1079,
+    "cache_creation_tokens": 637818,
+    "cache_read_tokens": 8446493,
+    "output_tokens": 7783,
+    "api_call_count": 100
   }
 }
