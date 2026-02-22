@@ -6,6 +6,11 @@ name: CI
   pull_request:
     branches: [main, develop]
 
+# Cancel in-progress runs when new commits are pushed
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 permissions:
   contents: read
 
