@@ -1,0 +1,29 @@
+{
+  "cli_version": "0.4.5",
+  "checkpoint_id": "bc4015b08f79",
+  "strategy": "manual-commit",
+  "branch": "main",
+  "checkpoints_count": 9,
+  "files_touched": [
+    "wfc/references/prompts/finding-validator.md",
+    "wfc/references/prompts/response-parser.md",
+    "wfc/scripts/orchestrators/review/agentic_validator.py",
+    "wfc/scripts/orchestrators/review/finding_validator.py"
+  ],
+  "sessions": [
+    {
+      "metadata": "/bc/4015b08f79/0/metadata.json",
+      "transcript": "/bc/4015b08f79/0/full.jsonl",
+      "context": "/bc/4015b08f79/0/context.md",
+      "content_hash": "/bc/4015b08f79/0/content_hash.txt",
+      "prompt": "/bc/4015b08f79/0/prompt.txt"
+    }
+  ],
+  "token_usage": {
+    "input_tokens": 1167,
+    "cache_creation_tokens": 792782,
+    "cache_read_tokens": 18262244,
+    "output_tokens": 824,
+    "api_call_count": 176
+  }
+}
