@@ -3,7 +3,7 @@
   "checkpoint_id": "79f014d16b73",
   "strategy": "manual-commit",
   "branch": "feat/ci-phase2-pragmatic",
-  "checkpoints_count": 1,
+  "checkpoints_count": 2,
   "files_touched": [
     "wfc/scripts/cloud_execution.py",
     "wfc/scripts/complexity_budget_gate.py",
@@ -43,13 +43,20 @@
       "context": "/79/f014d16b73/3/context.md",
       "content_hash": "/79/f014d16b73/3/content_hash.txt",
       "prompt": "/79/f014d16b73/3/prompt.txt"
+    },
+    {
+      "metadata": "/79/f014d16b73/4/metadata.json",
+      "transcript": "/79/f014d16b73/4/full.jsonl",
+      "context": "/79/f014d16b73/4/context.md",
+      "content_hash": "/79/f014d16b73/4/content_hash.txt",
+      "prompt": "/79/f014d16b73/4/prompt.txt"
     }
   ],
   "token_usage": {
-    "input_tokens": 15987,
-    "cache_creation_tokens": 1524215,
-    "cache_read_tokens": 31133442,
-    "output_tokens": 20170,
-    "api_call_count": 327
+    "input_tokens": 20600,
+    "cache_creation_tokens": 3350707,
+    "cache_read_tokens": 75474255,
+    "output_tokens": 23952,
+    "api_call_count": 801
   }
 }
