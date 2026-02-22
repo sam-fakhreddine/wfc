@@ -73,14 +73,35 @@ jobs:
         run: |
           uv pip install --system -e ".[dev,mcp,api]"
 
+      - name: Cache WFC skills
+        id: cache-skills
+        uses: actions/cache@v4
+        with:
+          path: ~/.claude/skills
+          key: ${{ runner.os }}-wfc-skills-${{ hashFiles('install.sh', 'wfc/**/*.py') }}
+          restore-keys: |
+            ${{ runner.os }}-wfc-skills-
+
       - name: Install WFC skills
         run: |
-          chmod +x install.sh
-          ./install.sh --ci
+          if [ "${{ steps.cache-skills.outputs.cache-hit }}" == "true" ]; then
+            echo "✅ Skills cache HIT - skipping installation"
+          else
+            echo "❌ Skills cache MISS - installing skills"
+            chmod +x install.sh
+            ./install.sh --ci
+          fi
 
       - name: Run tests
         run: |
-          uv run pytest tests/ -v --cov=wfc --cov-report=xml --ignore=tests/test_installer_docker.py
+          # Parallel execution with pytest-xdist
+          if [ "${{ github.event_name }}" == "pull_request" ]; then
+            # PR: skip coverage for speed
+            uv run pytest tests/ -n auto -v --ignore=tests/test_installer_docker.py
+          else
+            # main/develop: full coverage
+            uv run pytest tests/ -n auto -v --cov=wfc --cov-report=xml --ignore=tests/test_installer_docker.py
+          fi
 
       - name: Upload coverage
         if: matrix.python-version == '3.12' && matrix.os == 'ubuntu-latest'
