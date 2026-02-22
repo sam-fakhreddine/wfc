@@ -1,0 +1,34 @@
+{
+  "cli_version": "0.4.5",
+  "checkpoint_id": "23cf6e92245c",
+  "strategy": "manual-commit",
+  "branch": "feat/rest-api-implementation",
+  "checkpoints_count": 1,
+  "files_touched": [
+    "docs/MULTI_ENVIRONMENT.md",
+    "docs/TRAEFIK_DEPLOYMENT.md",
+    "plans/plan_rest_api_20260221_143551/PROPERTIES.md",
+    "plans/plan_rest_api_20260221_143551/REVIEW.md",
+    "plans/plan_rest_api_20260221_143551/TASKS.md",
+    "plans/plan_rest_api_20260221_143551/TEST-PLAN.md",
+    "plans/plan_rest_api_20260221_143551/VALIDATE.md",
+    "plans/plan_rest_api_20260221_143551/revision-log.md",
+    "uv.lock"
+  ],
+  "sessions": [
+    {
+      "metadata": "/23/cf6e92245c/0/metadata.json",
+      "transcript": "/23/cf6e92245c/0/full.jsonl",
+      "context": "/23/cf6e92245c/0/context.md",
+      "content_hash": "/23/cf6e92245c/0/content_hash.txt",
+      "prompt": "/23/cf6e92245c/0/prompt.txt"
+    }
+  ],
+  "token_usage": {
+    "input_tokens": 8100,
+    "cache_creation_tokens": 2184990,
+    "cache_read_tokens": 46331634,
+    "output_tokens": 2562,
+    "api_call_count": 453
+  }
+}
