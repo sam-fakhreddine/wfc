@@ -1,0 +1,26 @@
+{
+  "cli_version": "0.4.5",
+  "checkpoint_id": "cbb1816a2307",
+  "strategy": "manual-commit",
+  "branch": "feat/rest-api-implementation",
+  "checkpoints_count": 1,
+  "files_touched": [
+    ".github/workflows/validate.yml"
+  ],
+  "sessions": [
+    {
+      "metadata": "/cb/b1816a2307/0/metadata.json",
+      "transcript": "/cb/b1816a2307/0/full.jsonl",
+      "context": "/cb/b1816a2307/0/context.md",
+      "content_hash": "/cb/b1816a2307/0/content_hash.txt",
+      "prompt": "/cb/b1816a2307/0/prompt.txt"
+    }
+  ],
+  "token_usage": {
+    "input_tokens": 8141,
+    "cache_creation_tokens": 2385347,
+    "cache_read_tokens": 47123499,
+    "output_tokens": 2607,
+    "api_call_count": 464
+  }
+}
