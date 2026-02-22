@@ -3,7 +3,7 @@
   "checkpoint_id": "97c13a6b167d",
   "strategy": "manual-commit",
   "branch": "feat/ci-phase2-pragmatic",
-  "checkpoints_count": 1,
+  "checkpoints_count": 2,
   "files_touched": [
     "tests/tier0/test_token_bucket.py"
   ],
@@ -14,13 +14,20 @@
       "context": "/97/c13a6b167d/0/context.md",
       "content_hash": "/97/c13a6b167d/0/content_hash.txt",
       "prompt": "/97/c13a6b167d/0/prompt.txt"
+    },
+    {
+      "metadata": "/97/c13a6b167d/1/metadata.json",
+      "transcript": "/97/c13a6b167d/1/full.jsonl",
+      "context": "/97/c13a6b167d/1/context.md",
+      "content_hash": "/97/c13a6b167d/1/content_hash.txt",
+      "prompt": "/97/c13a6b167d/1/prompt.txt"
     }
   ],
   "token_usage": {
-    "input_tokens": 71,
-    "cache_creation_tokens": 177735,
-    "cache_read_tokens": 4601123,
-    "output_tokens": 7469,
-    "api_call_count": 56
+    "input_tokens": 1079,
+    "cache_creation_tokens": 637818,
+    "cache_read_tokens": 8446493,
+    "output_tokens": 7783,
+    "api_call_count": 100
   }
 }
