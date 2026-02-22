@@ -1,0 +1,35 @@
+{
+  "cli_version": "0.4.5",
+  "checkpoint_id": "7eff68487592",
+  "session_id": "dd35cd14-d989-4464-baea-39e67f726978",
+  "strategy": "manual-commit",
+  "created_at": "2026-02-22T16:26:24.266339Z",
+  "branch": "feat/wfc2-platform",
+  "checkpoints_count": 0,
+  "files_touched": [
+    ".github/WFC2-ROADMAP.md",
+    "ba/BA-mcp-gateway-integration.md",
+    "ba/competitive-analysis.md"
+  ],
+  "agent": "Claude Code",
+  "transcript_identifier_at_start": "37ae4e64-dad9-4304-9b2f-cb6930d7a3b2",
+  "checkpoint_transcript_start": 1549,
+  "transcript_lines_at_start": 1549,
+  "token_usage": {
+    "input_tokens": 14796,
+    "cache_creation_tokens": 825951,
+    "cache_read_tokens": 20451233,
+    "output_tokens": 12061,
+    "api_call_count": 189
+  },
+  "initial_attribution": {
+    "calculated_at": "2026-02-22T16:26:20.94647Z",
+    "agent_lines": 671,
+    "human_added": 352,
+    "human_modified": 0,
+    "human_removed": 0,
+    "total_committed": 1023,
+    "agent_percentage": 65.59139784946237
+  },
+  "transcript_path": ".claude/projects/-Users-samfakhreddine-repos-wfc/dd35cd14-d989-4464-baea-39e67f726978.jsonl"
+}
