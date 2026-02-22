@@ -1,0 +1,42 @@
+{
+  "cli_version": "0.4.5",
+  "checkpoint_id": "79f014d16b73",
+  "session_id": "558241d6-1b1a-49db-9a64-d522165180eb",
+  "strategy": "manual-commit",
+  "created_at": "2026-02-22T20:26:52.722896Z",
+  "branch": "feat/ci-phase2-pragmatic",
+  "checkpoints_count": 0,
+  "files_touched": [
+    "wfc/scripts/cloud_execution.py",
+    "wfc/scripts/complexity_budget_gate.py",
+    "wfc/scripts/confidence_checker.py",
+    "wfc/scripts/github/gh_helpers.py",
+    "wfc/scripts/github/pr_threads.py",
+    "wfc/scripts/token_manager.py",
+    "wfc/shared/doc_loader.py",
+    "wfc/shared/extended_thinking.py",
+    "wfc/shared/file_io.py"
+  ],
+  "agent": "Claude Code",
+  "turn_id": "aa3585f0e3db",
+  "transcript_identifier_at_start": "91a4c66e-e97f-4d6d-b04e-d73ab1a8fd57",
+  "checkpoint_transcript_start": 2641,
+  "transcript_lines_at_start": 2641,
+  "token_usage": {
+    "input_tokens": 112,
+    "cache_creation_tokens": 60446,
+    "cache_read_tokens": 2235716,
+    "output_tokens": 326,
+    "api_call_count": 38
+  },
+  "initial_attribution": {
+    "calculated_at": "2026-02-22T20:26:50.138926Z",
+    "agent_lines": 156,
+    "human_added": 3289,
+    "human_modified": 0,
+    "human_removed": 0,
+    "total_committed": 3445,
+    "agent_percentage": 4.528301886792453
+  },
+  "transcript_path": ".claude/projects/-Users-samfakhreddine-repos-wfc/558241d6-1b1a-49db-9a64-d522165180eb.jsonl"
+}
