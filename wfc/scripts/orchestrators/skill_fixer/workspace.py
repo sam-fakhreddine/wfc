@@ -160,10 +160,22 @@ class WorkspaceManager:
         """Write cataloger manifest to workspace."""
         manifest_path = workspace / "01-cataloger" / "manifest.json"
         try:
+            manifest_serializable = self._make_json_serializable(manifest)
             with open(manifest_path, "w") as f:
-                json.dump(manifest, f, indent=2)
+                json.dump(manifest_serializable, f, indent=2)
         except (PermissionError, OSError) as e:
             raise WorkspaceError(f"Failed to write manifest to {manifest_path}: {e}") from e
+
+    def _make_json_serializable(self, obj):
+        """Recursively convert Path objects to strings for JSON serialization."""
+        if isinstance(obj, Path):
+            return str(obj)
+        elif isinstance(obj, dict):
+            return {k: self._make_json_serializable(v) for k, v in obj.items()}
+        elif isinstance(obj, (list, tuple)):
+            return [self._make_json_serializable(item) for item in obj]
+        else:
+            return obj
 
     def read_manifest(self, workspace: Path) -> Dict:
         """Read cataloger manifest from workspace."""
