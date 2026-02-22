@@ -5,6 +5,7 @@ Logs all authentication attempts with timestamp, project_id, IP, and outcome.
 Implements failed auth rate limiting and suspicious pattern detection.
 """
 
+import hashlib
 import json
 import logging
 from datetime import datetime, timedelta, timezone
@@ -89,7 +90,7 @@ class AuthAuditor:
 
     def _track_failure(self, project_id: str, ip_address: str) -> None:
         """Track failed authentication for rate limiting."""
-        key = f"{project_id}:{ip_address}"
+        key = hashlib.sha256(f"{project_id}:{ip_address}".encode()).hexdigest()
         now = datetime.now(timezone.utc)
 
         if key not in self._recent_failures:
@@ -120,7 +121,7 @@ class AuthAuditor:
         Returns:
             True if rate limited (should block), False otherwise
         """
-        key = f"{project_id}:{ip_address}"
+        key = hashlib.sha256(f"{project_id}:{ip_address}".encode()).hexdigest()
 
         if key not in self._recent_failures:
             return False
@@ -139,7 +140,7 @@ class AuthAuditor:
 
     def get_failure_count(self, project_id: str, ip_address: str) -> int:
         """Get number of recent failures for project+IP."""
-        key = f"{project_id}:{ip_address}"
+        key = hashlib.sha256(f"{project_id}:{ip_address}".encode()).hexdigest()
 
         if key not in self._recent_failures:
             return 0

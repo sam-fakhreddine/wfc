@@ -54,7 +54,10 @@ class TestWFCMCPServer:
     @pytest.mark.asyncio
     async def test_call_tool_review_code_with_project_context(self, tmp_path):
         """review_code tool should create ProjectContext and run review."""
-        server = WFCMCPServer()
+        api_keys_path = tmp_path / "api_keys.json"
+        server = WFCMCPServer(api_keys_path=api_keys_path)
+
+        api_key = server.api_key_store.create_api_key("test-proj", "alice")
 
         with patch("wfc.servers.mcp_server.ReviewOrchestrator") as mock_orch_class:
             mock_orch = AsyncMock()
@@ -67,6 +70,7 @@ class TestWFCMCPServer:
                 name="review_code",
                 arguments={
                     "project_id": "test-proj",
+                    "api_key": api_key,
                     "developer_id": "alice",
                     "diff_content": "some diff",
                     "files": ["test.py"],
@@ -87,25 +91,20 @@ class TestWFCMCPServer:
 
     @pytest.mark.asyncio
     async def test_call_tool_review_code_backward_compat(self):
-        """review_code should work without project_id (backward compat)."""
+        """review_code should reject requests without authentication (no backward compat)."""
         server = WFCMCPServer()
 
-        with patch("wfc.servers.mcp_server.ReviewOrchestrator") as mock_orch_class:
-            mock_orch = AsyncMock()
-            mock_orch.review_code = AsyncMock(
-                return_value={"consensus_score": 7.5, "passed": True, "findings": []}
-            )
-            mock_orch_class.return_value = mock_orch
+        result = await server.call_tool(
+            name="review_code", arguments={"diff_content": "some diff", "files": ["test.py"]}
+        )
 
-            result = await server.call_tool(
-                name="review_code", arguments={"diff_content": "some diff", "files": ["test.py"]}
-            )
-
-            mock_orch_class.assert_called_once()
-            call_kwargs = mock_orch_class.call_args[1]
-            assert call_kwargs.get("project_context") is None
-
-            assert len(result) == 1
+        assert len(result) == 1
+        result_data = json.loads(result[0].text)
+        assert "error" in result_data
+        assert (
+            "project_id" in result_data["error"].lower()
+            or "authentication" in result_data["error"].lower()
+        )
 
     @pytest.mark.asyncio
     async def test_read_resource_review_latest(self, tmp_path):
@@ -125,25 +124,34 @@ class TestWFCMCPServer:
             assert "8.5" in content or "test-proj" in content
 
     @pytest.mark.asyncio
-    async def test_server_handles_rate_limiting(self):
+    async def test_server_handles_rate_limiting(self, tmp_path):
         """Server should enforce rate limits via TokenBucket."""
+        api_keys_path = tmp_path / "api_keys.json"
+
         with patch("wfc.servers.mcp_server.TokenBucket") as mock_bucket_class:
             mock_bucket = Mock()
             mock_bucket.acquire.side_effect = [True, False]
             mock_bucket_class.return_value = mock_bucket
 
-            server = WFCMCPServer()
+            server = WFCMCPServer(api_keys_path=api_keys_path)
+            api_key = server.api_key_store.create_api_key("test-proj", "alice")
 
             with patch("wfc.servers.mcp_server.ReviewOrchestrator") as mock_orch_class:
                 mock_orch = AsyncMock()
                 mock_orch.review_code = AsyncMock(return_value={"passed": True})
                 mock_orch_class.return_value = mock_orch
 
-                result1 = await server.call_tool("review_code", {"diff_content": "diff1"})
+                result1 = await server.call_tool(
+                    "review_code",
+                    {"project_id": "test-proj", "api_key": api_key, "diff_content": "diff1"},
+                )
                 assert len(result1) == 1
                 assert "rate limit" not in result1[0].text.lower()
 
-                result2 = await server.call_tool("review_code", {"diff_content": "diff2"})
+                result2 = await server.call_tool(
+                    "review_code",
+                    {"project_id": "test-proj", "api_key": api_key, "diff_content": "diff2"},
+                )
                 assert len(result2) == 1
                 assert "rate limit" in result2[0].text.lower()
 

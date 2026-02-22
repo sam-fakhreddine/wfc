@@ -45,6 +45,7 @@ class ProjectRateLimiter:
 
         self.quotas: Dict[str, dict] = {}
         self.lock = threading.Lock()
+        self._shutdown_event = threading.Event()
 
         self._start_refill_thread()
 
@@ -271,10 +272,16 @@ class ProjectRateLimiter:
         """Start background thread to refill tokens."""
 
         def refill_loop():
-            while True:
+            while not self._shutdown_event.is_set():
                 time.sleep(self.refill_interval)
-                self._refill_tokens()
+                if not self._shutdown_event.is_set():
+                    self._refill_tokens()
 
         thread = threading.Thread(target=refill_loop, daemon=True)
         thread.start()
         logger.info("Started token refill thread")
+
+    def cleanup(self) -> None:
+        """Stop the background refill thread gracefully."""
+        self._shutdown_event.set()
+        logger.info("Shutdown signal sent to refill thread")
