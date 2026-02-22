@@ -7,6 +7,7 @@ name: CI
     branches: [main, develop]
 
 # Cancel in-progress runs when new commits are pushed
+# This prevents wasted CI time when you push multiple commits rapidly
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
