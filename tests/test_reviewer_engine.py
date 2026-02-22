@@ -35,7 +35,8 @@ def reviewers_dir(tmp_path: Path) -> Path:
         d = tmp_path / reviewer_id
         d.mkdir()
 
-        prompt = textwrap.dedent(f"""\
+        prompt = textwrap.dedent(
+            f"""\
             # {reviewer_id.title()} Reviewer Agent
 
             ## Identity
@@ -51,7 +52,8 @@ def reviewers_dir(tmp_path: Path) -> Path:
             ```json
             {{"severity": "<1-10>", "description": "<what>"}}
             ```
-        """)
+        """
+        )
         (d / "PROMPT.md").write_text(prompt, encoding="utf-8")
 
         knowledge = f"# KNOWLEDGE.md -- {reviewer_id.title()}\n\n- Known pattern.\n"
@@ -329,7 +331,8 @@ class TestReviewerEnginePhase2:
 
     def test_parse_results_json_in_code_block(self, engine: ReviewerEngine) -> None:
         """Findings wrapped in markdown code blocks are parsed."""
-        response = textwrap.dedent("""\
+        response = textwrap.dedent(
+            """\
             Here are my findings:
 
             ```json
@@ -338,7 +341,8 @@ class TestReviewerEnginePhase2:
 
             SCORE: 6.0
             SUMMARY: Naming issues found.
-        """)
+        """
+        )
         results = engine.parse_results([{"reviewer_id": "maintainability", "response": response}])
         assert len(results[0].findings) == 1
         assert results[0].findings[0]["category"] == "naming"

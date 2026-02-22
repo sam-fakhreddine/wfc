@@ -200,11 +200,11 @@ pretooluse_hook.py
          .wfc/rules/*.md
 ```
 
-### Key Files
+### Key Files (WFC Codebase)
 
-- `wfc/scripts/hooks/rule_engine.py` - Rule evaluation engine
-- `wfc/scripts/hooks/config_loader.py` - YAML frontmatter parser
-- `wfc/scripts/hooks/pretooluse_hook.py` - Main dispatcher
+- WFC uses `wfc/scripts/hooks/rule_engine.py` for rule evaluation
+- WFC uses `wfc/scripts/hooks/config_loader.py` for YAML frontmatter parsing
+- WFC uses `wfc/scripts/hooks/pretooluse_hook.py` as the main hook dispatcher
 
 ## Tips
 
