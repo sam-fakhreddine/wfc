@@ -6,10 +6,13 @@ Eliminates inline boilerplate for JSON, YAML, and text file operations.
 """
 
 import json
+import logging
 from pathlib import Path
 from typing import Any, Dict, Optional
 
 from filelock import FileLock, Timeout
+
+logger = logging.getLogger(__name__)
 
 
 class FileIOError(Exception):
@@ -256,51 +259,54 @@ if __name__ == "__main__":
     import shutil
     import tempfile
 
+    # Note: Run this test with: python -m wfc.shared.file_io
+    logging.basicConfig(level=logging.INFO, format="%(message)s")
+
     temp_dir = Path(tempfile.mkdtemp())
 
     try:
-        print("Testing WFC File I/O Utilities\n")
+        logger.info("Testing WFC File I/O Utilities\n")
 
-        print("1. Testing JSON operations:")
+        logger.info("1. Testing JSON operations:")
         test_data = {"name": "WFC", "version": "1.0", "features": ["build", "review"]}
         json_file = temp_dir / "test.json"
 
         save_json(json_file, test_data)
-        print(f"   ✅ Saved JSON to {json_file}")
+        logger.info(f"   ✅ Saved JSON to {json_file}")
 
         loaded = load_json(json_file)
         assert loaded == test_data
-        print(f"   ✅ Loaded JSON: {loaded}")
+        logger.info(f"   ✅ Loaded JSON: {loaded}")
 
-        print("\n2. Testing JSON update:")
+        logger.info("\n2. Testing JSON update:")
         updated = update_json(json_file, {"new_key": "new_value"})
-        print(f"   ✅ Updated JSON: {updated}")
+        logger.info(f"   ✅ Updated JSON: {updated}")
 
-        print("\n3. Testing default values:")
+        logger.info("\n3. Testing default values:")
         missing = load_json(temp_dir / "missing.json", default={"default": True})
-        print(f"   ✅ Missing file returned default: {missing}")
+        logger.info(f"   ✅ Missing file returned default: {missing}")
 
-        print("\n4. Testing text operations:")
+        logger.info("\n4. Testing text operations:")
         text_file = temp_dir / "test.txt"
         save_text(text_file, "Hello WFC\n")
-        print("   ✅ Saved text")
+        logger.info("   ✅ Saved text")
 
         append_text(text_file, "Second line\n")
-        print("   ✅ Appended text")
+        logger.info("   ✅ Appended text")
 
         content = load_text(text_file)
         assert content == "Hello WFC\nSecond line\n"
-        print(f"   ✅ Loaded text: {repr(content)}")
+        logger.info(f"   ✅ Loaded text: {repr(content)}")
 
-        print("\n5. Testing error handling:")
+        logger.info("\n5. Testing error handling:")
         try:
             load_json(temp_dir / "missing.json")
-            print("   ❌ Should have raised error")
+            logger.error("   ❌ Should have raised error")
         except FileIOError as e:
-            print(f"   ✅ Correctly raised error: {e}")
+            logger.info(f"   ✅ Correctly raised error: {e}")
 
-        print("\n✅ All tests passed!")
+        logger.info("\n✅ All tests passed!")
 
     finally:
         shutil.rmtree(temp_dir)
-        print("\n🧹 Cleaned up temp directory")
+        logger.info("\n🧹 Cleaned up temp directory")

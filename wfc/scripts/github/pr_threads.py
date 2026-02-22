@@ -22,6 +22,7 @@ Usage:
 """
 
 import json
+import logging
 import sys
 from dataclasses import dataclass
 from pathlib import Path
@@ -33,6 +34,8 @@ from wfc.scripts.github.gh_helpers import (
     detect_repo,
     gh_graphql,
 )
+
+logger = logging.getLogger(__name__)
 
 _FETCH_QUERY = """
 query($owner: String!, $repo: String!, $number: Int!) {
@@ -187,15 +190,15 @@ def bulk_resolve(
                     **result,
                 }
             )
-            print(f"✅ Resolved {item['thread_id'][:20]}...")
+            logger.info(f"✅ Resolved {item['thread_id'][:20]}...")
         except Exception as e:
             results.append({"thread_id": item["thread_id"], "status": "error", "error": str(e)})
-            print(f"❌ Failed {item['thread_id'][:20]}...: {e}", file=sys.stderr)
+            logger.error(f"❌ Failed {item['thread_id'][:20]}...: {e}")
     return results
 
 
 def print_threads(threads: list[ReviewThread], unresolved_only: bool = True) -> None:
-    """Print threads as a formatted table."""
+    """Print threads as a formatted table (user-facing output)."""
     filtered = [t for t in threads if not t.is_resolved] if unresolved_only else threads
     print(f"\n{'#':<4} {'Thread ID':<30} {'File:Line':<45} {'Author':<20} {'Status'}")
     print("-" * 120)
@@ -219,10 +222,7 @@ def _parse_fetch_args(positional: list[str]) -> tuple[Optional[str], Optional[st
     elif len(positional) == 3:
         return positional[0], positional[1], int(positional[2])
     else:
-        print(
-            "Usage: fetch <pr_number>  OR  fetch <owner> <repo> <pr_number>",
-            file=sys.stderr,
-        )
+        logger.error("Usage: fetch <pr_number>  OR  fetch <owner> <repo> <pr_number>")
         sys.exit(1)
 
 
@@ -238,9 +238,8 @@ def _parse_bulk_args(positional: list[str]) -> tuple[Optional[str], Optional[str
     elif len(positional) == 3:
         return positional[0], positional[1], positional[2]
     else:
-        print(
-            "Usage: bulk-resolve <manifest.json>  OR  bulk-resolve <owner> <repo> <manifest.json>",
-            file=sys.stderr,
+        logger.error(
+            "Usage: bulk-resolve <manifest.json>  OR  bulk-resolve <owner> <repo> <manifest.json>"
         )
         sys.exit(1)
 
@@ -277,7 +276,7 @@ def _cmd_resolve(args) -> None:
     if result["resolved"]:
         print(f"✅ Thread resolved. Reply ID: {result['reply_id']}")
     else:
-        print("❌ Thread not resolved", file=sys.stderr)
+        logger.error("❌ Thread not resolved")
         sys.exit(1)
 
 
@@ -357,5 +356,5 @@ Examples:
     try:
         parsed.func(parsed)
     except GHError as exc:
-        print(f"Error: {exc}", file=sys.stderr)
+        logger.error(f"Error: {exc}")
         sys.exit(1)

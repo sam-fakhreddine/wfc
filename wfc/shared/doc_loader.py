@@ -6,9 +6,12 @@ Similar to persona loader but for documentation.
 """
 
 import json
+import logging
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Dict, List, Optional
+
+logger = logging.getLogger(__name__)
 
 
 @dataclass
@@ -80,8 +83,6 @@ class DocLoader:
             docs_dir: Path to docs directory (auto-detected if None)
         """
         if docs_dir is None:
-            # Auto-detect docs directory
-            # Try multiple locations for flexibility
             possible_paths = [
                 Path.cwd() / "docs",
                 Path(__file__).parent.parent.parent / "docs",
@@ -103,14 +104,11 @@ class DocLoader:
         if not self.registry_path.exists():
             raise FileNotFoundError(f"Registry not found: {self.registry_path}")
 
-        # Load registry
         with open(self.registry_path) as f:
             self.registry = json.load(f)
 
-        # Create summary index
         self.summaries = {doc["id"]: DocSummary.from_dict(doc) for doc in self.registry["docs"]}
 
-        # Cache for loaded docs
         self._cache: Dict[str, Doc] = {}
 
     def list_summaries(
@@ -158,27 +156,22 @@ class DocLoader:
         Raises:
             KeyError: If doc_id not found in registry
         """
-        # Check cache first
         if doc_id in self._cache:
             return self._cache[doc_id]
 
-        # Get summary
         if doc_id not in self.summaries:
             raise KeyError(f"Doc not found: {doc_id}")
 
         summary = self.summaries[doc_id]
 
-        # Load content
         doc_path = self.docs_dir / summary.path
         if not doc_path.exists():
             raise FileNotFoundError(f"Doc file not found: {doc_path}")
 
         content = doc_path.read_text()
 
-        # Create Doc
         doc = Doc(metadata=summary, content=content)
 
-        # Cache it
         self._cache[doc_id] = doc
 
         return doc
@@ -201,33 +194,26 @@ class DocLoader:
         results = []
 
         for summary in self.summaries.values():
-            # Category filter
             if category and summary.category != category:
                 continue
 
-            # Calculate relevance score
             score = 0
 
-            # Title match (highest weight)
             if query_lower in summary.title.lower():
                 score += 10
 
-            # Summary match
             if query_lower in summary.summary.lower():
                 score += 5
 
-            # Topic match
             if any(query_lower in topic.lower() for topic in summary.topics):
                 score += 3
 
-            # Skill match
             if any(query_lower in skill.lower() for skill in summary.skills):
                 score += 3
 
             if score > 0:
                 results.append((score, summary))
 
-        # Sort by relevance
         results.sort(key=lambda x: x[0], reverse=True)
 
         return [summary for _, summary in results[:max_results]]
@@ -251,7 +237,6 @@ class DocLoader:
         return counts
 
 
-# Convenience function for quick access
 def load_doc(doc_id: str, docs_dir: Optional[Path] = None) -> Doc:
     """
     Load a doc by ID (convenience function).
@@ -282,7 +267,6 @@ def search_docs(query: str, max_results: int = 5) -> List[DocSummary]:
     return loader.search(query, max_results=max_results)
 
 
-# Example usage
 if __name__ == "__main__":
     loader = DocLoader()
 
