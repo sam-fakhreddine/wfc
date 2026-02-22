@@ -196,7 +196,7 @@ class SkillCataloger:
         content_without_code = re.sub(r"```[\s\S]*?```", "", content, flags=re.MULTILINE)
 
         file_refs = re.findall(
-            r"(?:scripts|references|assets)/([\w\-./]+\.\w+)",
+            r"((?:scripts|references|assets)/[\w\-./]+\.\w+)",
             content_without_code,
             re.IGNORECASE,
         )
