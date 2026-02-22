@@ -193,9 +193,11 @@ class SkillCataloger:
         self, skill_path: Path, content: str, filesystem: FilesystemMetrics
     ) -> CrossReferences:
         """Check cross-reference integrity."""
+        content_without_code = re.sub(r"```[\s\S]*?```", "", content, flags=re.MULTILINE)
+
         file_refs = re.findall(
             r"(?:scripts|references|assets)/([\w\-./]+\.\w+)",
-            content,
+            content_without_code,
             re.IGNORECASE,
         )
 
