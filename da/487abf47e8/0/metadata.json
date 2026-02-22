@@ -1,0 +1,50 @@
+{
+  "cli_version": "0.4.5",
+  "checkpoint_id": "da487abf47e8",
+  "session_id": "394861b6-10ae-469a-a682-876c11b26c4f",
+  "strategy": "manual-commit",
+  "created_at": "2026-02-22T23:59:44.849444Z",
+  "branch": "claude/ast-metrics-integration-1771804600",
+  "checkpoints_count": 0,
+  "files_touched": [
+    "tests/test_ast_metrics_integration.py",
+    "wfc/scripts/ast_analyzer/__init__.py",
+    "wfc/scripts/ast_analyzer/metrics_extractor.py",
+    "plans/HISTORY.md",
+    "plans/plan_ast_metrics_integration_20260222/PROPERTIES.md",
+    "plans/plan_ast_metrics_integration_20260222/TEST-PLAN.md",
+    "wfc/references/reviewers/correctness/PROMPT.md",
+    "wfc/references/reviewers/performance/PROMPT.md",
+    "wfc/references/reviewers/reliability/PROMPT.md",
+    "wfc/scripts/ast_analyzer/cache_writer.py",
+    "wfc/scripts/ast_analyzer/language_detection.py",
+    "plans/plan_ast_metrics_integration_20260222/interview-results.json",
+    "wfc/references/reviewers/security/PROMPT.md",
+    "wfc/scripts/orchestrators/review/orchestrator.py",
+    "docs/concepts/AST_CONTEXT.md",
+    "plans/plan_ast_metrics_integration_20260222/TASKS.md",
+    "plans/plan_ast_metrics_integration_20260222/VALIDATE.md",
+    "plans/plan_ast_metrics_integration_20260222/plan-audit.json.txt",
+    "plans/plan_ast_metrics_integration_20260222/revision-log.md",
+    "wfc/references/reviewers/maintainability/PROMPT.md"
+  ],
+  "agent": "Claude Code",
+  "turn_id": "97c2ed74d3d7",
+  "token_usage": {
+    "input_tokens": 7107,
+    "cache_creation_tokens": 24296,
+    "cache_read_tokens": 361410,
+    "output_tokens": 37,
+    "api_call_count": 10
+  },
+  "initial_attribution": {
+    "calculated_at": "2026-02-22T23:59:44.689846Z",
+    "agent_lines": 2305,
+    "human_added": 0,
+    "human_modified": 0,
+    "human_removed": 0,
+    "total_committed": 2305,
+    "agent_percentage": 100
+  },
+  "transcript_path": ".claude/projects/-Users-samfakhreddine-repos-wfc/394861b6-10ae-469a-a682-876c11b26c4f.jsonl"
+}
