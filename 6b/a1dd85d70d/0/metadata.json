@@ -1,0 +1,32 @@
+{
+  "cli_version": "0.4.5",
+  "checkpoint_id": "6ba1dd85d70d",
+  "session_id": "bf9607d2-0692-422b-812d-809b12eae44f",
+  "strategy": "manual-commit",
+  "created_at": "2026-02-22T15:56:18.076744Z",
+  "branch": "feat/ci-phase2-pragmatic",
+  "checkpoints_count": 1,
+  "files_touched": [
+    ".github/workflows/ci.yml"
+  ],
+  "agent": "Claude Code",
+  "turn_id": "372bbd868164",
+  "transcript_identifier_at_start": "226a784b-1340-4ef2-823a-6af6cbc48aa8",
+  "token_usage": {
+    "input_tokens": 71,
+    "cache_creation_tokens": 177735,
+    "cache_read_tokens": 4601123,
+    "output_tokens": 7469,
+    "api_call_count": 56
+  },
+  "initial_attribution": {
+    "calculated_at": "2026-02-22T15:56:17.846953Z",
+    "agent_lines": 0,
+    "human_added": 1,
+    "human_modified": 0,
+    "human_removed": 0,
+    "total_committed": 1,
+    "agent_percentage": 0
+  },
+  "transcript_path": ".claude/projects/-Users-samfakhreddine-repos-wfc/bf9607d2-0692-422b-812d-809b12eae44f.jsonl"
+}
