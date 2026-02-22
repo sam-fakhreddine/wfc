@@ -13,19 +13,22 @@ PHILOSOPHY:
 """
 
 import json
+import logging
 from dataclasses import dataclass
 from enum import Enum
 from pathlib import Path
 from typing import Dict, Optional
 
+logger = logging.getLogger(__name__)
+
 
 class TaskComplexity(Enum):
     """Task complexity levels."""
 
-    S = "S"  # Small
-    M = "M"  # Medium
-    L = "L"  # Large
-    XL = "XL"  # Extra Large
+    S = "S"
+    M = "M"
+    L = "L"
+    XL = "XL"
 
 
 @dataclass
@@ -38,12 +41,10 @@ class TokenBudget:
     budget_input: int
     budget_output: int
 
-    # Actual usage (tracked during execution)
     actual_input: int = 0
     actual_output: int = 0
     actual_total: int = 0
 
-    # Status
     warned: bool = False
     exceeded: bool = False
 
@@ -93,7 +94,6 @@ class TokenManager:
     These are adjusted based on historical data.
     """
 
-    # Default budgets by complexity
     DEFAULT_BUDGETS = {
         TaskComplexity.S: {"input": 150, "output": 50, "total": 200},
         TaskComplexity.M: {"input": 700, "output": 300, "total": 1000},
@@ -111,7 +111,6 @@ class TokenManager:
         if memory_dir:
             self.memory_dir = Path(memory_dir)
         else:
-            # Default: wfc/memory/
             self.memory_dir = Path(__file__).parent.parent / "memory"
 
         self.memory_dir.mkdir(parents=True, exist_ok=True)
@@ -132,10 +131,8 @@ class TokenManager:
             TokenBudget
         """
         if use_history and self.metrics_file.exists():
-            # Get average from history
             budgets = self._get_historical_average(complexity)
         else:
-            # Use defaults
             budgets = self.DEFAULT_BUDGETS[complexity]
 
         return TokenBudget(
@@ -164,11 +161,9 @@ class TokenManager:
         budget.actual_output += output_tokens
         budget.actual_total = budget.actual_input + budget.actual_output
 
-        # Check if approaching limit
         if budget.is_approaching_limit() and not budget.warned:
             budget.warned = True
 
-        # Check if exceeded
         if budget.has_exceeded():
             budget.exceeded = True
 
@@ -240,13 +235,11 @@ class TokenManager:
             pass
 
         if count == 0:
-            # No history - return defaults
             return self.DEFAULT_BUDGETS[complexity]
 
         avg_input = total_input // count
         avg_output = total_output // count
 
-        # Add 20% buffer to historical average
         return {
             "input": int(avg_input * 1.2),
             "output": int(avg_output * 1.2),
@@ -281,49 +274,47 @@ class TokenManager:
 
 
 if __name__ == "__main__":
-    # Test token manager
-    print("WFC Token Manager Test")
-    print("=" * 60)
+    logging.basicConfig(
+        level=logging.INFO,
+        format="%(message)s",
+    )
+
+    logger.info("WFC Token Manager Test")
+    logger.info("=" * 60)
 
     manager = TokenManager()
 
-    # Test 1: Create budgets for each complexity
-    print("\n1. Testing budget creation:")
+    logger.info("\n1. Testing budget creation:")
     for complexity in [TaskComplexity.S, TaskComplexity.M, TaskComplexity.L, TaskComplexity.XL]:
         budget = manager.create_budget(f"TASK-{complexity.value}", complexity)
-        print(f"   {complexity.value}: {budget.budget_total:,} tokens")
-        print(f"      Recommendation: {manager.get_budget_recommendation(complexity)}")
+        logger.info(f"   {complexity.value}: {budget.budget_total:,} tokens")
+        logger.info(f"      Recommendation: {manager.get_budget_recommendation(complexity)}")
 
-    # Test 2: Test usage tracking
-    print("\n2. Testing usage tracking:")
+    logger.info("\n2. Testing usage tracking:")
     budget = manager.create_budget("TASK-M", TaskComplexity.M)
-    print(f"   Initial: {budget.actual_total}/{budget.budget_total}")
+    logger.info(f"   Initial: {budget.actual_total}/{budget.budget_total}")
 
-    # Use 60% of budget
     budget = manager.update_usage(budget, 420, 180)
-    print(f"   After 60%: {budget.actual_total}/{budget.budget_total}")
+    logger.info(f"   After 60%: {budget.actual_total}/{budget.budget_total}")
     warning = manager.get_warning_message(budget)
     if warning:
-        print(f"   {warning}")
+        logger.warning(f"   {warning}")
 
-    # Use 85% of budget (should warn)
     budget = manager.update_usage(budget, 140, 60)
-    print(f"   After 85%: {budget.actual_total}/{budget.budget_total}")
+    logger.info(f"   After 85%: {budget.actual_total}/{budget.budget_total}")
     warning = manager.get_warning_message(budget)
     if warning:
-        print(f"   {warning}")
+        logger.warning(f"   {warning}")
 
-    # Exceed budget
     budget = manager.update_usage(budget, 200, 100)
-    print(f"   After exceeding: {budget.actual_total}/{budget.budget_total}")
+    logger.info(f"   After exceeding: {budget.actual_total}/{budget.budget_total}")
     warning = manager.get_warning_message(budget)
     if warning:
-        print(f"   {warning}")
+        logger.warning(f"   {warning}")
 
-    # Test 3: Budget status
-    print("\n3. Testing budget status:")
-    print(f"   Usage: {budget.get_usage_percentage():.1f}%")
-    print(f"   Warned: {budget.warned}")
-    print(f"   Exceeded: {budget.exceeded}")
+    logger.info("\n3. Testing budget status:")
+    logger.info(f"   Usage: {budget.get_usage_percentage():.1f}%")
+    logger.info(f"   Warned: {budget.warned}")
+    logger.info(f"   Exceeded: {budget.exceeded}")
 
-    print("\n✅ All token manager tests passed!")
+    logger.info("\n✅ All token manager tests passed!")
