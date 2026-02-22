@@ -8,6 +8,44 @@ Do not confuse working ON WFC with working WITH WFC.
 
 **Never implement features manually — always use WFC skills.**
 
+---
+
+## 🚀 WFC2 Platform Transformation (Active)
+
+**Branch**: `feat/wfc2-platform` (long-running, started 2026-02-22)
+
+**Vision**: Transform WFC from CLI tool → **Centralized AI Development Platform**
+
+- Single source of truth for all development artifacts (plans, reviews, BAs, tests)
+- Living documentation engine (auto-generated from actual work)
+- Team dashboard (visualize AI agent activity)
+- Multi-agent collaboration hub
+
+**Roadmap**: See `.github/WFC2-ROADMAP.md`
+**BA Document**: See `ba/BA-mcp-gateway-integration.md`
+
+### WFC2 Development Rules
+
+- **Branch from**: `feat/wfc2-platform` (not develop)
+- **Sub-feature pattern**: `feat/wfc2-{feature-name}` (e.g., `feat/wfc2-artifact-storage`)
+- **Merge to**: `feat/wfc2-platform` first, then periodically to `develop`
+- **Backward compatibility**: CRITICAL - existing MCP/REST clients must work unchanged
+- **Testing**: 85% coverage minimum, integration tests required
+- **Performance targets**: Auth < 5ms, artifacts < 50ms, search < 200ms
+
+### WFC2 Phase 1 Priorities (Current)
+
+1. **M-000**: Central artifact storage (SQLite/PostgreSQL)
+2. **M-001**: Unified authentication gateway
+3. **M-002**: Per-project rate limiting (all transports)
+4. **M-003**: Request normalization layer
+5. **M-004**: Unified observability pipeline
+6. **M-005**: Living documentation API (search, timeline, insights)
+
+**When working on WFC2**: Always check `.github/WFC2-ROADMAP.md` for current status.
+
+---
+
 ## Python Environment
 
 ```bash
@@ -66,7 +104,8 @@ CS formula: `(0.5 × R̄) + (0.3 × R̄ × k/n) + (0.2 × R_max)`. MPR: if R_max
 ## Absolute Rules
 
 - **MULTI-AGENT ANALYSIS:** For complex analysis tasks (validation, review, planning), ALWAYS use Task tool to spawn parallel subagents. Never analyze sequentially in main context. Each dimension/concern gets its own agent.
-- **Branching:** ALWAYS branch from `develop`. Never branch from `main` or feature branches.
+- **Branching (WFC2):** For WFC2 work, branch from `feat/wfc2-platform`. For other work, branch from `develop`. Never branch from `main`.
+- **Branching (General):** ALWAYS branch from `develop` (or `feat/wfc2-platform` for WFC2). Never branch from `main` or feature branches.
 - **Skills:** Hyphenated names only (`wfc-review` not `wfc:review`). No invalid frontmatter. `make validate` before commit.
 - **Code:** `make format` before commit. `make check-all` before PR. Never commit failing tests. Never skip pre-commit hooks.
 - **Worktrees:** `bash wfc/gitwork/scripts/worktree-manager.sh create <name>`. Never bare `git worktree add`.
