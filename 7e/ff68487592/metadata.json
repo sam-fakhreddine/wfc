@@ -1,0 +1,28 @@
+{
+  "cli_version": "0.4.5",
+  "checkpoint_id": "7eff68487592",
+  "strategy": "manual-commit",
+  "branch": "feat/wfc2-platform",
+  "checkpoints_count": 1,
+  "files_touched": [
+    ".github/WFC2-ROADMAP.md",
+    "ba/BA-mcp-gateway-integration.md",
+    "ba/competitive-analysis.md"
+  ],
+  "sessions": [
+    {
+      "metadata": "/7e/ff68487592/0/metadata.json",
+      "transcript": "/7e/ff68487592/0/full.jsonl",
+      "context": "/7e/ff68487592/0/context.md",
+      "content_hash": "/7e/ff68487592/0/content_hash.txt",
+      "prompt": "/7e/ff68487592/0/prompt.txt"
+    }
+  ],
+  "token_usage": {
+    "input_tokens": 71,
+    "cache_creation_tokens": 177735,
+    "cache_read_tokens": 4601123,
+    "output_tokens": 7469,
+    "api_call_count": 56
+  }
+}
