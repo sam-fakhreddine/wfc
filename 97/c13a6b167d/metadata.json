@@ -1,0 +1,26 @@
+{
+  "cli_version": "0.4.5",
+  "checkpoint_id": "97c13a6b167d",
+  "strategy": "manual-commit",
+  "branch": "feat/ci-phase2-pragmatic",
+  "checkpoints_count": 1,
+  "files_touched": [
+    "tests/tier0/test_token_bucket.py"
+  ],
+  "sessions": [
+    {
+      "metadata": "/97/c13a6b167d/0/metadata.json",
+      "transcript": "/97/c13a6b167d/0/full.jsonl",
+      "context": "/97/c13a6b167d/0/context.md",
+      "content_hash": "/97/c13a6b167d/0/content_hash.txt",
+      "prompt": "/97/c13a6b167d/0/prompt.txt"
+    }
+  ],
+  "token_usage": {
+    "input_tokens": 71,
+    "cache_creation_tokens": 177735,
+    "cache_read_tokens": 4601123,
+    "output_tokens": 7469,
+    "api_call_count": 56
+  }
+}
