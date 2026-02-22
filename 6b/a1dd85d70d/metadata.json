@@ -3,7 +3,7 @@
   "checkpoint_id": "6ba1dd85d70d",
   "strategy": "manual-commit",
   "branch": "feat/ci-phase2-pragmatic",
-  "checkpoints_count": 2,
+  "checkpoints_count": 3,
   "files_touched": [
     ".github/workflows/ci.yml"
   ],
@@ -28,13 +28,20 @@
       "context": "/6b/a1dd85d70d/2/context.md",
       "content_hash": "/6b/a1dd85d70d/2/content_hash.txt",
       "prompt": "/6b/a1dd85d70d/2/prompt.txt"
+    },
+    {
+      "metadata": "/6b/a1dd85d70d/3/metadata.json",
+      "transcript": "/6b/a1dd85d70d/3/full.jsonl",
+      "context": "/6b/a1dd85d70d/3/context.md",
+      "content_hash": "/6b/a1dd85d70d/3/content_hash.txt",
+      "prompt": "/6b/a1dd85d70d/3/prompt.txt"
     }
   ],
   "token_usage": {
-    "input_tokens": 15875,
-    "cache_creation_tokens": 1463769,
-    "cache_read_tokens": 28897726,
-    "output_tokens": 19844,
-    "api_call_count": 289
+    "input_tokens": 19837,
+    "cache_creation_tokens": 2926287,
+    "cache_read_tokens": 61988247,
+    "output_tokens": 22929,
+    "api_call_count": 629
   }
 }
