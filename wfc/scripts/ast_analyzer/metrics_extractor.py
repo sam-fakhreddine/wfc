@@ -210,7 +210,7 @@ def analyze_function(func_node: ast.FunctionDef | ast.AsyncFunctionDef) -> Funct
 
 def analyze_file(file_path: Path) -> FileMetrics:
     """Extract reviewer-relevant metrics from a Python file."""
-    content = file_path.read_text()
+    content = file_path.read_text(encoding="utf-8", errors="replace")
     tree = ast.parse(content, filename=str(file_path))
 
     lines = content.count("\n")
@@ -255,8 +255,13 @@ def analyze_file(file_path: Path) -> FileMetrics:
         if issues:
             hotspots.append({"line": metrics.line, "function": metrics.name, "issues": issues})
 
+    try:
+        relative_path = str(file_path.relative_to(Path.cwd()))
+    except ValueError:
+        relative_path = file_path.name
+
     return FileMetrics(
-        file_path=str(file_path),
+        file_path=relative_path,
         lines=lines,
         functions=len(functions),
         classes=len(classes),

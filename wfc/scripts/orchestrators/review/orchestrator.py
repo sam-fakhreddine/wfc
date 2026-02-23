@@ -201,7 +201,7 @@ class ReviewOrchestrator:
                 file=sys.stderr,
             )
             logger.exception("AST analysis crashed")
-            return {"parsed": 0, "failed": 0, "duration_ms": 0, "error": str(e)}
+            return {"parsed": 0, "failed": 0, "duration_ms": 0, "error": type(e).__name__}
 
     def prepare_review(self, request: ReviewRequest) -> list[dict]:
         """Phase 1: Build task specs for the 5 reviewers."""
@@ -256,11 +256,13 @@ class ReviewOrchestrator:
             observe("review.ast_parsed_count", ast_stats.get("parsed", 0))
             observe("review.ast_failed_count", ast_stats.get("failed", 0))
 
-            cache_path = output_dir / ".ast-context.json"
-            if cache_path.exists():
-                observe("review.ast_cache_size_bytes", cache_path.stat().st_size)
+            ast_cache_path = output_dir / ".ast-context.json"
+            try:
+                observe("review.ast_cache_size_bytes", ast_cache_path.stat().st_size)
+            except FileNotFoundError:
+                pass
         except Exception:
-            pass
+            logger.debug("Observability emit failed for AST metrics", exc_info=True)
 
         reviewer_results = self.engine.parse_results(task_responses)
 

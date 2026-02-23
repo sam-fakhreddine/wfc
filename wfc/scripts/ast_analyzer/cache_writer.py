@@ -8,6 +8,7 @@ Fail-open strategy: Parse failures are logged but don't block the review.
 """
 
 import json
+import os
 import sys
 import time
 from pathlib import Path
@@ -49,6 +50,12 @@ def write_ast_cache(
     file_summaries = []
 
     for file_path in changed_files:
+        try:
+            file_path = file_path.resolve()
+        except OSError:
+            failed_count += 1
+            continue
+
         if any(excluded in file_path.parts for excluded in exclude_dirs):
             continue
 
@@ -86,6 +93,12 @@ def write_ast_cache(
     }
 
     output_path.parent.mkdir(parents=True, exist_ok=True)
-    output_path.write_text(json.dumps(cache_data, indent=2))
+    tmp_path = output_path.with_suffix(".tmp")
+    try:
+        tmp_path.write_text(json.dumps(cache_data))
+        os.replace(tmp_path, output_path)
+    finally:
+        if tmp_path.exists():
+            tmp_path.unlink(missing_ok=True)
 
     return cache_data["summary"]
