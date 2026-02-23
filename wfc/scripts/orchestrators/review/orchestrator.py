@@ -153,6 +153,56 @@ class ReviewOrchestrator:
             except (OSError, PermissionError) as e:
                 raise ValueError(f"Cannot create parent directory {resolved.parent}: {e}")
 
+    def _run_ast_analysis(self, files: list[str], output_dir: Path) -> dict:
+        """
+        Pre-review AST analysis phase.
+
+        Generates .wfc-review/.ast-context.json with supplemental metrics.
+        Fail-open: parsing failures log warnings but don't block review.
+
+        Returns dict with parse statistics for telemetry.
+        """
+        import sys
+        from pathlib import Path
+
+        from wfc.scripts.ast_analyzer.cache_writer import write_ast_cache
+
+        changed_files = [Path(f) for f in files]
+        cache_path = output_dir / ".ast-context.json"
+
+        try:
+            stats = write_ast_cache(
+                changed_files=changed_files,
+                output_path=cache_path,
+                exclude_dirs=[".worktrees", ".venv", "__pycache__", ".git", "node_modules"],
+            )
+
+            duration_ms = stats.get("duration_ms", 0)
+            parsed = stats.get("parsed", 0)
+            failed = stats.get("failed", 0)
+            total = parsed + failed
+
+            print(
+                f"AST analysis completed in {duration_ms:.1f}ms ({parsed}/{total} files parsed, {failed} failed)",
+                file=sys.stderr,
+            )
+
+            if total > 0 and (failed / total) > 0.1:
+                print(
+                    f"WARNING: {failed}/{total} ({100 * failed / total:.1f}%) files failed AST parsing - potential systemic issue",
+                    file=sys.stderr,
+                )
+
+            return stats
+
+        except Exception as e:
+            print(
+                f"WARNING: AST analysis failed: {e} - continuing review without AST context",
+                file=sys.stderr,
+            )
+            logger.exception("AST analysis crashed")
+            return {"parsed": 0, "failed": 0, "duration_ms": 0, "error": str(e)}
+
     def prepare_review(self, request: ReviewRequest) -> list[dict]:
         """Phase 1: Build task specs for the 5 reviewers."""
         try:
@@ -187,6 +237,7 @@ class ReviewOrchestrator:
     ) -> ReviewResult:
         """Phase 2: Parse responses, deduplicate, score, report.
 
+        0. Run AST analysis (pre-review supplemental context)
         1. Parse subagent responses into ReviewerResults
         2. Collect all findings, tag with reviewer_id
         3. Deduplicate via Fingerprinter
@@ -195,6 +246,22 @@ class ReviewOrchestrator:
         6. Return ReviewResult
         """
         _start_time = time.monotonic()
+
+        ast_stats = self._run_ast_analysis(request.files, output_dir)
+
+        try:
+            from wfc.observability.instrument import observe
+
+            observe("review.ast_duration_ms", ast_stats.get("duration_ms", 0))
+            observe("review.ast_parsed_count", ast_stats.get("parsed", 0))
+            observe("review.ast_failed_count", ast_stats.get("failed", 0))
+
+            cache_path = output_dir / ".ast-context.json"
+            if cache_path.exists():
+                observe("review.ast_cache_size_bytes", cache_path.stat().st_size)
+        except Exception:
+            pass
+
         reviewer_results = self.engine.parse_results(task_responses)
 
         try:
