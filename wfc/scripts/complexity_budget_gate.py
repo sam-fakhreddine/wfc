@@ -279,7 +279,7 @@ def format_budget_report(result: BudgetResult) -> str:
 
 
 def _configure_cli_logging() -> None:
-    """Configure logging for CLI/demo usage without overwriting existing handlers."""
+    """Configure logging for CLI/demo usage without overriding existing handlers."""
     root = logging.getLogger()
     if not root.handlers:
         logging.basicConfig(level=logging.INFO, format="%(message)s", stream=sys.stdout)

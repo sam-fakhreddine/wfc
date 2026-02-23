@@ -475,7 +475,7 @@ def _cmd_comment(args) -> None:
 
 def _configure_cli_logging() -> None:
     """
-    Configure logging for CLI usage without clobbering existing handlers.
+    Configure logging for CLI usage without overriding existing handlers.
 
     Keeps output clean (message only) while allowing callers embedding this
     module to supply their own logging configuration.
