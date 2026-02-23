@@ -13,7 +13,6 @@ import sys
 import time
 from concurrent.futures import ThreadPoolExecutor, TimeoutError, as_completed
 from pathlib import Path
-from typing import Dict, List
 
 from .language_detection import is_python
 from .metrics_extractor import analyze_file, summarize_for_reviewer
@@ -28,9 +27,51 @@ def _analyze_and_summarize(file_path: Path) -> dict:
     return summarize_for_reviewer(metrics)
 
 
+def _build_cache_data(python_files: list[Path], changed_files_count: int) -> dict:
+    """Build cache data dict from Python files. Pure function with no I/O except file reading."""
+    parsed_count = 0
+    failed_count = 0
+    file_summaries = []
+
+    max_workers = min(8, len(python_files) or 1)
+    with ThreadPoolExecutor(max_workers=max_workers) as executor:
+        futures = {executor.submit(_analyze_and_summarize, fp): fp for fp in python_files}
+        try:
+            for future in as_completed(futures, timeout=_BATCH_TIMEOUT):
+                fp = futures[future]
+                try:
+                    summary = future.result(timeout=_FILE_TIMEOUT)
+                    file_summaries.append(summary)
+                    parsed_count += 1
+                except TimeoutError:
+                    print(f"AST analysis timed out for {fp}", file=sys.stderr)
+                    failed_count += 1
+                except SyntaxError as e:
+                    print(f"AST parse failed for {fp}: {e}", file=sys.stderr)
+                    failed_count += 1
+                except Exception as e:
+                    print(f"AST analysis failed for {fp}: {e}", file=sys.stderr)
+                    failed_count += 1
+        except TimeoutError:
+            for future, fp in futures.items():
+                if not future.done():
+                    future.cancel()
+                    print(f"AST analysis batch timeout, skipping {fp}", file=sys.stderr)
+                    failed_count += 1
+
+    return {
+        "files": file_summaries,
+        "summary": {
+            "total_files": changed_files_count,
+            "parsed": parsed_count,
+            "failed": failed_count,
+        },
+    }
+
+
 def write_ast_cache(
-    changed_files: List[Path], output_path: Path, exclude_dirs: List[str] | None = None
-) -> Dict:
+    changed_files: list[Path], output_path: Path, exclude_dirs: list[str] | None = None
+) -> dict:
     """
     Analyze changed Python files and write AST metrics to cache file.
 
@@ -54,12 +95,8 @@ def write_ast_cache(
     if exclude_dirs is None:
         exclude_dirs = [".worktrees", ".venv", "__pycache__", ".git", "node_modules"]
 
-    start_time = time.perf_counter()
-    parsed_count = 0
-    failed_count = 0
-    file_summaries = []
-
     # Filter to Python files within project bounds
+    failed_count = 0
     python_files = []
     for file_path in changed_files:
         try:
@@ -73,45 +110,13 @@ def write_ast_cache(
             continue
         python_files.append(file_path)
 
-    # Parallel analysis with per-file and batch timeouts
-    max_workers = min(8, len(python_files) or 1)
-    with ThreadPoolExecutor(max_workers=max_workers) as executor:
-        futures = {executor.submit(_analyze_and_summarize, fp): fp for fp in python_files}
-        try:
-            for future in as_completed(futures, timeout=_BATCH_TIMEOUT):
-                fp = futures[future]
-                try:
-                    summary = future.result(timeout=_FILE_TIMEOUT)
-                    file_summaries.append(summary)
-                    parsed_count += 1
-                except TimeoutError:
-                    print(f"AST analysis timed out for {fp}", file=sys.stderr)
-                    failed_count += 1
-                except SyntaxError as e:
-                    print(f"AST parse failed for {fp}: {e}", file=sys.stderr)
-                    failed_count += 1
-                except Exception as e:
-                    print(f"AST analysis failed for {fp}: {e}", file=sys.stderr)
-                    failed_count += 1
-        except TimeoutError:
-            # Batch timeout — count remaining unfinished futures as failed
-            for future, fp in futures.items():
-                if not future.done():
-                    future.cancel()
-                    print(f"AST analysis batch timeout, skipping {fp}", file=sys.stderr)
-                    failed_count += 1
-
+    start_time = time.perf_counter()
+    cache_data = _build_cache_data(python_files, len(changed_files))
     duration_ms = (time.perf_counter() - start_time) * 1000
 
-    cache_data = {
-        "files": file_summaries,
-        "summary": {
-            "total_files": len(changed_files),
-            "parsed": parsed_count,
-            "failed": failed_count,
-            "duration_ms": round(duration_ms, 2),
-        },
-    }
+    # Incorporate any pre-filter failures into the summary
+    cache_data["summary"]["failed"] += failed_count
+    cache_data["summary"]["duration_ms"] = round(duration_ms, 2)
 
     output_path.parent.mkdir(parents=True, exist_ok=True)
     tmp_path = output_path.with_suffix(".tmp")

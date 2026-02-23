@@ -42,6 +42,9 @@ def get_language(file_path: Path) -> str:
         - Go (.go)
         - Rust (.rs)
         - Java (.java)
+
+    Deprecated:
+        This function is not exported from the package. Use is_python() instead.
     """
     if is_python(file_path):
         return "python"

@@ -8,6 +8,7 @@ Uses ReviewerEngine, Fingerprinter, and ConsensusScore as the default (and only)
 from __future__ import annotations
 
 import logging
+import sys
 import time
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -18,6 +19,7 @@ from .doc_auditor import DocAuditor, DocAuditReport
 from .finding_validator import FindingValidator, ValidationStatus
 from .fingerprint import Fingerprinter
 from .reviewer_engine import ReviewerEngine
+from wfc.scripts.ast_analyzer.cache_writer import write_ast_cache
 
 if TYPE_CHECKING:
     from wfc.scripts.knowledge.retriever import KnowledgeRetriever
@@ -162,11 +164,6 @@ class ReviewOrchestrator:
 
         Returns dict with parse statistics for telemetry.
         """
-        import sys
-        from pathlib import Path
-
-        from wfc.scripts.ast_analyzer.cache_writer import write_ast_cache
-
         changed_files = [Path(f) for f in files]
         cache_path = output_dir / ".ast-context.json"
 

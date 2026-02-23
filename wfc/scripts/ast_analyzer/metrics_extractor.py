@@ -12,7 +12,6 @@ Focus on actionable insights:
 import ast
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Dict, List, Optional
 
 MAX_LINES = 5000
 
@@ -31,8 +30,8 @@ class FunctionMetrics:
     max_nesting: int
     has_try_except: bool
     has_returns: bool
-    dangerous_calls: List[str] = field(default_factory=list)
-    params: List[str] = field(default_factory=list)
+    dangerous_calls: list[str] = field(default_factory=list)
+    params: list[str] = field(default_factory=list)
 
 
 @dataclass
@@ -43,10 +42,10 @@ class FileMetrics:
     lines: int
     functions: int
     classes: int
-    imports: List[str] = field(default_factory=list)
-    dangerous_imports: List[str] = field(default_factory=list)
-    hotspots: List[Dict] = field(default_factory=list)
-    function_details: List[FunctionMetrics] = field(default_factory=list)
+    imports: list[str] = field(default_factory=list)
+    dangerous_imports: list[str] = field(default_factory=list)
+    hotspots: list[dict] = field(default_factory=list)
+    function_details: list[FunctionMetrics] = field(default_factory=list)
 
 
 class UnifiedFunctionVisitor(ast.NodeVisitor):
@@ -68,7 +67,7 @@ class UnifiedFunctionVisitor(ast.NodeVisitor):
         self.complexity = 1
         self.max_depth = 0
         self.current_depth = 0
-        self.dangerous: List[str] = []
+        self.dangerous: list[str] = []
         self.has_try_except = False
         self.has_return = False
         self._root_visited = False
@@ -125,7 +124,7 @@ class UnifiedFunctionVisitor(ast.NodeVisitor):
                     self.dangerous.append(call_name)
         self.generic_visit(node)
 
-    def _get_call_name(self, node) -> Optional[str]:
+    def _get_call_name(self, node) -> str | None:
         if isinstance(node, ast.Name):
             return node.id
         elif isinstance(node, ast.Attribute):
@@ -160,10 +159,10 @@ class FileAnalysisVisitor(ast.NodeVisitor):
     """Single-pass visitor collecting file-level structure."""
 
     def __init__(self):
-        self.func_nodes: List[ast.AST] = []
-        self.class_nodes: List[ast.ClassDef] = []
-        self.imports: List[str] = []
-        self.dangerous_imports: List[str] = []
+        self.func_nodes: list[ast.AST] = []
+        self.class_nodes: list[ast.ClassDef] = []
+        self.imports: list[str] = []
+        self.dangerous_imports: list[str] = []
 
     def visit_FunctionDef(self, node):
         self.func_nodes.append(node)
@@ -266,7 +265,7 @@ def analyze_file(file_path: Path) -> FileMetrics:
     )
 
 
-def summarize_for_reviewer(metrics: FileMetrics) -> Dict:
+def summarize_for_reviewer(metrics: FileMetrics) -> dict:
     """
     Create compact summary optimized for reviewer context.
 
