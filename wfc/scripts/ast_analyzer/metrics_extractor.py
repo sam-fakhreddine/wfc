@@ -14,6 +14,8 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Dict, List, Optional
 
+MAX_LINES = 5000
+
 DANGEROUS_NAMESPACES = {"os", "subprocess", "pickle", "yaml"}
 
 DANGEROUS_MODULES = {"subprocess", "os", "pickle", "yaml", "eval"}
@@ -219,9 +221,12 @@ def analyze_function(func_node: ast.FunctionDef | ast.AsyncFunctionDef) -> Funct
 def analyze_file(file_path: Path) -> FileMetrics:
     """Extract reviewer-relevant metrics from a Python file."""
     content = file_path.read_text(encoding="utf-8", errors="replace")
-    tree = ast.parse(content, filename=str(file_path))
-
     lines = content.count("\n")
+
+    if lines > MAX_LINES:
+        raise ValueError(f"File too large for AST analysis: {lines} lines (max {MAX_LINES})")
+
+    tree = ast.parse(content, filename=str(file_path))
 
     file_visitor = FileAnalysisVisitor()
     file_visitor.visit(tree)
