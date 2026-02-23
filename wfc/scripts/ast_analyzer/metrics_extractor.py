@@ -14,10 +14,15 @@ from dataclasses import dataclass, field
 from pathlib import Path
 
 MAX_LINES = 5000
+MAX_FILE_BYTES = 512_000  # ~500 KB (roughly 5000 lines × 100 chars)
 
+# DANGEROUS_NAMESPACES: used in visit_Call to check call-site namespace prefixes
+# (e.g., os.system, subprocess.Popen) — separate from import checks
 DANGEROUS_NAMESPACES = {"os", "subprocess", "pickle", "yaml"}
 
-DANGEROUS_MODULES = {"subprocess", "os", "pickle", "yaml", "eval"}
+# DANGEROUS_MODULES: used in visit_Import / visit_ImportFrom to flag dangerous imports.
+# Note: 'eval' is intentionally excluded — it is a builtin, not a module name.
+DANGEROUS_MODULES = {"subprocess", "os", "pickle", "yaml"}
 
 
 @dataclass
@@ -146,17 +151,23 @@ class UnifiedFunctionVisitor(ast.NodeVisitor):
         if not self._root_visited:
             self._root_visited = True
             self.generic_visit(node)
-        # else: skip nested function bodies
+        # else: skip nested function bodies — their complexity is counted separately
 
     def visit_AsyncFunctionDef(self, node):
         if not self._root_visited:
             self._root_visited = True
             self.generic_visit(node)
-        # else: skip nested async function bodies
+        # else: skip nested async function bodies — their complexity is counted separately
 
 
 class FileAnalysisVisitor(ast.NodeVisitor):
-    """Single-pass visitor collecting file-level structure."""
+    """Single-pass visitor collecting file-level structure.
+
+    Descends into function bodies so that nested functions each receive their
+    own entry in func_nodes (each node appears exactly once).  Complexity for
+    each function is computed independently by UnifiedFunctionVisitor, which
+    already guards against counting nested function branches.
+    """
 
     def __init__(self):
         self.func_nodes: list[ast.AST] = []
@@ -166,6 +177,9 @@ class FileAnalysisVisitor(ast.NodeVisitor):
 
     def visit_FunctionDef(self, node):
         self.func_nodes.append(node)
+        # Descend into the body so nested functions are collected as their own
+        # entries. Each node is only appended once because AST traversal visits
+        # each node exactly once.
         self.generic_visit(node)
 
     def visit_AsyncFunctionDef(self, node):
@@ -219,8 +233,15 @@ def analyze_function(func_node: ast.FunctionDef | ast.AsyncFunctionDef) -> Funct
 
 def analyze_file(file_path: Path) -> FileMetrics:
     """Extract reviewer-relevant metrics from a Python file."""
+    # Cheap byte-size guard before reading entire file into memory
+    if file_path.stat().st_size > MAX_FILE_BYTES:
+        raise ValueError(
+            f"File too large for AST analysis: {file_path.stat().st_size} bytes (max {MAX_FILE_BYTES})"
+        )
+
     content = file_path.read_text(encoding="utf-8", errors="replace")
-    lines = content.count("\n")
+    # Use splitlines() to correctly count lines regardless of trailing newline
+    lines = len(content.splitlines())
 
     if lines > MAX_LINES:
         raise ValueError(f"File too large for AST analysis: {lines} lines (max {MAX_LINES})")
@@ -251,7 +272,13 @@ def analyze_file(file_path: Path) -> FileMetrics:
     try:
         relative_path = str(file_path.relative_to(Path.cwd()))
     except ValueError:
-        relative_path = file_path.name
+        # file_path is outside CWD — use path relative to its own parent directory
+        # so we get "dirname/filename" instead of a bare name or an absolute path.
+        # This avoids absolute-path leakage while still distinguishing same-named
+        # files in different directories.
+        relative_path = (
+            "/".join(file_path.parts[-2:]) if len(file_path.parts) >= 2 else file_path.name
+        )
 
     return FileMetrics(
         file_path=relative_path,
