@@ -1,0 +1,26 @@
+{
+  "cli_version": "0.4.5",
+  "checkpoint_id": "b1042f972eb0",
+  "strategy": "manual-commit",
+  "branch": "claude/ast-metrics-integration-1771804600",
+  "checkpoints_count": 1,
+  "files_touched": [
+    "wfc/skills/wfc-review/SKILL.md"
+  ],
+  "sessions": [
+    {
+      "metadata": "/b1/042f972eb0/0/metadata.json",
+      "transcript": "/b1/042f972eb0/0/full.jsonl",
+      "context": "/b1/042f972eb0/0/context.md",
+      "content_hash": "/b1/042f972eb0/0/content_hash.txt",
+      "prompt": "/b1/042f972eb0/0/prompt.txt"
+    }
+  ],
+  "token_usage": {
+    "input_tokens": 7156,
+    "cache_creation_tokens": 31163,
+    "cache_read_tokens": 903872,
+    "output_tokens": 128,
+    "api_call_count": 22
+  }
+}
