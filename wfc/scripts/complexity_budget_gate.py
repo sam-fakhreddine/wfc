@@ -24,6 +24,7 @@ When budget exceeded:
 """
 
 import logging
+import sys
 from dataclasses import dataclass
 from typing import Dict
 
@@ -277,30 +278,37 @@ def format_budget_report(result: BudgetResult) -> str:
     return result.report
 
 
-if __name__ == "__main__":
-    logging.basicConfig(level=logging.INFO, format="%(message)s")
+def _configure_cli_logging() -> None:
+    """Configure logging for CLI/demo usage without overriding existing handlers."""
+    root = logging.getLogger()
+    if not root.handlers:
+        logging.basicConfig(level=logging.INFO, format="%(message)s", stream=sys.stdout)
 
-    print("WFC Complexity Budget Gate Test")
-    print("=" * 60)
 
-    print("\n1. Testing S complexity (PASSING):")
+def main() -> None:
+    _configure_cli_logging()
+
+    logger.info("WFC Complexity Budget Gate Test")
+    logger.info("=" * 60)
+
+    logger.info("\n1. Testing S complexity (PASSING):")
     result = check_complexity_budget("TASK-001", "S", 45, 2)
-    print(format_budget_report(result))
-    print(f"\nPassed: {result.passed}")
+    logger.info("%s\nPassed: %s\n", format_budget_report(result), result.passed)
 
-    print("\n2. Testing S complexity (EXCEEDING):")
+    logger.info("2. Testing S complexity (EXCEEDING):")
     result = check_complexity_budget("TASK-002", "S", 100, 3)
-    print(format_budget_report(result))
-    print(f"\nPassed: {result.passed}")
+    logger.info("%s\nPassed: %s\n", format_budget_report(result), result.passed)
 
-    print("\n3. Testing M complexity (PASSING):")
+    logger.info("3. Testing M complexity (PASSING):")
     result = check_complexity_budget("TASK-003", "M", 180, 4)
-    print(format_budget_report(result))
-    print(f"\nPassed: {result.passed}")
+    logger.info("%s\nPassed: %s\n", format_budget_report(result), result.passed)
 
-    print("\n4. Testing XL complexity (AT LIMIT):")
+    logger.info("4. Testing XL complexity (AT LIMIT):")
     result = check_complexity_budget("TASK-004", "XL", 1000, 20)
-    print(format_budget_report(result))
-    print(f"\nPassed: {result.passed}")
+    logger.info("%s\nPassed: %s\n", format_budget_report(result), result.passed)
 
-    print("\n✅ All complexity budget gate tests passed!")
+    logger.info("✅ All complexity budget gate tests passed!")
+
+
+if __name__ == "__main__":
+    main()

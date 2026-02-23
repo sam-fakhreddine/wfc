@@ -267,14 +267,14 @@ def _cmd_fetch(args) -> None:
     else:
         unresolved = [t for t in threads if not t.is_resolved]
         num = pr_number or "?"
-        print(f"PR #{num}: {len(threads)} total, {len(unresolved)} unresolved")
+        logger.info("PR #%s: %s total, %s unresolved", num, len(threads), len(unresolved))
         print_threads(threads)
 
 
 def _cmd_resolve(args) -> None:
     result = reply_and_resolve(args.thread_id, args.message)
     if result["resolved"]:
-        print(f"✅ Thread resolved. Reply ID: {result['reply_id']}")
+        logger.info("✅ Thread resolved. Reply ID: %s", result["reply_id"])
     else:
         logger.error("❌ Thread not resolved")
         sys.exit(1)
@@ -286,13 +286,27 @@ def _cmd_bulk_resolve(args) -> None:
     resolved = sum(1 for r in results if r["status"] == "resolved")
     skipped = sum(1 for r in results if r["status"] == "skipped")
     failed = sum(1 for r in results if r["status"] in ("failed", "error"))
-    print(f"\nDone: {resolved} resolved, {skipped} skipped, {failed} failed")
+    logger.info("Done: %s resolved, %s skipped, %s failed", resolved, skipped, failed)
     if failed:
         sys.exit(1)
 
 
-if __name__ == "__main__":
+def _configure_cli_logging() -> None:
+    """
+    Configure logging for CLI usage without overriding existing handlers.
+
+    Keeps output clean (message only) while allowing embedding modules to
+    manage logging themselves.
+    """
+    root = logging.getLogger()
+    if not root.handlers:
+        logging.basicConfig(level=logging.INFO, format="%(message)s", stream=sys.stdout)
+
+
+def main() -> None:
     import argparse
+
+    _configure_cli_logging()
 
     parser = argparse.ArgumentParser(
         description="GitHub PR review thread manager",
@@ -356,5 +370,9 @@ Examples:
     try:
         parsed.func(parsed)
     except GHError as exc:
-        logger.error(f"Error: {exc}")
+        logger.error("Error: %s", exc)
         sys.exit(1)
+
+
+if __name__ == "__main__":
+    main()
