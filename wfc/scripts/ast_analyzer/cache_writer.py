@@ -17,7 +17,6 @@ from pathlib import Path
 from .language_detection import is_python
 from .metrics_extractor import analyze_file, summarize_for_reviewer
 
-_FILE_TIMEOUT = 5.0  # seconds per file
 _BATCH_TIMEOUT = 30.0  # seconds for entire batch
 
 
@@ -40,12 +39,11 @@ def _build_cache_data(python_files: list[Path], changed_files_count: int) -> dic
             for future in as_completed(futures, timeout=_BATCH_TIMEOUT):
                 fp = futures[future]
                 try:
-                    summary = future.result(timeout=_FILE_TIMEOUT)
+                    # future.result() has no timeout here — as_completed only yields completed futures.
+                    # Per-file wall-clock limit is enforced by the _BATCH_TIMEOUT on as_completed().
+                    summary = future.result()
                     file_summaries.append(summary)
                     parsed_count += 1
-                except TimeoutError:
-                    print(f"AST analysis timed out for {fp}", file=sys.stderr)
-                    failed_count += 1
                 except SyntaxError as e:
                     print(f"AST parse failed for {fp}: {e}", file=sys.stderr)
                     failed_count += 1
@@ -54,7 +52,15 @@ def _build_cache_data(python_files: list[Path], changed_files_count: int) -> dic
                     failed_count += 1
         except TimeoutError:
             for future, fp in futures.items():
-                if not future.done():
+                if future.done():
+                    try:
+                        summary = future.result()
+                        file_summaries.append(summary)
+                        parsed_count += 1
+                    except Exception as e:
+                        print(f"AST analysis failed for {fp}: {e}", file=sys.stderr)
+                        failed_count += 1
+                else:
                     future.cancel()
                     print(f"AST analysis batch timeout, skipping {fp}", file=sys.stderr)
                     failed_count += 1
@@ -125,6 +131,7 @@ def write_ast_cache(
         os.replace(tmp_path, output_path)
     finally:
         if tmp_path.exists():
+            print(f"DEBUG: AST cache tmp file cleanup: {tmp_path}", file=sys.stderr)
             tmp_path.unlink(missing_ok=True)
 
     return cache_data["summary"]
