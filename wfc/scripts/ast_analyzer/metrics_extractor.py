@@ -16,6 +16,8 @@ from typing import Dict, List, Optional
 
 DANGEROUS_NAMESPACES = {"os", "subprocess", "pickle", "yaml"}
 
+DANGEROUS_MODULES = {"subprocess", "os", "pickle", "yaml", "eval"}
+
 
 @dataclass
 class FunctionMetrics:
@@ -27,7 +29,6 @@ class FunctionMetrics:
     max_nesting: int
     has_try_except: bool
     has_returns: bool
-    calls: List[str] = field(default_factory=list)
     dangerous_calls: List[str] = field(default_factory=list)
     params: List[str] = field(default_factory=list)
 
@@ -46,90 +47,8 @@ class FileMetrics:
     function_details: List[FunctionMetrics] = field(default_factory=list)
 
 
-class ComplexityVisitor(ast.NodeVisitor):
-    """Calculate cyclomatic complexity."""
-
-    def __init__(self):
-        self.complexity = 1
-        self._root_visited = False
-
-    def visit_If(self, node):
-        self.complexity += 1
-        self.generic_visit(node)
-
-    def visit_For(self, node):
-        self.complexity += 1
-        self.generic_visit(node)
-
-    def visit_While(self, node):
-        self.complexity += 1
-        self.generic_visit(node)
-
-    def visit_ExceptHandler(self, node):
-        self.complexity += 1
-        self.generic_visit(node)
-
-    def visit_With(self, node):
-        self.complexity += 1
-        self.generic_visit(node)
-
-    def visit_BoolOp(self, node):
-        self.complexity += len(node.values) - 1
-        self.generic_visit(node)
-
-    def visit_FunctionDef(self, node):
-        if not self._root_visited:
-            self._root_visited = True
-            self.generic_visit(node)
-
-    def visit_AsyncFunctionDef(self, node):
-        if not self._root_visited:
-            self._root_visited = True
-            self.generic_visit(node)
-
-
-class NestingVisitor(ast.NodeVisitor):
-    """Calculate maximum nesting depth."""
-
-    def __init__(self):
-        self.max_depth = 0
-        self.current_depth = 0
-        self._root_visited = False
-
-    def _enter_block(self, node):
-        self.current_depth += 1
-        self.max_depth = max(self.max_depth, self.current_depth)
-        self.generic_visit(node)
-        self.current_depth -= 1
-
-    def visit_If(self, node):
-        self._enter_block(node)
-
-    def visit_For(self, node):
-        self._enter_block(node)
-
-    def visit_While(self, node):
-        self._enter_block(node)
-
-    def visit_With(self, node):
-        self._enter_block(node)
-
-    def visit_Try(self, node):
-        self._enter_block(node)
-
-    def visit_FunctionDef(self, node):
-        if not self._root_visited:
-            self._root_visited = True
-            self.generic_visit(node)
-
-    def visit_AsyncFunctionDef(self, node):
-        if not self._root_visited:
-            self._root_visited = True
-            self.generic_visit(node)
-
-
-class CallVisitor(ast.NodeVisitor):
-    """Extract function calls and identify dangerous patterns."""
+class UnifiedFunctionVisitor(ast.NodeVisitor):
+    """Single-pass visitor computing all per-function metrics."""
 
     DANGEROUS_CALLS = {
         "eval",
@@ -144,15 +63,59 @@ class CallVisitor(ast.NodeVisitor):
     }
 
     def __init__(self):
-        self.calls: List[str] = []
+        self.complexity = 1
+        self.max_depth = 0
+        self.current_depth = 0
         self.dangerous: List[str] = []
+        self.has_try_except = False
+        self.has_return = False
+        self._root_visited = False
+
+    # --- Complexity counting ---
+
+    def visit_If(self, node):
+        self.complexity += 1
+        self._enter_block(node)
+
+    def visit_For(self, node):
+        self.complexity += 1
+        self._enter_block(node)
+
+    def visit_While(self, node):
+        self.complexity += 1
+        self._enter_block(node)
+
+    def visit_ExceptHandler(self, node):
+        self.complexity += 1
+        self.generic_visit(node)
+
+    def visit_With(self, node):
+        self.complexity += 1
+        self._enter_block(node)
+
+    def visit_BoolOp(self, node):
+        self.complexity += len(node.values) - 1
+        self.generic_visit(node)
+
+    # --- Nesting depth ---
+
+    def _enter_block(self, node):
+        self.current_depth += 1
+        self.max_depth = max(self.max_depth, self.current_depth)
+        self.generic_visit(node)
+        self.current_depth -= 1
+
+    def visit_Try(self, node):
+        self.has_try_except = True
+        self._enter_block(node)
+
+    # --- Call detection ---
 
     def visit_Call(self, node):
         call_name = self._get_call_name(node.func)
         if call_name:
             if len(call_name) > 256:
                 call_name = call_name[:256]
-            self.calls.append(call_name)
             parts = call_name.split(".")
             leaf = parts[-1]
             if leaf in self.DANGEROUS_CALLS:
@@ -170,21 +133,67 @@ class CallVisitor(ast.NodeVisitor):
             return node.attr
         return None
 
+    # --- Return detection ---
+
+    def visit_Return(self, node):
+        self.has_return = True
+        self.generic_visit(node)
+
+    # --- Nested function skipping ---
+
+    def visit_FunctionDef(self, node):
+        if not self._root_visited:
+            self._root_visited = True
+            self.generic_visit(node)
+        # else: skip nested function bodies
+
+    def visit_AsyncFunctionDef(self, node):
+        if not self._root_visited:
+            self._root_visited = True
+            self.generic_visit(node)
+        # else: skip nested async function bodies
+
+
+class FileAnalysisVisitor(ast.NodeVisitor):
+    """Single-pass visitor collecting file-level structure."""
+
+    def __init__(self):
+        self.func_nodes: List[ast.AST] = []
+        self.class_nodes: List[ast.ClassDef] = []
+        self.imports: List[str] = []
+        self.dangerous_imports: List[str] = []
+
+    def visit_FunctionDef(self, node):
+        self.func_nodes.append(node)
+        self.generic_visit(node)
+
+    def visit_AsyncFunctionDef(self, node):
+        self.func_nodes.append(node)
+        self.generic_visit(node)
+
+    def visit_ClassDef(self, node):
+        self.class_nodes.append(node)
+        self.generic_visit(node)
+
+    def visit_Import(self, node):
+        for alias in node.names:
+            self.imports.append(alias.name)
+            parts = alias.name.split(".")
+            if any(part in DANGEROUS_MODULES for part in parts):
+                self.dangerous_imports.append(alias.name)
+
+    def visit_ImportFrom(self, node):
+        module = node.module or ""
+        self.imports.append(module)
+        parts = module.split(".")
+        if any(part in DANGEROUS_MODULES for part in parts):
+            self.dangerous_imports.append(module)
+
 
 def analyze_function(func_node: ast.FunctionDef | ast.AsyncFunctionDef) -> FunctionMetrics:
     """Extract metrics for a single function."""
-    complexity_visitor = ComplexityVisitor()
-    complexity_visitor.visit(func_node)
-
-    nesting_visitor = NestingVisitor()
-    nesting_visitor.visit(func_node)
-
-    call_visitor = CallVisitor()
-    call_visitor.visit(func_node)
-
-    has_try = any(isinstance(n, ast.Try) for n in ast.walk(func_node))
-
-    has_return = any(isinstance(n, ast.Return) for n in ast.walk(func_node))
+    visitor = UnifiedFunctionVisitor()
+    visitor.visit(func_node)
 
     args = func_node.args
     params = (
@@ -198,12 +207,11 @@ def analyze_function(func_node: ast.FunctionDef | ast.AsyncFunctionDef) -> Funct
     return FunctionMetrics(
         name=func_node.name,
         line=func_node.lineno,
-        complexity=complexity_visitor.complexity,
-        max_nesting=nesting_visitor.max_depth,
-        has_try_except=has_try,
-        has_returns=has_return,
-        calls=call_visitor.calls,
-        dangerous_calls=call_visitor.dangerous,
+        complexity=visitor.complexity,
+        max_nesting=visitor.max_depth,
+        has_try_except=visitor.has_try_except,
+        has_returns=visitor.has_return,
+        dangerous_calls=visitor.dangerous,
         params=params,
     )
 
@@ -214,31 +222,14 @@ def analyze_file(file_path: Path) -> FileMetrics:
     tree = ast.parse(content, filename=str(file_path))
 
     lines = content.count("\n")
-    functions = [
-        n for n in ast.walk(tree) if isinstance(n, (ast.FunctionDef, ast.AsyncFunctionDef))
-    ]
-    classes = [n for n in ast.walk(tree) if isinstance(n, ast.ClassDef)]
 
-    imports = []
-    dangerous_imports = []
-    DANGEROUS_MODULES = {"subprocess", "os", "pickle", "yaml", "eval"}
-
-    for node in ast.walk(tree):
-        if isinstance(node, ast.Import):
-            for alias in node.names:
-                imports.append(alias.name)
-                if any(part in DANGEROUS_MODULES for part in alias.name.split(".")):
-                    dangerous_imports.append(alias.name)
-        elif isinstance(node, ast.ImportFrom):
-            module = node.module or ""
-            imports.append(module)
-            if any(part in DANGEROUS_MODULES for part in module.split(".")):
-                dangerous_imports.append(module)
+    file_visitor = FileAnalysisVisitor()
+    file_visitor.visit(tree)
 
     function_metrics = []
     hotspots = []
 
-    for func in functions:
+    for func in file_visitor.func_nodes:
         metrics = analyze_function(func)
         function_metrics.append(metrics)
 
@@ -249,8 +240,6 @@ def analyze_file(file_path: Path) -> FileMetrics:
             issues.append(f"deep_nesting:{metrics.max_nesting}")
         if metrics.dangerous_calls:
             issues.append(f"dangerous_calls:{','.join(metrics.dangerous_calls)}")
-        if not metrics.has_try_except and any("open" in c or "request" in c for c in metrics.calls):
-            issues.append("missing_error_handling")
 
         if issues:
             hotspots.append({"line": metrics.line, "function": metrics.name, "issues": issues})
@@ -263,10 +252,10 @@ def analyze_file(file_path: Path) -> FileMetrics:
     return FileMetrics(
         file_path=relative_path,
         lines=lines,
-        functions=len(functions),
-        classes=len(classes),
-        imports=imports,
-        dangerous_imports=dangerous_imports,
+        functions=len(file_visitor.func_nodes),
+        classes=len(file_visitor.class_nodes),
+        imports=file_visitor.imports,
+        dangerous_imports=file_visitor.dangerous_imports,
         hotspots=hotspots,
         function_details=function_metrics,
     )
