@@ -29,10 +29,10 @@ import pytest
 
 from wfc.scripts.ast_analyzer import (
     analyze_file,
-    get_language,
     is_python,
     summarize_for_reviewer,
 )
+from wfc.scripts.ast_analyzer.language_detection import get_language
 from wfc.scripts.ast_analyzer.cache_writer import write_ast_cache
 
 

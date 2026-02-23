@@ -5,7 +5,7 @@ Extract actionable metrics from Python code to provide reviewers
 with supplemental context (complexity, dangerous patterns, hotspots).
 """
 
-from .language_detection import get_language, is_python
+from .language_detection import is_python
 from .metrics_extractor import (
     CallVisitor,
     ComplexityVisitor,
@@ -25,7 +25,6 @@ __all__ = [
     "NestingVisitor",
     "analyze_file",
     "analyze_function",
-    "get_language",
     "is_python",
     "summarize_for_reviewer",
 ]

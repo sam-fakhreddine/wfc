@@ -14,6 +14,8 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Dict, List, Optional
 
+DANGEROUS_NAMESPACES = {"os", "subprocess", "pickle", "yaml"}
+
 
 @dataclass
 class FunctionMetrics:
@@ -49,6 +51,7 @@ class ComplexityVisitor(ast.NodeVisitor):
 
     def __init__(self):
         self.complexity = 1
+        self._root_visited = False
 
     def visit_If(self, node):
         self.complexity += 1
@@ -74,6 +77,16 @@ class ComplexityVisitor(ast.NodeVisitor):
         self.complexity += len(node.values) - 1
         self.generic_visit(node)
 
+    def visit_FunctionDef(self, node):
+        if not self._root_visited:
+            self._root_visited = True
+            self.generic_visit(node)
+
+    def visit_AsyncFunctionDef(self, node):
+        if not self._root_visited:
+            self._root_visited = True
+            self.generic_visit(node)
+
 
 class NestingVisitor(ast.NodeVisitor):
     """Calculate maximum nesting depth."""
@@ -81,6 +94,7 @@ class NestingVisitor(ast.NodeVisitor):
     def __init__(self):
         self.max_depth = 0
         self.current_depth = 0
+        self._root_visited = False
 
     def _enter_block(self, node):
         self.current_depth += 1
@@ -102,6 +116,16 @@ class NestingVisitor(ast.NodeVisitor):
 
     def visit_Try(self, node):
         self._enter_block(node)
+
+    def visit_FunctionDef(self, node):
+        if not self._root_visited:
+            self._root_visited = True
+            self.generic_visit(node)
+
+    def visit_AsyncFunctionDef(self, node):
+        if not self._root_visited:
+            self._root_visited = True
+            self.generic_visit(node)
 
 
 class CallVisitor(ast.NodeVisitor):
@@ -126,9 +150,14 @@ class CallVisitor(ast.NodeVisitor):
     def visit_Call(self, node):
         call_name = self._get_call_name(node.func)
         if call_name:
+            if len(call_name) > 256:
+                call_name = call_name[:256]
             self.calls.append(call_name)
-            if any(danger in call_name for danger in self.DANGEROUS_CALLS):
-                self.dangerous.append(call_name)
+            parts = call_name.split(".")
+            leaf = parts[-1]
+            if leaf in self.DANGEROUS_CALLS:
+                if len(parts) == 1 or parts[0] in DANGEROUS_NAMESPACES:
+                    self.dangerous.append(call_name)
         self.generic_visit(node)
 
     def _get_call_name(self, node) -> Optional[str]:
@@ -142,7 +171,7 @@ class CallVisitor(ast.NodeVisitor):
         return None
 
 
-def analyze_function(func_node: ast.FunctionDef) -> FunctionMetrics:
+def analyze_function(func_node: ast.FunctionDef | ast.AsyncFunctionDef) -> FunctionMetrics:
     """Extract metrics for a single function."""
     complexity_visitor = ComplexityVisitor()
     complexity_visitor.visit(func_node)
@@ -157,7 +186,14 @@ def analyze_function(func_node: ast.FunctionDef) -> FunctionMetrics:
 
     has_return = any(isinstance(n, ast.Return) for n in ast.walk(func_node))
 
-    params = [arg.arg for arg in func_node.args.args]
+    args = func_node.args
+    params = (
+        [arg.arg for arg in args.posonlyargs]
+        + [arg.arg for arg in args.args]
+        + ([args.vararg.arg] if args.vararg else [])
+        + [arg.arg for arg in args.kwonlyargs]
+        + ([args.kwarg.arg] if args.kwarg else [])
+    )
 
     return FunctionMetrics(
         name=func_node.name,
@@ -177,8 +213,10 @@ def analyze_file(file_path: Path) -> FileMetrics:
     content = file_path.read_text()
     tree = ast.parse(content, filename=str(file_path))
 
-    lines = len(content.splitlines())
-    functions = [n for n in ast.walk(tree) if isinstance(n, ast.FunctionDef)]
+    lines = content.count("\n")
+    functions = [
+        n for n in ast.walk(tree) if isinstance(n, (ast.FunctionDef, ast.AsyncFunctionDef))
+    ]
     classes = [n for n in ast.walk(tree) if isinstance(n, ast.ClassDef)]
 
     imports = []
@@ -189,36 +227,33 @@ def analyze_file(file_path: Path) -> FileMetrics:
         if isinstance(node, ast.Import):
             for alias in node.names:
                 imports.append(alias.name)
-                if any(danger in alias.name for danger in DANGEROUS_MODULES):
+                if any(part in DANGEROUS_MODULES for part in alias.name.split(".")):
                     dangerous_imports.append(alias.name)
         elif isinstance(node, ast.ImportFrom):
             module = node.module or ""
             imports.append(module)
-            if any(danger in module for danger in DANGEROUS_MODULES):
+            if any(part in DANGEROUS_MODULES for part in module.split(".")):
                 dangerous_imports.append(module)
 
     function_metrics = []
     hotspots = []
 
     for func in functions:
-        if isinstance(func, ast.FunctionDef):
-            metrics = analyze_function(func)
-            function_metrics.append(metrics)
+        metrics = analyze_function(func)
+        function_metrics.append(metrics)
 
-            issues = []
-            if metrics.complexity > 10:
-                issues.append(f"high_complexity:{metrics.complexity}")
-            if metrics.max_nesting > 4:
-                issues.append(f"deep_nesting:{metrics.max_nesting}")
-            if metrics.dangerous_calls:
-                issues.append(f"dangerous_calls:{','.join(metrics.dangerous_calls)}")
-            if not metrics.has_try_except and any(
-                "open" in c or "request" in c for c in metrics.calls
-            ):
-                issues.append("missing_error_handling")
+        issues = []
+        if metrics.complexity > 10:
+            issues.append(f"high_complexity:{metrics.complexity}")
+        if metrics.max_nesting > 4:
+            issues.append(f"deep_nesting:{metrics.max_nesting}")
+        if metrics.dangerous_calls:
+            issues.append(f"dangerous_calls:{','.join(metrics.dangerous_calls)}")
+        if not metrics.has_try_except and any("open" in c or "request" in c for c in metrics.calls):
+            issues.append("missing_error_handling")
 
-            if issues:
-                hotspots.append({"line": metrics.line, "function": metrics.name, "issues": issues})
+        if issues:
+            hotspots.append({"line": metrics.line, "function": metrics.name, "issues": issues})
 
     return FileMetrics(
         file_path=str(file_path),
@@ -245,22 +280,22 @@ def summarize_for_reviewer(metrics: FileMetrics) -> Dict:
         "file": metrics.file_path,
         "lines": metrics.lines,
         "complexity_budget": sum(f.complexity for f in metrics.function_details),
-        "_note": "📍 Supplemental hints only. Review the full code, not just these flags.",
+        "_note": "Supplemental hints only. Review the full code, not just these flags.",
     }
 
     if metrics.dangerous_imports:
         summary["dangerous_imports"] = list(set(metrics.dangerous_imports))
-        summary["_imports_note"] = "⚠️  Verify actual usage. Presence ≠ vulnerability."
+        summary["_imports_note"] = "Verify actual usage. Presence != vulnerability."
 
     if metrics.hotspots:
         summary["hotspots"] = metrics.hotspots
-        summary["_hotspots_note"] = "💡 Suggested focus areas. Not exhaustive."
+        summary["_hotspots_note"] = "Suggested focus areas. Not exhaustive."
 
     complex_funcs = sorted(metrics.function_details, key=lambda f: f.complexity, reverse=True)[:3]
     if complex_funcs and complex_funcs[0].complexity > 5:
         summary["complex_functions"] = [
             {"name": f.name, "line": f.line, "complexity": f.complexity} for f in complex_funcs
         ]
-        summary["_complexity_note"] = "🔍 High complexity warrants deeper review."
+        summary["_complexity_note"] = "High complexity warrants deeper review."
 
     return summary
