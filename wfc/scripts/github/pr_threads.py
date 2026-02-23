@@ -22,6 +22,7 @@ Usage:
 """
 
 import json
+import logging
 import sys
 from dataclasses import dataclass
 from pathlib import Path
@@ -33,6 +34,8 @@ from wfc.scripts.github.gh_helpers import (
     detect_repo,
     gh_graphql,
 )
+
+logger = logging.getLogger(__name__)
 
 _FETCH_QUERY = """
 query($owner: String!, $repo: String!, $number: Int!) {
@@ -187,15 +190,15 @@ def bulk_resolve(
                     **result,
                 }
             )
-            print(f"✅ Resolved {item['thread_id'][:20]}...")
+            logger.info(f"✅ Resolved {item['thread_id'][:20]}...")
         except Exception as e:
             results.append({"thread_id": item["thread_id"], "status": "error", "error": str(e)})
-            print(f"❌ Failed {item['thread_id'][:20]}...: {e}", file=sys.stderr)
+            logger.error(f"❌ Failed {item['thread_id'][:20]}...: {e}")
     return results
 
 
 def print_threads(threads: list[ReviewThread], unresolved_only: bool = True) -> None:
-    """Print threads as a formatted table."""
+    """Print threads as a formatted table (user-facing output)."""
     filtered = [t for t in threads if not t.is_resolved] if unresolved_only else threads
     print(f"\n{'#':<4} {'Thread ID':<30} {'File:Line':<45} {'Author':<20} {'Status'}")
     print("-" * 120)
@@ -219,10 +222,7 @@ def _parse_fetch_args(positional: list[str]) -> tuple[Optional[str], Optional[st
     elif len(positional) == 3:
         return positional[0], positional[1], int(positional[2])
     else:
-        print(
-            "Usage: fetch <pr_number>  OR  fetch <owner> <repo> <pr_number>",
-            file=sys.stderr,
-        )
+        logger.error("Usage: fetch <pr_number>  OR  fetch <owner> <repo> <pr_number>")
         sys.exit(1)
 
 
@@ -238,9 +238,8 @@ def _parse_bulk_args(positional: list[str]) -> tuple[Optional[str], Optional[str
     elif len(positional) == 3:
         return positional[0], positional[1], positional[2]
     else:
-        print(
-            "Usage: bulk-resolve <manifest.json>  OR  bulk-resolve <owner> <repo> <manifest.json>",
-            file=sys.stderr,
+        logger.error(
+            "Usage: bulk-resolve <manifest.json>  OR  bulk-resolve <owner> <repo> <manifest.json>"
         )
         sys.exit(1)
 
@@ -268,16 +267,16 @@ def _cmd_fetch(args) -> None:
     else:
         unresolved = [t for t in threads if not t.is_resolved]
         num = pr_number or "?"
-        print(f"PR #{num}: {len(threads)} total, {len(unresolved)} unresolved")
+        logger.info("PR #%s: %s total, %s unresolved", num, len(threads), len(unresolved))
         print_threads(threads)
 
 
 def _cmd_resolve(args) -> None:
     result = reply_and_resolve(args.thread_id, args.message)
     if result["resolved"]:
-        print(f"✅ Thread resolved. Reply ID: {result['reply_id']}")
+        logger.info("✅ Thread resolved. Reply ID: %s", result["reply_id"])
     else:
-        print("❌ Thread not resolved", file=sys.stderr)
+        logger.error("❌ Thread not resolved")
         sys.exit(1)
 
 
@@ -287,13 +286,27 @@ def _cmd_bulk_resolve(args) -> None:
     resolved = sum(1 for r in results if r["status"] == "resolved")
     skipped = sum(1 for r in results if r["status"] == "skipped")
     failed = sum(1 for r in results if r["status"] in ("failed", "error"))
-    print(f"\nDone: {resolved} resolved, {skipped} skipped, {failed} failed")
+    logger.info("Done: %s resolved, %s skipped, %s failed", resolved, skipped, failed)
     if failed:
         sys.exit(1)
 
 
-if __name__ == "__main__":
+def _configure_cli_logging() -> None:
+    """
+    Configure logging for CLI usage without overriding existing handlers.
+
+    Keeps output clean (message only) while allowing embedding modules to
+    manage logging themselves.
+    """
+    root = logging.getLogger()
+    if not root.handlers:
+        logging.basicConfig(level=logging.INFO, format="%(message)s", stream=sys.stdout)
+
+
+def main() -> None:
     import argparse
+
+    _configure_cli_logging()
 
     parser = argparse.ArgumentParser(
         description="GitHub PR review thread manager",
@@ -357,5 +370,9 @@ Examples:
     try:
         parsed.func(parsed)
     except GHError as exc:
-        print(f"Error: {exc}", file=sys.stderr)
+        logger.error("Error: %s", exc)
         sys.exit(1)
+
+
+if __name__ == "__main__":
+    main()

@@ -9,9 +9,12 @@ DESIGN DOCUMENT (Not Yet Implemented)
 This document outlines the architecture for distributed WFC execution.
 """
 
+import logging
 from dataclasses import dataclass, field
 from enum import Enum
 from typing import Any, Dict, List, Optional
+
+logger = logging.getLogger(__name__)
 
 
 class CloudProvider(Enum):
@@ -20,8 +23,8 @@ class CloudProvider(Enum):
     AWS_LAMBDA = "aws_lambda"
     GOOGLE_CLOUD_RUN = "google_cloud_run"
     AZURE_FUNCTIONS = "azure_functions"
-    MODAL = "modal"  # Modal.com for easy cloud execution
-    RUNPOD = "runpod"  # RunPod for GPU workloads
+    MODAL = "modal"
+    RUNPOD = "runpod"
 
 
 @dataclass
@@ -30,12 +33,11 @@ class CloudAgentSpec:
 
     agent_id: str
     task_id: str
-    model: str  # opus, sonnet, haiku
+    model: str
     memory_mb: int = 2048
     timeout_seconds: int = 600
     environment: Optional[Dict[str, str]] = field(default=None)
 
-    # Cloud-specific
     provider: CloudProvider = CloudProvider.MODAL
     region: str = "us-west-2"
     retry_policy: Optional[Dict[str, Any]] = field(default=None)
@@ -253,8 +255,8 @@ class CloudExecutionArchitecture:
         self.provider = provider
         self.config = config
 
-        print(f"Cloud execution initialized: {provider.value}")
-        print("Status: Design phase - not yet implemented")
+        logger.info(f"Cloud execution initialized: {provider.value}")
+        logger.info("Status: Design phase - not yet implemented")
 
     def deploy_agent(self, spec: CloudAgentSpec):
         """Deploy agent to cloud (placeholder)."""

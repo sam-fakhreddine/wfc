@@ -26,6 +26,7 @@ tokens = [
 dev = [
     "pytest>=7.0.0",
     "pytest-cov>=4.0.0",
+    "pytest-timeout>=2.0.0",
     "pytest-asyncio>=0.23.0",
     "black>=23.0.0",
     "ruff>=0.1.0",
@@ -73,3 +74,5 @@ target-version = "py312"
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 python_files = ["test_*.py"]
+timeout = 30  # 30 seconds per test (fail-fast for hung tests)
+timeout_method = "thread"

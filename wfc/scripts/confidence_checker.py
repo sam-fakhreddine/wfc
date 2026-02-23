@@ -14,18 +14,21 @@ This is the single highest-ROI feature for token efficiency.
 """
 
 import json
+import logging
 from dataclasses import dataclass
 from enum import Enum
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 
+logger = logging.getLogger(__name__)
+
 
 class ConfidenceLevel(Enum):
     """Confidence level thresholds."""
 
-    HIGH = "high"  # ≥90% - Proceed
-    MEDIUM = "medium"  # 70-89% - Ask questions
-    LOW = "low"  # <70% - Stop and investigate
+    HIGH = "high"
+    MEDIUM = "medium"
+    LOW = "low"
 
 
 @dataclass
@@ -37,26 +40,21 @@ class ConfidenceAssessment:
     """
 
     task_id: str
-    confidence_score: int  # 0-100
+    confidence_score: int
     confidence_level: ConfidenceLevel
 
-    # Reasoning
     clear_requirements: bool
     has_examples: bool
     understands_architecture: bool
     knows_dependencies: bool
     can_verify_success: bool
 
-    # Risks identified
-    risks: List[Dict[str, str]]  # [{"risk": "...", "severity": "high|medium|low"}]
+    risks: List[Dict[str, str]]
 
-    # Clarifying questions (if medium/low confidence)
     questions: List[str]
 
-    # Alternatives (if medium confidence)
-    alternatives: List[Dict[str, str]]  # [{"approach": "...", "pros": "...", "cons": "..."}]
+    alternatives: List[Dict[str, str]]
 
-    # Recommendation
     should_proceed: bool
     recommendation: str
 
@@ -115,14 +113,12 @@ class ConfidenceChecker:
         """
         task_id = task.get("id", "UNKNOWN")
 
-        # Assess each dimension
         clear_requirements = self._assess_requirements_clarity(task)
         has_examples = self._assess_examples_available(task, context)
         understands_architecture = self._assess_architecture_understanding(task, context)
         knows_dependencies = self._assess_dependencies_clear(task, context)
         can_verify_success = self._assess_verification_possible(task)
 
-        # Calculate confidence score (0-100)
         confidence_score = self._calculate_confidence_score(
             clear_requirements=clear_requirements,
             has_examples=has_examples,
@@ -131,7 +127,6 @@ class ConfidenceChecker:
             can_verify_success=can_verify_success,
         )
 
-        # Determine confidence level
         if confidence_score >= 90:
             confidence_level = ConfidenceLevel.HIGH
         elif confidence_score >= 70:
@@ -139,10 +134,8 @@ class ConfidenceChecker:
         else:
             confidence_level = ConfidenceLevel.LOW
 
-        # Identify risks
         risks = self._identify_risks(task, confidence_score)
 
-        # Generate questions (if not high confidence)
         questions = []
         if confidence_level != ConfidenceLevel.HIGH:
             questions = self._generate_clarifying_questions(
@@ -154,15 +147,12 @@ class ConfidenceChecker:
                 can_verify_success,
             )
 
-        # Generate alternatives (if medium confidence)
         alternatives = []
         if confidence_level == ConfidenceLevel.MEDIUM:
             alternatives = self._generate_alternatives(task, context)
 
-        # Determine if should proceed
         should_proceed = confidence_level == ConfidenceLevel.HIGH
 
-        # Generate recommendation
         recommendation = self._generate_recommendation(
             confidence_level, confidence_score, risks, questions
         )
@@ -190,17 +180,14 @@ class ConfidenceChecker:
         Returns:
             True if requirements are clear and unambiguous
         """
-        # Check for clear description
         description = task.get("description", "")
         if len(description) < 20:
             return False
 
-        # Check for acceptance criteria
         acceptance_criteria = task.get("acceptance_criteria", [])
         if not acceptance_criteria or len(acceptance_criteria) < 1:
             return False
 
-        # Check for vague language
         vague_words = ["maybe", "probably", "should", "could", "might", "possibly"]
         description_lower = description.lower()
 
@@ -218,13 +205,11 @@ class ConfidenceChecker:
         Returns:
             True if examples available
         """
-        # Check if files_likely_affected has examples
         files_affected = task.get("files_likely_affected", [])
 
         if not files_affected:
             return False
 
-        # Check if those files exist (as examples)
         for file_path in files_affected:
             full_path = self.project_root / file_path
             if full_path.exists():
@@ -241,13 +226,11 @@ class ConfidenceChecker:
         Returns:
             True if architecture clear
         """
-        # Check if files_likely_affected are in known structure
         files_affected = task.get("files_likely_affected", [])
 
         if not files_affected:
             return False
 
-        # Check if parent directories exist (indicates known structure)
         for file_path in files_affected:
             full_path = self.project_root / file_path
             parent_dir = full_path.parent
@@ -266,15 +249,11 @@ class ConfidenceChecker:
         Returns:
             True if dependencies understood
         """
-        # Check for explicit dependencies in task
         dependencies = task.get("dependencies", [])
 
-        # If has dependencies, check if they're clear
         if dependencies:
-            # Dependencies listed = clear
             return True
 
-        # No dependencies = also clear (independent task)
         return True
 
     def _assess_verification_possible(self, task: Dict[str, Any]) -> bool:
@@ -284,17 +263,14 @@ class ConfidenceChecker:
         Returns:
             True if can verify success
         """
-        # Check for test requirements
         test_requirements = task.get("test_requirements", [])
 
         if test_requirements and len(test_requirements) > 0:
             return True
 
-        # Check for acceptance criteria (can be verified)
         acceptance_criteria = task.get("acceptance_criteria", [])
 
         if acceptance_criteria and len(acceptance_criteria) > 0:
-            # Check if criteria are verifiable (not vague)
             for criterion in acceptance_criteria:
                 if any(word in criterion.lower() for word in ["works", "good", "better", "nice"]):
                     return False
@@ -347,18 +323,15 @@ class ConfidenceChecker:
         """
         risks = []
 
-        # Low confidence = high risk
         if confidence_score < 70:
             risks.append(
                 {"risk": "Low confidence - may implement wrong solution", "severity": "high"}
             )
 
-        # Check for complexity without examples
         complexity = task.get("complexity", "M")
         if complexity in ["L", "XL"] and confidence_score < 80:
             risks.append({"risk": "High complexity with unclear requirements", "severity": "high"})
 
-        # Check for dependencies without clear understanding
         dependencies = task.get("dependencies", [])
         if len(dependencies) > 2 and confidence_score < 85:
             risks.append({"risk": "Multiple dependencies - integration risk", "severity": "medium"})
@@ -417,8 +390,6 @@ class ConfidenceChecker:
         Returns:
             List of alternative dictionaries
         """
-        # This would be enhanced with actual analysis
-        # For now, return placeholder
         return [
             {
                 "approach": "Option 1: Minimal implementation",
@@ -458,7 +429,7 @@ class ConfidenceChecker:
                 "Multiple approaches possible - user input recommended."
             )
 
-        else:  # LOW
+        else:
             risk_count = len([r for r in risks if r["severity"] == "high"])
             return (
                 f"🛑 LOW CONFIDENCE ({confidence_score}%) - DO NOT PROCEED. "
@@ -483,18 +454,17 @@ def log_confidence_assessment(assessment: ConfidenceAssessment, telemetry_file: 
         **assessment.to_dict(),
     }
 
-    # Append to telemetry file
     with open(telemetry_file, "a") as f:
         f.write(json.dumps(log_entry) + "\n")
 
 
 if __name__ == "__main__":
-    # Test confidence checker
-    print("WFC Confidence Checker Test")
-    print("=" * 60)
+    logging.basicConfig(level=logging.INFO, format="%(levelname)s: %(message)s")
 
-    # Test 1: High confidence task
-    print("\n1. Testing HIGH confidence task:")
+    logger.info("WFC Confidence Checker Test")
+    logger.info("=" * 60)
+
+    logger.info("\n1. Testing HIGH confidence task:")
     high_confidence_task = {
         "id": "TASK-001",
         "description": "Add a new endpoint /api/users that returns list of users from database",
@@ -511,12 +481,13 @@ if __name__ == "__main__":
     checker = ConfidenceChecker(Path.cwd())
     assessment = checker.assess(high_confidence_task)
 
-    print(f"   Confidence: {assessment.confidence_score}% ({assessment.confidence_level.value})")
-    print(f"   Should proceed: {assessment.should_proceed}")
-    print(f"   ✅ {assessment.recommendation}")
+    logger.info(
+        f"   Confidence: {assessment.confidence_score}% ({assessment.confidence_level.value})"
+    )
+    logger.info(f"   Should proceed: {assessment.should_proceed}")
+    logger.info(f"   ✅ {assessment.recommendation}")
 
-    # Test 2: Medium confidence task
-    print("\n2. Testing MEDIUM confidence task:")
+    logger.info("\n2. Testing MEDIUM confidence task:")
     medium_confidence_task = {
         "id": "TASK-002",
         "description": "Improve the authentication system",
@@ -527,15 +498,16 @@ if __name__ == "__main__":
 
     assessment = checker.assess(medium_confidence_task)
 
-    print(f"   Confidence: {assessment.confidence_score}% ({assessment.confidence_level.value})")
-    print(f"   Should proceed: {assessment.should_proceed}")
-    print(f"   Questions: {len(assessment.questions)}")
+    logger.info(
+        f"   Confidence: {assessment.confidence_score}% ({assessment.confidence_level.value})"
+    )
+    logger.info(f"   Should proceed: {assessment.should_proceed}")
+    logger.info(f"   Questions: {len(assessment.questions)}")
     for q in assessment.questions[:3]:
-        print(f"      - {q}")
-    print(f"   ⚠️  {assessment.recommendation}")
+        logger.info(f"      - {q}")
+    logger.warning(f"   {assessment.recommendation}")
 
-    # Test 3: Low confidence task
-    print("\n3. Testing LOW confidence task:")
+    logger.info("\n3. Testing LOW confidence task:")
     low_confidence_task = {
         "id": "TASK-003",
         "description": "Fix the bug",
@@ -544,11 +516,13 @@ if __name__ == "__main__":
 
     assessment = checker.assess(low_confidence_task)
 
-    print(f"   Confidence: {assessment.confidence_score}% ({assessment.confidence_level.value})")
-    print(f"   Should proceed: {assessment.should_proceed}")
-    print(f"   Risks: {len(assessment.risks)}")
+    logger.info(
+        f"   Confidence: {assessment.confidence_score}% ({assessment.confidence_level.value})"
+    )
+    logger.info(f"   Should proceed: {assessment.should_proceed}")
+    logger.info(f"   Risks: {len(assessment.risks)}")
     for risk in assessment.risks:
-        print(f"      - {risk['risk']} ({risk['severity']})")
-    print(f"   🛑 {assessment.recommendation}")
+        logger.warning(f"      - {risk['risk']} ({risk['severity']})")
+    logger.error(f"   {assessment.recommendation}")
 
-    print("\n✅ All confidence checker tests passed!")
+    logger.info("\n✅ All confidence checker tests passed!")
