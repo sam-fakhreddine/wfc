@@ -177,7 +177,7 @@ class ReviewOrchestrator:
             duration_ms = stats.get("duration_ms", 0)
             parsed = stats.get("parsed", 0)
             failed = stats.get("failed", 0)
-            total = parsed + failed
+            total = stats.get("total_files", parsed + failed)
 
             print(
                 f"AST analysis completed in {duration_ms:.1f}ms ({parsed}/{total} files parsed, {failed} failed)",
@@ -215,7 +215,7 @@ class ReviewOrchestrator:
                 },
             )
         except Exception:
-            pass
+            logger.debug("Observability emit failed", exc_info=True)
 
         return self.engine.prepare_review_tasks(
             files=request.files,
@@ -296,7 +296,7 @@ class ReviewOrchestrator:
                             level="warning",
                         )
                     except Exception:
-                        pass
+                        logger.debug("Observability emit failed", exc_info=True)
             self._last_retry_specs = retry_specs
         except Exception:
             logger.exception(
@@ -397,10 +397,10 @@ class ReviewOrchestrator:
                 },
             )
             incr("review.completed")
-            observe("review.duration", 0.0)
+            observe("review.duration", time.monotonic() - _start_time)
             observe("review.consensus_score", cs_result.cs)
         except Exception:
-            pass
+            logger.debug("Observability emit failed", exc_info=True)
 
         return ReviewResult(
             task_id=request.task_id,

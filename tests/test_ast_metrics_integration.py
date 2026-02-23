@@ -32,7 +32,6 @@ from wfc.scripts.ast_analyzer import (
     is_python,
     summarize_for_reviewer,
 )
-from wfc.scripts.ast_analyzer.language_detection import get_language
 from wfc.scripts.ast_analyzer.cache_writer import write_ast_cache
 
 
@@ -351,8 +350,6 @@ class TestFormalProperties:
 
         assert is_python(py_file) is True
         assert is_python(py_file) is True
-        assert get_language(py_file) == "python"
-        assert get_language(py_file) == "python"
 
     def test_prop_002_fail_open(self, tmp_path):
         """PROP-002: Parse failures don't block review."""
@@ -644,11 +641,16 @@ class TestSecurityBoundary:
             file_field = data["files"][0]["file"]
             assert not file_field.startswith("/")
 
-    def test_get_language_not_exported(self):
-        """get_language() is dead code and should not be exported."""
-        import wfc.scripts.ast_analyzer as pkg
+    def test_get_language_not_exported(self, tmp_path):
+        """TEST-035: get_language not exported from wfc.scripts.ast_analyzer"""
+        with pytest.raises(ImportError):
+            from wfc.scripts.ast_analyzer import get_language  # noqa: F401
+        # Also verify it doesn't exist in language_detection module
+        from wfc.scripts.ast_analyzer import language_detection
 
-        assert not hasattr(pkg, "get_language"), "get_language is dead code and should be removed"
+        assert not hasattr(
+            language_detection, "get_language"
+        ), "get_language should be deleted from language_detection.py"
 
     def test_summarize_no_emoji_in_output(self, tmp_path):
         """summarize_for_reviewer output must contain no emoji characters."""
