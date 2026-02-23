@@ -14,13 +14,10 @@ from dataclasses import dataclass, field
 from pathlib import Path
 
 MAX_LINES = 5000
-MAX_FILE_BYTES = 512_000  # ~500 KB (roughly 5000 lines × 100 chars)
+MAX_FILE_BYTES = 512_000
 
-# DANGEROUS_NAMESPACES: used in visit_Call to check call-site namespace prefixes
-# (e.g., os.system, subprocess.Popen) — separate from import checks
 DANGEROUS_NAMESPACES = {"os", "subprocess", "pickle", "yaml"}
 
-# DANGEROUS_MODULES: used in visit_Import / visit_ImportFrom to flag dangerous imports.
 # Note: 'eval' is intentionally excluded — it is a builtin, not a module name.
 DANGEROUS_MODULES = {"subprocess", "os", "pickle", "yaml"}
 
@@ -35,6 +32,7 @@ class FunctionMetrics:
     max_nesting: int
     has_try_except: bool
     has_returns: bool
+    has_io_calls: bool = False
     dangerous_calls: list[str] = field(default_factory=list)
     params: list[str] = field(default_factory=list)
 
@@ -68,6 +66,8 @@ class UnifiedFunctionVisitor(ast.NodeVisitor):
         "spawn",
     }
 
+    IO_CALLS = {"open", "read", "write", "request", "get", "post", "urlopen", "urlretrieve"}
+
     def __init__(self):
         self.complexity = 1
         self.max_depth = 0
@@ -75,9 +75,8 @@ class UnifiedFunctionVisitor(ast.NodeVisitor):
         self.dangerous: list[str] = []
         self.has_try_except = False
         self.has_return = False
+        self.has_io_calls = False
         self._root_visited = False
-
-    # --- Complexity counting ---
 
     def visit_If(self, node):
         self.complexity += 1
@@ -103,8 +102,6 @@ class UnifiedFunctionVisitor(ast.NodeVisitor):
         self.complexity += len(node.values) - 1
         self.generic_visit(node)
 
-    # --- Nesting depth ---
-
     def _enter_block(self, node):
         self.current_depth += 1
         self.max_depth = max(self.max_depth, self.current_depth)
@@ -114,8 +111,6 @@ class UnifiedFunctionVisitor(ast.NodeVisitor):
     def visit_Try(self, node):
         self.has_try_except = True
         self._enter_block(node)
-
-    # --- Call detection ---
 
     def visit_Call(self, node):
         call_name = self._get_call_name(node.func)
@@ -127,6 +122,8 @@ class UnifiedFunctionVisitor(ast.NodeVisitor):
             if leaf in self.DANGEROUS_CALLS:
                 if len(parts) == 1 or parts[0] in DANGEROUS_NAMESPACES:
                     self.dangerous.append(call_name)
+            if leaf in self.IO_CALLS:
+                self.has_io_calls = True
         self.generic_visit(node)
 
     def _get_call_name(self, node) -> str | None:
@@ -139,25 +136,19 @@ class UnifiedFunctionVisitor(ast.NodeVisitor):
             return node.attr
         return None
 
-    # --- Return detection ---
-
     def visit_Return(self, node):
         self.has_return = True
         self.generic_visit(node)
-
-    # --- Nested function skipping ---
 
     def visit_FunctionDef(self, node):
         if not self._root_visited:
             self._root_visited = True
             self.generic_visit(node)
-        # else: skip nested function bodies — their complexity is counted separately
 
     def visit_AsyncFunctionDef(self, node):
         if not self._root_visited:
             self._root_visited = True
             self.generic_visit(node)
-        # else: skip nested async function bodies — their complexity is counted separately
 
 
 class FileAnalysisVisitor(ast.NodeVisitor):
@@ -177,9 +168,6 @@ class FileAnalysisVisitor(ast.NodeVisitor):
 
     def visit_FunctionDef(self, node):
         self.func_nodes.append(node)
-        # Descend into the body so nested functions are collected as their own
-        # entries. Each node is only appended once because AST traversal visits
-        # each node exactly once.
         self.generic_visit(node)
 
     def visit_AsyncFunctionDef(self, node):
@@ -199,7 +187,12 @@ class FileAnalysisVisitor(ast.NodeVisitor):
 
     def visit_ImportFrom(self, node):
         module = node.module or ""
-        self.imports.append(module)
+        if module:
+            self.imports.append(module)
+        for alias in node.names:
+            full_name = f"{module}.{alias.name}" if module else alias.name
+            if full_name not in self.imports:
+                self.imports.append(full_name)
         parts = module.split(".")
         if any(part in DANGEROUS_MODULES for part in parts):
             self.dangerous_imports.append(module)
@@ -226,6 +219,7 @@ def analyze_function(func_node: ast.FunctionDef | ast.AsyncFunctionDef) -> Funct
         max_nesting=visitor.max_depth,
         has_try_except=visitor.has_try_except,
         has_returns=visitor.has_return,
+        has_io_calls=visitor.has_io_calls,
         dangerous_calls=visitor.dangerous,
         params=params,
     )
@@ -233,14 +227,12 @@ def analyze_function(func_node: ast.FunctionDef | ast.AsyncFunctionDef) -> Funct
 
 def analyze_file(file_path: Path) -> FileMetrics:
     """Extract reviewer-relevant metrics from a Python file."""
-    # Cheap byte-size guard before reading entire file into memory
     if file_path.stat().st_size > MAX_FILE_BYTES:
         raise ValueError(
             f"File too large for AST analysis: {file_path.stat().st_size} bytes (max {MAX_FILE_BYTES})"
         )
 
     content = file_path.read_text(encoding="utf-8", errors="replace")
-    # Use splitlines() to correctly count lines regardless of trailing newline
     lines = len(content.splitlines())
 
     if lines > MAX_LINES:
@@ -265,6 +257,8 @@ def analyze_file(file_path: Path) -> FileMetrics:
             issues.append(f"deep_nesting:{metrics.max_nesting}")
         if metrics.dangerous_calls:
             issues.append(f"dangerous_calls:{','.join(metrics.dangerous_calls)}")
+        if metrics.has_io_calls and not metrics.has_try_except:
+            issues.append("missing_error_handling")
 
         if issues:
             hotspots.append({"line": metrics.line, "function": metrics.name, "issues": issues})
@@ -272,10 +266,6 @@ def analyze_file(file_path: Path) -> FileMetrics:
     try:
         relative_path = str(file_path.relative_to(Path.cwd()))
     except ValueError:
-        # file_path is outside CWD — use path relative to its own parent directory
-        # so we get "dirname/filename" instead of a bare name or an absolute path.
-        # This avoids absolute-path leakage while still distinguishing same-named
-        # files in different directories.
         relative_path = (
             "/".join(file_path.parts[-2:]) if len(file_path.parts) >= 2 else file_path.name
         )

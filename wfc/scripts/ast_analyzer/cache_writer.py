@@ -17,7 +17,7 @@ from pathlib import Path
 from .language_detection import is_python
 from .metrics_extractor import analyze_file, summarize_for_reviewer
 
-_BATCH_TIMEOUT = 30.0  # seconds for entire batch
+_BATCH_TIMEOUT = 30.0
 
 
 def _analyze_and_summarize(file_path: Path) -> dict:
@@ -39,8 +39,6 @@ def _build_cache_data(python_files: list[Path], changed_files_count: int) -> dic
             for future in as_completed(futures, timeout=_BATCH_TIMEOUT):
                 fp = futures[future]
                 try:
-                    # future.result() has no timeout here — as_completed only yields completed futures.
-                    # Per-file wall-clock limit is enforced by the _BATCH_TIMEOUT on as_completed().
                     summary = future.result()
                     file_summaries.append(summary)
                     parsed_count += 1
@@ -101,7 +99,6 @@ def write_ast_cache(
     if exclude_dirs is None:
         exclude_dirs = [".worktrees", ".venv", "__pycache__", ".git", "node_modules"]
 
-    # Filter to Python files within project bounds
     failed_count = 0
     python_files = []
     for file_path in changed_files:
@@ -120,12 +117,11 @@ def write_ast_cache(
     cache_data = _build_cache_data(python_files, len(changed_files))
     duration_ms = (time.perf_counter() - start_time) * 1000
 
-    # Incorporate any pre-filter failures into the summary
     cache_data["summary"]["failed"] += failed_count
     cache_data["summary"]["duration_ms"] = round(duration_ms, 2)
 
     output_path.parent.mkdir(parents=True, exist_ok=True)
-    tmp_path = output_path.with_suffix(".tmp")
+    tmp_path = output_path.parent / (output_path.name + ".tmp")
     try:
         tmp_path.write_text(json.dumps(cache_data))
         os.replace(tmp_path, output_path)

@@ -20,6 +20,7 @@ Formal properties verified (from PROPERTIES.md):
 from __future__ import annotations
 
 import json
+import os
 import re
 import textwrap
 import time
@@ -625,6 +626,21 @@ class TestParamsCollection:
         assert "c" in params
         assert "kwargs" in params
 
+    def test_posonly_params_collected(self, tmp_path):
+        """Positional-only parameters (before /) must appear in params."""
+        f = tmp_path / "a.py"
+        f.write_text(textwrap.dedent("""
+            def fn(a, /, b, *args, c, **kwargs):
+                pass
+        """))
+        metrics = analyze_file(f)
+        params = metrics.function_details[0].params
+        assert "a" in params
+        assert "b" in params
+        assert "args" in params
+        assert "c" in params
+        assert "kwargs" in params
+
 
 class TestSecurityBoundary:
     """Tests for path traversal protection — currently missing (FAIL now)."""
@@ -639,13 +655,12 @@ class TestSecurityBoundary:
         data = json.loads(cache_path.read_text())
         if data["files"]:
             file_field = data["files"][0]["file"]
-            assert not file_field.startswith("/")
+            assert not os.path.isabs(file_field), f"Expected relative path, got: {file_field}"
 
     def test_get_language_not_exported(self, tmp_path):
         """TEST-035: get_language not exported from wfc.scripts.ast_analyzer"""
         with pytest.raises(ImportError):
             from wfc.scripts.ast_analyzer import get_language  # noqa: F401
-        # Also verify it doesn't exist in language_detection module
         from wfc.scripts.ast_analyzer import language_detection
 
         assert not hasattr(
@@ -714,4 +729,16 @@ class TestResourceBounds:
         f.write_text("\n".join(lines) + "\n")
         cache_path = tmp_path / ".ast-context.json"
         stats = write_ast_cache([f], cache_path)
-        assert stats["parsed"] + stats["failed"] == 1
+        assert stats["failed"] == 1
+        assert stats["parsed"] == 0
+
+    def test_large_file_does_not_abort_batch(self, tmp_path):
+        """An oversized file must not abort processing of other files in the batch."""
+        small = tmp_path / "small.py"
+        small.write_text("def fn(): pass\n")
+        huge = tmp_path / "huge.py"
+        huge.write_text("\n".join(["x = 1"] * 6000) + "\n")
+        cache_path = tmp_path / ".ast-context.json"
+        stats = write_ast_cache([small, huge], cache_path)
+        assert stats["parsed"] == 1
+        assert stats["failed"] == 1
