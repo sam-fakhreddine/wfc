@@ -8,6 +8,7 @@ Uses ReviewerEngine, Fingerprinter, and ConsensusScore as the default (and only)
 from __future__ import annotations
 
 import logging
+import sys
 import time
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -18,6 +19,7 @@ from .doc_auditor import DocAuditor, DocAuditReport
 from .finding_validator import FindingValidator, ValidationStatus
 from .fingerprint import Fingerprinter
 from .reviewer_engine import ReviewerEngine
+from wfc.scripts.ast_analyzer.cache_writer import write_ast_cache
 
 if TYPE_CHECKING:
     from wfc.scripts.knowledge.retriever import KnowledgeRetriever
@@ -162,11 +164,6 @@ class ReviewOrchestrator:
 
         Returns dict with parse statistics for telemetry.
         """
-        import sys
-        from pathlib import Path
-
-        from wfc.scripts.ast_analyzer.cache_writer import write_ast_cache
-
         changed_files = [Path(f) for f in files]
         cache_path = output_dir / ".ast-context.json"
 
@@ -180,7 +177,7 @@ class ReviewOrchestrator:
             duration_ms = stats.get("duration_ms", 0)
             parsed = stats.get("parsed", 0)
             failed = stats.get("failed", 0)
-            total = parsed + failed
+            total = stats.get("total_files", parsed + failed)
 
             print(
                 f"AST analysis completed in {duration_ms:.1f}ms ({parsed}/{total} files parsed, {failed} failed)",
@@ -201,7 +198,7 @@ class ReviewOrchestrator:
                 file=sys.stderr,
             )
             logger.exception("AST analysis crashed")
-            return {"parsed": 0, "failed": 0, "duration_ms": 0, "error": str(e)}
+            return {"parsed": 0, "failed": 0, "duration_ms": 0, "error": type(e).__name__}
 
     def prepare_review(self, request: ReviewRequest) -> list[dict]:
         """Phase 1: Build task specs for the 5 reviewers."""
@@ -218,7 +215,7 @@ class ReviewOrchestrator:
                 },
             )
         except Exception:
-            pass
+            logger.debug("Observability emit failed", exc_info=True)
 
         return self.engine.prepare_review_tasks(
             files=request.files,
@@ -256,11 +253,13 @@ class ReviewOrchestrator:
             observe("review.ast_parsed_count", ast_stats.get("parsed", 0))
             observe("review.ast_failed_count", ast_stats.get("failed", 0))
 
-            cache_path = output_dir / ".ast-context.json"
-            if cache_path.exists():
-                observe("review.ast_cache_size_bytes", cache_path.stat().st_size)
+            ast_cache_path = output_dir / ".ast-context.json"
+            try:
+                observe("review.ast_cache_size_bytes", ast_cache_path.stat().st_size)
+            except FileNotFoundError:
+                pass
         except Exception:
-            pass
+            logger.debug("Observability emit failed for AST metrics", exc_info=True)
 
         reviewer_results = self.engine.parse_results(task_responses)
 
@@ -297,7 +296,7 @@ class ReviewOrchestrator:
                             level="warning",
                         )
                     except Exception:
-                        pass
+                        logger.debug("Observability emit failed", exc_info=True)
             self._last_retry_specs = retry_specs
         except Exception:
             logger.exception(
@@ -398,10 +397,10 @@ class ReviewOrchestrator:
                 },
             )
             incr("review.completed")
-            observe("review.duration", 0.0)
+            observe("review.duration", time.monotonic() - _start_time)
             observe("review.consensus_score", cs_result.cs)
         except Exception:
-            pass
+            logger.debug("Observability emit failed", exc_info=True)
 
         return ReviewResult(
             task_id=request.task_id,
