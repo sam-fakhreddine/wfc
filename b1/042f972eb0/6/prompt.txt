@@ -1,0 +1,2143 @@
+Base directory for this skill: /Users/samfakhreddine/.claude/skills/wfc-vibe
+
+# wfc-vibe - Natural Brainstorming Mode
+
+**Conversational mode for stream-of-consciousness brainstorming with smart transitions to structured workflows**
+
+## What It Does
+
+Natural chat interface that lets you brainstorm freely without workflow enforcement:
+1. **Vibe naturally** - Just talk, no formal structure required
+2. **Smart detection** - Recognizes when scope grows large (not annoying)
+3. **Passive reminders** - Subtle hints every ~10 messages
+4. **Easy transitions** - Say "let's plan this" to move to wfc-plan or wfc-build
+
+## When to Use
+
+**Use wfc-vibe when:**
+- ✅ Brainstorming ideas
+- ✅ Exploring possibilities
+- ✅ Stream-of-consciousness thinking
+- ✅ Not ready to commit to implementation
+
+**Transition to planning when:**
+- ⚠️ Scope growing large (>3 features)
+- ⚠️ Ready to implement
+- ⚠️ Need structured breakdown
+
+## Usage
+
+```bash
+# Start vibe session (default mode in Claude Code)
+# Just start chatting naturally - no special command needed
+
+# When ready to plan:
+"let's plan this"
+"I want to implement this"
+"let's build this"
+```
+
+## Philosophy
+
+**CHILL:** Natural conversation, no pressure
+**SMART:** Detects planning opportunities (not annoying)
+**SMOOTH:** Easy transition with context preservation
+
+**Not like ChatGPT/Gemini:** No constant "want me to create?" interruptions
+
+## Key Behaviors
+
+### What wfc-vibe DOES:
+- ✅ Respond naturally like normal chat
+- ✅ Track conversation context
+- ✅ Passive reminder every ~10 messages (8-12 randomized)
+- ✅ Detect when scope grows large (once per conversation)
+- ✅ Smooth transition with relevant context summary
+
+### What wfc-vibe DOESN'T DO:
+- ❌ Force workflow transitions
+- ❌ Interrupt natural flow
+- ❌ Ask "want to plan?" constantly
+- ❌ Be pushy or eager about planning
+
+## Smart Detection
+
+Suggests planning when:
+- Multiple features mentioned (>3)
+- Architecture discussion detected
+- Many files mentioned (>5)
+- Complexity indicators ("refactor", "migrate", "system")
+
+**Max 1 suggestion per conversation** - not annoying
+
+## Transition Preview
+
+When you say "let's plan this":
+```
+📋 I'll help you plan this. Here's what I captured:
+
+Goal: Build a REST API for user management
+Features:
+  - User authentication
+  - Role-based access control
+  - Audit logging
+Estimated complexity: M
+
+Route to: wfc-build (simple) or wfc-plan (complex)?
+```
+
+## Configuration
+
+```json
+{
+  "vibe": {
+    "reminder_frequency": [8, 12],
+    "max_scope_suggestions": 1,
+    "context_summarization_timeout": 5000,
+    "transition_preview": true
+  }
+}
+```
+
+## Examples
+
+### Natural Brainstorming
+```
+You: I'm thinking about adding user authentication
+Claude: What kind of auth are you considering?
+You: JWT tokens, maybe with Redis for sessions
+Claude: Makes sense. How about the user model?
+You: Probably email, password hash, role
+...
+(after 10 messages)
+💡 *Tip: Say 'let's plan this' anytime to move to implementation*
+```
+
+### Scope Growing
+```
+You: We need auth, RBAC, audit logging, email notifications, webhooks
+Claude: 💭 *This is growing into a sizable project. Consider using /wfc-plan to structure it when ready.*
+```
+
+### Smooth Transition
+```
+You: let's plan this
+
+Claude:
+📋 I'll help you plan this. Here's what I captured:
+
+Goal: User management system with auth and RBAC
+Features: authentication, roles, audit logs, email
+Tech: JWT, Redis, PostgreSQL
+Complexity: M (2-3 agents)
+
+Ready to start with /wfc-build? (yes/no)
+```
+
+## Integration
+
+- **Transitions to:** wfc-build (simple) or wfc-plan (complex)
+- **Context:** Relevant info extracted automatically
+- **Telemetry:** Tracks vibe sessions, transitions, suggestions
+
+---
+
+Can we send the AST to the code review so it's better not just the files
+
+---
+
+I just want the reviewers to have more relevant context to help them, do they need the ast
+
+---
+
+Sounds right
+How long does static analysis take
+
+---
+
+Yes
+
+---
+
+Ok make sure we ignore worktrees that aren't relevant to the reviewer
+
+---
+
+Did this glean any info
+
+---
+
+You decide what reviewers need
+And let's break up that agents.py it's too big
+
+---
+
+AST metrics 
+I'll come back to the other in a fresh session.
+
+---
+
+Make sure it just provides it as help not as the only place to look. This is supplemental to our current process
+
+---
+
+Ready go implement
+
+---
+
+Base directory for this skill: /Users/samfakhreddine/.claude/skills/wfc-plan
+
+# WFC:PLAN - Adaptive Planning with Formal Properties
+
+Converts requirements into structured implementation plans through adaptive interviewing.
+
+## What It Does
+
+1. **Adaptive Interview** - Asks intelligent questions that adapt based on answers
+2. **Task Generation** - Breaks down requirements into structured TASKS.md with dependencies
+3. **Property Extraction** - Identifies formal properties (SAFETY, LIVENESS, INVARIANT, PERFORMANCE)
+4. **Test Planning** - Creates comprehensive TEST-PLAN.md linked to requirements and properties
+
+## Usage
+
+```bash
+# Default (creates timestamped plan with history)
+/wfc-plan
+# → Generates: plans/plan_oauth2_authentication_20260211_143022/
+#              plans/HISTORY.md
+#              plans/HISTORY.json
+
+# Custom output directory (disables history)
+/wfc-plan path/to/output
+
+# With options (future)
+/wfc-plan --interactive  # Step through interview
+/wfc-plan --from-file requirements.md  # Import requirements
+
+# Skip validation (not recommended)
+/wfc-plan --skip-validation
+```
+
+## Plan History
+
+**Each plan gets a unique timestamped directory.**
+
+### Directory Structure
+
+```
+plans/
+├── HISTORY.md                                    # Human-readable history
+├── HISTORY.json                                  # Machine-readable index
+├── plan_oauth2_authentication_20260211_143022/  # Timestamped plan
+│   ├── TASKS.md
+│   ├── PROPERTIES.md
+│   ├── TEST-PLAN.md
+│   ├── interview-results.json
+│   ├── revision-log.md
+│   └── plan-audit_20260211_143022.json
+├── plan_caching_layer_20260211_150135/
+│   ├── TASKS.md
+│   ├── PROPERTIES.md
+│   ├── TEST-PLAN.md
+│   ├── interview-results.json
+│   ├── revision-log.md
+│   └── plan-audit_20260211_150135.json
+└── plan_user_dashboard_20260212_091523/
+    ├── TASKS.md
+    ├── PROPERTIES.md
+    ├── TEST-PLAN.md
+    ├── interview-results.json
+    ├── revision-log.md
+    └── plan-audit_20260212_091523.json
+```
+
+### History File
+
+**plans/HISTORY.md** contains a searchable record:
+
+```markdown
+# Plan History
+
+**Total Plans:** 3
+
+---
+
+## plan_user_dashboard_20260212_091523
+- **Created:** 2026-02-12T09:15:23
+- **Goal:** Build user analytics dashboard
+- **Context:** Product team needs visibility into user behavior
+- **Directory:** `plans/plan_user_dashboard_20260212_091523`
+- **Tasks:** 7
+- **Properties:** 4
+- **Tests:** 15
+- **Validated:** yes (score: 8.7)
+
+## plan_caching_layer_20260211_150135
+- **Created:** 2026-02-11T15:01:35
+- **Goal:** Implement caching layer for API
+- **Context:** Reduce database load and improve response times
+- **Directory:** `plans/plan_caching_layer_20260211_150135`
+- **Tasks:** 3
+- **Properties:** 2
+- **Tests:** 8
+- **Validated:** skipped
+```
+
+### Benefits
+
+- **Version control** - Never lose old plans
+- **Searchable** - Find plans by goal or date
+- **Traceable** - See evolution of project planning
+- **Reference** - Compare approaches across time
+
+## Architecture Design Phase
+
+After the interview, WFC generates 2-3 architecture approaches:
+
+### Option 1: Minimal Changes
+- Smallest diff, maximum code reuse
+- Lowest risk, fastest to implement
+- Best for simple features or hotfixes
+
+### Option 2: Clean Architecture
+- Proper abstractions, maintainability-first
+- Best long-term design
+- Higher initial effort
+
+### Option 3: Pragmatic Balance
+- Speed + quality tradeoff
+- Addresses key concerns without over-engineering
+- Best for most features
+
+The approaches are saved to `ARCHITECTURE-OPTIONS.md` for reference.
+
+## Interview Process
+
+The adaptive interview gathers:
+
+### Core Understanding
+- What are you building? (goal)
+- Why are you building it? (context)
+- Who will use it? (users)
+
+### Requirements
+- Core features (must-have)
+- Nice-to-have features
+- Technical constraints
+- Performance requirements
+- Security requirements
+
+### Technical Details
+- Technology stack
+- Existing codebase or new project
+- Testing approach
+- Coverage targets
+
+### Formal Properties
+- Safety properties (what must never happen)
+- Liveness properties (what must eventually happen)
+- Invariants (what must always be true)
+- Performance properties (time/resource bounds)
+
+## Outputs
+
+### 1. TASKS.md
+Structured implementation tasks with:
+- Unique IDs (TASK-001, TASK-002, ...)
+- Complexity ratings (S, M, L, XL)
+- Dependency graph (DAG)
+- Properties to satisfy
+- Files likely affected
+- Acceptance criteria
+
+Example:
+```markdown
+## TASK-001: Setup project structure
+- **Complexity**: S
+- **Dependencies**: []
+- **Properties**: []
+- **Files**: README.md, pyproject.toml
+- **Description**: Create initial project structure
+- **Acceptance Criteria**:
+  - [ ] Project structure follows best practices
+  - [ ] Dependencies documented
+```
+
+### 2. PROPERTIES.md
+Formal properties with:
+- Type (SAFETY, LIVENESS, INVARIANT, PERFORMANCE)
+- Formal statement
+- Rationale
+- Priority
+- Suggested observables
+
+Example:
+```markdown
+## PROP-001: SAFETY
+- **Statement**: Unauthenticated user must never access protected endpoints
+- **Rationale**: Security: prevent unauthorized data access
+- **Priority**: critical
+- **Observables**: auth_failures, unauthorized_access_attempts
+```
+
+### 3. TEST-PLAN.md
+Test strategy and cases:
+- Testing approach (unit, integration, e2e)
+- Coverage targets
+- Specific test cases linked to tasks and properties
+- Test steps and expected outcomes
+
+Example:
+```markdown
+### TEST-001: Verify SAFETY property
+- **Type**: integration
+- **Related Task**: TASK-003
+- **Related Property**: PROP-001
+- **Description**: Test that unauthenticated users cannot access protected endpoints
+- **Steps**:
+  1. Attempt access without authentication
+  2. Verify 401 response
+- **Expected**: Access denied
+```
+
+## Architecture
+
+### MULTI-TIER Design
+```
+┌─────────────────────────────┐
+│  PRESENTATION (cli.py)      │  User interaction, output formatting
+└──────────────┬──────────────┘
+               │
+┌──────────────▼──────────────┐
+│  LOGIC (orchestrator.py)    │  Interview → Generate → Save
+│  - interview.py             │
+│  - tasks_generator.py       │
+│  - properties_generator.py  │
+│  - test_plan_generator.py   │
+└──────────────┬──────────────┘
+               │
+┌──────────────▼──────────────┐
+│  DATA (filesystem)          │  Save markdown and JSON
+└─────────────────────────────┘
+```
+
+## Living Plan Documents
+
+Plans are living documents that track progress during implementation, not static artifacts.
+
+### YAML Frontmatter
+
+Every TASKS.md includes frontmatter for machine-readable status tracking:
+
+```yaml
+---
+title: OAuth2 Authentication
+status: active          # active | in_progress | completed | abandoned
+created: 2026-02-18T14:30:00Z
+updated: 2026-02-18T16:45:00Z
+tasks_total: 5
+tasks_completed: 0
+complexity: M
+---
+```
+
+### Checkbox Progress
+
+Each acceptance criterion uses markdown checkboxes. wfc-implement updates these as tasks complete:
+
+```markdown
+## TASK-001: Setup project structure
+- **Status**: completed
+- **Acceptance Criteria**:
+  - [x] Project structure follows best practices
+  - [x] Dependencies documented
+
+## TASK-002: Implement JWT auth
+- **Status**: in_progress
+- **Acceptance Criteria**:
+  - [x] Token generation works
+  - [ ] Token refresh implemented
+  - [ ] Rate limiting on auth endpoints
+```
+
+### Status Lifecycle
+
+```
+active → in_progress → completed
+                    ↘ abandoned (with reason)
+```
+
+- **active**: Plan created, not yet started
+- **in_progress**: wfc-implement is executing tasks
+- **completed**: All tasks done, tests passing, PR merged
+- **abandoned**: Scope changed, plan no longer relevant (reason recorded)
+
+### Divergence Tracking
+
+When implementation diverges from the plan, wfc-implement records it:
+
+```markdown
+## Divergence Log
+
+### TASK-003: Redis caching layer
+- **Planned**: Use Redis Cluster with 3 nodes
+- **Actual**: Switched to single Redis instance (sufficient for current scale)
+- **Reason**: Over-engineered for <1000 req/s
+- **Impact**: TASK-004 dependency removed (cluster config no longer needed)
+```
+
+### Knowledge Integration
+
+Plans automatically search `docs/solutions/` (via wfc-compound) during generation:
+
+```markdown
+## TASK-005: Connection pool configuration
+- **Known pitfall**: docs/solutions/performance-issues/redis-pool-exhaustion.md
+  - Size pools relative to worker count, not static
+  - Monitor utilization > 80%
+```
+
+## Integration with WFC
+
+### Produces (consumed by wfc-implement, wfc-deepen, wfc-lfg)
+- `plan/TASKS.md` → Task orchestration (living document)
+- `plan/PROPERTIES.md` → TDD test requirements
+- `plan/TEST-PLAN.md` → Test strategy
+
+### Consumes
+- `docs/solutions/` → Past solutions for pitfall warnings (via wfc-compound)
+- `wfc-architecture` → Architecture analysis
+- `wfc-security` → Threat model properties
+
+## Configuration
+
+```json
+{
+  "plan": {
+    "output_dir": "./plan",
+    "interview_mode": "adaptive",
+    "task_complexity_model": "auto",
+    "generate_diagram": true
+  }
+}
+```
+
+## What to Do
+
+1. **If `` contains `--skip-validation`**, set `skip_validation = true` and remove the flag from arguments
+2. **If `` is provided** (after flag removal), use it as output directory
+3. **If no arguments**, use `./plan` as default output directory
+4. **Run adaptive interview** using `AdaptiveInterviewer`
+5. **Generate all files** using orchestrator (TASKS.md, PROPERTIES.md, TEST-PLAN.md)
+6. **Run Plan Validation Pipeline** (unless `--skip-validation` was set)
+7. **Display results** showing file paths and summary
+8. **Record telemetry** for all operations
+
+## Plan Validation Pipeline
+
+After generating the draft plan (TASKS.md, PROPERTIES.md, TEST-PLAN.md), run a mandatory validation pipeline to ensure plan quality. This pipeline can only be bypassed with the `--skip-validation` flag.
+
+### Pipeline Overview
+
+```
+Draft Plan → SHA-256 Hash → Validate Gate → Revise → Review Gate (loop until 8.5+) → Final Plan
+```
+
+### Step 1: Record Original Hash
+
+Compute a SHA-256 hash of the draft plan content (concatenation of TASKS.md + PROPERTIES.md + TEST-PLAN.md in that order). This is the `original_hash` used for the audit trail.
+
+```python
+import hashlib
+content = tasks_md + properties_md + test_plan_md
+original_hash = hashlib.sha256(content.encode()).hexdigest()
+```
+
+### Step 2: Validate Gate
+
+Invoke `/wfc-validate` on the generated draft plan. All plan content **must** be delimited with XML tags per PROP-009 prompt injection defense:
+
+```
+/wfc-validate
+<plan-content>
+[Full content of TASKS.md, PROPERTIES.md, TEST-PLAN.md concatenated]
+</plan-content>
+```
+
+This produces a `VALIDATE.md` output with scored recommendations categorized as Must-Do, Should-Do, or informational.
+
+### Step 3: Revision Mechanism
+
+After validation produces its analysis, read the VALIDATE.md output and apply revisions:
+
+1. **Must-Do** recommendations: Apply every Must-Do change to the draft TASKS.md and/or PROPERTIES.md. These are non-negotiable improvements identified by the analysis.
+2. **Should-Do** recommendations: Apply if low-effort (can be done in under 5 minutes). Otherwise, note as deferred with a reason.
+3. **Deferred** items: Record in revision log for future consideration.
+
+Write a `revision-log.md` in the plan directory documenting what changed and why:
+
+```markdown
+# Revision Log
+
+## Original Plan Hash
+`<original_hash>` (SHA-256)
+
+## Validate Score
+<score>/10
+
+## Revisions Applied
+
+### Must-Do
+
+1. **<change title>** - <description of change>
+   - Source: Validate recommendation #N
+   - File changed: TASKS.md | PROPERTIES.md | TEST-PLAN.md
+
+### Should-Do
+
+1. **<change title>** - <description>
+   - Source: Validate recommendation #N
+   - Status: Applied (low effort) | Deferred (high effort)
+
+### Deferred
+
+1. **<item>** - <reason for deferral>
+   - Source: Validate recommendation #N
+   - Reason: <explanation>
+
+## Review Gate Results
+
+| Round | Score | Action |
+|-------|-------|--------|
+| 1     | X.X   | Applied N findings |
+| 2     | X.X   | Passed threshold |
+
+## Final Plan Hash
+`<final_hash>` (SHA-256)
+```
+
+### Step 4: Review Gate
+
+Invoke `/wfc-review` on the revised plan using architecture and quality personas. Plan content **must** be delimited with XML tags per PROP-009 prompt injection defense:
+
+```
+/wfc-review
+<plan-content>
+[Full content of revised TASKS.md, PROPERTIES.md, TEST-PLAN.md]
+</plan-content>
+```
+
+**Review Loop**: If the weighted consensus score is below 8.5/10, apply the review findings to the plan and re-invoke `/wfc-review`. Repeat until the score reaches 8.5 or higher. This threshold is the standard -- it is not optional.
+
+### Step 5: Audit Trail
+
+After the review gate passes (or validation is skipped), write a `plan-audit.json` file (timestamped) in the plan directory. The filename includes a timestamp for immutability (e.g., `plan-audit_20260215_103000.json`).
+
+**Required schema for plan-audit_YYYYMMDD_HHMMSS.json:**
+
+```json
+{
+  "hash_algorithm": "sha256",
+  "original_hash": "<64-char hex SHA-256 of draft plan>",
+  "validate_score": 7.8,
+  "revision_count": 2,
+  "review_score": 8.7,
+  "final_hash": "<64-char hex SHA-256 of final plan>",
+  "timestamp": "2026-02-15T10:30:00Z",
+  "validated": true,
+  "skipped": false
+}
+```
+
+Field definitions:
+- `hash_algorithm`: Always `"sha256"`
+- `original_hash`: SHA-256 hash of the draft plan before any revisions
+- `validate_score`: Numeric score from the validation analysis
+- `revision_count`: Total number of revision rounds applied (validation revisions + review loop rounds)
+- `review_score`: Final weighted consensus score from wfc-review (numeric, e.g. 8.7)
+- `final_hash`: SHA-256 hash of the plan after all revisions are complete
+- `timestamp`: ISO 8601 timestamp of when validation completed
+- `validated`: `true` if the final review_score >= 8.5, `false` otherwise
+- `skipped`: `true` if `--skip-validation` was used, `false` otherwise
+
+### Step 6: History Update
+
+Update HISTORY.md to record whether the plan was validated or skipped. Add a `- **Validated:** yes (score: X.X)` or `- **Validated:** skipped` entry to the plan's history record.
+
+### Skip Validation Flag
+
+If `--skip-validation` is passed as an argument:
+
+1. Skip Steps 2-4 entirely (no Validate Gate, no Review Gate, no revision)
+2. Still compute SHA-256 hashes (original_hash = final_hash since no changes were made)
+3. Write `plan-audit_YYYYMMDD_HHMMSS.json` with `"skipped": true` and `"validated": false`
+4. Do not generate `revision-log.md` (no revisions occurred)
+5. Record `- **Validated:** skipped` in HISTORY.md
+
+### Validation Pipeline Summary
+
+| Step | Action | Output |
+|------|--------|--------|
+| 1 | SHA-256 hash of draft plan | `original_hash` |
+| 2 | `/wfc-validate` with `<plan-content>` XML tags (PROP-009) | VALIDATE.md |
+| 3 | Apply Must-Do + low-effort Should-Do revisions | revision-log.md, updated plan files |
+| 4 | `/wfc-review` with `<plan-content>` XML tags (PROP-009), loop until >= 8.5 | Review consensus |
+| 5 | Write plan-audit_YYYYMMDD_HHMMSS.json with all fields | plan-audit_YYYYMMDD_HHMMSS.json |
+| 6 | Update HISTORY.md with validation status | HISTORY.md entry |
+
+## Example Flow
+
+```
+User runs: /wfc-plan
+
+[ADAPTIVE INTERVIEW]
+Q: What are you trying to build?
+A: REST API for user management
+
+Q: What are the core features?
+A: User CRUD, authentication, role-based access
+
+Q: Security requirements?
+A: JWT tokens, role-based authorization
+
+[GENERATION]
+Created TASKS.md (5 tasks)
+Created PROPERTIES.md (3 properties: 1 SAFETY, 2 INVARIANT)
+Created TEST-PLAN.md (12 test cases)
+
+[PLAN VALIDATION PIPELINE]
+SHA-256 hash recorded: a1b2c3...
+Validate Gate: 7.8/10
+  - Applied 2 Must-Do revisions
+  - Applied 1 Should-Do revision (low effort)
+  - Deferred 1 suggestion
+Review Gate round 1: 8.1/10 - applying 2 findings
+Review Gate round 2: 8.7/10 - PASSED
+Wrote revision-log.md
+Wrote plan-audit_YYYYMMDD_HHMMSS.json
+
+[OUTPUT]
+plans/plan_rest_api_20260215_103000/
+  - TASKS.md
+  - PROPERTIES.md
+  - TEST-PLAN.md
+  - interview-results.json
+  - revision-log.md
+  - plan-audit_20260215_103000.json
+
+Next: Run `/wfc-implement plans/plan_rest_api_20260215_103000/TASKS.md`
+```
+
+## Philosophy
+
+**ELEGANT**: Simple interview questions, clear task breakdown
+**MULTI-TIER**: Clean separation of presentation, logic, and data
+**PARALLEL**: Can generate all three files concurrently (future optimization)
+
+---
+
+Python for now
+Before spawn, low cost
+Write to file because we can share amongst reviewers no? 
+Log warning
+
+---
+
+Base directory for this skill: /Users/samfakhreddine/.claude/skills/wfc-validate
+
+# WFC:VALIDATE - Thoughtful Advisor
+
+The experienced staff engineer who asks "is this the right approach?" before we commit.
+
+## What It Does
+
+Analyzes any WFC artifact (plan, architecture, idea) across 7 dimensions:
+
+1. **Do We Even Need This?** - Real problem vs hypothetical
+2. **Is This the Simplest Approach?** - Avoid over-engineering
+3. **Is the Scope Right?** - Not too much, not too little
+4. **What Are We Trading Off?** - Opportunity cost, maintenance burden
+5. **Have We Seen This Fail Before?** - Anti-patterns, known failure modes
+6. **What's the Blast Radius?** - Risk assessment, rollback plan
+7. **Is the Timeline Realistic?** - Hidden dependencies, prototype first?
+
+Returns balanced assessment with verdict: PROCEED, PROCEED WITH ADJUSTMENTS, RECONSIDER, or DON'T PROCEED.
+
+## Usage
+
+```bash
+# Analyze current plan
+/wfc-validate
+
+# Analyze a freeform idea
+/wfc-validate "rewrite auth system in Rust"
+
+# Analyze specific artifact
+/wfc-validate --plan
+/wfc-validate --architecture
+/wfc-validate --task TASK-005
+```
+
+## Output: VALIDATE.md
+
+```markdown
+# Validation Analysis
+
+## Subject: Rewrite auth system in Rust
+## Verdict: 🟡 PROCEED WITH ADJUSTMENTS
+## Overall Score: 7.5/10
+
+---
+
+## Executive Summary
+
+Overall, this approach shows 12 clear strengths and 8 areas for consideration.
+
+The strongest aspects are: Blast Radius, Need, Simplicity.
+
+Key considerations: Opportunity cost of other features, Integration risks, Consider using existing library.
+
+With an overall score of 7.5/10, this is a solid approach that can move forward with attention to the identified concerns.
+
+---
+
+## Dimension Analysis
+
+### Do We Even Need This? — Score: 8/10
+
+**Strengths:**
+- Addresses clear user need
+- Backed by data/metrics
+
+**Concerns:**
+- Consider if existing solution could be improved instead
+
+**Recommendation:** Need is justified, but validate assumptions
+
+[... 6 more dimensions ...]
+
+---
+
+## Simpler Alternatives
+
+- Start with a simpler MVP and iterate based on feedback
+- Consider using existing solution (e.g., off-the-shelf library)
+- Phase the implementation - deliver core value first
+
+---
+
+## Final Recommendation
+
+Proceed, but address these key concerns first: Opportunity cost of other features; Integration risks may extend timeline; Consider using existing library
+```
+
+## Tone
+
+**Discerning but constructive. Honest but not harsh.**
+
+Not a naysayer - wants us to succeed with the best approach. Highlights both strengths and concerns. Suggests simpler alternatives when appropriate.
+
+## Verdict Logic
+
+- **🟢 PROCEED**: Overall score >= 8.5/10, no critical concerns
+- **🟡 PROCEED WITH ADJUSTMENTS**: Score 7.0-8.4, address concerns first
+- **🟠 RECONSIDER**: Score 5.0-6.9, explore alternatives
+- **🔴 DON'T PROCEED**: Score < 5.0 or any dimension <= 4/10
+
+## Integration with WFC
+
+### Can Analyze
+- `wfc-plan` outputs (TASKS.md, PROPERTIES.md)
+- `wfc-architecture` outputs (ARCHITECTURE.md)
+- `wfc-security` outputs (THREAT-MODEL.md)
+- Freeform ideas (text input)
+
+### Produces
+- VALIDATE.md report
+- Simpler alternatives
+- Final recommendation
+
+## Philosophy
+
+**ELEGANT**: Simple 7-dimension framework, clear logic
+**MULTI-TIER**: Analysis (logic) separated from presentation
+**PARALLEL**: Can analyze multiple artifacts concurrently
+
+
+ARGUMENTS: <plan-content>
+---
+title: AST Metrics Integration for WFC Review
+status: active
+created: 2026-02-22T00:00:00Z
+updated: 2026-02-22T00:00:00Z
+tasks_total: 6
+tasks_completed: 0
+complexity: M
+---
+
+# AST Metrics Integration for WFC Review
+
+## Overview
+
+Integrate AST-based static analysis into wfc-review to provide reviewers with supplemental context. Metrics are extracted before reviewer agents spawn, cached to a shared file, and included as guidance (not directives) in reviewer prompts.
+
+**Key Constraints:**
+- Python-only initially (extensible to multi-language later)
+- <100ms overhead for typical PR (5-20 files)
+- Fail-open if parsing fails (log warning, continue review)
+- Metrics are supplemental hints, not replacement for code review
+
+**Success Criteria:**
+- 97% token reduction (8000 → 200 tokens per file) with better context
+- Zero false negatives (parsing failures don't block reviews)
+- Reviewers receive actionable hotspot guidance
+
+---
+
+## TASK-001: Move AST extractor from .development to wfc/scripts/ast_analyzer
+- **Complexity**: S
+- **Dependencies**: []
+- **Properties**: [PROP-001]
+- **Files**:
+  - `.development/ast_metrics_extractor.py` → `wfc/scripts/ast_analyzer/metrics_extractor.py`
+  - New: `wfc/scripts/ast_analyzer/__init__.py`
+  - New: `wfc/scripts/ast_analyzer/language_detection.py`
+- **Description**: Promote the prototype AST metrics extractor to production code under `wfc/scripts/ast_analyzer/`. Add proper imports, docstrings, and type hints. Create `language_detection.py` to identify Python files (extensible for future languages).
+- **Acceptance Criteria**:
+  - [ ] `wfc/scripts/ast_analyzer/metrics_extractor.py` exists with same logic as prototype
+  - [ ] `language_detection.py` provides `is_python(file_path: Path) -> bool`
+  - [ ] All code passes `make format` and `make check-all`
+  - [ ] No regression in .development prototype (keep for reference)
+
+---
+
+## TASK-002: Create AST cache writer for shared reviewer context
+- **Complexity**: S
+- **Dependencies**: [TASK-001]
+- **Properties**: [PROP-002, PROP-003]
+- **Files**:
+  - New: `wfc/scripts/ast_analyzer/cache_writer.py`
+- **Description**: Create a module that analyzes changed files (via `git diff --name-only`), extracts AST metrics for Python files only, and writes results to `.wfc-review/.ast-context.json`. This file is shared across all reviewer agents. If parsing fails for a file, log warning and skip (fail-open).
+- **Acceptance Criteria**:
+  - [ ] `write_ast_cache(changed_files: List[Path], output_path: Path) -> Dict` function exists
+  - [ ] Filters files to Python-only using `language_detection.is_python()`
+  - [ ] Writes JSON with schema: `{"files": [{"file": "path", "metrics": {...}}, ...]}`
+  - [ ] Parse failures logged to stderr, do not raise exceptions
+  - [ ] Excludes `.worktrees/`, `.venv/`, `__pycache__/` from analysis
+  - [ ] Returns parse summary: `{"parsed": N, "failed": M, "duration_ms": X}`
+
+---
+
+## TASK-003: Integrate AST analysis into review orchestrator pre-phase
+- **Complexity**: M
+- **Dependencies**: [TASK-002]
+- **Properties**: [PROP-004]
+- **Files**:
+  - `wfc/scripts/orchestrators/review/orchestrator.py`
+- **Description**: Add a pre-review phase to `orchestrator.py` that runs AST analysis before spawning reviewer agents. This phase:
+  1. Gets changed files from git
+  2. Calls `cache_writer.write_ast_cache()` to generate `.wfc-review/.ast-context.json`
+  3. Measures and logs duration
+  4. Continues even if AST analysis fails entirely (fail-open)
+
+Integration point: After review directory setup, before reviewer Task agent spawns.
+- **Acceptance Criteria**:
+  - [ ] New method `_run_ast_analysis()` in `ReviewOrchestrator` class
+  - [ ] Called before `_spawn_reviewers()` method
+  - [ ] Logs "AST analysis completed in Xms (N files parsed, M failed)"
+  - [ ] If AST analysis crashes, logs error and continues to reviewer spawn
+  - [ ] Telemetry tracks AST phase duration separately
+
+---
+
+## TASK-004: Update reviewer prompts to include AST context file reference
+- **Complexity**: S
+- **Dependencies**: [TASK-003]
+- **Properties**: [PROP-005]
+- **Files**:
+  - `wfc/references/reviewers/security/PROMPT.md`
+  - `wfc/references/reviewers/correctness/PROMPT.md`
+  - `wfc/references/reviewers/performance/PROMPT.md`
+  - `wfc/references/reviewers/maintainability/PROMPT.md`
+  - `wfc/references/reviewers/reliability/PROMPT.md`
+- **Description**: Add a brief note to each reviewer's PROMPT.md instructing them to read `.wfc-review/.ast-context.json` for supplemental context. Emphasize that metrics are guidance, not directives. Include example of what the JSON contains and how to use it.
+- **Acceptance Criteria**:
+  - [ ] All 5 reviewer prompts mention `.ast-context.json`
+  - [ ] Prompts include disclaimer: "AST metrics are supplemental hints. Review the full code."
+  - [ ] Prompts explain JSON schema briefly (file path, complexity, hotspots, dangerous imports)
+  - [ ] Security reviewer told to focus on `dangerous_imports` and `hotspots` with security issues
+  - [ ] Performance reviewer told to focus on `complex_functions` and `max_nesting`
+
+---
+
+## TASK-005: Add tests for AST analyzer components
+- **Complexity**: M
+- **Dependencies**: [TASK-001, TASK-002]
+- **Properties**: [PROP-006]
+- **Files**:
+  - New: `tests/test_ast_metrics_extractor.py`
+  - New: `tests/test_ast_cache_writer.py`
+  - New: `tests/test_language_detection.py`
+- **Description**: Create unit tests for AST analyzer components. Test both happy path (successful parsing) and failure modes (invalid Python, missing files, unsupported languages).
+- **Acceptance Criteria**:
+  - [ ] Test `metrics_extractor.analyze_file()` on valid Python file
+  - [ ] Test `metrics_extractor.analyze_file()` on invalid Python (should fail gracefully)
+  - [ ] Test `cache_writer.write_ast_cache()` creates correct JSON schema
+  - [ ] Test cache writer skips non-Python files
+  - [ ] Test cache writer logs warnings on parse failures
+  - [ ] Test `language_detection.is_python()` returns True for .py files
+  - [ ] All tests pass with `uv run pytest tests/test_ast_*.py -v`
+
+---
+
+## TASK-006: Add documentation and update SKILLS.md reference
+- **Complexity**: S
+- **Dependencies**: [TASK-005]
+- **Properties**: []
+- **Files**:
+  - New: `docs/concepts/AST_CONTEXT.md`
+  - `wfc/references/SKILLS.md`
+- **Description**: Document the AST metrics feature for future maintainers and users. Explain what metrics are extracted, where they're cached, how reviewers use them, and how to extend to new languages.
+- **Acceptance Criteria**:
+  - [ ] `docs/concepts/AST_CONTEXT.md` created with:
+    - Overview of AST integration
+    - Metrics extracted (complexity, nesting, dangerous calls)
+    - Performance characteristics (<100ms for typical PR)
+    - Fail-open behavior on parse errors
+    - Future multi-language extension plan
+  - [ ] `SKILLS.md` updated to mention AST context in wfc-review section
+  - [ ] Document passes `make check-all` (markdownlint)
+
+---
+
+# Formal Properties - AST Metrics Integration
+
+## PROP-001: INVARIANT - Language detection must be deterministic
+- **Statement**: `is_python(file_path)` must return the same result for the same file across multiple invocations
+- **Rationale**: Consistency: reviewers must see the same set of analyzed files regardless of when analysis runs
+- **Priority**: high
+- **Observables**: `language_detection_consistency_ratio` (should be 1.0)
+- **Verification**: Unit test calls `is_python()` 100x on same file, asserts all results identical
+
+---
+
+## PROP-002: SAFETY - Parse failures must not block review
+- **Statement**: If AST parsing fails for any file, the review process must continue without that file's metrics
+- **Rationale**: Availability: a malformed Python file or parser bug should not prevent code review
+- **Priority**: critical
+- **Observables**: `ast_parse_failures`, `reviews_blocked_by_ast_errors` (should be 0)
+- **Verification**: Integration test with intentionally malformed Python file, assert review completes successfully
+
+---
+
+## PROP-003: PERFORMANCE - AST analysis overhead must be <5% of review time
+- **Statement**: For a typical PR (5-20 files), AST analysis duration must be <100ms
+- **Rationale**: Efficiency: reviewers should not wait for static analysis
+- **Priority**: high
+- **Observables**: `ast_analysis_duration_ms`, `review_total_duration_ms`
+- **Verification**: Benchmark test on 20-file PR, assert `ast_analysis_duration_ms < 100`
+
+---
+
+## PROP-004: LIVENESS - AST cache file must exist before reviewers spawn
+- **Statement**: `.wfc-review/.ast-context.json` must exist (even if empty) before any reviewer Task agent is invoked
+- **Rationale**: Correctness: reviewers expect the file to be readable, missing file causes task failures
+- **Priority**: critical
+- **Observables**: `ast_cache_file_missing_errors` (should be 0)
+- **Verification**: Integration test asserts `.ast-context.json` exists after orchestrator pre-phase, before reviewer spawn
+
+---
+
+## PROP-005: INVARIANT - Reviewer prompts must include AST disclaimers
+- **Statement**: All 5 reviewer PROMPT.md files must contain the text "supplemental hints" and "Review the full code"
+- **Rationale**: Safety: prevent reviewers from over-relying on automated metrics
+- **Priority**: medium
+- **Observables**: `reviewer_prompts_with_ast_disclaimers` (should be 5/5)
+- **Verification**: Unit test greps all PROMPT.md files for required phrases
+
+---
+
+## PROP-006: SAFETY - AST analyzer must exclude development artifacts
+- **Statement**: AST analysis must skip files in `.worktrees/`, `.venv/`, `__pycache__/`, and other non-production directories
+- **Rationale**: Correctness: analyzing duplicate or generated code wastes time and pollutes metrics
+- **Priority**: high
+- **Observables**: `ast_analyzed_worktree_files` (should be 0)
+- **Verification**: Integration test with worktree present, assert no worktree files in `.ast-context.json`
+
+---
+
+# Test Plan - AST Metrics Integration
+
+## Testing Approach
+
+### Test Pyramid
+- **Unit tests (60%)**: Individual component validation (metrics_extractor, cache_writer, language_detection)
+- **Integration tests (30%)**: End-to-end review orchestrator with AST pre-phase
+- **Benchmark tests (10%)**: Performance validation (<100ms for 20 files)
+
+### Coverage Targets
+- **Line coverage**: >85% for all `wfc/scripts/ast_analyzer/` modules
+- **Branch coverage**: >75% for error handling paths (parse failures, missing files)
+- **Property coverage**: 100% (all 6 PROP-* verified)
+
+---
+
+## Unit Tests
+
+### TEST-001: Verify PROP-001 (language detection determinism)
+- **Type**: unit
+- **Related Task**: TASK-001
+- **Related Property**: PROP-001
+- **File**: `tests/test_language_detection.py`
+- **Description**: Call `is_python()` 100 times on the same file, assert all results are identical
+- **Steps**:
+  1. Create test file `test.py` with valid Python code
+  2. Call `is_python(Path("test.py"))` 100 times
+  3. Assert all 100 results are `True`
+  4. Repeat with `test.js` file, assert all 100 results are `False`
+- **Expected**: 100/100 identical results for both files
+
+---
+
+### TEST-002: Verify metrics extraction on valid Python file
+- **Type**: unit
+- **Related Task**: TASK-001
+- **Related Property**: none
+- **File**: `tests/test_ast_metrics_extractor.py`
+- **Description**: Parse a known Python file and verify extracted metrics match expected values
+- **Steps**:
+  1. Create `sample.py` with 2 functions, 1 class, complexity 5
+  2. Call `analyze_file(Path("sample.py"))`
+  3. Assert `metrics.functions == 2`, `metrics.classes == 1`
+  4. Assert complexity budget matches expected value
+- **Expected**: Metrics match manual analysis
+
+---
+
+### TEST-003: Verify metrics extractor handles invalid Python gracefully
+- **Type**: unit
+- **Related Task**: TASK-001
+- **Related Property**: PROP-002
+- **File**: `tests/test_ast_metrics_extractor.py`
+- **Description**: Parse malformed Python file and assert exception is caught, not raised
+- **Steps**:
+  1. Create `invalid.py` with syntax errors (e.g., `def foo(`)
+  2. Call `analyze_file(Path("invalid.py"))`
+  3. Assert function returns `None` or error dict, does not raise exception
+- **Expected**: No exception raised, graceful failure
+
+---
+
+### TEST-004: Verify cache writer creates correct JSON schema
+- **Type**: unit
+- **Related Task**: TASK-002
+- **Related Property**: none
+- **File**: `tests/test_ast_cache_writer.py`
+- **Description**: Write AST cache for 3 Python files and validate JSON structure
+- **Steps**:
+  1. Create 3 test Python files with known metrics
+  2. Call `write_ast_cache(files, output_path)`
+  3. Read output JSON, assert schema matches:
+     - `files` array with 3 entries
+     - Each entry has `file`, `lines`, `complexity_budget` keys
+     - `summary` has `total_files`, `parsed`, `failed`, `duration_ms`
+- **Expected**: JSON schema is valid and complete
+
+---
+
+### TEST-005: Verify cache writer skips non-Python files
+- **Type**: unit
+- **Related Task**: TASK-002
+- **Related Property**: none
+- **File**: `tests/test_ast_cache_writer.py`
+- **Description**: Pass mixed file types (Python + JS + Markdown) and assert only Python files analyzed
+- **Steps**:
+  1. Create test files: `test.py`, `test.js`, `README.md`
+  2. Call `write_ast_cache([test.py, test.js, README.md], output)`
+  3. Read output JSON, assert `files` array has only 1 entry (test.py)
+- **Expected**: Only Python files in output
+
+---
+
+### TEST-006: Verify PROP-005 (reviewer prompts include disclaimers)
+- **Type**: unit
+- **Related Task**: TASK-004
+- **Related Property**: PROP-005
+- **File**: `tests/test_reviewer_prompts.py`
+- **Description**: Grep all 5 reviewer PROMPT.md files for required AST disclaimer text
+- **Steps**:
+  1. Read `wfc/references/reviewers/{security,correctness,performance,maintainability,reliability}/PROMPT.md`
+  2. Assert each contains "supplemental hints"
+  3. Assert each contains "Review the full code"
+- **Expected**: All 5 prompts pass assertion
+
+---
+
+## Integration Tests
+
+### TEST-007: Verify PROP-002 (parse failure doesn't block review)
+- **Type**: integration
+- **Related Task**: TASK-003
+- **Related Property**: PROP-002
+- **File**: `tests/test_orchestrator_integration.py`
+- **Description**: Run full review with intentionally malformed Python file, assert review completes
+- **Steps**:
+  1. Create git branch with 2 files: `valid.py` (good), `invalid.py` (syntax error)
+  2. Invoke `ReviewOrchestrator.run()`
+  3. Assert AST pre-phase logs warning about `invalid.py` parse failure
+  4. Assert review completes successfully with consensus score
+  5. Assert `.ast-context.json` contains only `valid.py` metrics
+- **Expected**: Review succeeds, invalid file skipped
+
+---
+
+### TEST-008: Verify PROP-004 (AST cache exists before reviewers spawn)
+- **Type**: integration
+- **Related Task**: TASK-003
+- **Related Property**: PROP-004
+- **File**: `tests/test_orchestrator_integration.py`
+- **Description**: Verify `.ast-context.json` file exists after AST pre-phase, before first reviewer Task call
+- **Steps**:
+  1. Mock `Task` tool to capture when reviewers are spawned
+  2. Run `ReviewOrchestrator.run()` on test PR
+  3. In the mock, assert `.wfc-review/.ast-context.json` exists and is readable
+- **Expected**: File exists before any reviewer spawns
+
+---
+
+### TEST-009: Verify PROP-006 (worktrees excluded from analysis)
+- **Type**: integration
+- **Related Task**: TASK-002
+- **Related Property**: PROP-006
+- **File**: `tests/test_ast_cache_writer.py`
+- **Description**: Create a git worktree with Python files, run AST analysis, assert worktree files not included
+- **Steps**:
+  1. Create main repo with `main.py`
+  2. Create worktree at `.worktrees/test-branch/` with `worktree.py`
+  3. Run `write_ast_cache()` on all Python files in repo
+  4. Assert output JSON contains `main.py` but not `worktree.py`
+- **Expected**: Worktree files excluded
+
+---
+
+### TEST-010: End-to-end review with AST context
+- **Type**: integration
+- **Related Task**: TASK-003, TASK-004
+- **Related Property**: none
+- **File**: `tests/test_orchestrator_integration.py`
+- **Description**: Run full review on real PR and verify reviewers receive AST context
+- **Steps**:
+  1. Create test PR with 5 Python files (mix of simple and complex)
+  2. Run `ReviewOrchestrator.run()`
+  3. Assert `.ast-context.json` created with 5 file entries
+  4. Mock reviewer Task agents, capture their prompts
+  5. Assert prompts mention `.ast-context.json` file reference
+  6. Assert review completes with consensus score
+- **Expected**: Full review uses AST context successfully
+
+---
+
+## Benchmark Tests
+
+### TEST-011: Verify PROP-003 (AST analysis <100ms for 20 files)
+- **Type**: benchmark
+- **Related Task**: TASK-002
+- **Related Property**: PROP-003
+- **File**: `tests/test_ast_performance.py`
+- **Description**: Benchmark AST analysis on 20 Python files, assert duration <100ms
+- **Steps**:
+  1. Create 20 test Python files (mix of sizes: 50-500 lines)
+  2. Call `write_ast_cache(files, output)` with timing
+  3. Assert duration <100ms
+  4. Repeat 10 times, assert P95 <100ms
+- **Expected**: P95 duration <100ms
+
+---
+
+### TEST-012: Measure token savings with AST context
+- **Type**: benchmark
+- **Related Task**: none
+- **Related Property**: none
+- **File**: `tests/test_ast_performance.py`
+- **Description**: Compare token usage of sending full file vs AST summary to reviewers
+- **Steps**:
+  1. Take real WFC file (e.g., `agent.py`, 1468 lines)
+  2. Count tokens for full file content (~8000 tokens)
+  3. Count tokens for AST summary JSON (~200 tokens)
+  4. Assert token reduction >90%
+- **Expected**: >90% token reduction
+</plan-content>
+
+---
+
+As Nike said, just do it
+
+---
+
+Base directory for this skill: /Users/samfakhreddine/.claude/skills/wfc-implement
+
+# wfc-implement - Multi-Agent Parallel Implementation Engine
+
+**Core skill #3** - Reads TASKS.md, orchestrates N agents in isolated worktrees, enforces TDD, routes through review, auto-merges, handles rollbacks.
+
+## Status
+
+✅ **PRODUCTION READY**
+
+- ✅ Shared infrastructure (config, telemetry, schemas, utils)
+- ✅ Orchestrator logic (task queue, dependency management) - 355 lines
+- ✅ Agent implementation (TDD workflow) - 1,468 lines
+- ✅ Merge engine (rebase, integration tests, rollback) - 884 lines
+- ✅ CLI interface - 168 lines
+- ✅ Parser - 128 lines
+- ✅ Executor - 287 lines
+- ✅ Full integration testing - 14 tests passing
+- 🚧 Dashboard (WebSocket, Mermaid visualization) - optional, not required
+
+**Total**: 3,323 lines of production code, fully tested and functional.
+
+## Architecture
+
+### MULTI-TIER Design
+
+```
+┌─────────────────────────────┐
+│  PRESENTATION TIER          │  CLI, Dashboard (future: Web UI, API)
+└──────────────┬──────────────┘
+               │
+┌──────────────▼──────────────┐
+│  LOGIC TIER                 │  Orchestrator, Agents, Merge Engine
+│  - orchestrator.py          │  (Pure logic, no UI)
+│  - agent.py                 │
+│  - merge_engine.py          │
+└──────────────┬──────────────┘
+               │
+┌──────────────▼──────────────┐
+│  DATA TIER                  │  Uses shared infrastructure
+│  - WFCTelemetry             │  (Swappable storage)
+│  - Git (worktrees)          │
+└──────────────┬──────────────┘
+               │
+┌──────────────▼──────────────┐
+│  CONFIG TIER                │  WFCConfig
+│  - wfc.config.json          │  (Global/project)
+└─────────────────────────────┘
+```
+
+### PARALLEL Execution
+
+```
+Orchestrator
+    ├── Agent 1 (worktree-1, TASK-001, sonnet)
+    ├── Agent 2 (worktree-2, TASK-002, opus)
+    ├── Agent 3 (worktree-3, TASK-005, sonnet)
+    └── Agent N (worktree-N, TASK-XXX, haiku)
+         ↓ (all work concurrently)
+    Review (sequential per agent)
+         ↓
+    Merge (sequential, one at a time)
+         ↓
+    Integration Tests
+         ↓ (pass/fail)
+    Main Branch (or Rollback)
+```
+
+## Triggers
+
+```bash
+# Default: use TASKS.md in /plan
+/wfc-implement
+
+# Custom tasks file
+/wfc-implement --tasks path/to/TASKS.md
+
+# Override agent count
+/wfc-implement --agents 5
+
+# Override strategy
+/wfc-implement --strategy smart
+
+# Dry run (show plan, don't execute)
+/wfc-implement --dry-run
+```
+
+## Configuration
+
+```json
+{
+  "orchestration": {
+    "agent_strategy": "smart",
+    "max_agents": 5
+  },
+  "worktree": {
+    "directory": ".worktrees",
+    "cleanup_on_success": true
+  },
+  "tdd": {
+    "enforce_test_first": true,
+    "require_all_properties_tested": true
+  },
+  "merge": {
+    "auto_merge": true,
+    "require_rebase": true
+  },
+  "integration_tests": {
+    "command": "pytest",
+    "timeout_seconds": 300,
+    "run_after_every_merge": true
+  },
+  "rollback": {
+    "strategy": "re_queue",
+    "max_rollback_retries": 2
+  },
+  "dashboard": {
+    "enabled": true,
+    "websocket_port": 9876
+  }
+}
+```
+
+## TDD Workflow (Per Agent)
+
+```
+1. UNDERSTAND
+   - Read task definition
+   - Read properties
+   - Read test plan
+   - Read existing code
+
+2. TEST FIRST (RED)
+   - Write tests BEFORE implementation
+   - Tests cover acceptance criteria
+   - Tests cover properties
+   - Run tests → they FAIL
+
+3. IMPLEMENT (GREEN)
+   - Write minimum code to pass tests
+   - Follow ELEGANT principles
+   - Run tests → they PASS
+
+4. REFACTOR
+   - Clean up without changing behavior
+   - Maintain SOLID & DRY
+   - Run tests → still PASS
+
+5. SUBMIT
+   - Commit to worktree branch
+   - Produce agent report
+   - Route to wfc-consensus-review
+```
+
+## Dependencies
+
+- **Consumes**: TASKS.md, PROPERTIES.md, TEST-PLAN.md (from wfc-plan)
+- **Integrates**: wfc-consensus-review (for code review)
+- **Produces**: PR to develop branch, telemetry records, agent reports
+
+## Post-Deploy Validation Plan
+
+After all tasks are implemented and merged, the orchestrator generates a post-deploy validation plan included in the PR body.
+
+### Generation Process
+
+1. Collect all PROPERTIES.md entries for implemented tasks
+2. Map each property to observable metrics:
+   - SAFETY properties → error rate monitors, auth failure alerts
+   - PERFORMANCE properties → latency P95/P99 thresholds, throughput baselines
+   - LIVENESS properties → health check endpoints, heartbeat monitors
+   - INVARIANT properties → data consistency checks, constraint validations
+3. Generate validation plan section for PR body
+
+### Validation Plan Format
+
+```markdown
+## Post-Deploy Monitoring & Validation
+
+### Properties Validated
+| Property | Type | Observable | Threshold |
+|----------|------|-----------|-----------|
+| PROP-001 | SAFETY | auth_failure_rate | < 0.1% |
+| PROP-002 | PERFORMANCE | api_latency_p99 | < 200ms |
+
+### Monitoring Queries
+- `auth_failures{service="api"} / auth_total > 0.001`
+- `histogram_quantile(0.99, api_latency) > 0.2`
+
+### Validation Window
+- Standard changes: 24 hours
+- Data/auth changes: 72 hours
+- Infrastructure changes: 1 week
+
+### Rollback Criteria
+- Any SAFETY property violation triggers immediate rollback
+- PERFORMANCE degradation >20% from baseline triggers investigation
+```
+
+## Philosophy
+
+**ELEGANT**: Simple agent logic, clear orchestration, no over-engineering
+**MULTI-TIER**: Presentation/Logic/Data/Config cleanly separated
+**PARALLEL**: Maximum concurrency where safe (agents, tasks, reviews)
+
+## Git Workflow Policy (PR-First)
+
+WFC creates feature branches, pushes them, and opens GitHub PRs for team review.
+
+```
+WFC workflow:
+  Implement -> Quality -> Review -> Push Branch -> Create GitHub PR to develop
+                                                        |
+                                                  [WFC STOPS HERE]
+                                                        |
+                                      Auto-merge for claude/* branches
+                                      Manual review for feat/* branches
+```
+
+Agent branches (claude/*) auto-merge to develop when CI passes. Human branches require manual review. Release candidates are cut from develop to main on a schedule.
+
+**What WFC does:**
+- Creates feature branches
+- Pushes branches to remote
+- Creates GitHub PRs targeting develop (draft by default)
+
+**What WFC never does:**
+- Push directly to main/master
+- Force push
+- Merge PRs to main (you decide when to cut releases)
+
+**Legacy mode:** Set `"merge.strategy": "direct"` in wfc.config.json for local-only merge.
+
+See [GIT_SAFETY_POLICY.md](../../../docs/security/GIT_SAFETY_POLICY.md) for complete policy.
+
+## Current Implementation Status
+
+### ✅ Production Ready (3,323 lines)
+- Orchestrator (task queue, dependency management) - 355 lines
+- Agent TDD workflow - 1,468 lines
+- Merge engine with rollback - 884 lines
+- CLI interface - 168 lines
+- Parser - 128 lines
+- Executor - 287 lines
+- Full integration testing - 14 tests passing
+- Shared infrastructure (config, telemetry, schemas, utils)
+- Real wfc-plan and wfc-consensus-review integration
+
+### 🚧 Optional Enhancements
+- Dashboard (WebSocket, Mermaid visualization)
+- Performance optimization for very large task lists (>50 tasks)
+
+
+ARGUMENTS: plans/plan_ast_metrics_integration_20260222/TASKS.md
+
+---
+
+Sitrep
+
+---
+
+Need a follow up to figure out why the orchestraator failed
+
+---
+
+Sitrep
+
+---
+
+1 fix it and do it right is best
+
+---
+
+Log an issue do the rest manual yeah
+
+---
+
+This session is being continued from a previous conversation that ran out of context. The summary below covers the earlier portion of the conversation.
+
+Analysis:
+Let me chronologically analyze this conversation:
+
+1. **Session Start - Vibe Mode Conversation**: User initiated with `/wfc-vibe` to discuss sending AST to code review. We had a natural brainstorming conversation about:
+   - Whether reviewers need raw AST vs. derived insights
+   - What metrics would be most valuable (complexity, dangerous calls, nesting depth)
+   - Token efficiency (97% reduction: 8000 → 200 tokens per file)
+   - Performance benchmarking (ran actual tests on WFC codebase)
+   - Decision to use supplemental context, not replacement for review
+
+2. **Transition to Planning**: User said "Sounds right, How long does static analysis take" - we benchmarked and found <100ms for 311 files
+
+3. **User Decision Point**: "Yes" to running experiment, then "Make sure it just provides it as help not as the only place to look" - critical requirement that metrics are supplemental
+
+4. **Implementation Request**: User said "Ready go implement" then "As Nike said, just do it"
+
+5. **Planning Phase**: I invoked `/wfc-plan` which:
+   - Conducted adaptive interview (confirmed Python-only, pre-spawn execution, file-based sharing, log warnings)
+   - Generated 7 tasks in `plans/plan_ast_metrics_integration_20260222/TASKS.md`
+   - Generated PROPERTIES.md with 6 formal properties
+   - Generated TEST-PLAN.md with 12 tests
+   - Ran validation (score 8.3/10 - PROCEED WITH ADJUSTMENTS)
+   - Applied 4 revisions (added TASK-007 for observability, enhanced monitoring, stronger disclaimers)
+
+6. **Implementation Attempt - wfc-implement Issues**: 
+   - Tried to use `/wfc-implement` orchestrator
+   - Discovered Bug #1: Broken import `from wfc_review.mock import mock_review`
+   - Fixed to: `from wfc.skills import wfc_review` + `from wfc_review.mock import mock_review`
+   - Discovered Bug #2: CLI/orchestrator signature mismatch
+   - User said "1 fix it and do it right is best" - clear directive to fix orchestrator then use it
+   - After attempting fix, still had issues with signature mismatch
+   - User said "Log an issue do the rest manual yeah" - clear pivot to manual implementation
+
+7. **Manual Implementation - Current Work**:
+   - Documented bugs in `.development/wfc-implement-bugs.md`
+   - **TASK-001 COMPLETED**: Created production AST analyzer
+     - `wfc/scripts/ast_analyzer/__init__.py` - exports
+     - `wfc/scripts/ast_analyzer/metrics_extractor.py` - core analysis (ComplexityVisitor, NestingVisitor, CallVisitor, analyze_file, summarize_for_reviewer)
+     - `wfc/scripts/ast_analyzer/language_detection.py` - is_python() for file filtering
+   - **TASK-002 COMPLETED**: Created cache writer
+     - `wfc/scripts/ast_analyzer/cache_writer.py` - write_ast_cache() function with fail-open error handling
+     - Tested and verified working (4.02ms for single file)
+   - **TASK-003 IN PROGRESS**: Started reading orchestrator to integrate AST pre-phase
+     - Read `wfc/scripts/orchestrators/review/orchestrator.py` (lines 1-100)
+     - Need to add `_run_ast_analysis()` method before reviewer spawn
+
+**Key Technical Details**:
+- Python 3.12+, uses ast module (stdlib)
+- Performance: 1.27ms average per file, <100ms for 20 files
+- Token savings: 97% (8000 → 200 tokens per file)
+- Fail-open strategy: parse failures log warnings, don't block reviews
+- Excludes: `.worktrees/`, `.venv/`, `__pycache__/`
+- Output: `.wfc-review/.ast-context.json` shared across all 5 reviewers
+
+**User Feedback Points**:
+1. "Make sure it just provides it as help not as the only place to look" - metrics are supplemental
+2. "1 fix it and do it right is best" - fix orchestrator properly
+3. "Log an issue do the rest manual yeah" - pivot to manual after discovering orchestrator bugs
+
+**Errors Encountered**:
+1. wfc-implement import error: `from wfc_review.mock` → fixed with PEP 562 two-step import
+2. wfc-implement signature mismatch: CLI expects `strategy`, `max_agents`, `dry_run` but orchestrator doesn't accept them
+3. Multiple TDD hook warnings (expected, tests come in TASK-005)
+
+**Current State**: 
+- Just read orchestrator.py to understand structure
+- Need to add AST pre-phase integration
+- 5 more tasks remaining (TASK-003 through TASK-007)
+
+Summary:
+1. Primary Request and Intent:
+   - User wanted to integrate AST metrics into WFC code review to provide reviewers with supplemental context (NOT replacement for actual review)
+   - Started with natural brainstorming about AST vs. derived insights
+   - Decided on: Python-only initially, <100ms overhead, fail-open strategy, 97% token reduction
+   - Explicit requirement: "Make sure it just provides it as help not as the only place to look"
+   - Implementation approach: "As Nike said, just do it" then pivoted to "fix it and do it right is best" for orchestrator, finally "Log an issue do the rest manual yeah" after discovering orchestrator bugs
+
+2. Key Technical Concepts:
+   - AST (Abstract Syntax Tree) parsing using Python's stdlib ast module
+   - Cyclomatic complexity calculation (McCabe complexity)
+   - Token optimization (97% reduction: 8000 → 200 tokens per file)
+   - Fail-open error handling (parse failures don't block reviews)
+   - WFC multi-agent review system (5 fixed reviewers: Security, Correctness, Performance, Maintainability, Reliability)
+   - PEP 562 module import bridge for hyphenated skill names
+   - TDD workflow with formal properties (SAFETY, LIVENESS, INVARIANT, PERFORMANCE)
+   - Validation pipeline (wfc-validate score: 8.3/10)
+
+3. Files and Code Sections:
+
+   - `.development/ast_metrics_extractor.py` (prototype)
+     - Original working prototype that validated the approach
+     - Benchmarked at 1.27ms average per file, 311 files in 0.395s
+     - Contains ComplexityVisitor, NestingVisitor, CallVisitor classes
+   
+   - `.development/benchmark_ast_parsing.py`
+     - Performance validation script
+     - Key finding: 154,555 lines/second throughput, zero parse failures
+     - Excludes `.worktrees/` to avoid duplicates
+   
+   - `.development/wfc-implement-bugs.md`
+     - Documentation of orchestrator bugs discovered during implementation
+     - Bug #1 (FIXED): Import error `from wfc_review.mock`
+     - Bug #2 (OPEN): CLI/orchestrator signature mismatch
+   
+   - `wfc/skills/wfc-implement/executor.py:268` (bug fix)
+     - **Fixed broken import**:
+     ```python
+     from wfc.skills import wfc_review  # noqa: F401 - needed for subsequent import
+     from wfc_review.mock import mock_review
+     ```
+   
+   - `plans/plan_ast_metrics_integration_20260222/TASKS.md`
+     - 7 tasks with dependencies, complexity ratings, properties
+     - Tasks: Move extractor to production, create cache writer, integrate into orchestrator, update prompts, add tests, add docs, add observability
+     - Validated score: 8.3/10 (PROCEED WITH ADJUSTMENTS)
+   
+   - `plans/plan_ast_metrics_integration_20260222/PROPERTIES.md`
+     - 6 formal properties (2 SAFETY, 1 LIVENESS, 2 INVARIANT, 1 PERFORMANCE)
+     - PROP-002 (critical): Parse failures must not block review
+     - PROP-004 (critical): AST cache must exist before reviewers spawn
+   
+   - `plans/plan_ast_metrics_integration_20260222/TEST-PLAN.md`
+     - 12 tests (6 unit, 4 integration, 2 benchmark)
+     - Coverage targets: >85% line, >75% branch, 100% property coverage
+   
+   - `wfc/scripts/ast_analyzer/__init__.py` (CREATED)
+     - Exports: analyze_file, summarize_for_reviewer, is_python, get_language
+     - All visitor classes and dataclasses exported
+   
+   - `wfc/scripts/ast_analyzer/metrics_extractor.py` (CREATED - 280 lines)
+     - **Core production module** moved from prototype
+     - Key classes:
+       ```python
+       class ComplexityVisitor(ast.NodeVisitor):
+           def __init__(self):
+               self.complexity = 1  # Base complexity
+       
+       class NestingVisitor(ast.NodeVisitor):
+           def _enter_block(self, node):
+               self.current_depth += 1
+               self.max_depth = max(self.max_depth, self.current_depth)
+       
+       class CallVisitor(ast.NodeVisitor):
+           DANGEROUS_CALLS = {"eval", "exec", "compile", "__import__", ...}
+       ```
+     - Main functions:
+       ```python
+       def analyze_file(file_path: Path) -> FileMetrics
+       def summarize_for_reviewer(metrics: FileMetrics) -> Dict  # 50-100 tokens vs 1000+
+       ```
+   
+   - `wfc/scripts/ast_analyzer/language_detection.py` (CREATED)
+     - Simple Python detection for now, extensible for multi-language
+     - ```python
+       def is_python(file_path: Path) -> bool:
+           return file_path.suffix == ".py"
+       ```
+   
+   - `wfc/scripts/ast_analyzer/cache_writer.py` (CREATED)
+     - **Fail-open implementation** with stderr logging
+     - ```python
+       def write_ast_cache(
+           changed_files: List[Path], 
+           output_path: Path, 
+           exclude_dirs: List[str] | None = None
+       ) -> Dict:
+           # Excludes: .worktrees, .venv, __pycache__, .git, node_modules
+           # Returns: {"parsed": N, "failed": M, "duration_ms": X}
+       ```
+     - Tested: 4.02ms for single file, creates `.wfc-review/.ast-context.json`
+   
+   - `wfc/scripts/orchestrators/review/orchestrator.py` (READ lines 1-100)
+     - Two-phase workflow: prepare_review() → finalize_review()
+     - ReviewOrchestrator class initialized with ReviewerEngine, Fingerprinter, ConsensusScore
+     - **Need to add**: `_run_ast_analysis()` method in pre-review phase
+
+4. Errors and Fixes:
+
+   - **Error 1: wfc-implement module import failure**
+     - Error: `ModuleNotFoundError: No module named 'wfc_review'`
+     - Root cause: Hyphenated directory `wfc-review` requires PEP 562 two-step import
+     - Fix applied:
+       ```python
+       from wfc.skills import wfc_review  # noqa: F401
+       from wfc_review.mock import mock_review
+       ```
+     - File: `wfc/skills/wfc-implement/executor.py:268-269`
+     - User feedback: "1 fix it and do it right is best"
+   
+   - **Error 2: wfc-implement CLI/orchestrator signature mismatch**
+     - Error: `TypeError: run_implementation() got an unexpected keyword argument 'strategy'`
+     - Root cause: CLI passes `strategy`, `max_agents`, `dry_run` but orchestrator signature is:
+       ```python
+       def run_implementation(
+           tasks_file: Path,
+           config: Optional[WFCConfig] = None,
+           project_root: Optional[Path] = None
+       ) -> RunResult:
+       ```
+     - Fix: Not implemented (orchestrator has deeper issues)
+     - User feedback: "Log an issue do the rest manual yeah" - pivot to manual implementation
+     - Documented in: `.development/wfc-implement-bugs.md`
+   
+   - **Error 3: Python cache preventing import fix**
+     - Cleared all `__pycache__` directories with:
+       ```bash
+       find wfc -type d -name "__pycache__" -exec rm -rf {} + 2>/dev/null
+       ```
+   
+   - **Error 4: Missing language_detection exports**
+     - ImportError when trying to import `is_python`
+     - Fixed by adding to `__init__.py`:
+       ```python
+       from .language_detection import get_language, is_python
+       ```
+
+5. Problem Solving:
+
+   - **Problem**: How to provide AST context without overwhelming reviewers?
+     - Solution: Compact JSON summaries (50-100 tokens) with disclaimers
+     - Design pattern: "_note" fields with emojis explaining metrics are hints, not truth
+   
+   - **Problem**: wfc-implement orchestrator broken
+     - Initial attempt: Fix broken import (SUCCESSFUL)
+     - Second issue: Signature mismatch between CLI and orchestrator
+     - Final solution: Document bugs, implement manually following validated plan
+   
+   - **Problem**: Performance overhead of AST parsing
+     - Benchmarked: 1.27ms average per file, <100ms for 20 files
+     - Result: Negligible (<0.2% overhead for typical review)
+   
+   - **Problem**: Parse failures could block reviews
+     - Solution: Fail-open strategy - log warnings to stderr, continue review
+     - Implementation: try/except in cache_writer with SyntaxError and Exception handlers
+   
+   - **Ongoing**: TDD hook warnings about missing tests
+     - Expected: Tests come in TASK-005
+     - Current approach: Implement production code first, comprehensive tests later
+
+6. All User Messages:
+
+   - "Can we send the AST to the code review so it's better not just the files"
+   - "Sounds right How long does static analysis take"
+   - "Yes" (to running benchmark experiment)
+   - "Ok make sure we ignore worktrees that aren't relevant to the reviewer"
+   - "Did this glean any info" (about benchmark results)
+   - "You decide what reviewers need And let's break up that agents.py it's too big"
+   - "AST metrics I'll come back to the other in a fresh session."
+   - "Ready go implement"
+   - "As Nike said, just do it"
+   - "Need a follow up to figure out why the orchestraator failed"
+   - "1 fix it and do it right is best"
+   - "Log an issue do the rest manual yeah"
+   - Multiple TDD hook system reminders (not user messages, system feedback)
+
+7. Pending Tasks:
+
+   - **TASK-003**: Integrate AST analysis into review orchestrator pre-phase (IN PROGRESS)
+     - Add `_run_ast_analysis()` method to ReviewOrchestrator
+     - Call before `_spawn_reviewers()` method
+     - Log "AST analysis completed in Xms (N files parsed, M failed)"
+     - Fail-open if AST crashes
+     - Add telemetry tracking
+   
+   - **TASK-004**: Update reviewer prompts to include AST context file reference
+     - Update 5 PROMPT.md files (security, correctness, performance, maintainability, reliability)
+     - Add strong disclaimers: "AST metrics are starting points for investigation"
+     - Include caveats about high complexity not meaning bad code
+   
+   - **TASK-005**: Add tests for AST analyzer components
+     - 12 tests total (6 unit, 4 integration, 2 benchmark)
+     - Verify all 6 formal properties (PROP-001 through PROP-006)
+   
+   - **TASK-006**: Add documentation
+     - Create `docs/concepts/AST_CONTEXT.md`
+     - Update `wfc/references/SKILLS.md`
+   
+   - **TASK-007**: Add observability and monitoring
+     - Log parsing time per file to `ast-analysis.log`
+     - Track cache_file_size_bytes in telemetry
+     - Warn if >10% of files fail to parse
+
+8. Current Work:
+
+   Just completed TASK-002 (cache writer) and started TASK-003 (orchestrator integration). 
+   
+   Read the first 100 lines of `wfc/scripts/orchestrators/review/orchestrator.py` to understand structure:
+   - Found `ReviewOrchestrator` class at line 53
+   - Two-phase workflow: `prepare_review()` at line 156, `finalize_review()` at line 181
+   - Initialized with ReviewerEngine, Fingerprinter, ConsensusScore
+   - Has output_dir configuration handling project context
+   
+   According to TASK-003 requirements, need to:
+   1. Add `_run_ast_analysis()` method to ReviewOrchestrator class
+   2. Call it after review directory setup, before reviewer spawn
+   3. Get changed files from git, call cache_writer.write_ast_cache()
+   4. Generate `.wfc-review/.ast-context.json`
+   5. Log duration and parse statistics
+   6. Continue even if AST analysis fails (fail-open)
+
+9. Optional Next Step:
+
+   Continue TASK-003 by reading more of the orchestrator.py file to find:
+   - Where review directory is set up
+   - Where reviewers are spawned (`_spawn_reviewers()` method)
+   - How to get changed files from git (likely uses existing git utilities)
+   - Where to insert the `_run_ast_analysis()` method call
+   
+   Direct quote from TASK-003: "Integration point: After review directory setup, before reviewer Task agent spawns."
+   
+   Acceptance criteria to implement:
+   - "New method `_run_ast_analysis()` in `ReviewOrchestrator` class"
+   - "Called before `_spawn_reviewers()` method"
+   - "Logs 'AST analysis completed in Xms (N files parsed, M failed)'"
+   - "If AST analysis crashes, logs error and continues to reviewer spawn"
+   - "Telemetry tracks AST phase duration separately"
+   - "Logs warning if >10% of files fail to parse (potential systemic issue)"
+   - "Telemetry includes `cache_file_size_bytes` for monitoring growth"
+
+If you need specific details from before compaction (like exact code snippets, error messages, or content you generated), read the full transcript at: /Users/samfakhreddine/.REDACTED.jsonl
+Please continue the conversation from where we left it off without asking the user any further questions. Continue with the last task that you were asked to work on.
+
+---
+
+Yeah let's try the new review
+
+---
+
+Base directory for this skill: /Users/samfakhreddine/.claude/skills/wfc-review
+
+# WFC:CONSENSUS-REVIEW - Five-Agent Consensus Code Review
+
+Five fixed reviewers analyze code and a Consensus Score determines the decision.
+
+## What It Does
+
+1. **Security Reviewer** - Injection, auth/authz, OWASP Top 10
+2. **Correctness Reviewer** - Logic bugs, edge cases, type safety
+3. **Performance Reviewer** - Algorithmic efficiency, N+1 queries, memory
+4. **Maintainability Reviewer** - Readability, naming, SOLID/DRY, complexity
+5. **Reliability Reviewer** - Error handling, fault tolerance, graceful degradation
+6. **Consensus Score (CS)** - Weighted formula with Minority Protection Rule
+
+## Usage
+
+```bash
+# Review specific task
+/wfc-consensus-review TASK-001
+
+# Review files directly
+/wfc-consensus-review path/to/code
+
+# With properties
+/wfc-consensus-review TASK-001 --properties PROP-001,PROP-002
+
+# Multi-tenant mode (with project and developer isolation)
+/wfc-consensus-review --project-id my-project --developer-id alice TASK-001
+
+# All flags combined
+/wfc-consensus-review --project-id proj1 --developer-id bob --properties PROP-001 path/to/code
+```
+
+### Multi-Tenant Flags
+
+- `--project-id PROJECT_ID`: Namespace review outputs and worktrees by project (e.g., `proj1`, `my-project`)
+- `--developer-id DEVELOPER_ID`: Attribute review findings and knowledge entries to specific developer (e.g., `alice`, `bob`)
+
+When these flags are provided:
+- Review outputs go to `.wfc/output/{project_id}/`
+- Worktrees created at `.worktrees/{project_id}/wfc-{task_id}`
+- Knowledge base entries tagged with developer attribution
+- Metrics isolated by project
+
+If flags are omitted, uses legacy single-project mode (backward compatible).
+
+## Two-Phase Workflow
+
+### Phase 1: Prepare Review
+```
+orchestrator.prepare_review(request) -> 5 task specs
+```
+Builds prompts for each reviewer with file list, diff, properties, and knowledge context. Irrelevant reviewers (based on file extensions) are marked for skipping.
+
+### Phase 2: Finalize Review
+```
+orchestrator.finalize_review(request, responses, output_dir) -> ReviewResult
+```
+1. Parse subagent responses into findings
+2. Deduplicate findings across reviewers (SHA-256 fingerprinting with +/-3 line tolerance)
+3. Calculate Consensus Score
+4. Generate markdown report
+
+## Consensus Score (CS) Formula
+
+```
+CS = (0.5 * R_bar) + (0.3 * R_bar * (k/n)) + (0.2 * R_max)
+```
+
+Where:
+- **R_i** = (severity * confidence) / 10 for each deduplicated finding
+- **R_bar** = mean of all R_i values
+- **k** = total reviewer agreements (sum of per-finding reviewer counts)
+- **n** = 5 (total reviewers)
+- **R_max** = max(R_i) across all findings
+
+## Decision Tiers
+
+| Tier | CS Range | Action |
+|------|----------|--------|
+| Informational | CS < 4.0 | Log only, review passes |
+| Moderate | 4.0 <= CS < 7.0 | Inline comment, review passes |
+| Important | 7.0 <= CS < 9.0 | Block merge, review fails |
+| Critical | CS >= 9.0 | Block + escalate, review fails |
+
+## Minority Protection Rule (MPR)
+
+Prevents a single critical finding from being diluted by many clean reviews:
+
+```
+IF R_max >= 8.5 AND k >= 1 AND finding is from security/reliability:
+    CS_final = max(CS, 0.7 * R_max + 2.0)
+```
+
+## Finding Deduplication
+
+Findings from different reviewers pointing to the same issue are merged:
+- **Fingerprint**: SHA-256 of `file:normalized_line:category` (line tolerance +/-3)
+- **Merge**: highest severity wins, all descriptions and remediations preserved
+- **k tracking**: number of reviewers who flagged the same issue (increases CS)
+
+## Output
+
+### Review Report (REVIEW-TASK-XXX.md)
+
+```markdown
+# Review Report: TASK-001
+
+**Status**: PASSED
+**Consensus Score**: CS=3.50 (informational)
+**Reviewers**: 5
+**Findings**: 2
+
+---
+
+## Reviewer Summaries
+
+### PASS: Security Reviewer
+**Score**: 10.0/10
+**Summary**: No security issues found.
+**Findings**: 0
+
+### PASS: Correctness Reviewer
+**Score**: 8.5/10
+**Summary**: Minor edge case.
+**Findings**: 1
+
+...
+
+---
+
+## Findings
+
+### [MODERATE] src/auth.py:45
+**Category**: validation
+**Severity**: 5.0
+**Confidence**: 7.0
+**Reviewers**: correctness, reliability (k=2)
+**R_i**: 3.50
+
+**Description**: Missing input validation on user_id
+
+**Remediation**:
+- Add type check and bounds validation
+
+---
+
+## Summary
+
+CS=3.50 (informational): 2 finding(s), review passed.
+```
+
+## Integration with WFC
+
+### Called By
+- `wfc-implement` - After agent completes TDD workflow
+
+### Consumes
+- Task files (from git worktree)
+- PROPERTIES.md (formal properties to verify)
+- Git diff content
+
+### Produces
+- Review report (REVIEW-{task_id}.md)
+- Consensus Score decision (pass/fail with tier)
+- Deduplicated findings with reviewer agreement counts
+
+## Conditional Reviewer Activation
+
+Reviewers are activated based on change characteristics, not just file extensions. This saves tokens on small changes and adds depth on risky ones.
+
+### Tier 1: Lightweight Review (S complexity, <50 lines changed)
+
+Only 2 reviewers run:
+- **Correctness** (always)
+- **Maintainability** (always)
+
+**Triggers:** Single-file changes, typo fixes, small refactors, config changes.
+
+### Tier 2: Standard Review (M complexity, 50-500 lines changed)
+
+All 5 base reviewers run with relevance gating.
+
+### Tier 3: Deep Review (L/XL complexity, >500 lines or risk signals)
+
+All 5 base reviewers + conditional specialist agents:
+
+| Signal Detected | Additional Agent | What It Checks |
+|----------------|-----------------|----------------|
+| Database migration files | **Schema Drift Detector** | Unrelated schema changes, migration safety |
+| Database migration files | **Data Migration Expert** | ID mappings, swapped values, rollback safety |
+| Auth/security changes | **Auth Deep Dive** | Token handling, session management, RBAC gaps |
+| API endpoint changes | **API Contract Checker** | Breaking changes, versioning, backwards compat |
+| Infrastructure/deploy | **Deploy Verification** | Go/No-Go checklist, rollback plan |
+
+### Relevance Gate (File Extensions)
+
+Each reviewer has domain-specific file extensions. Only relevant reviewers execute:
+
+| Reviewer | Relevant Extensions |
+|----------|-------------------|
+| Security | .py, .js, .ts, .go, .java, .rb, .php, .rs |
+| Correctness | .py, .js, .ts, .go, .java, .rb, .rs, .c, .cpp |
+| Performance | .py, .js, .ts, .go, .java, .rs, .sql |
+| Maintainability | * (always relevant) |
+| Reliability | .py, .js, .ts, .go, .java, .rs |
+
+### Signal Detection Rules
+
+```
+IF files include **/migrations/** OR **/migrate/** OR schema changes:
+    → Activate Schema Drift Detector + Data Migration Expert
+
+IF files include **/auth/** OR **/security/** OR JWT/token/session patterns:
+    → Activate Auth Deep Dive
+
+IF files include **/api/** OR **/routes/** OR **/endpoints/**:
+    → Activate API Contract Checker
+
+IF files include Dockerfile, docker-compose, k8s, terraform, CI configs:
+    → Activate Deploy Verification
+```
+
+### Knowledge Search (Always-On)
+
+Regardless of tier, the review always searches `docs/solutions/` for related past issues via wfc-compound's knowledge base. This surfaces known pitfalls before they become findings.
+
+### Per-Project Configuration
+
+Projects can customize which reviewers run via `wfc-review.local.md`:
+
+```yaml
+---
+review_agents:
+  - security
+  - correctness
+  - performance
+  - maintainability
+  - reliability
+additional_agents:
+  - schema-drift-detector
+tier_overrides:
+  always_deep: true  # Force Tier 3 for all reviews
+---
+
+# Optional: Review Context
+Focus on Rails conventions and N+1 query detection.
+```
+
+## Philosophy
+
+**ELEGANT**: Simple two-phase workflow, deterministic reviewer set
+**MULTI-TIER**: Engine (logic) separated from CLI (presentation)
+**PARALLEL**: 5 reviewers can run concurrently via Task tool
+**TOKEN-AWARE**: Relevance gate skips irrelevant reviewers
+
+---
+
+Ok develop to main flow
