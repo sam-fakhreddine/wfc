@@ -680,8 +680,7 @@ class TestSecurityBoundary:
             "\U0001f300-\U0001f5ff"
             "\U0001f680-\U0001f6ff"
             "\u2600-\u27bf"
-            "\u26aa-\u26ff"
-            "📍⚠️💡🔍"
+            "\U0001f4cd\u26a0\ufe0f\U0001f4a1\U0001f50d"
             "]"
         )
         assert not emoji_pattern.search(json_str), f"Emoji found in summary output: {json_str}"
