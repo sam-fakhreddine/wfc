@@ -6,8 +6,13 @@ Eliminates inline boilerplate for JSON, YAML, and text file operations.
 """
 
 import json
+import logging
 from pathlib import Path
 from typing import Any, Dict, Optional
+
+from filelock import FileLock, Timeout
+
+logger = logging.getLogger(__name__)
 
 
 class FileIOError(Exception):
@@ -71,7 +76,6 @@ def save_json(
     try:
         path = Path(path)
 
-        # Create parent directory if needed
         if ensure_parent and not path.parent.exists():
             path.parent.mkdir(parents=True, exist_ok=True)
 
@@ -107,7 +111,6 @@ def update_json(
         config = update_json(Path('config.json'), {'nested': {'key': 'value'}})
     """
     try:
-        # Load existing or start with empty
         if Path(path).exists():
             data = load_json(path)
         elif create_if_missing:
@@ -115,10 +118,8 @@ def update_json(
         else:
             raise FileIOError(f"File not found and create_if_missing=False: {path}")
 
-        # Update with new values (shallow merge)
         data.update(updates)
 
-        # Save back
         save_json(path, data)
 
         return data
@@ -178,7 +179,6 @@ def save_text(path: Path, content: str, ensure_parent: bool = True) -> None:
     try:
         path = Path(path)
 
-        # Create parent directory if needed
         if ensure_parent and not path.parent.exists():
             path.parent.mkdir(parents=True, exist_ok=True)
 
@@ -189,9 +189,51 @@ def save_text(path: Path, content: str, ensure_parent: bool = True) -> None:
         raise FileIOError(f"Error writing {path}: {e}")
 
 
+def safe_append_text(
+    path: Path, content: str, ensure_parent: bool = True, timeout: int = 10
+) -> None:
+    """
+    Append to text file safely with file locking for concurrent writes.
+
+    Args:
+        path: Path to text file
+        content: String content to append
+        ensure_parent: Create parent directory if needed (default: True)
+        timeout: Lock timeout in seconds (default: 10)
+
+    Raises:
+        FileIOError: If file can't be written or lock times out
+
+    Example:
+        safe_append_text(Path('log.txt'), 'New log entry\\n')
+        safe_append_text(Path('log.txt'), 'Entry\\n', timeout=5)
+    """
+    try:
+        path = Path(path).resolve()
+        lock_path = path.parent / f"{path.name}.lock"
+        lock_path = lock_path.resolve()
+
+        if lock_path.parent != path.parent:
+            raise FileIOError(f"Lock file path traversal detected: {lock_path}")
+
+        if ensure_parent and not path.parent.exists():
+            path.parent.mkdir(parents=True, exist_ok=True)
+
+        with FileLock(lock_path, timeout=timeout):
+            with open(path, "a", encoding="utf-8") as f:
+                f.write(content)
+
+    except Timeout:
+        raise FileIOError(f"Failed to acquire lock for {path} within {timeout}s")
+    except FileIOError:
+        raise
+    except Exception as e:
+        raise FileIOError(f"Error appending to {path}: {e}")
+
+
 def append_text(path: Path, content: str, ensure_parent: bool = True) -> None:
     """
-    Append to text file safely.
+    Append to text file safely (delegates to safe_append_text).
 
     Args:
         path: Path to text file
@@ -204,84 +246,67 @@ def append_text(path: Path, content: str, ensure_parent: bool = True) -> None:
     Example:
         append_text(Path('log.txt'), 'New log entry\\n')
     """
-    try:
-        path = Path(path)
-
-        # Create parent directory if needed
-        if ensure_parent and not path.parent.exists():
-            path.parent.mkdir(parents=True, exist_ok=True)
-
-        with open(path, "a", encoding="utf-8") as f:
-            f.write(content)
-
-    except Exception as e:
-        raise FileIOError(f"Error appending to {path}: {e}")
+    safe_append_text(path, content, ensure_parent=ensure_parent)
 
 
-# Convenience aliases
 read_json = load_json
 write_json = save_json
 read_text = load_text
 write_text = save_text
 
 
-# Example usage
 if __name__ == "__main__":
     import shutil
     import tempfile
 
-    # Create temp directory for testing
+    # Note: Run this test with: python -m wfc.shared.file_io
+    logging.basicConfig(level=logging.INFO, format="%(message)s")
+
     temp_dir = Path(tempfile.mkdtemp())
 
     try:
-        print("Testing WFC File I/O Utilities\n")
+        logger.info("Testing WFC File I/O Utilities\n")
 
-        # Test 1: Save and load JSON
-        print("1. Testing JSON operations:")
+        logger.info("1. Testing JSON operations:")
         test_data = {"name": "WFC", "version": "1.0", "features": ["build", "review"]}
         json_file = temp_dir / "test.json"
 
         save_json(json_file, test_data)
-        print(f"   ✅ Saved JSON to {json_file}")
+        logger.info(f"   ✅ Saved JSON to {json_file}")
 
         loaded = load_json(json_file)
         assert loaded == test_data
-        print(f"   ✅ Loaded JSON: {loaded}")
+        logger.info(f"   ✅ Loaded JSON: {loaded}")
 
-        # Test 2: Update JSON
-        print("\n2. Testing JSON update:")
+        logger.info("\n2. Testing JSON update:")
         updated = update_json(json_file, {"new_key": "new_value"})
-        print(f"   ✅ Updated JSON: {updated}")
+        logger.info(f"   ✅ Updated JSON: {updated}")
 
-        # Test 3: Load with default
-        print("\n3. Testing default values:")
+        logger.info("\n3. Testing default values:")
         missing = load_json(temp_dir / "missing.json", default={"default": True})
-        print(f"   ✅ Missing file returned default: {missing}")
+        logger.info(f"   ✅ Missing file returned default: {missing}")
 
-        # Test 4: Text operations
-        print("\n4. Testing text operations:")
+        logger.info("\n4. Testing text operations:")
         text_file = temp_dir / "test.txt"
         save_text(text_file, "Hello WFC\n")
-        print("   ✅ Saved text")
+        logger.info("   ✅ Saved text")
 
         append_text(text_file, "Second line\n")
-        print("   ✅ Appended text")
+        logger.info("   ✅ Appended text")
 
         content = load_text(text_file)
         assert content == "Hello WFC\nSecond line\n"
-        print(f"   ✅ Loaded text: {repr(content)}")
+        logger.info(f"   ✅ Loaded text: {repr(content)}")
 
-        # Test 5: Error handling
-        print("\n5. Testing error handling:")
+        logger.info("\n5. Testing error handling:")
         try:
             load_json(temp_dir / "missing.json")
-            print("   ❌ Should have raised error")
+            logger.error("   ❌ Should have raised error")
         except FileIOError as e:
-            print(f"   ✅ Correctly raised error: {e}")
+            logger.info(f"   ✅ Correctly raised error: {e}")
 
-        print("\n✅ All tests passed!")
+        logger.info("\n✅ All tests passed!")
 
     finally:
-        # Cleanup
         shutil.rmtree(temp_dir)
-        print("\n🧹 Cleaned up temp directory")
+        logger.info("\n🧹 Cleaned up temp directory")

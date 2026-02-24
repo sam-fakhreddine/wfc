@@ -11,6 +11,8 @@ from dataclasses import dataclass
 from datetime import date
 from pathlib import Path
 
+from filelock import FileLock
+
 _log = logging.getLogger(__name__)
 
 _DATE_RE = re.compile(r"\[(\d{4}-\d{2}-\d{2})\]")
@@ -40,6 +42,7 @@ class LearningEntry:
     section: str
     reviewer_id: str
     source: str
+    developer_id: str = ""
     date: str = ""
 
     def __post_init__(self) -> None:
@@ -106,17 +109,22 @@ class KnowledgeWriter:
 
         result: dict[str, int] = {}
         for reviewer_id, reviewer_entries in grouped.items():
-            count = 0
             kp = self.reviewers_dir / reviewer_id / "KNOWLEDGE.md"
-            if not kp.exists():
-                self._create_empty_knowledge(kp, reviewer_id)
-            current_content: str = kp.read_text(encoding="utf-8")
-            for entry in reviewer_entries:
-                updated_content = self._append_to_file(kp, entry, existing_content=current_content)
-                if updated_content is not None:
-                    current_content = updated_content
-                    count += 1
-            kp.write_text(current_content, encoding="utf-8")
+            lock_file = kp.with_suffix(".lock")
+
+            with FileLock(lock_file, timeout=10):
+                count = 0
+                if not kp.exists():
+                    self._create_empty_knowledge(kp, reviewer_id)
+                current_content: str = kp.read_text(encoding="utf-8")
+                for entry in reviewer_entries:
+                    updated_content = self._append_to_file(
+                        kp, entry, existing_content=current_content
+                    )
+                    if updated_content is not None:
+                        current_content = updated_content
+                        count += 1
+                kp.write_text(current_content, encoding="utf-8")
             result[reviewer_id] = count
         return result
 
@@ -216,13 +224,23 @@ class KnowledgeWriter:
 
     def _format_entry(self, entry: LearningEntry) -> str:
         entry_text, entry_source = self._sanitize_entry_fields(entry.text, entry.source)
-        return f"- [{entry.date}] {entry_text} (Source: {entry_source})"
+        if entry.developer_id:
+            return (
+                f"- [{entry.date}] {entry_text} (Source: {entry_source}, Dev: {entry.developer_id})"
+            )
+        else:
+            return f"- [{entry.date}] {entry_text} (Source: {entry_source})"
 
     def _format_entry_sanitized(
         self, entry: LearningEntry, entry_text: str, entry_source: str
     ) -> str:
         """Format an entry using already-sanitized text and source fields."""
-        return f"- [{entry.date}] {entry_text} (Source: {entry_source})"
+        if entry.developer_id:
+            return (
+                f"- [{entry.date}] {entry_text} (Source: {entry_source}, Dev: {entry.developer_id})"
+            )
+        else:
+            return f"- [{entry.date}] {entry_text} (Source: {entry_source})"
 
     def prune_old_entries(self, reviewer_id: str, max_age_days: int = 180) -> int:
         kp = self.reviewers_dir / reviewer_id / "KNOWLEDGE.md"

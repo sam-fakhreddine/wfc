@@ -5,17 +5,20 @@ Orchestrators use this to decide when agents should use deep reasoning.
 Provides consistent logic across all WFC skills for enabling extended thinking.
 """
 
+import logging
 from dataclasses import dataclass
 from enum import Enum
 from typing import List, Optional
+
+logger = logging.getLogger(__name__)
 
 
 class ThinkingMode(Enum):
     """Extended thinking modes"""
 
-    NORMAL = "normal"  # Standard reasoning
-    EXTENDED = "extended"  # Deep reasoning enabled
-    UNLIMITED = "unlimited"  # No thinking budget limit
+    NORMAL = "normal"
+    EXTENDED = "extended"
+    UNLIMITED = "unlimited"
 
 
 @dataclass
@@ -23,8 +26,8 @@ class ThinkingConfig:
     """Configuration for extended thinking"""
 
     mode: ThinkingMode
-    reason: str  # Why extended thinking was enabled
-    budget_tokens: Optional[int] = None  # Token budget (None = unlimited)
+    reason: str
+    budget_tokens: Optional[int] = None
 
     def to_prompt_section(self) -> str:
         """
@@ -100,12 +103,10 @@ class ExtendedThinkingDecider:
         reasons = []
         mode = ThinkingMode.NORMAL
 
-        # High complexity tasks
         if complexity in ["L", "XL"]:
             reasons.append(f"High complexity ({complexity})")
             mode = ThinkingMode.EXTENDED
 
-        # Critical properties
         critical_properties = {"SAFETY", "LIVENESS", "SECURITY", "CORRECTNESS"}
         has_critical = bool(set(properties) & critical_properties)
         if has_critical:
@@ -113,44 +114,32 @@ class ExtendedThinkingDecider:
             reasons.append(f"Critical properties: {', '.join(critical)}")
             mode = ThinkingMode.EXTENDED
 
-        # Retry - failed before, think harder
-        # After 3 retries, escalate to UNLIMITED thinking mode
-        # Hard limit: Maximum 4 total retries (5 attempts total)
         if retry_count >= 3:
             if retry_count > 4:
-                # Exceeded maximum retry limit - should not happen
-                # Orchestrator should stop task before reaching this point
                 reasons.append("⚠️ EXCEEDED MAX RETRIES (4 total) - task should be abandoned")
             else:
                 reasons.append(f"Retry #{retry_count} - think harder to avoid previous failures")
-            mode = ThinkingMode.UNLIMITED  # No budget on retries
+            mode = ThinkingMode.UNLIMITED
 
-        # Architecture decisions
         if is_architecture:
             reasons.append("Architecture decisions require careful reasoning")
             mode = ThinkingMode.EXTENDED
 
-        # Complex dependencies
         if has_dependencies:
             reasons.append("Complex dependencies require careful coordination")
             mode = ThinkingMode.EXTENDED
 
-        # Custom indicators
         if custom_indicators:
             for indicator in custom_indicators:
                 reasons.append(indicator)
                 mode = ThinkingMode.EXTENDED
 
-        # Determine budget
         budget = None
         if mode == ThinkingMode.EXTENDED:
-            # Budget based on complexity
-            # Context window is 200k tokens - allocate 1-10% for extended thinking
-            # S=1%, M=2.5%, L=5%, XL=10% of context
             budget_map = {"S": 2000, "M": 5000, "L": 10000, "XL": 20000}
             budget = budget_map.get(complexity, 1000)
         elif mode == ThinkingMode.UNLIMITED:
-            budget = None  # Unlimited
+            budget = None
 
         reason = "; ".join(reasons) if reasons else "Standard task"
 
@@ -178,7 +167,6 @@ class ExtendedThinkingDecider:
         )
 
 
-# Convenience functions
 def enable_thinking(reason: str, budget: Optional[int] = None) -> ThinkingConfig:
     """Enable extended thinking with reason"""
     return ThinkingConfig(mode=ThinkingMode.EXTENDED, reason=reason, budget_tokens=budget)
@@ -194,44 +182,40 @@ def disable_thinking() -> ThinkingConfig:
     return ThinkingConfig(mode=ThinkingMode.NORMAL, reason="Standard task")
 
 
-# Example usage
 if __name__ == "__main__":
-    print("Extended Thinking Decision Examples\n")
+    logging.basicConfig(level=logging.INFO, format="%(message)s")
 
-    # Example 1: Simple task
+    logger.info("Extended Thinking Decision Examples\n")
+
     config = ExtendedThinkingDecider.should_use_extended_thinking(
         complexity="S", properties=[], retry_count=0
     )
-    print(f"1. Simple task: {config.mode.value}")
-    print(f"   Reason: {config.reason}\n")
+    logger.info(f"1. Simple task: {config.mode.value}")
+    logger.info(f"   Reason: {config.reason}\n")
 
-    # Example 2: High complexity
     config = ExtendedThinkingDecider.should_use_extended_thinking(
         complexity="XL", properties=["MAINTAINABILITY"], retry_count=0
     )
-    print(f"2. High complexity: {config.mode.value}")
-    print(f"   Reason: {config.reason}")
-    print(f"   Budget: {config.budget_tokens} tokens\n")
+    logger.info(f"2. High complexity: {config.mode.value}")
+    logger.info(f"   Reason: {config.reason}")
+    logger.info(f"   Budget: {config.budget_tokens} tokens\n")
 
-    # Example 3: Critical properties
     config = ExtendedThinkingDecider.should_use_extended_thinking(
         complexity="M", properties=["SAFETY", "SECURITY"], retry_count=0
     )
-    print(f"3. Critical properties: {config.mode.value}")
-    print(f"   Reason: {config.reason}")
-    print(f"   Budget: {config.budget_tokens} tokens\n")
+    logger.info(f"3. Critical properties: {config.mode.value}")
+    logger.info(f"   Reason: {config.reason}")
+    logger.info(f"   Budget: {config.budget_tokens} tokens\n")
 
-    # Example 4: Retry
     config = ExtendedThinkingDecider.should_use_extended_thinking(
         complexity="M", properties=[], retry_count=2
     )
-    print(f"4. Retry task: {config.mode.value}")
-    print(f"   Reason: {config.reason}")
-    print(f"   Budget: {config.budget_tokens or 'Unlimited'}\n")
+    logger.info(f"4. Retry task: {config.mode.value}")
+    logger.info(f"   Reason: {config.reason}")
+    logger.info(f"   Budget: {config.budget_tokens or 'Unlimited'}\n")
 
-    # Example 5: Prompt section
     config = ExtendedThinkingDecider.for_complex_task(
         "Complex algorithm with edge cases", budget=2500
     )
-    print("5. Prompt section example:")
-    print(config.to_prompt_section())
+    logger.info("5. Prompt section example:")
+    logger.info(config.to_prompt_section())

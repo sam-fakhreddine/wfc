@@ -1,0 +1,242 @@
+{
+  "feature": "multi-tenant-wfc",
+  "feature_full_name": "Multi-Tenant WFC Service Architecture",
+  "timestamp": "2026-02-21T12:00:00Z",
+  "source": "technical_plan",
+  "source_file": "/Users/samfakhreddine/.claude/plans/jiggly-toasting-shell.md",
+  "phases": [
+    {
+      "phase": "context",
+      "questions": [
+        {
+          "question": "What system does this affect?",
+          "answer": "WFC core orchestrators (review, implement, plan) plus new API interfaces (MCP and REST)",
+          "follow_ups": []
+        },
+        {
+          "question": "What's the current state?",
+          "answer": "WFC is single-tenant by design. Optimized for one developer, one project, one session. Uses Path.cwd() for project detection, shared KNOWLEDGE.md with no locking, worktrees named .worktrees/wfc-{task_id} without project namespacing.",
+          "follow_ups": [
+            {
+              "question": "What happens when 2 projects run concurrently?",
+              "answer": "50% failure rate due to worktree collision, KNOWLEDGE.md corruption, report overwrites, no way to distinguish findings from different projects"
+            }
+          ]
+        },
+        {
+          "question": "What triggered this work?",
+          "answer": "User scenarios: (1) Solo developer managing 6 local projects, (2) Team of 10 developers sharing infrastructure. Current architecture fails under concurrent use.",
+          "follow_ups": []
+        },
+        {
+          "question": "What's the desired outcome?",
+          "answer": "Production-grade multi-tenant WFC supporting: (1) One dev, 6 projects concurrently OR (2) Team of 10+ devs, 50+ projects with shared knowledge, audit trail, RBAC. Choice of deployment: MCP (solo), REST API (teams), or Hybrid (both).",
+          "follow_ups": []
+        }
+      ]
+    },
+    {
+      "phase": "requirements",
+      "questions": [
+        {
+          "question": "What MUST this do?",
+          "answer": "M1: Project isolation (unique namespaces), M2: Concurrent access safety (file locking), M3: Developer attribution (audit trail), M4: API rate limiting (prevent 429s), M5: Guaranteed resource cleanup (orphan detection), M6: Choice of interface (MCP or REST or both)",
+          "follow_ups": [
+            {
+              "question": "How would you verify project isolation works?",
+              "answer": "6 concurrent reviews with same task_id complete successfully with 0 collisions, 6 separate reports generated"
+            },
+            {
+              "question": "How would you verify concurrent access safety?",
+              "answer": "100 concurrent writes to KNOWLEDGE.md result in 0 corrupted entries, valid JSON/Markdown output"
+            },
+            {
+              "question": "How would you verify API rate limiting works?",
+              "answer": "50 concurrent reviews (10 devs × 5 agents) result in 0 Anthropic 429 errors, token bucket queues fairly"
+            },
+            {
+              "question": "How would you verify resource cleanup works?",
+              "answer": "Crash 10 reviews mid-execution, 24 hours later 0 orphaned worktrees on disk"
+            }
+          ]
+        },
+        {
+          "question": "What SHOULD this do?",
+          "answer": "S1: Crash recovery (REST API persists job state), S2: Shared knowledge base (team learnings), S3: WebSocket progress streaming, S4: RBAC (role-based access control)",
+          "follow_ups": []
+        },
+        {
+          "question": "What COULD this do?",
+          "answer": "C1: Multi-region deployment, C2: Review history dashboard (web UI), C3: GitHub App integration (auto-review on PR open)",
+          "follow_ups": []
+        },
+        {
+          "question": "What WON'T this do?",
+          "answer": "W1: Live migration from single-tenant (clean deployment only), W2: Support non-Claude LLMs (Anthropic API only), W3: Self-hosted MCP server for teams (REST API is correct choice)",
+          "follow_ups": []
+        }
+      ]
+    },
+    {
+      "phase": "technical",
+      "questions": [
+        {
+          "question": "What existing code does this touch?",
+          "answer": "Core orchestrators (orchestrator.py, reviewer_engine.py, consensus_score.py), infrastructure (wfc_config.py, worktree.py, file_io.py, knowledge_writer.py, telemetry_auto.py, worktree-manager.sh, executor.py)",
+          "follow_ups": [
+            {
+              "question": "Which files are modified vs created?",
+              "answer": "Modified: 8 existing files (add ProjectContext, file locking, developer attribution, rate limiting). Created: 12 new files (MCP interface: 3 files, REST interface: 9 files)"
+            }
+          ]
+        },
+        {
+          "question": "What's the input/output contract?",
+          "answer": "Input: Claude Code MCP calls OR HTTP REST requests. Output: ReviewResult (consensus_score, findings, passed boolean), PostgreSQL audit log (REST only), KNOWLEDGE.md updates (with file locking)",
+          "follow_ups": []
+        },
+        {
+          "question": "Are there hard technical constraints?",
+          "answer": "Python 3.12+, Git 2.25+ (worktree API), Claude API (Anthropic SDK), PostgreSQL 14+ (REST only), Redis 6+ (REST only), MCP protocol (JSON-RPC 2.0)",
+          "follow_ups": []
+        },
+        {
+          "question": "What must NOT break?",
+          "answer": "Existing WFC skills/orchestrators must work unmodified, backward compatibility with current single-tenant usage (via ProjectContext with defaults)",
+          "follow_ups": []
+        }
+      ]
+    },
+    {
+      "phase": "risk",
+      "questions": [
+        {
+          "question": "What's the biggest risk to this feature?",
+          "answer": "FileLock doesn't work across processes (mitigation: use fcntl.flock on Unix, test with 2 concurrent processes). PostgreSQL connection pool exhausted (mitigation: max_connections=100, bounded worker pool). Token bucket causes starvation (mitigation: priority queue).",
+          "follow_ups": []
+        },
+        {
+          "question": "Has anything similar been attempted before?",
+          "answer": "WFC explicitly shelved MCP/A2A in PHASE-0-DEVIATION-MAP.md (section 4.1) because single-session model was sufficient. This BA reverses that decision based on multi-tenant requirements.",
+          "follow_ups": []
+        },
+        {
+          "question": "Are there open-source solutions we should study?",
+          "answer": "Prior art: Kodus AI (4-layer validation), GitHub Copilot Enterprise (RBAC + shared knowledge), FastAPI + PostgreSQL (multi-tenant SaaS stack), Anthropic MCP protocol (local-first tool integration)",
+          "follow_ups": [
+            {
+              "question": "What should we adopt from prior art?",
+              "answer": "Adopt: Multi-layer validation (Kodus), RBAC pattern (GitHub Copilot), FastAPI stack (proven SaaS architecture), MCP for solo dev use case. Gap: WFC's 5-agent consensus review is unique, no competitor supports true multi-tenant review orchestration."
+            }
+          ]
+        },
+        {
+          "question": "What dependencies does this introduce?",
+          "answer": "Required (MCP): mcp SDK, httpx (optional delegation). Required (REST): fastapi, uvicorn, sqlalchemy, redis, celery/rq, filelock, pydantic v2. Database: PostgreSQL 14+, Redis 6+ (REST only).",
+          "follow_ups": []
+        }
+      ]
+    }
+  ],
+  "duration_minutes": 0,
+  "note": "Generated from technical plan, not interactive interview",
+  "requirements_count": {
+    "must": 6,
+    "should": 4,
+    "could": 3,
+    "wont": 3
+  },
+  "critical_files": {
+    "modified": [
+      "wfc/shared/config/wfc_config.py",
+      "wfc/gitwork/api/worktree.py",
+      "wfc/scripts/orchestrators/review/orchestrator.py",
+      "wfc/shared/file_io.py",
+      "wfc/shared/telemetry_auto.py",
+      "wfc/gitwork/scripts/worktree-manager.sh",
+      "wfc/scripts/knowledge/knowledge_writer.py",
+      "wfc/skills/wfc-implement/executor.py"
+    ],
+    "created": [
+      "wfc/mcp/server.py",
+      "wfc/mcp/resources.py",
+      "wfc/mcp/tools.py",
+      "wfc/api/main.py",
+      "wfc/api/routes/review.py",
+      "wfc/api/routes/plan.py",
+      "wfc/api/routes/projects.py",
+      "wfc/api/models.py",
+      "wfc/api/state.py",
+      "wfc/api/auth.py",
+      "wfc/api/rbac.py",
+      "wfc/api/background.py",
+      "wfc/api/websocket.py",
+      "wfc/api/audit.py",
+      "wfc/shared/resource_pool.py",
+      "wfc/shared/interfaces.py"
+    ]
+  },
+  "implementation_streams": [
+    {
+      "name": "Stream 1: MCP-First (Solo Developer)",
+      "timeline_weeks": 2,
+      "target": "1 developer, 6 local projects",
+      "phases": [
+        "Week 1: Shared core fixes (ProjectContext, FileLock, worktree namespacing)",
+        "Week 2: MCP interface implementation"
+      ]
+    },
+    {
+      "name": "Stream 2: REST-First (Team Deployment)",
+      "timeline_weeks": 4,
+      "target": "10 developers, 50 projects",
+      "phases": [
+        "Week 1-2: Shared core fixes (same as Stream 1)",
+        "Week 3: REST interface (FastAPI, auth, PostgreSQL/Redis)",
+        "Week 4: Team features (RBAC, audit, rate limiting, WebSocket)"
+      ]
+    },
+    {
+      "name": "Stream 3: Hybrid (Best of Both)",
+      "timeline_weeks": "3-6",
+      "target": "Solo devs + teams",
+      "phases": [
+        "Weeks 1-2: Core + MCP (as in Stream 1)",
+        "Weeks 3-4: Add REST interface (as in Stream 2)",
+        "Week 5: MCP → REST delegation (optional)"
+      ]
+    }
+  ],
+  "verification_tests": [
+    {
+      "name": "Test 1: Concurrent Project Reviews",
+      "scenario": "6 concurrent reviews with different project_ids",
+      "acceptance": "0 collisions, 6 separate reports, no KNOWLEDGE.md corruption"
+    },
+    {
+      "name": "Test 2: Rate Limiting Under Load",
+      "scenario": "50 concurrent reviews (simulate 10 devs × 5 agents)",
+      "acceptance": "0 Anthropic 429 errors, fair token bucket queuing, all 50 complete"
+    },
+    {
+      "name": "Test 3: Crash Recovery",
+      "scenario": "Kill service mid-review, restart, verify recovery",
+      "acceptance": "Job state recovered from PostgreSQL, review resumes, no orphaned worktrees"
+    },
+    {
+      "name": "Test 4: Developer Isolation",
+      "scenario": "Alice and Bob create worktrees with same task_id, different projects",
+      "acceptance": "No collision, correct git author attribution, audit log shows both devs"
+    },
+    {
+      "name": "Test 5: MCP Local Speed",
+      "scenario": "Benchmark MCP overhead vs current session-based execution",
+      "acceptance": "MCP overhead < 500ms"
+    },
+    {
+      "name": "Test 6: Shared Knowledge Base",
+      "scenario": "Alice reviews code with SQL injection, Bob reviews different code with SQL injection",
+      "acceptance": "Bob's review references Alice's finding, shared KNOWLEDGE.md updated"
+    }
+  ]
+}

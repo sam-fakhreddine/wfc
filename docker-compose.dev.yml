@@ -1,0 +1,60 @@
+version: '3.8'
+
+# Development Environment
+# - Single WFC instance
+# - Hot reload enabled
+# - Debug logging
+# - No HTTPS (localhost only)
+# - Port 9950 (dev)
+
+services:
+  traefik:
+    image: traefik:v3.0
+    container_name: wfc-traefik-dev
+    restart: unless-stopped
+    ports:
+      - "9950:9950"   # Dev API
+      - "8080:8080"   # Dashboard (insecure mode OK for dev)
+    command:
+      - "--providers.docker=true"
+      - "--providers.docker.exposedbydefault=false"
+      - "--entrypoints.wfc-dev.address=:9950"
+      - "--api.dashboard=true"
+      - "--api.insecure=true"
+      - "--accesslog=true"
+      - "--log.level=DEBUG"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    networks:
+      - wfc-dev-network
+
+  wfc-rest-api:
+    build:
+      context: .
+      dockerfile: Dockerfile.rest_api
+      target: development  # Use dev stage with hot reload
+    container_name: wfc-api-dev
+    restart: unless-stopped
+    expose:
+      - "8000"
+    volumes:
+      - ./wfc:/app/wfc:rw  # Read-write for hot reload
+      - wfc-dev-data:/root/.wfc
+    environment:
+      - LOG_LEVEL=debug
+      - ENV=development
+      - RELOAD=true  # Enable uvicorn --reload
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.wfc-api-dev.rule=PathPrefix(`/`)"
+      - "traefik.http.routers.wfc-api-dev.entrypoints=wfc-dev"
+      - "traefik.http.services.wfc-api-dev.loadbalancer.server.port=8000"
+    networks:
+      - wfc-dev-network
+
+volumes:
+  wfc-dev-data:
+
+networks:
+  wfc-dev-network:
+    driver: bridge

@@ -1,0 +1,269 @@
+version: '3.8'
+
+# Production Environment
+# - 3+ WFC instances with auto-scaling
+# - HTTPS with Let's Encrypt
+# - Full observability stack
+# - Port 443 (HTTPS), 9952 (direct access)
+# - Resource limits
+# - Security hardened
+
+services:
+  traefik:
+    image: traefik:v3.0
+    container_name: wfc-traefik-prod
+    restart: always
+    ports:
+      - "80:80"       # HTTP (redirect to HTTPS)
+      - "443:443"     # HTTPS
+      - "9952:9952"   # Direct access (optional, can be removed)
+    command:
+      # Docker provider
+      - "--providers.docker=true"
+      - "--providers.docker.exposedbydefault=false"
+      - "--providers.docker.network=wfc-prod-network"
+
+      # Entrypoints
+      - "--entrypoints.web.address=:80"
+      - "--entrypoints.websecure.address=:443"
+      - "--entrypoints.wfc-prod.address=:9952"
+
+      # HTTPS redirect
+      - "--entrypoints.web.http.redirections.entrypoint.to=websecure"
+      - "--entrypoints.web.http.redirections.entrypoint.scheme=https"
+
+      # Let's Encrypt
+      - "--certificatesresolvers.letsencrypt.acme.email=${ACME_EMAIL}"
+      - "--certificatesresolvers.letsencrypt.acme.storage=/letsencrypt/acme.json"
+      - "--certificatesresolvers.letsencrypt.acme.httpchallenge.entrypoint=web"
+
+      # Dashboard (secured)
+      - "--api.dashboard=true"
+
+      # Logging
+      - "--accesslog=true"
+      - "--accesslog.filepath=/var/log/traefik/access.log"
+      - "--accesslog.format=json"
+      - "--log.level=WARN"
+
+      # Metrics
+      - "--metrics.prometheus=true"
+      - "--metrics.prometheus.addEntryPointsLabels=true"
+      - "--metrics.prometheus.addServicesLabels=true"
+      - "--metrics.prometheus.addRoutersLabels=true"
+
+      # TLS options
+      - "--entrypoints.websecure.http.tls.options=default"
+      - "--providers.file.filename=/traefik/tls-config.yml"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - traefik-prod-letsencrypt:/letsencrypt
+      - traefik-prod-logs:/var/log/traefik
+      - ./traefik-tls-config.yml:/traefik/tls-config.yml:ro
+    networks:
+      - wfc-prod-network
+    deploy:
+      resources:
+        limits:
+          cpus: '2'
+          memory: 1G
+        reservations:
+          cpus: '0.5'
+          memory: 256M
+    labels:
+      # Secure dashboard access
+      - "traefik.enable=true"
+      - "traefik.http.routers.dashboard-prod.rule=Host(`traefik.${PROD_DOMAIN}`)"
+      - "traefik.http.routers.dashboard-prod.entrypoints=websecure"
+      - "traefik.http.routers.dashboard-prod.tls.certresolver=letsencrypt"
+      - "traefik.http.routers.dashboard-prod.service=api@internal"
+      - "traefik.http.routers.dashboard-prod.middlewares=dashboard-auth"
+      # Basic auth for dashboard (generate with: htpasswd -nb admin password)
+      - "traefik.http.middlewares.dashboard-auth.basicauth.users=admin:$$apr1$$xyz..."  # Change this!
+
+  wfc-rest-api:
+    build:
+      context: .
+      dockerfile: Dockerfile.rest_api
+      target: production
+    restart: always
+    expose:
+      - "8000"
+    volumes:
+      - ./wfc:/app/wfc:ro
+      - wfc-prod-data:/root/.wfc
+    environment:
+      - LOG_LEVEL=warn
+      - ENV=production
+      - FORWARDED_ALLOW_IPS=*
+      - WORKERS=4  # Uvicorn workers per instance
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+    labels:
+      - "traefik.enable=true"
+
+      # HTTPS router (primary)
+      - "traefik.http.routers.wfc-api-prod.rule=Host(`api.${PROD_DOMAIN}`)"
+      - "traefik.http.routers.wfc-api-prod.entrypoints=websecure"
+      - "traefik.http.routers.wfc-api-prod.tls.certresolver=letsencrypt"
+      - "traefik.http.routers.wfc-api-prod.service=wfc-api-prod"
+      - "traefik.http.routers.wfc-api-prod.middlewares=wfc-prod-chain"
+
+      # Direct access (optional, can be removed for security)
+      - "traefik.http.routers.wfc-api-prod-direct.rule=PathPrefix(`/`)"
+      - "traefik.http.routers.wfc-api-prod-direct.entrypoints=wfc-prod"
+      - "traefik.http.routers.wfc-api-prod-direct.service=wfc-api-prod"
+      - "traefik.http.routers.wfc-api-prod-direct.middlewares=wfc-prod-chain"
+
+      # Service definition
+      - "traefik.http.services.wfc-api-prod.loadbalancer.server.port=8000"
+      - "traefik.http.services.wfc-api-prod.loadbalancer.healthcheck.path=/"
+      - "traefik.http.services.wfc-api-prod.loadbalancer.healthcheck.interval=10s"
+      - "traefik.http.services.wfc-api-prod.loadbalancer.healthcheck.timeout=3s"
+      - "traefik.http.services.wfc-api-prod.loadbalancer.sticky.cookie=true"
+      - "traefik.http.services.wfc-api-prod.loadbalancer.sticky.cookie.name=wfc_lb"
+      - "traefik.http.services.wfc-api-prod.loadbalancer.sticky.cookie.secure=true"
+
+      # Middleware chain
+      - "traefik.http.middlewares.wfc-prod-chain.chain.middlewares=wfc-ratelimit,wfc-security,wfc-compress"
+
+      # Rate limiting (200 req/s per IP in prod)
+      - "traefik.http.middlewares.wfc-ratelimit.ratelimit.average=200"
+      - "traefik.http.middlewares.wfc-ratelimit.ratelimit.burst=100"
+      - "traefik.http.middlewares.wfc-ratelimit.ratelimit.period=1s"
+
+      # Security headers
+      - "traefik.http.middlewares.wfc-security.headers.sslredirect=true"
+      - "traefik.http.middlewares.wfc-security.headers.stsincludesubdomains=true"
+      - "traefik.http.middlewares.wfc-security.headers.stspreload=true"
+      - "traefik.http.middlewares.wfc-security.headers.stsseconds=31536000"
+      - "traefik.http.middlewares.wfc-security.headers.forcestsheader=true"
+      - "traefik.http.middlewares.wfc-security.headers.framedeny=true"
+      - "traefik.http.middlewares.wfc-security.headers.contenttypenosniff=true"
+      - "traefik.http.middlewares.wfc-security.headers.browserxssfilter=true"
+      - "traefik.http.middlewares.wfc-security.headers.customresponseheaders.X-Robots-Tag=noindex,nofollow"
+      - "traefik.http.middlewares.wfc-security.headers.customresponseheaders.Server="  # Hide server header
+
+      # Compression
+      - "traefik.http.middlewares.wfc-compress.compress=true"
+
+    networks:
+      - wfc-prod-network
+    deploy:
+      replicas: 3  # 3 instances minimum
+      update_config:
+        parallelism: 1
+        delay: 30s
+        order: start-first
+        failure_action: rollback
+      rollback_config:
+        parallelism: 1
+        delay: 10s
+      restart_policy:
+        condition: on-failure
+        delay: 10s
+        max_attempts: 5
+        window: 60s
+      resources:
+        limits:
+          cpus: '1'
+          memory: 512M
+        reservations:
+          cpus: '0.25'
+          memory: 128M
+
+  # Prometheus for metrics
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: wfc-prometheus-prod
+    restart: always
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./prometheus-prod.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus-prod-data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--storage.tsdb.retention.time=30d'
+      - '--web.console.libraries=/usr/share/prometheus/console_libraries'
+      - '--web.console.templates=/usr/share/prometheus/consoles'
+    networks:
+      - wfc-prod-network
+    deploy:
+      resources:
+        limits:
+          cpus: '1'
+          memory: 2G
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.prometheus-prod.rule=Host(`prometheus.${PROD_DOMAIN}`)"
+      - "traefik.http.routers.prometheus-prod.entrypoints=websecure"
+      - "traefik.http.routers.prometheus-prod.tls.certresolver=letsencrypt"
+      - "traefik.http.services.prometheus-prod.loadbalancer.server.port=9090"
+      - "traefik.http.routers.prometheus-prod.middlewares=dashboard-auth"
+
+  # Grafana for visualization
+  grafana:
+    image: grafana/grafana:latest
+    container_name: wfc-grafana-prod
+    restart: always
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_ADMIN_PASSWORD}
+      - GF_USERS_ALLOW_SIGN_UP=false
+      - GF_SERVER_ROOT_URL=https://grafana.${PROD_DOMAIN}
+      - GF_SECURITY_COOKIE_SECURE=true
+      - GF_SECURITY_STRICT_TRANSPORT_SECURITY=true
+      - GF_SNAPSHOTS_EXTERNAL_ENABLED=false
+    volumes:
+      - grafana-prod-data:/var/lib/grafana
+      - ./grafana-dashboards:/etc/grafana/provisioning/dashboards:ro
+      - ./grafana-datasources.yml:/etc/grafana/provisioning/datasources/datasources.yml:ro
+    networks:
+      - wfc-prod-network
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 512M
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.grafana-prod.rule=Host(`grafana.${PROD_DOMAIN}`)"
+      - "traefik.http.routers.grafana-prod.entrypoints=websecure"
+      - "traefik.http.routers.grafana-prod.tls.certresolver=letsencrypt"
+      - "traefik.http.services.grafana-prod.loadbalancer.server.port=3000"
+
+  # Alertmanager for alerts
+  alertmanager:
+    image: prom/alertmanager:latest
+    container_name: wfc-alertmanager-prod
+    restart: always
+    ports:
+      - "9093:9093"
+    volumes:
+      - ./alertmanager.yml:/etc/alertmanager/alertmanager.yml:ro
+    command:
+      - '--config.file=/etc/alertmanager/alertmanager.yml'
+      - '--storage.path=/alertmanager'
+    networks:
+      - wfc-prod-network
+    deploy:
+      resources:
+        limits:
+          cpus: '0.25'
+          memory: 128M
+
+volumes:
+  wfc-prod-data:
+  traefik-prod-letsencrypt:
+  traefik-prod-logs:
+  prometheus-prod-data:
+  grafana-prod-data:
+
+networks:
+  wfc-prod-network:
+    driver: bridge

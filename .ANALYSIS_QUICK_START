@@ -1,0 +1,293 @@
+╔═══════════════════════════════════════════════════════════════════════════╗
+║         WFC DIFF REPLACEMENT ANALYSIS - QUICK START GUIDE                 ║
+╚═══════════════════════════════════════════════════════════════════════════╝
+
+START HERE: Read the documents in this order based on your role
+
+┌─────────────────────────────────────────────────────────────────────────┐
+│ FOR DECISION MAKERS (15 minutes)                                         │
+├─────────────────────────────────────────────────────────────────────────┤
+│ 1. Read: ANALYSIS_SUMMARY.md                                            │
+│    - Executive summary of problem and solution                          │
+│    - Expected outcomes and ROI                                          │
+│    - Implementation timeline                                            │
+│                                                                          │
+│ 2. Question to answer: Should we implement this?                        │
+│    - Decision framework in ANALYSIS_SUMMARY.md                          │
+│    - Expected token savings: 55-60% (62.5k → 25-30k tokens)            │
+│    - Annual cost savings: ~$540 @ 100 reviews/week                      │
+│    - Implementation cost: 15-20 engineering hours                       │
+│                                                                          │
+│ 3. Next step: Read DESIGN_DECISION_MATRIX.md                            │
+│    - "Why Approach A is Recommended" section                            │
+│    - Approve and allocate resources                                     │
+└─────────────────────────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────────────────────┐
+│ FOR ARCHITECTS / TECH LEADS (90 minutes)                                 │
+├─────────────────────────────────────────────────────────────────────────┤
+│ 1. Read: DIFF_REPLACEMENT_STRATEGY.md (45 min)                          │
+│    - Detailed problem analysis                                          │
+│    - Design recommendation overview                                     │
+│    - Detailed answers to 4 key questions                                │
+│    - Implementation roadmap                                             │
+│    - Risk mitigation strategies                                         │
+│                                                                          │
+│ 2. Read: DESIGN_DECISION_MATRIX.md (30 min)                             │
+│    - Compare 3 approaches (Manifest, Temp File, Status Quo)            │
+│    - Why Approach A is optimal                                          │
+│    - Decision flow diagram                                              │
+│                                                                          │
+│ 3. Question to answer: Is this approach solid?                          │
+│    - Risk assessment: LOW (all risks mitigated)                         │
+│    - Token math: 55-60% reduction verified                              │
+│    - Quality impact: ±0% to +5%                                         │
+│    - Approval to implement                                              │
+└─────────────────────────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────────────────────┐
+│ FOR IMPLEMENTERS (60 minutes)                                            │
+├─────────────────────────────────────────────────────────────────────────┤
+│ 1. Read: IMPLEMENTATION_EXAMPLE.md (60 min)                             │
+│    - Current code with problems highlighted                            │
+│    - 4 new methods (complete implementations)                          │
+│    - Updated _build_task_prompt() method                               │
+│    - Token impact analysis (before/after)                              │
+│    - Testing strategy                                                   │
+│                                                                          │
+│ 2. Files to modify:                                                     │
+│    - wfc/scripts/orchestrators/review/reviewer_engine.py               │
+│      Lines 255-260: Replace embedded diff                              │
+│      Add ~170 lines of new code                                        │
+│                                                                          │
+│    - wfc/scripts/orchestrators/review/orchestrator.py                  │
+│      Lines 114-136: Optional temp file handling                        │
+│      Add ~20-40 lines (optional)                                       │
+│                                                                          │
+│ 3. Next steps:                                                          │
+│    - Implement Phase 1 (8-10 hours)                                    │
+│    - Write tests (~150 lines)                                          │
+│    - Measure token savings (target: 50%+)                              │
+│    - Validate quality on parallel reviews                              │
+└─────────────────────────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────────────────────┐
+│ FOR CODE REVIEWERS                                                      │
+├─────────────────────────────────────────────────────────────────────────┤
+│ Use this as a PR review checklist:                                      │
+│                                                                          │
+│ □ Token savings >= 50% (measured from before/after prompts)            │
+│ □ Test coverage >= 95% (diff parsing edge cases)                       │
+│ □ Diff parsing handles: ADDED, MODIFIED, DELETED, renames             │
+│ □ Domain-specific guidance is present for all 5 reviewers              │
+│ □ Line ranges are correct (cross-check vs actual diff)                 │
+│ □ No breaking changes to public APIs                                   │
+│ □ Feature flag present for gradual rollout                             │
+│ □ Quality metrics on parallel reviews (±5% finding count)              │
+│                                                                          │
+│ Reference: DESIGN_DECISION_MATRIX.md § "Success Metrics"               │
+└─────────────────────────────────────────────────────────────────────────┘
+
+╔═══════════════════════════════════════════════════════════════════════════╗
+║                         THE PROBLEM (TL;DR)                               ║
+╚═══════════════════════════════════════════════════════════════════════════╝
+
+File: wfc/scripts/orchestrators/review/reviewer_engine.py
+Lines: 255-260
+
+CURRENT CODE:
+    if diff_content:
+        sanitized_diff = _sanitize_embedded_content(diff_content)
+        parts.append("\n# Diff\n```diff")
+        parts.append(sanitized_diff)  # ← Embeds 50k chars per reviewer
+
+TOKEN WASTE:
+  Current:    50k chars × 4 chars/token = 12.5k tokens per reviewer
+  × 5 reviewers = 62.5k tokens wasted
+  Annual cost = 62.5k × (5,200 reviews/year) × $0.003/1k = $973/year
+
+╔═══════════════════════════════════════════════════════════════════════════╗
+║                      THE SOLUTION (TL;DR)                                 ║
+╚═══════════════════════════════════════════════════════════════════════════╝
+
+REPLACE EMBEDDED DIFF WITH:
+
+Tier 1: Structured manifest (1-2k tokens)
+  - Changed files list
+  - Line ranges (old_start-old_end, new_start-new_end)
+  - Domain-specific guidance per reviewer
+
+Tier 2: Context around hunks (2-3k tokens)
+  - 3 lines before and after each change
+  - Helps agents understand impact
+
+Tier 3: Optional temp file (0 tokens)
+  - For large diffs (>50k chars)
+  - Agents use Read tool if needed
+  - Progressive disclosure
+
+EXPECTED SAVINGS:
+  Before:  62.5k tokens × 5 reviewers = 312.5k tokens/batch
+  After:   28k tokens × 5 reviewers = 140k tokens/batch
+  Savings: 172.5k tokens = 55% reduction
+  Cost:    -$0.173/review (-50%)
+  Annual:  ~$540 @ 100 reviews/week
+
+╔═══════════════════════════════════════════════════════════════════════════╗
+║                    KEY DESIGN DECISIONS ANSWERED                          ║
+╚═══════════════════════════════════════════════════════════════════════════╝
+
+Q1: Should we provide git diff as temp file instead of embedded?
+A1: YES, conditionally
+    - Large diffs (>50k chars): Write to temp file
+    - Small diffs (<5k chars): Embed in manifest context
+    - Reference: DIFF_REPLACEMENT_STRATEGY.md § Q1
+
+Q2: Should we list changed files with line ranges and let agents Read them?
+A2: YES, this is the PRIMARY STRATEGY
+    - List all changed files with exact line ranges
+    - Agents use Read tool to see full context
+    - Reduces noise while preserving accuracy
+    - Reference: DIFF_REPLACEMENT_STRATEGY.md § Q2
+
+Q3: How do we ensure agents see CHANGES not just current state?
+A3: Three-tier approach
+    Tier 1: Line ranges in manifest (agents know WHERE to look)
+    Tier 2: Context hunks in manifest (agents see change CONTEXT)
+    Tier 3: Full diff on disk (agents see exact CHANGES if needed)
+    - Reference: DIFF_REPLACEMENT_STRATEGY.md § Q3
+
+Q4: What instructions replace the embedded diff section?
+A4: Domain-specific guidance
+    - Security: "Check input validation in lines 45-55"
+    - Correctness: "Verify error handling in modified functions"
+    - Performance: "Review algorithm complexity in lines 48-52"
+    - Maintainability: "Verify naming clarity in new code"
+    - Reliability: "Check error recovery in modified paths"
+    - Reference: DIFF_REPLACEMENT_STRATEGY.md § Q4
+
+╔═══════════════════════════════════════════════════════════════════════════╗
+║                        IMPLEMENTATION TIMELINE                             ║
+╚═══════════════════════════════════════════════════════════════════════════╝
+
+Phase 1: Implement Manifest (Week 1)
+  8-10 hours | Low Risk
+  - Add diff parser: _parse_diff_to_manifest()
+  - Add manifest builder: _build_changed_files_manifest()
+  - Add domain guidance: _get_domain_guidance()
+  - Add instructions: _build_review_instructions()
+  - Update: _build_task_prompt()
+
+Phase 2: Validate Quality (Week 1-2)
+  4-6 hours | Low Risk
+  - Run parallel reviews (old vs new) on 10+ PRs
+  - Compare: finding counts, false positive rate
+  - Measure: token usage, cost per review
+  - Validate: quality metrics ±5% of baseline
+
+Phase 3: Add Temp File (Week 2) [Optional]
+  2-3 hours | Medium Risk
+  - Conditional temp file creation (diff_len > 50k)
+  - Pass path to agents
+  - Only if Phase 2 shows need
+
+Phase 4: Rollout & Monitor (Week 2-3)
+  2 hours | Low Risk
+  - Feature flag: use_manifest_mode=True
+  - Monitor: token usage, quality metrics
+  - GA when metrics confirmed
+
+Total: 15-20 hours | ROI: ~$540/year savings
+
+╔═══════════════════════════════════════════════════════════════════════════╗
+║                           RISK ASSESSMENT                                  ║
+╚═══════════════════════════════════════════════════════════════════════════╝
+
+IDENTIFIED RISKS:
+
+Risk 1: Agents can't Read files in subagent context
+  Likelihood: VERY LOW
+  Mitigation: Subagent isolation validated in CLAUDE.md
+  Impact if occurs: HIGH
+  Mitigation: Can revert to embedded diff immediately
+
+Risk 2: Diff parsing is buggy (edge cases)
+  Likelihood: LOW
+  Mitigation: 95%+ test coverage, use difflib
+  Impact if occurs: MEDIUM
+  Mitigation: Graceful fallback to embedded diff
+
+Risk 3: Missing change context confuses agents
+  Likelihood: LOW
+  Mitigation: 3-line context hunks + full file access
+  Impact if occurs: MEDIUM
+  Mitigation: Add temp file (Approach B)
+
+Risk 4: Large diffs still expensive
+  Likelihood: LOW
+  Mitigation: Temp file approach for >50k chars
+  Impact if occurs: LOW
+  Mitigation: Transparent tradeoff vs token usage
+
+OVERALL RISK: LOW
+All risks have clear mitigations. Can validate with parallel reviews.
+
+╔═══════════════════════════════════════════════════════════════════════════╗
+║                         SUCCESS METRICS                                    ║
+╚═══════════════════════════════════════════════════════════════════════════╝
+
+Measure after implementation:
+
+□ Token usage per review: -50% (target: 55-60%)
+□ Cost per review: -50%
+□ Finding count: ±5% of baseline (quality maintained)
+□ False positive rate: -10% or better
+□ Agent Read tool usage: 80%+ of reviews
+□ Prompt generation latency: <100ms (no regression)
+
+Reference: DESIGN_DECISION_MATRIX.md § "Success Metrics"
+
+╔═══════════════════════════════════════════════════════════════════════════╗
+║                        DOCUMENT REFERENCE                                  ║
+╚═══════════════════════════════════════════════════════════════════════════╝
+
+All files in: /Users/samfakhreddine/repos/wfc/
+
+├─ DIFF_REPLACEMENT_README.md (9.5 KB)
+│  Quick reference guide, navigation, index
+│
+├─ ANALYSIS_SUMMARY.md (8.2 KB)
+│  Executive summary for decision makers
+│
+├─ DIFF_REPLACEMENT_STRATEGY.md (16 KB)
+│  Detailed analysis, design recommendation, full Q&A
+│
+├─ DESIGN_DECISION_MATRIX.md (10 KB)
+│  Approach comparison, decision framework
+│
+└─ IMPLEMENTATION_EXAMPLE.md (23 KB)
+   Complete code patterns, testing strategy
+
+Total: 2,099 lines, 66.7 KB
+
+╔═══════════════════════════════════════════════════════════════════════════╗
+║                         NEXT ACTIONS                                       ║
+╚═══════════════════════════════════════════════════════════════════════════╝
+
+DECISION MAKERS:
+1. Read: ANALYSIS_SUMMARY.md (15 min)
+2. Decide: Approve Approach A + B? (see DECISION_MATRIX.md § "Why A is Recommended")
+3. Allocate: 15-20 engineering hours
+
+IMPLEMENTERS:
+1. Read: IMPLEMENTATION_EXAMPLE.md (60 min)
+2. Start: Phase 1 (diff parser + manifest builder)
+3. Measure: Token savings (target: 50%+)
+4. Validate: Quality on parallel reviews
+
+CODE REVIEWERS:
+1. Use: DESIGN_DECISION_MATRIX.md as PR checklist
+2. Verify: Token savings, test coverage (95%+)
+3. Confirm: Quality metrics from parallel reviews
+
+Ready to implement. 🎯

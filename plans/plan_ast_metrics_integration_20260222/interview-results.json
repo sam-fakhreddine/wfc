@@ -1,0 +1,49 @@
+{
+  "goal": "Integrate AST-based static analysis into wfc-review to provide reviewers with supplemental context",
+  "context": "Token optimization - 97% reduction (8000 → 200 tokens per file) while providing better context than raw file content",
+  "users": "WFC reviewers (5 specialist agents: Security, Correctness, Performance, Maintainability, Reliability)",
+  "core_features": [
+    "AST metrics extraction (complexity, dangerous calls, nesting depth)",
+    "Shared cache file (.ast-context.json) for all reviewers",
+    "Pre-review hook integration (before reviewer agents spawn)",
+    "Fail-open error handling (parsing failures don't block reviews)"
+  ],
+  "constraints": {
+    "language": "Python-only initially (extensible to multi-language later)",
+    "performance": "<100ms overhead for typical PR (5-20 files)",
+    "error_handling": "Fail-open (log warning, continue review)",
+    "philosophy": "Metrics are supplemental hints, not replacement for code review"
+  },
+  "success_criteria": [
+    "97% token reduction with better context",
+    "Zero false negatives (parsing failures don't block reviews)",
+    "Reviewers receive actionable hotspot guidance"
+  ],
+  "stack": {
+    "language": "Python 3.12+",
+    "parser": "ast (stdlib)",
+    "integration_point": "wfc/scripts/orchestrators/review/orchestrator.py",
+    "cache_format": "JSON"
+  },
+  "testing": {
+    "approach": "Unit (60%), Integration (30%), Benchmark (10%)",
+    "coverage_target": ">85% line coverage for ast_analyzer modules",
+    "property_coverage": "100% (all 6 PROP-* verified)"
+  },
+  "formal_properties": {
+    "safety": [
+      "Parse failures must not block review (PROP-002)",
+      "AST analyzer must exclude development artifacts (PROP-006)"
+    ],
+    "liveness": [
+      "AST cache file must exist before reviewers spawn (PROP-004)"
+    ],
+    "invariant": [
+      "Language detection must be deterministic (PROP-001)",
+      "Reviewer prompts must include AST disclaimers (PROP-005)"
+    ],
+    "performance": [
+      "AST analysis overhead must be <5% of review time (PROP-003)"
+    ]
+  }
+}

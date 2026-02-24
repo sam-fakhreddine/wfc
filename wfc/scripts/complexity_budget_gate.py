@@ -23,10 +23,12 @@ When budget exceeded:
 - Mark as severity="warning" (not blocking)
 """
 
+import logging
 from dataclasses import dataclass
 from typing import Dict
 
-# Complexity budget tiers
+logger = logging.getLogger(__name__)
+
 COMPLEXITY_BUDGETS: Dict[str, Dict[str, int]] = {
     "S": {"lines": 50, "files": 2},
     "M": {"lines": 200, "files": 5},
@@ -44,17 +46,17 @@ class BudgetResult:
     """
 
     task_id: str
-    complexity: str  # S, M, L, XL
+    complexity: str
     lines_changed: int
     files_changed: int
     lines_budget: int
     files_budget: int
-    lines_exceeded: int  # 0 if within budget, >0 if exceeded
-    files_exceeded: int  # 0 if within budget, >0 if exceeded
+    lines_exceeded: int
+    files_exceeded: int
     passed: bool
     report: str
-    severity: str = "warning"  # Always warning, never blocking
-    unknown_complexity: bool = False  # True when input was coerced to XL
+    severity: str = "warning"
+    unknown_complexity: bool = False
 
     def to_dict(self) -> Dict:
         """Convert to dictionary for serialization."""
@@ -95,14 +97,11 @@ def check_complexity_budget(
         >>> result = check_complexity_budget("TASK-002", "S", 100, 3)
         >>> assert result.passed is False
     """
-    # Normalize complexity rating
     original_complexity = complexity
     complexity = complexity.upper()
 
-    # Get budget for this complexity tier
     unknown_complexity = False
     if complexity not in COMPLEXITY_BUDGETS:
-        # Unknown complexity - treat as XL budget
         unknown_complexity = True
         budget = COMPLEXITY_BUDGETS["XL"]
     else:
@@ -111,14 +110,11 @@ def check_complexity_budget(
     lines_budget = budget["lines"]
     files_budget = budget["files"]
 
-    # Check if exceeded
     lines_exceeded = max(0, lines_changed - lines_budget)
     files_exceeded = max(0, files_changed - files_budget)
 
-    # Passed if both within budget
     passed = lines_exceeded == 0 and files_exceeded == 0
 
-    # Generate report
     if passed:
         report = _generate_passing_report(
             task_id, complexity, lines_changed, files_changed, lines_budget, files_budget
@@ -229,7 +225,6 @@ def _generate_exceeding_report(
         "",
     ]
 
-    # Lines exceeded
     if lines_exceeded > 0:
         report_lines.append(
             f"Lines Changed: {lines_changed}/{lines_budget} ({lines_pct:.0f}% of budget)"
@@ -243,7 +238,6 @@ def _generate_exceeding_report(
         )
         report_lines.append("  ✅ Within budget")
 
-    # Files exceeded
     if files_exceeded > 0:
         report_lines.append(
             f"Files Changed: {files_changed}/{files_budget} ({files_pct:.0f}% of budget)"
@@ -284,29 +278,26 @@ def format_budget_report(result: BudgetResult) -> str:
 
 
 if __name__ == "__main__":
-    # Test complexity budget gate
+    logging.basicConfig(level=logging.INFO, format="%(message)s")
+
     print("WFC Complexity Budget Gate Test")
     print("=" * 60)
 
-    # Test 1: S complexity - passing
     print("\n1. Testing S complexity (PASSING):")
     result = check_complexity_budget("TASK-001", "S", 45, 2)
     print(format_budget_report(result))
     print(f"\nPassed: {result.passed}")
 
-    # Test 2: S complexity - exceeding
     print("\n2. Testing S complexity (EXCEEDING):")
     result = check_complexity_budget("TASK-002", "S", 100, 3)
     print(format_budget_report(result))
     print(f"\nPassed: {result.passed}")
 
-    # Test 3: M complexity - passing
     print("\n3. Testing M complexity (PASSING):")
     result = check_complexity_budget("TASK-003", "M", 180, 4)
     print(format_budget_report(result))
     print(f"\nPassed: {result.passed}")
 
-    # Test 4: XL complexity - at limit
     print("\n4. Testing XL complexity (AT LIMIT):")
     result = check_complexity_budget("TASK-004", "XL", 1000, 20)
     print(format_budget_report(result))

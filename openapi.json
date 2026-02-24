@@ -1,0 +1,775 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "WFC REST API",
+    "description": "Multi-tenant code review and project management API for WFC",
+    "version": "1.0.0",
+    "x-logo": {
+      "url": "https://wfc.example.com/logo.png",
+      "altText": "WFC Logo"
+    }
+  },
+  "paths": {
+    "/v1/reviews/": {
+      "post": {
+        "tags": [
+          "reviews"
+        ],
+        "summary": "Submit code for review",
+        "description": "Submit code changes for 5-agent consensus review. Returns immediately with review_id. Use GET /v1/reviews/{review_id} to check status.",
+        "operationId": "submit_review_v1_reviews__post",
+        "parameters": [
+          {
+            "name": "x-project-id",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "Project ID",
+              "title": "X-Project-Id"
+            },
+            "description": "Project ID"
+          },
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "Bearer <api_key>",
+              "title": "Authorization"
+            },
+            "description": "Bearer <api_key>"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReviewSubmitRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "202": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReviewSubmitResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/reviews/{review_id}": {
+      "get": {
+        "tags": [
+          "reviews"
+        ],
+        "summary": "Get review status",
+        "description": "Get status and results of a review task.",
+        "operationId": "get_review_status_v1_reviews__review_id__get",
+        "parameters": [
+          {
+            "name": "review_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Review Id"
+            }
+          },
+          {
+            "name": "x-project-id",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "Project ID",
+              "title": "X-Project-Id"
+            },
+            "description": "Project ID"
+          },
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "Bearer <api_key>",
+              "title": "Authorization"
+            },
+            "description": "Bearer <api_key>"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReviewStatusResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/projects/": {
+      "get": {
+        "tags": [
+          "projects"
+        ],
+        "summary": "List all projects",
+        "description": "List all registered projects (does not require authentication).",
+        "operationId": "list_projects_v1_projects__get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProjectListResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "projects"
+        ],
+        "summary": "Create new project",
+        "description": "Create new project and generate API key. IMPORTANT: Store the API key securely - it cannot be retrieved later.",
+        "operationId": "create_project_v1_projects__post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ProjectCreateRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProjectCreateResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/resources/pool": {
+      "get": {
+        "tags": [
+          "resources"
+        ],
+        "summary": "Get worktree pool status",
+        "description": "Get current status of the worktree resource pool.",
+        "operationId": "get_pool_status_v1_resources_pool_get",
+        "parameters": [
+          {
+            "name": "x-project-id",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "Project ID",
+              "title": "X-Project-Id"
+            },
+            "description": "Project ID"
+          },
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "Bearer <api_key>",
+              "title": "Authorization"
+            },
+            "description": "Bearer <api_key>"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PoolStatusResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/resources/rate-limit": {
+      "get": {
+        "tags": [
+          "resources"
+        ],
+        "summary": "Get rate limit status",
+        "description": "Get current rate limiting status for review requests.",
+        "operationId": "get_rate_limit_status_v1_resources_rate_limit_get",
+        "parameters": [
+          {
+            "name": "x-project-id",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "Project ID",
+              "title": "X-Project-Id"
+            },
+            "description": "Project ID"
+          },
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "Bearer <api_key>",
+              "title": "Authorization"
+            },
+            "description": "Bearer <api_key>"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RateLimitStatusResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/": {
+      "get": {
+        "tags": [
+          "health"
+        ],
+        "summary": "Health check",
+        "description": "Health check endpoint.",
+        "operationId": "health_check__get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "HTTPValidationError": {
+        "properties": {
+          "detail": {
+            "items": {
+              "$ref": "#/components/schemas/ValidationError"
+            },
+            "type": "array",
+            "title": "Detail"
+          }
+        },
+        "type": "object",
+        "title": "HTTPValidationError"
+      },
+      "PoolStatusResponse": {
+        "properties": {
+          "max_worktrees": {
+            "type": "integer",
+            "title": "Max Worktrees"
+          },
+          "active_worktrees": {
+            "type": "integer",
+            "title": "Active Worktrees"
+          },
+          "available_capacity": {
+            "type": "integer",
+            "title": "Available Capacity"
+          },
+          "orphaned_worktrees": {
+            "type": "integer",
+            "title": "Orphaned Worktrees"
+          }
+        },
+        "type": "object",
+        "required": [
+          "max_worktrees",
+          "active_worktrees",
+          "available_capacity",
+          "orphaned_worktrees"
+        ],
+        "title": "PoolStatusResponse",
+        "description": "Worktree pool status."
+      },
+      "ProjectCreateRequest": {
+        "properties": {
+          "project_id": {
+            "type": "string",
+            "pattern": "^[a-zA-Z0-9_-]{1,64}$",
+            "title": "Project Id"
+          },
+          "developer_id": {
+            "type": "string",
+            "pattern": "^[a-zA-Z0-9_-]{1,64}$",
+            "title": "Developer Id"
+          },
+          "repo_path": {
+            "type": "string",
+            "title": "Repo Path",
+            "description": "Absolute path to repository"
+          }
+        },
+        "type": "object",
+        "required": [
+          "project_id",
+          "developer_id",
+          "repo_path"
+        ],
+        "title": "ProjectCreateRequest",
+        "description": "Request to create a new project."
+      },
+      "ProjectCreateResponse": {
+        "properties": {
+          "project_id": {
+            "type": "string",
+            "title": "Project Id"
+          },
+          "api_key": {
+            "type": "string",
+            "title": "Api Key",
+            "description": "Generated API key (store securely)"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "project_id",
+          "api_key",
+          "created_at"
+        ],
+        "title": "ProjectCreateResponse",
+        "description": "Response after creating project."
+      },
+      "ProjectListResponse": {
+        "properties": {
+          "projects": {
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "type": "array",
+            "title": "Projects",
+            "description": "List of projects"
+          }
+        },
+        "type": "object",
+        "required": [
+          "projects"
+        ],
+        "title": "ProjectListResponse",
+        "description": "Response listing all projects."
+      },
+      "RateLimitStatusResponse": {
+        "properties": {
+          "capacity": {
+            "type": "integer",
+            "title": "Capacity"
+          },
+          "refill_rate": {
+            "type": "number",
+            "title": "Refill Rate"
+          },
+          "available_tokens": {
+            "type": "number",
+            "title": "Available Tokens"
+          },
+          "tokens_used": {
+            "type": "number",
+            "title": "Tokens Used"
+          }
+        },
+        "type": "object",
+        "required": [
+          "capacity",
+          "refill_rate",
+          "available_tokens",
+          "tokens_used"
+        ],
+        "title": "RateLimitStatusResponse",
+        "description": "Rate limit status."
+      },
+      "ReviewFinding": {
+        "properties": {
+          "reviewer": {
+            "type": "string",
+            "title": "Reviewer",
+            "description": "Reviewer name (e.g., Security)"
+          },
+          "severity": {
+            "type": "string",
+            "title": "Severity",
+            "description": "HIGH, MEDIUM, LOW"
+          },
+          "category": {
+            "type": "string",
+            "title": "Category",
+            "description": "Finding category"
+          },
+          "description": {
+            "type": "string",
+            "title": "Description",
+            "description": "Finding description"
+          },
+          "file_path": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "File Path",
+            "description": "Affected file"
+          },
+          "line_number": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Line Number",
+            "description": "Line number"
+          },
+          "confidence": {
+            "type": "integer",
+            "maximum": 100.0,
+            "minimum": 0.0,
+            "title": "Confidence",
+            "description": "Confidence score 0-100"
+          }
+        },
+        "type": "object",
+        "required": [
+          "reviewer",
+          "severity",
+          "category",
+          "description",
+          "confidence"
+        ],
+        "title": "ReviewFinding",
+        "description": "Individual review finding."
+      },
+      "ReviewStatus": {
+        "type": "string",
+        "enum": [
+          "pending",
+          "in_progress",
+          "completed",
+          "failed"
+        ],
+        "title": "ReviewStatus",
+        "description": "Review task status."
+      },
+      "ReviewStatusResponse": {
+        "properties": {
+          "review_id": {
+            "type": "string",
+            "title": "Review Id"
+          },
+          "status": {
+            "$ref": "#/components/schemas/ReviewStatus"
+          },
+          "project_id": {
+            "type": "string",
+            "title": "Project Id"
+          },
+          "developer_id": {
+            "type": "string",
+            "title": "Developer Id"
+          },
+          "submitted_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Submitted At"
+          },
+          "completed_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Completed At"
+          },
+          "consensus_score": {
+            "anyOf": [
+              {
+                "type": "number",
+                "maximum": 10.0,
+                "minimum": 0.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Consensus Score"
+          },
+          "passed": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Passed"
+          },
+          "findings": {
+            "items": {
+              "$ref": "#/components/schemas/ReviewFinding"
+            },
+            "type": "array",
+            "title": "Findings"
+          },
+          "error_message": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Error Message"
+          }
+        },
+        "type": "object",
+        "required": [
+          "review_id",
+          "status",
+          "project_id",
+          "developer_id",
+          "submitted_at"
+        ],
+        "title": "ReviewStatusResponse",
+        "description": "Response for review status query."
+      },
+      "ReviewSubmitRequest": {
+        "properties": {
+          "diff_content": {
+            "type": "string",
+            "minLength": 1,
+            "title": "Diff Content",
+            "description": "Git diff content"
+          },
+          "files": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Files",
+            "description": "List of changed files"
+          }
+        },
+        "type": "object",
+        "required": [
+          "diff_content"
+        ],
+        "title": "ReviewSubmitRequest",
+        "description": "Request to submit code for review."
+      },
+      "ReviewSubmitResponse": {
+        "properties": {
+          "review_id": {
+            "type": "string",
+            "title": "Review Id",
+            "description": "Unique review identifier"
+          },
+          "status": {
+            "$ref": "#/components/schemas/ReviewStatus",
+            "description": "Initial status (pending)"
+          },
+          "submitted_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Submitted At",
+            "description": "Submission timestamp"
+          },
+          "project_id": {
+            "type": "string",
+            "title": "Project Id",
+            "description": "Project identifier"
+          }
+        },
+        "type": "object",
+        "required": [
+          "review_id",
+          "status",
+          "submitted_at",
+          "project_id"
+        ],
+        "title": "ReviewSubmitResponse",
+        "description": "Response after submitting review request."
+      },
+      "ValidationError": {
+        "properties": {
+          "loc": {
+            "items": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "integer"
+                }
+              ]
+            },
+            "type": "array",
+            "title": "Location"
+          },
+          "msg": {
+            "type": "string",
+            "title": "Message"
+          },
+          "type": {
+            "type": "string",
+            "title": "Error Type"
+          },
+          "input": {
+            "title": "Input"
+          },
+          "ctx": {
+            "type": "object",
+            "title": "Context"
+          }
+        },
+        "type": "object",
+        "required": [
+          "loc",
+          "msg",
+          "type"
+        ],
+        "title": "ValidationError"
+      }
+    },
+    "securitySchemes": {
+      "ApiKeyAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "API Key",
+        "description": "API key authentication. Include API key in Authorization header as 'Bearer <key>'"
+      },
+      "ProjectID": {
+        "type": "apiKey",
+        "in": "header",
+        "name": "X-Project-ID",
+        "description": "Project identifier header required for all authenticated requests"
+      }
+    }
+  },
+  "servers": [
+    {
+      "url": "https://api.wfc.example.com",
+      "description": "Production"
+    },
+    {
+      "url": "http://localhost:9950",
+      "description": "Development"
+    },
+    {
+      "url": "http://localhost:9951",
+      "description": "Test"
+    }
+  ]
+}
