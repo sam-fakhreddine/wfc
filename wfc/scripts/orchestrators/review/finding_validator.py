@@ -63,6 +63,7 @@ _WEIGHT_MAP: dict[ValidationStatus, float] = {
 }
 
 _CROSS_CHECK_MODEL = "claude-haiku-4-5"
+_PROMPT_PATH = Path(__file__).parents[3] / "references" / "prompts" / "finding-validator.md"
 
 
 @dataclass
@@ -226,28 +227,50 @@ class FindingValidator:
         The caller is responsible for dispatching the task to the model.
         """
         df = finding.finding
-        prompt_parts = [
-            "You are a code review validator.",
-            "",
-            "Given the following code snippet and a security/quality finding,",
-            "determine whether the finding is valid.",
-            "Reply YES or NO on the first line, then explain in 1-3 sentences.",
-            "",
-            f"## Code Snippet (file: {df.file}, line {df.line_start})",
-            "```",
-            code_snippet if code_snippet else "(no code snippet available)",
-            "```",
-            "",
-            "## Finding",
-            f"Category: {df.category}",
-            f"Severity: {df.severity}",
-            f"Description: {df.description}",
-            "",
-            "Is this finding valid? Reply YES or NO on the first line.",
-        ]
+
+        try:
+            template = _PROMPT_PATH.read_text(encoding="utf-8")
+            prompt = (
+                template.replace("{file_path}", str(df.file))
+                .replace("{line_start}", str(df.line_start))
+                .replace(
+                    "{code_snippet}",
+                    code_snippet if code_snippet else "(no code snippet available)",
+                )
+                .replace("{category}", df.category)
+                .replace("{severity}", str(df.severity))
+                .replace("{description}", df.description)
+            )
+        except Exception as exc:
+            logger.warning(
+                "Failed to load finding-validator prompt from %s: %s (using fallback)",
+                _PROMPT_PATH,
+                exc,
+            )
+            prompt_parts = [
+                "You are a code review validator.",
+                "",
+                "Given the following code snippet and a security/quality finding,",
+                "determine whether the finding is valid.",
+                "Reply YES or NO on the first line, then explain in 1-3 sentences.",
+                "",
+                f"## Code Snippet (file: {df.file}, line {df.line_start})",
+                "```",
+                code_snippet if code_snippet else "(no code snippet available)",
+                "```",
+                "",
+                "## Finding",
+                f"Category: {df.category}",
+                f"Severity: {df.severity}",
+                f"Description: {df.description}",
+                "",
+                "Is this finding valid? Reply YES or NO on the first line.",
+            ]
+            prompt = "\n".join(prompt_parts)
+
         return {
             "model": _CROSS_CHECK_MODEL,
-            "prompt": "\n".join(prompt_parts),
+            "prompt": prompt,
         }
 
     def apply_cross_check_result(
