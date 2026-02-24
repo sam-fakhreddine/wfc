@@ -1,0 +1,132 @@
+{
+  "antipatterns": [
+    {
+      "id": "SK-01",
+      "name": "Empty/TODO description",
+      "severity": "critical",
+      "dimension": "TRIGGER_COVERAGE",
+      "description": "Description is empty, 'TODO', 'TBD', or placeholder text",
+      "fix": "Write comprehensive description covering all user phrasings"
+    },
+    {
+      "id": "SK-02",
+      "name": "Timid description",
+      "severity": "major",
+      "dimension": "TRIGGER_ASSERTIVENESS",
+      "description": "Description too short (<50 chars) to cover triggering phrasings",
+      "fix": "Expand description to be assertive and comprehensive"
+    },
+    {
+      "id": "SK-03",
+      "name": "Overbroad description",
+      "severity": "critical",
+      "dimension": "TRIGGER_SPECIFICITY",
+      "description": "Description exceeds 1024 character limit or lacks clear boundaries",
+      "fix": "Condense to <1024 chars and add clear scope boundaries"
+    },
+    {
+      "id": "SK-04",
+      "name": "Body as reference dump",
+      "severity": "major",
+      "dimension": "ANTI_BLOAT",
+      "description": "SKILL.md body is a reference dump instead of progressive disclosure",
+      "fix": "Extract reference content to references/ directory"
+    },
+    {
+      "id": "SK-05",
+      "name": "Missing quick reference",
+      "severity": "minor",
+      "dimension": "PROGRESSIVE_DISCLOSURE",
+      "description": "No quick reference section for common operations",
+      "fix": "Add Quick Reference section at top of body"
+    },
+    {
+      "id": "SK-06",
+      "name": "Passive instructions",
+      "severity": "minor",
+      "dimension": "ACTIONABILITY",
+      "description": "Instructions use passive voice or vague suggestions",
+      "fix": "Rewrite with concrete commands and active voice"
+    },
+    {
+      "id": "SK-07",
+      "name": "MUST/NEVER without WHY",
+      "severity": "minor",
+      "dimension": "EXPLANATION_OVER_MANDATE",
+      "description": "Uses MUST/NEVER commands without explaining rationale",
+      "fix": "Add brief explanation of WHY after each mandate"
+    },
+    {
+      "id": "SK-08",
+      "name": "Phantom file references",
+      "severity": "critical",
+      "dimension": "FILE_INTEGRITY",
+      "description": "References files that don't exist in scripts/references/assets/",
+      "fix": "Remove phantom references or create missing files"
+    },
+    {
+      "id": "SK-09",
+      "name": "Orphaned files",
+      "severity": "minor",
+      "dimension": "FILE_INTEGRITY",
+      "description": "Files present in directories but never referenced in SKILL.md",
+      "fix": "Reference files in SKILL.md or remove if unused"
+    },
+    {
+      "id": "SK-10",
+      "name": "Non-executable scripts",
+      "severity": "major",
+      "dimension": "SCRIPT_QUALITY",
+      "description": "Scripts lack execute permissions (chmod +x)",
+      "fix": "Add execute permissions: chmod +x scripts/*.sh"
+    },
+    {
+      "id": "SK-11",
+      "name": "README in disguise",
+      "severity": "major",
+      "dimension": "ANTI_BLOAT",
+      "description": "SKILL.md exceeds 700 lines (README-style content)",
+      "fix": "Extract content to references/ or condense"
+    },
+    {
+      "id": "SK-12",
+      "name": "Description/body mismatch",
+      "severity": "minor",
+      "dimension": "TRIGGER_COVERAGE",
+      "description": "Description promises features not covered in body",
+      "fix": "Align description with actual body content"
+    },
+    {
+      "id": "SK-13",
+      "name": "Monolithic reference file",
+      "severity": "minor",
+      "dimension": "REFERENCE_ORGANIZATION",
+      "description": "Single massive reference file instead of organized structure",
+      "fix": "Split into topic-specific files with ToC"
+    },
+    {
+      "id": "SK-14",
+      "name": "Source code in assets",
+      "severity": "minor",
+      "dimension": "ASSET_APPROPRIATENESS",
+      "description": "Source code files (.py, .js) in assets/ instead of scripts/",
+      "fix": "Move source code to scripts/, keep only data/media in assets/"
+    },
+    {
+      "id": "SK-15",
+      "name": "Example pollution",
+      "severity": "minor",
+      "dimension": "EXAMPLE_QUALITY",
+      "description": "Too many examples obscure core instructions",
+      "fix": "Keep 1-2 representative examples, extract rest to references/"
+    },
+    {
+      "id": "SK-16",
+      "name": "No examples for transformation skills",
+      "severity": "major",
+      "dimension": "EXAMPLE_QUALITY",
+      "description": "Transformation skill lacks before/after examples",
+      "fix": "Add concrete before/after examples for transformations"
+    }
+  ]
+}

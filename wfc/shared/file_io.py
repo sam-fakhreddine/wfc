@@ -267,6 +267,7 @@ if __name__ == "__main__":
     try:
         logger.info("Testing WFC File I/O Utilities\n")
 
+        print("1. Testing JSON operations:")
         logger.info("1. Testing JSON operations:")
         test_data = {"name": "WFC", "version": "1.0", "features": ["build", "review"]}
         json_file = temp_dir / "test.json"
@@ -278,14 +279,17 @@ if __name__ == "__main__":
         assert loaded == test_data
         logger.info(f"   ✅ Loaded JSON: {loaded}")
 
+        print("\n2. Testing JSON update:")
         logger.info("\n2. Testing JSON update:")
         updated = update_json(json_file, {"new_key": "new_value"})
         logger.info(f"   ✅ Updated JSON: {updated}")
 
+        print("\n3. Testing default values:")
         logger.info("\n3. Testing default values:")
         missing = load_json(temp_dir / "missing.json", default={"default": True})
         logger.info(f"   ✅ Missing file returned default: {missing}")
 
+        print("\n4. Testing text operations:")
         logger.info("\n4. Testing text operations:")
         text_file = temp_dir / "test.txt"
         save_text(text_file, "Hello WFC\n")
@@ -298,6 +302,7 @@ if __name__ == "__main__":
         assert content == "Hello WFC\nSecond line\n"
         logger.info(f"   ✅ Loaded text: {repr(content)}")
 
+        print("\n5. Testing error handling:")
         logger.info("\n5. Testing error handling:")
         try:
             load_json(temp_dir / "missing.json")

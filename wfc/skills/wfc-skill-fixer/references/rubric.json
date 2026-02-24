@@ -1,0 +1,207 @@
+{
+  "rubric": {
+    "name": "Claude Skills Quality Rubric",
+    "version": "1.0",
+    "dimensions": {
+      "TRIGGERING": {
+        "weight": "critical",
+        "description": "Determines if skill loads at all (metadata-level)",
+        "criteria": [
+          {
+            "name": "TRIGGER_COVERAGE",
+            "weight": "critical",
+            "question": "Does description cover all user phrasings?",
+            "scoring": {
+              "0": "Empty, TODO, or <10 chars",
+              "1": "Covers <50% of phrasings",
+              "2": "Covers most phrasings",
+              "3": "Comprehensive coverage"
+            }
+          },
+          {
+            "name": "TRIGGER_ASSERTIVENESS",
+            "weight": "high",
+            "question": "Pushy enough to overcome undertriggering?",
+            "scoring": {
+              "0": "Too timid (<50 chars)",
+              "1": "Somewhat assertive",
+              "2": "Assertive and clear",
+              "3": "Assertive with examples"
+            }
+          },
+          {
+            "name": "TRIGGER_SPECIFICITY",
+            "weight": "high",
+            "question": "Clear boundaries to avoid overtriggering?",
+            "scoring": {
+              "0": "No boundaries, overbroad",
+              "1": "Vague boundaries",
+              "2": "Clear boundaries",
+              "3": "Precise scope definition"
+            }
+          },
+          {
+            "name": "TRIGGER_FORMAT",
+            "weight": "critical",
+            "question": "Valid YAML, under 1024 chars, no angle brackets?",
+            "scoring": {
+              "0": "Invalid YAML or >1024 chars",
+              "1": "Valid but near limit",
+              "2": "Valid, reasonable length",
+              "3": "Valid, concise (<512 chars)"
+            }
+          }
+        ]
+      },
+      "INSTRUCTION": {
+        "weight": "high",
+        "description": "Quality of instructions once skill is loaded (body-level)",
+        "criteria": [
+          {
+            "name": "PROGRESSIVE_DISCLOSURE",
+            "weight": "high",
+            "question": "Uses 3-level loading effectively (desc → body → refs)?",
+            "scoring": {
+              "0": "Monolithic, no levels",
+              "1": "Attempts levels poorly",
+              "2": "Good level separation",
+              "3": "Excellent progressive disclosure"
+            }
+          },
+          {
+            "name": "STRUCTURE_PATTERN",
+            "weight": "medium",
+            "question": "Appropriate pattern (workflow/task-based/reference/capabilities)?",
+            "scoring": {
+              "0": "No clear pattern",
+              "1": "Pattern unclear",
+              "2": "Appropriate pattern",
+              "3": "Pattern fits perfectly"
+            }
+          },
+          {
+            "name": "ACTIONABILITY",
+            "weight": "high",
+            "question": "Concrete commands vs vague suggestions?",
+            "scoring": {
+              "0": "All vague suggestions",
+              "1": "Mix of vague/concrete",
+              "2": "Mostly concrete",
+              "3": "All concrete, executable"
+            }
+          },
+          {
+            "name": "EXAMPLE_QUALITY",
+            "weight": "medium",
+            "question": "Present when needed, demonstrates right patterns?",
+            "scoring": {
+              "0": "No examples or wrong patterns",
+              "1": "Examples present but unclear",
+              "2": "Good examples",
+              "3": "Excellent, representative examples"
+            }
+          },
+          {
+            "name": "EXPLANATION_OVER_MANDATE",
+            "weight": "low",
+            "question": "Explains WHY vs just commanding?",
+            "scoring": {
+              "0": "Pure mandates, no WHY",
+              "1": "Some WHY, mostly commands",
+              "2": "Good balance",
+              "3": "Teaches principles, not rules"
+            }
+          },
+          {
+            "name": "SCOPE_BOUNDARIES",
+            "weight": "medium",
+            "question": "Clear negative scope (what NOT to do)?",
+            "scoring": {
+              "0": "No negative scope",
+              "1": "Vague boundaries",
+              "2": "Clear boundaries",
+              "3": "Precise do/don't guidance"
+            }
+          },
+          {
+            "name": "ANTI_BLOAT",
+            "weight": "high",
+            "question": "Free of README-style content (under 700 lines)?",
+            "scoring": {
+              "0": ">1000 lines",
+              "1": "700-1000 lines",
+              "2": "400-700 lines",
+              "3": "<400 lines, focused"
+            }
+          }
+        ]
+      },
+      "OPERATIONAL": {
+        "weight": "high",
+        "description": "Operational integrity (filesystem-level)",
+        "criteria": [
+          {
+            "name": "FILE_INTEGRITY",
+            "weight": "critical",
+            "question": "Cross-references resolve (no phantom files)?",
+            "scoring": {
+              "0": "Broken references",
+              "1": "Some broken refs",
+              "2": "All refs valid",
+              "3": "All refs valid + organized"
+            }
+          },
+          {
+            "name": "SCRIPT_QUALITY",
+            "weight": "high",
+            "question": "Executable, has shebang, basic error handling?",
+            "scoring": {
+              "0": "Not executable or no shebang",
+              "1": "Executable but no error handling",
+              "2": "Good quality",
+              "3": "Excellent quality + tests"
+            }
+          },
+          {
+            "name": "REFERENCE_ORGANIZATION",
+            "weight": "medium",
+            "question": "ToCs for long files, selective reading enabled?",
+            "scoring": {
+              "0": "No organization",
+              "1": "Minimal organization",
+              "2": "Good organization",
+              "3": "Excellent, ToCs + selective reading"
+            }
+          }
+        ]
+      }
+    },
+    "grading": {
+      "A": {
+        "avg_score": ">=2.5",
+        "critical_issues": 0,
+        "description": "Excellent skill, no changes needed"
+      },
+      "B": {
+        "avg_score": ">=2.0",
+        "critical_issues": "<2",
+        "description": "Good skill, minor improvements possible"
+      },
+      "C": {
+        "avg_score": ">=1.5",
+        "critical_issues": "<4",
+        "description": "Adequate skill, needs improvements"
+      },
+      "D": {
+        "avg_score": ">=1.0",
+        "critical_issues": "any",
+        "description": "Poor skill, needs major fixes"
+      },
+      "F": {
+        "avg_score": "<1.0",
+        "critical_issues": "any",
+        "description": "Failing skill, requires rewrite"
+      }
+    }
+  }
+}

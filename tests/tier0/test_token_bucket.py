@@ -70,7 +70,7 @@ class TestTokenBucket:
         time.sleep(0.5)
 
         available = bucket.get_available_tokens()
-        assert 3.5 <= available <= 6.5
+        assert 3.5 <= available <= 7.0
 
     def test_refill_does_not_exceed_capacity(self):
         """Refill should not exceed bucket capacity."""

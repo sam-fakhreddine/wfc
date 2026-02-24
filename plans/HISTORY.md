@@ -1,5 +1,6 @@
 # Plan History
 
+**Total Plans:** 4
 **Total Plans:** 5
 
 ---
