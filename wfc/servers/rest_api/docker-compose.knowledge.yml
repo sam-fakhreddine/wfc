@@ -1,0 +1,61 @@
+# WFC Knowledge Server — Docker Compose
+#
+# Usage:
+#   WFC_KNOWLEDGE_TOKEN=<min-32-chars> docker compose -f docker-compose.knowledge.yml up -d
+#
+# The knowledge server centralizes the RAG knowledge system behind a REST API.
+# ChromaDB is the vector store backend, accessible only via internal Docker network.
+
+services:
+  wfc-knowledge:
+    build:
+      context: ../../../
+      dockerfile: wfc/servers/rest_api/Dockerfile
+    container_name: wfc-knowledge
+    ports:
+      - "8420:8420"
+    environment:
+      - WFC_KNOWLEDGE_TOKEN=${WFC_KNOWLEDGE_TOKEN}
+      - WFC_DATA_DIR=/data/wfc-knowledge
+      - CHROMA_HOST=chroma
+      - CHROMA_PORT=8000
+      - EMBEDDING_MODEL=${EMBEDDING_MODEL:-all-MiniLM-L6-v2}
+      - WFC_KNOWLEDGE_TLS_CERT=${WFC_KNOWLEDGE_TLS_CERT:-}
+      - WFC_KNOWLEDGE_TLS_KEY=${WFC_KNOWLEDGE_TLS_KEY:-}
+    volumes:
+      - wfc-data:/data/wfc-knowledge
+    depends_on:
+      chroma:
+        condition: service_healthy
+    mem_limit: 1g
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-sf", "http://localhost:8420/v1/knowledge/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+
+  chroma:
+    image: chromadb/chroma:latest
+    container_name: wfc-chroma
+    # NO port exposed to host — internal network only
+    environment:
+      - ANONYMIZED_TELEMETRY=false
+      - IS_PERSISTENT=TRUE
+      - PERSIST_DIRECTORY=/chroma/chroma
+    volumes:
+      - chroma-data:/chroma/chroma
+    healthcheck:
+      test: ["CMD", "curl", "-sf", "http://localhost:8000/api/v1/heartbeat"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    restart: unless-stopped
+
+volumes:
+  wfc-data:
+    name: wfc-knowledge-data
+  chroma-data:
+    name: wfc-chroma-data
