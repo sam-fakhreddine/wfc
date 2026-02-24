@@ -6,7 +6,8 @@ from collections import OrderedDict
 from pathlib import Path
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, HTTPException, Response, status
+from fastapi import APIRouter, Depends, HTTPException, Query, Response, status
+from fastapi import Path as PathParam
 
 from wfc.servers.rest_api.knowledge_dependencies import (
     optional_knowledge_token,
@@ -36,20 +37,30 @@ KNOWLEDGE_API_VERSION = 1
 
 DATA_DIR = Path("/data/wfc-knowledge")
 
-_locks: dict[tuple[str, str], asyncio.Lock] = {}
+_locks: OrderedDict[tuple[str, str], asyncio.Lock] = OrderedDict()
 _index_semaphore = asyncio.Semaphore(2)
 
-_MAX_ENGINES = 20
+_MAX_CACHE_SIZE = 20
 _engines: OrderedDict[str, object] = OrderedDict()
 _writers: OrderedDict[str, object] = OrderedDict()
 
 
 def _get_lock(project: str, reviewer_id: str) -> asyncio.Lock:
-    """Get or create an asyncio.Lock for a (project, reviewer_id) pair."""
+    """Get or create an asyncio.Lock for a (project, reviewer_id) pair, LRU-capped."""
     key = (project, reviewer_id)
-    if key not in _locks:
-        _locks[key] = asyncio.Lock()
-    return _locks[key]
+    lock = _locks.get(key)
+    if lock is not None:
+        _locks.move_to_end(key)
+        return lock
+
+    lock = asyncio.Lock()
+    _locks[key] = lock
+
+    max_locks = _MAX_CACHE_SIZE * 5
+    while len(_locks) > max_locks:
+        _locks.popitem(last=False)
+
+    return lock
 
 
 def _get_engine(project: str):
@@ -65,7 +76,7 @@ def _get_engine(project: str):
     engine = RAGEngine(store_dir=store_dir)
     _engines[project] = engine
 
-    while len(_engines) > _MAX_ENGINES:
+    while len(_engines) > _MAX_CACHE_SIZE:
         evicted_key, _ = _engines.popitem(last=False)
         logger.warning("Evicted RAGEngine for project: %s", evicted_key)
 
@@ -87,7 +98,7 @@ def _get_writer(project: str):
     writer = KnowledgeWriter(reviewers_dir=reviewers_dir, global_knowledge_dir=global_dir)
     _writers[project] = writer
 
-    while len(_writers) > _MAX_ENGINES:
+    while len(_writers) > _MAX_CACHE_SIZE:
         evicted_key, _ = _writers.popitem(last=False)
         logger.warning("Evicted KnowledgeWriter for project: %s", evicted_key)
 
@@ -117,17 +128,24 @@ async def index_chunks(req: IndexRequest, response: Response, _auth: Auth):
     """Index KNOWLEDGE.md content into vector store."""
     _add_version_header(response)
 
-    engine = _get_engine(req.project)
-    lock = _get_lock(req.project, req.reviewer_id)
+    try:
+        engine = _get_engine(req.project)
+        lock = _get_lock(req.project, req.reviewer_id)
 
-    async with _index_semaphore:
-        async with lock:
-            knowledge_dir = DATA_DIR / req.project / "reviewers" / req.reviewer_id
-            knowledge_dir.mkdir(parents=True, exist_ok=True)
-            knowledge_path = knowledge_dir / "KNOWLEDGE.md"
+        async with _index_semaphore:
+            async with lock:
+                knowledge_dir = DATA_DIR / req.project / "reviewers" / req.reviewer_id
+                knowledge_dir.mkdir(parents=True, exist_ok=True)
+                knowledge_path = knowledge_dir / "KNOWLEDGE.md"
 
-            await asyncio.to_thread(knowledge_path.write_text, req.knowledge_md)
-            count = await asyncio.to_thread(engine.index, req.reviewer_id, knowledge_path)
+                await asyncio.to_thread(knowledge_path.write_text, req.knowledge_md)
+                count = await asyncio.to_thread(engine.index, req.reviewer_id, knowledge_path)
+    except OSError as e:
+        logger.exception("Index failed (I/O): project=%s reviewer=%s", req.project, req.reviewer_id)
+        raise HTTPException(status_code=503, detail=f"Storage error: {type(e).__name__}") from e
+    except Exception as e:
+        logger.exception("Index failed: project=%s reviewer=%s", req.project, req.reviewer_id)
+        raise HTTPException(status_code=500, detail="Indexing failed") from e
 
     return IndexResponse(chunks_indexed=count, reviewer_id=req.reviewer_id, project=req.project)
 
@@ -137,8 +155,15 @@ async def query_chunks(req: QueryRequest, response: Response, _auth: Auth):
     """Query knowledge chunks."""
     _add_version_header(response)
 
-    engine = _get_engine(req.project)
-    results = await asyncio.to_thread(engine.query, req.reviewer_id, req.query_text, req.top_k)
+    try:
+        engine = _get_engine(req.project)
+        results = await asyncio.to_thread(engine.query, req.reviewer_id, req.query_text, req.top_k)
+    except OSError as e:
+        logger.exception("Query failed (I/O): project=%s", req.project)
+        raise HTTPException(status_code=503, detail=f"Storage error: {type(e).__name__}") from e
+    except Exception as e:
+        logger.exception("Query failed: project=%s", req.project)
+        raise HTTPException(status_code=500, detail="Query failed") from e
 
     chunks = [
         ChunkResult(
@@ -179,11 +204,18 @@ async def append_learnings(req: AppendRequest, response: Response, _auth: Auth):
         for e in req.entries
     ]
 
-    async with lock:
-        result = await asyncio.to_thread(writer.append_entries, entries)
+    try:
+        async with lock:
+            result = await asyncio.to_thread(writer.append_entries, entries)
+    except OSError as e:
+        logger.exception("Append failed (I/O): project=%s", req.project)
+        raise HTTPException(status_code=503, detail=f"Storage error: {type(e).__name__}") from e
+    except Exception as e:
+        logger.exception("Append failed: project=%s", req.project)
+        raise HTTPException(status_code=500, detail="Append failed") from e
 
     appended = sum(result.values())
-    duplicates = len(entries) - appended
+    duplicates = max(0, len(entries) - appended)
 
     return AppendResponse(
         appended=appended, duplicates_skipped=duplicates, reviewer_id=req.reviewer_id
@@ -213,7 +245,10 @@ async def promote_learning(req: PromoteRequest, response: Response, _auth: Auth)
 
 @router.get("/learnings/{reviewer_id}")
 async def get_learnings(
-    reviewer_id: ReviewerId, response: Response, _auth: Auth, project: str = "default"
+    reviewer_id: ReviewerId,
+    response: Response,
+    _auth: Auth,
+    project: Annotated[str, Query(pattern=r"^[a-zA-Z0-9_-]+$", max_length=128)] = "default",
 ):
     """Get raw KNOWLEDGE.md content for a reviewer."""
     _add_version_header(response)
@@ -264,7 +299,12 @@ async def analyze_drift(req: DriftRequest, response: Response, _auth: Auth):
 
 
 @router.get("/hash/{project}/{reviewer_id}", response_model=HashResponse)
-async def get_hash(project: str, reviewer_id: ReviewerId, response: Response, _auth: Auth):
+async def get_hash(
+    project: Annotated[str, PathParam(pattern=r"^[a-zA-Z0-9_-]+$", max_length=128)],
+    reviewer_id: ReviewerId,
+    response: Response,
+    _auth: Auth,
+):
     """Get stored file hash and last-indexed timestamp for a reviewer."""
     _add_version_header(response)
 

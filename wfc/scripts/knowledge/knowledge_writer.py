@@ -66,8 +66,8 @@ class KnowledgeWriter:
             global_knowledge_dir = Path.home() / ".wfc" / "knowledge" / "global" / "reviewers"
         self.global_knowledge_dir = global_knowledge_dir
 
+    @staticmethod
     def extract_learnings(
-        self,
         review_findings: list[dict],
         reviewer_id: str,
         source: str,
@@ -303,8 +303,9 @@ class KnowledgeWriter:
 
         return self._append_to_file(gk, promoted_entry) is not None
 
+    @staticmethod
     def check_promotion_eligibility(
-        self, entry_text: str, reviewer_id: str, min_projects: int = 2
+        entry_text: str, reviewer_id: str, min_projects: int = 2
     ) -> bool:
         # TODO: Implement cross-project promotion check — currently auto-promotes all entries.
         return True

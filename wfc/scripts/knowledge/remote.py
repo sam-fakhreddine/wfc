@@ -180,15 +180,13 @@ class RemoteRetriever:
         """Format results as markdown section — local operation."""
         from wfc.scripts.knowledge.retriever import KnowledgeRetriever
 
-        retriever = KnowledgeRetriever.__new__(KnowledgeRetriever)
-        return KnowledgeRetriever.format_knowledge_section(retriever, results, token_budget)
+        return KnowledgeRetriever.format_knowledge_section(results, token_budget)
 
     def extract_diff_signals(self, diff_content: str) -> str:
         """Extract diff signals — local operation (no HTTP)."""
         from wfc.scripts.knowledge.retriever import KnowledgeRetriever
 
-        retriever = KnowledgeRetriever.__new__(KnowledgeRetriever)
-        return KnowledgeRetriever.extract_diff_signals(retriever, diff_content)
+        return KnowledgeRetriever.extract_diff_signals(diff_content)
 
 
 class RemoteWriter:
@@ -256,32 +254,20 @@ class RemoteWriter:
         """Extract learnings from review — local operation (text parsing)."""
         from wfc.scripts.knowledge.knowledge_writer import KnowledgeWriter
 
-        writer = KnowledgeWriter.__new__(KnowledgeWriter)
-        writer.reviewers_dir = Path("/tmp")
-        writer.global_knowledge_dir = Path("/tmp")
-        return KnowledgeWriter.extract_learnings(writer, review_findings, reviewer_id, source)
+        return KnowledgeWriter.extract_learnings(review_findings, reviewer_id, source)
 
     def prune_old_entries(self, reviewer_id: str, max_age_days: int = 180) -> int:
-        """Prune old entries — delegates to local implementation."""
-        from wfc.scripts.knowledge.knowledge_writer import KnowledgeWriter
-
-        writer = KnowledgeWriter.__new__(KnowledgeWriter)
-        writer.reviewers_dir = Path("/tmp")
-        writer.global_knowledge_dir = Path("/tmp")
-        return KnowledgeWriter.prune_old_entries(writer, reviewer_id, max_age_days)
+        """Prune old entries — not supported in remote mode (requires filesystem)."""
+        logger.warning("prune_old_entries not supported in remote mode")
+        return 0
 
     def check_promotion_eligibility(
         self, entry_text: str, reviewer_id: str, min_projects: int = 2
     ) -> bool:
-        """Check promotion eligibility — delegates to local implementation."""
+        """Check promotion eligibility — local operation."""
         from wfc.scripts.knowledge.knowledge_writer import KnowledgeWriter
 
-        writer = KnowledgeWriter.__new__(KnowledgeWriter)
-        writer.reviewers_dir = Path("/tmp")
-        writer.global_knowledge_dir = Path("/tmp")
-        return KnowledgeWriter.check_promotion_eligibility(
-            writer, entry_text, reviewer_id, min_projects
-        )
+        return KnowledgeWriter.check_promotion_eligibility(entry_text, reviewer_id, min_projects)
 
 
 class RemoteRAGEngine:

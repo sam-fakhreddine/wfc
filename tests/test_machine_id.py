@@ -9,7 +9,17 @@ import hashlib
 from pathlib import Path
 from unittest.mock import patch
 
+import pytest
+
 from wfc.shared.machine import machine_id
+
+
+@pytest.fixture(autouse=True)
+def _clear_machine_id_cache():
+    """Clear lru_cache between tests so mocks take effect."""
+    machine_id.cache_clear()
+    yield
+    machine_id.cache_clear()
 
 
 class TestMachineIdDeterminism:

@@ -133,8 +133,8 @@ class KnowledgeRetriever:
         filtered.sort(key=lambda r: r.score, reverse=True)
         return filtered[:effective_top_k]
 
+    @staticmethod
     def format_knowledge_section(
-        self,
         results: list[TaggedResult],
         token_budget: int = 500,
     ) -> str:
@@ -167,7 +167,8 @@ class KnowledgeRetriever:
 
         return output
 
-    def extract_diff_signals(self, diff_content: str) -> str:
+    @staticmethod
+    def extract_diff_signals(diff_content: str) -> str:
         """Extract key signals from a diff for use as a RAG query.
 
         Extracts: file paths, function/class names, import statements.

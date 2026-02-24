@@ -1,5 +1,6 @@
 """Idempotent machine identity for audit trails and deduplication."""
 
+import functools
 import getpass
 import hashlib
 import platform
@@ -7,6 +8,7 @@ import uuid
 from pathlib import Path
 
 
+@functools.lru_cache(maxsize=1)
 def machine_id() -> str:
     """Derive an 8-char hex fingerprint for this machine.
 

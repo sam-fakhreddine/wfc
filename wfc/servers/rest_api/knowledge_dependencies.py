@@ -1,14 +1,14 @@
 """Knowledge API authentication dependencies."""
 
+import hmac
 import logging
 import os
-from typing import Optional
 
 from fastapi import Header, HTTPException, status
 
 logger = logging.getLogger(__name__)
 
-_KNOWLEDGE_TOKEN: Optional[str] = None
+_KNOWLEDGE_TOKEN: str | None = None
 
 
 def _get_knowledge_token() -> str:
@@ -31,6 +31,7 @@ async def verify_knowledge_token(
     """Verify Bearer token for knowledge API endpoints.
 
     Returns True if valid, raises 401 if invalid.
+    Uses hmac.compare_digest for constant-time comparison (prevents timing attacks).
     """
     token = _get_knowledge_token()
     if not token:
@@ -43,7 +44,7 @@ async def verify_knowledge_token(
         )
 
     provided = authorization[7:]
-    if provided != token:
+    if not hmac.compare_digest(provided, token):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Invalid authentication token",
@@ -60,4 +61,4 @@ async def optional_knowledge_token(
         return True
     if not authorization.startswith("Bearer "):
         return False
-    return authorization[7:] == token
+    return hmac.compare_digest(authorization[7:], token)

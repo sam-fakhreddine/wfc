@@ -41,8 +41,7 @@ class DegradedRetriever:
     def extract_diff_signals(self, diff_content: str) -> str:
         from wfc.scripts.knowledge.retriever import KnowledgeRetriever
 
-        r = KnowledgeRetriever.__new__(KnowledgeRetriever)
-        return KnowledgeRetriever.extract_diff_signals(r, diff_content)
+        return KnowledgeRetriever.extract_diff_signals(diff_content)
 
 
 class KnowledgeFactory:
@@ -68,13 +67,19 @@ class KnowledgeFactory:
         """
         url = server_url or os.environ.get("WFC_KNOWLEDGE_URL", "")
         token = auth_token or os.environ.get("WFC_KNOWLEDGE_TOKEN", "")
-        timeout = health_timeout or float(os.environ.get("WFC_KNOWLEDGE_TIMEOUT", "2.0"))
+        timeout = (
+            health_timeout
+            if health_timeout is not None
+            else float(os.environ.get("WFC_KNOWLEDGE_TIMEOUT", "2.0"))
+        )
 
         if not url:
             logger.info("knowledge: local (WFC_KNOWLEDGE_URL not set)")
             return cls._create_local(project)
 
         try:
+            import httpx
+
             from wfc.scripts.knowledge.remote import KnowledgeHTTPConfig
 
             config = KnowledgeHTTPConfig(
@@ -86,11 +91,11 @@ class KnowledgeFactory:
             health_data = resp.json()
             cls._cached_health = health_data
 
-            logger.info(f"knowledge: remote ({url})")
+            logger.info("knowledge: remote (%s)", url)
             return cls._create_remote(config, project)
 
-        except Exception as e:
-            logger.warning(f"Knowledge server unreachable: {e}")
+        except (httpx.HTTPError, OSError, ConnectionError) as e:
+            logger.warning("Knowledge server unreachable: %s", e)
             return cls._create_fallback(project, url)
 
     @classmethod
@@ -143,12 +148,13 @@ class KnowledgeFactory:
             local_provider = "unknown"
 
         if local_provider == server_provider:
-            logger.info(f"knowledge: local (same provider: {local_provider})")
+            logger.info("knowledge: local (same provider: %s)", local_provider)
             return cls._create_local(project)
 
         logger.error(
-            f"knowledge: local (degraded — embedding mismatch: "
-            f"server={server_provider}, local={local_provider})"
+            "knowledge: local (degraded — embedding mismatch: server=%s, local=%s)",
+            server_provider,
+            local_provider,
         )
 
         from wfc.scripts.knowledge.knowledge_writer import KnowledgeWriter
