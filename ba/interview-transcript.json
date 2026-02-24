@@ -52,7 +52,7 @@
             },
             {
               "question": "How would you verify API rate limiting works?",
-              "answer": "50 concurrent reviews (10 devs × 5 agents) result in 0 Anthropic 429 errors, token bucket queues fairly"
+              "answer": "50 concurrent reviews (10 devs x 5 agents) result in 0 Anthropic 429 errors, token bucket queues fairly"
             },
             {
               "question": "How would you verify resource cleanup works?",
@@ -203,7 +203,7 @@
       "phases": [
         "Weeks 1-2: Core + MCP (as in Stream 1)",
         "Weeks 3-4: Add REST interface (as in Stream 2)",
-        "Week 5: MCP → REST delegation (optional)"
+        "Week 5: MCP -> REST delegation (optional)"
       ]
     }
   ],
@@ -215,7 +215,7 @@
     },
     {
       "name": "Test 2: Rate Limiting Under Load",
-      "scenario": "50 concurrent reviews (simulate 10 devs × 5 agents)",
+      "scenario": "50 concurrent reviews (simulate 10 devs x 5 agents)",
       "acceptance": "0 Anthropic 429 errors, fair token bucket queuing, all 50 complete"
     },
     {

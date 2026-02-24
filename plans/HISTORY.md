@@ -9,15 +9,15 @@
 - **Created:** 2026-02-22T23:12:19Z
 - **Completed:** 2026-02-22T23:45:00Z
 - **Goal:** Integrate AST-based static analysis into wfc-review to provide reviewers with supplemental context
-- **Context:** Token optimization — 97% reduction (8000 → 200 tokens per file) while providing better context
+- **Context:** Token optimization -- 97% reduction (8000 -> 200 tokens per file) while providing better context
 - **Directory:** `plans/plan_ast_metrics_integration_20260222`
-- **Tasks:** 7 (6 original + 1 observability task added during validation) — **ALL COMPLETED** ✅
-- **Properties:** 6 (2 critical SAFETY, 1 LIVENESS, 2 INVARIANT, 1 PERFORMANCE) — **100% VERIFIED** ✅
-- **Tests:** 23 (expanded from 12, all passing with 100% property coverage) ✅
+- **Tasks:** 7 (6 original + 1 observability task added during validation) -- ALL COMPLETED
+- **Properties:** 6 (2 critical SAFETY, 1 LIVENESS, 2 INVARIANT, 1 PERFORMANCE) -- 100% VERIFIED
+- **Tests:** 23 (expanded from 12, all passing with 100% property coverage)
 - **Complexity:** M (~1.5 weeks estimated, **6 hours actual** via manual implementation)
 - **Validated:** yes (score: 8.3/10, PROCEED WITH ADJUSTMENTS)
 - **Revisions Applied:** 4 (3 Must-Do, 1 Should-Do)
-- **Status:** ✅ **IMPLEMENTED AND TESTED** — ready for review and PR
+- **Status:** IMPLEMENTED AND TESTED -- ready for review and PR
 
 ---
 
@@ -47,9 +47,9 @@
 - **Properties:** 17 (6 SAFETY, 3 LIVENESS, 6 INVARIANT, 2 PERFORMANCE)
 - **Tests:** 34 (24 unit, 8 integration, 2 E2E)
 - **Validated:** yes (score: 8.8/10, PROCEED verdict)
-- **Review Skipped:** yes (validation score ≥ 8.5 bypasses review gate)
+- **Review Skipped:** yes (validation score >= 8.5 bypasses review gate)
 - **Estimated Effort:** 68-83 hours (2-3 weeks for 1 developer)
-- **PR Phasing:** Recommended 3-PR approach (Foundation → Core → Complete)
+- **PR Phasing:** Recommended 3-PR approach (Foundation -> Core -> Complete)
 
 ---
 
@@ -65,7 +65,7 @@
 - **Validated:** yes (validate: 7.4/10, review: 4.59/10 - PASSED)
 - **Review Findings:** 29 total (8 critical/important applied)
 - **Status:** Approved for implementation with fixes
-- **Estimated Effort:** 65 tasks × 30min avg = 32.5 agent-hours (agentic parallel execution: 3-4 weeks)
+- **Estimated Effort:** 65 tasks x 30min avg = 32.5 agent-hours (agentic parallel execution: 3-4 weeks)
 - **Streams:** Phase 1 (26 tasks, Shared Core), Phase 2A (12 tasks, MCP), Phase 2B (20 tasks, REST), Phase 3 (7 tasks, Infrastructure)
 
 ---
@@ -82,7 +82,7 @@
 - **Validated:** yes (score: 8.7/10, PROCEED verdict)
 - **Review:** CS=4.84/10 (moderate tier, PASSED - 5/5 reviewers approved)
 - **Review Findings:** 7 total (3 moderate duplicates, 4 unique enhancements applied)
-- **Status:** ✅ Approved for implementation
+- **Status:** Approved for implementation
 - **Estimated Effort:** 3.5 weeks (3 weeks implementation + 2 days prototype)
 - **Key Features:** FastAPI server, API key authentication, file-based storage (MVP), async review execution, background tasks, resource monitoring, Prometheus metrics, Docker deployment
 - **Architecture Decisions:** File-based storage (JSON + filelock), API key hashing (SHA-256), project isolation (dependency injection), backward compatible (reuses ReviewOrchestrator, ProjectContext, WorktreePool, TokenBucket)
