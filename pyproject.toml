@@ -76,3 +76,7 @@ testpaths = ["tests"]
 python_files = ["test_*.py"]
 timeout = 30  # 30 seconds per test (fail-fast for hung tests)
 timeout_method = "thread"
+addopts = "-m 'not integration'"
+markers = [
+    "integration: requires running Docker Compose knowledge server stack",
+]
