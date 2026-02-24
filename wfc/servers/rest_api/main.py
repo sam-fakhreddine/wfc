@@ -13,6 +13,7 @@ from fastapi import FastAPI, Request, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
+from wfc.servers.rest_api.knowledge_routes import router as knowledge_router
 from wfc.servers.rest_api.models import ErrorResponse
 from wfc.servers.rest_api.routes import project_router, resource_router, review_router
 
@@ -51,6 +52,7 @@ app.add_middleware(
 app.include_router(review_router)
 app.include_router(project_router)
 app.include_router(resource_router)
+app.include_router(knowledge_router)
 
 
 @app.get("/", summary="Health check", tags=["health"])
