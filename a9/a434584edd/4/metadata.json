@@ -1,0 +1,31 @@
+{
+  "cli_version": "0.4.5",
+  "checkpoint_id": "a9a434584edd",
+  "session_id": "cc88c2e0-9a11-47d9-b91a-f45218fc3099",
+  "strategy": "manual-commit",
+  "created_at": "2026-02-21T19:20:43.072981Z",
+  "branch": "claude/fix-consensus-review-critical-issues-1771647949",
+  "checkpoints_count": 1,
+  "files_touched": [
+    "wfc/scripts/orchestrators/review/orchestrator.py"
+  ],
+  "agent": "Claude Code",
+  "turn_id": "547c1381ee30",
+  "token_usage": {
+    "input_tokens": 9014,
+    "cache_creation_tokens": 957614,
+    "cache_read_tokens": 17494378,
+    "output_tokens": 1650,
+    "api_call_count": 200
+  },
+  "initial_attribution": {
+    "calculated_at": "2026-02-21T19:20:41.607655Z",
+    "agent_lines": 31,
+    "human_added": 14126,
+    "human_modified": 0,
+    "human_removed": 0,
+    "total_committed": 14157,
+    "agent_percentage": 0.21897294624567354
+  },
+  "transcript_path": ".claude/projects/-Users-samfakhreddine-repos-wfc/cc88c2e0-9a11-47d9-b91a-f45218fc3099.jsonl"
+}

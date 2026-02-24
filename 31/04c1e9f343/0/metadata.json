@@ -1,0 +1,38 @@
+{
+  "cli_version": "0.4.5",
+  "checkpoint_id": "3104c1e9f343",
+  "session_id": "558241d6-1b1a-49db-9a64-d522165180eb",
+  "strategy": "manual-commit",
+  "created_at": "2026-02-22T03:29:24.954164Z",
+  "branch": "feat/rest-api-implementation",
+  "checkpoints_count": 2,
+  "files_touched": [
+    "ATTACK-SURFACE.md",
+    "THREAT-MODEL.md",
+    "VULNERABILITIES.md",
+    "docs/roadmap/COMING-SOON.md",
+    "plans/hardened-runner-requirements.md",
+    ".github/workflows/agent-dispatch.yml",
+    ".secrets.baseline"
+  ],
+  "agent": "Claude Code",
+  "turn_id": "72e287bc99e0",
+  "transcript_identifier_at_start": "91a4c66e-e97f-4d6d-b04e-d73ab1a8fd57",
+  "token_usage": {
+    "input_tokens": 8148,
+    "cache_creation_tokens": 2386483,
+    "cache_read_tokens": 47323772,
+    "output_tokens": 2634,
+    "api_call_count": 467
+  },
+  "initial_attribution": {
+    "calculated_at": "2026-02-22T03:29:22.51871Z",
+    "agent_lines": 2229,
+    "human_added": 57,
+    "human_modified": 1,
+    "human_removed": 0,
+    "total_committed": 2287,
+    "agent_percentage": 97.46392654132052
+  },
+  "transcript_path": ".claude/projects/-Users-samfakhreddine-repos-wfc/558241d6-1b1a-49db-9a64-d522165180eb.jsonl"
+}

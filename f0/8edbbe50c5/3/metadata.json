@@ -1,0 +1,31 @@
+{
+  "cli_version": "0.4.5",
+  "checkpoint_id": "f08edbbe50c5",
+  "session_id": "e2111fe2-5340-4bed-9ae8-71f62140f54e",
+  "strategy": "manual-commit",
+  "created_at": "2026-02-22T11:14:30.589943Z",
+  "branch": "feat/rest-api-implementation",
+  "checkpoints_count": 1,
+  "files_touched": [
+    "THREAT-MODEL.md"
+  ],
+  "agent": "Claude Code",
+  "turn_id": "b07bd6492bc9",
+  "token_usage": {
+    "input_tokens": 252,
+    "cache_creation_tokens": 394995,
+    "cache_read_tokens": 4421103,
+    "output_tokens": 737,
+    "api_call_count": 52
+  },
+  "initial_attribution": {
+    "calculated_at": "2026-02-22T11:14:30.106514Z",
+    "agent_lines": 391,
+    "human_added": 1968,
+    "human_modified": 4,
+    "human_removed": 0,
+    "total_committed": 2363,
+    "agent_percentage": 16.546762589928058
+  },
+  "transcript_path": ".claude/projects/-Users-samfakhreddine-repos-wfc/e2111fe2-5340-4bed-9ae8-71f62140f54e.jsonl"
+}

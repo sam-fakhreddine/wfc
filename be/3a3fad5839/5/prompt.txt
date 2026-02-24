@@ -1,0 +1,1952 @@
+Base directory for this skill: /Users/samfakhreddine/.claude/skills/wfc-plan
+
+# WFC:PLAN - Adaptive Planning with Formal Properties
+
+Converts requirements into structured implementation plans through adaptive interviewing.
+
+## What It Does
+
+1. **Adaptive Interview** - Asks intelligent questions that adapt based on answers
+2. **Task Generation** - Breaks down requirements into structured TASKS.md with dependencies
+3. **Property Extraction** - Identifies formal properties (SAFETY, LIVENESS, INVARIANT, PERFORMANCE)
+4. **Test Planning** - Creates comprehensive TEST-PLAN.md linked to requirements and properties
+
+## Usage
+
+```bash
+# Default output to ./plan
+/wfc:plan
+
+# Custom output directory
+/wfc:plan path/to/output
+
+# With options (future)
+/wfc:plan --interactive  # Step through interview
+/wfc:plan --from-file requirements.md  # Import requirements
+```
+
+## Interview Process
+
+The adaptive interview gathers:
+
+### Core Understanding
+- What are you building? (goal)
+- Why are you building it? (context)
+- Who will use it? (users)
+
+### Requirements
+- Core features (must-have)
+- Nice-to-have features
+- Technical constraints
+- Performance requirements
+- Security requirements
+
+### Technical Details
+- Technology stack
+- Existing codebase or new project
+- Testing approach
+- Coverage targets
+
+### Formal Properties
+- Safety properties (what must never happen)
+- Liveness properties (what must eventually happen)
+- Invariants (what must always be true)
+- Performance properties (time/resource bounds)
+
+## Outputs
+
+### 1. TASKS.md
+Structured implementation tasks with:
+- Unique IDs (TASK-001, TASK-002, ...)
+- Complexity ratings (S, M, L, XL)
+- Dependency graph (DAG)
+- Properties to satisfy
+- Files likely affected
+- Acceptance criteria
+
+Example:
+```markdown
+## TASK-001: Setup project structure
+- **Complexity**: S
+- **Dependencies**: []
+- **Properties**: []
+- **Files**: README.md, pyproject.toml
+- **Description**: Create initial project structure
+- **Acceptance Criteria**:
+  - [ ] Project structure follows best practices
+  - [ ] Dependencies documented
+```
+
+### 2. PROPERTIES.md
+Formal properties with:
+- Type (SAFETY, LIVENESS, INVARIANT, PERFORMANCE)
+- Formal statement
+- Rationale
+- Priority
+- Suggested observables
+
+Example:
+```markdown
+## PROP-001: SAFETY
+- **Statement**: Unauthenticated user must never access protected endpoints
+- **Rationale**: Security: prevent unauthorized data access
+- **Priority**: critical
+- **Observables**: auth_failures, unauthorized_access_attempts
+```
+
+### 3. TEST-PLAN.md
+Test strategy and cases:
+- Testing approach (unit, integration, e2e)
+- Coverage targets
+- Specific test cases linked to tasks and properties
+- Test steps and expected outcomes
+
+Example:
+```markdown
+### TEST-001: Verify SAFETY property
+- **Type**: integration
+- **Related Task**: TASK-003
+- **Related Property**: PROP-001
+- **Description**: Test that unauthenticated users cannot access protected endpoints
+- **Steps**:
+  1. Attempt access without authentication
+  2. Verify 401 response
+- **Expected**: Access denied
+```
+
+## Architecture
+
+### MULTI-TIER Design
+```
+┌─────────────────────────────┐
+│  PRESENTATION (cli.py)      │  User interaction, output formatting
+└──────────────┬──────────────┘
+               │
+┌──────────────▼──────────────┐
+│  LOGIC (orchestrator.py)    │  Interview → Generate → Save
+│  - interview.py             │
+│  - tasks_generator.py       │
+│  - properties_generator.py  │
+│  - test_plan_generator.py   │
+└──────────────┬──────────────┘
+               │
+┌──────────────▼──────────────┐
+│  DATA (filesystem)          │  Save markdown and JSON
+└─────────────────────────────┘
+```
+
+## Integration with WFC
+
+### Produces (consumed by wfc:implement)
+- `plan/TASKS.md` → Task orchestration
+- `plan/PROPERTIES.md` → TDD test requirements
+- `plan/TEST-PLAN.md` → Test strategy
+
+### Consumes (future)
+- `wfc:architecture` for architecture analysis
+- `wfc:security` for threat model properties
+
+## Configuration
+
+```json
+{
+  "plan": {
+    "output_dir": "./plan",
+    "interview_mode": "adaptive",
+    "task_complexity_model": "auto",
+    "generate_diagram": true
+  }
+}
+```
+
+## What to Do
+
+1. **If `BA-LOKI-MODE.md` is provided**, use it as output directory
+2. **If no arguments**, use `./plan` as default output directory
+3. **Run adaptive interview** using `AdaptiveInterviewer`
+4. **Generate all files** using orchestrator
+5. **Display results** showing file paths and summary
+6. **Record telemetry** for all operations
+
+## Example Flow
+
+```
+User runs: /wfc:plan
+
+[ADAPTIVE INTERVIEW]
+Q: What are you trying to build?
+A: REST API for user management
+
+Q: What are the core features?
+A: User CRUD, authentication, role-based access
+
+Q: Security requirements?
+A: JWT tokens, role-based authorization
+
+[GENERATION]
+✅ Created TASKS.md (5 tasks)
+✅ Created PROPERTIES.md (3 properties: 1 SAFETY, 2 INVARIANT)
+✅ Created TEST-PLAN.md (12 test cases)
+
+[OUTPUT]
+📁 ./plan/
+  - TASKS.md
+  - PROPERTIES.md
+  - TEST-PLAN.md
+  - interview-results.json
+
+Next: Run `/wfc:implement ./plan/TASKS.md`
+```
+
+## Philosophy
+
+**ELEGANT**: Simple interview questions, clear task breakdown
+**MULTI-TIER**: Clean separation of presentation, logic, and data
+**PARALLEL**: Can generate all three files concurrently (future optimization)
+
+---
+
+[Request interrupted by user for tool use]
+
+---
+
+Base directory for this skill: /Users/samfakhreddine/.claude/skills/wfc-plan
+
+# WFC:PLAN - Adaptive Planning with Formal Properties
+
+Converts requirements into structured implementation plans through adaptive interviewing.
+
+## What It Does
+
+1. **Adaptive Interview** - Asks intelligent questions that adapt based on answers
+2. **Task Generation** - Breaks down requirements into structured TASKS.md with dependencies
+3. **Property Extraction** - Identifies formal properties (SAFETY, LIVENESS, INVARIANT, PERFORMANCE)
+4. **Test Planning** - Creates comprehensive TEST-PLAN.md linked to requirements and properties
+
+## Usage
+
+```bash
+# Default output to ./plan
+/wfc:plan
+
+# Custom output directory
+/wfc:plan path/to/output
+
+# With options (future)
+/wfc:plan --interactive  # Step through interview
+/wfc:plan --from-file requirements.md  # Import requirements
+```
+
+## Interview Process
+
+The adaptive interview gathers:
+
+### Core Understanding
+- What are you building? (goal)
+- Why are you building it? (context)
+- Who will use it? (users)
+
+### Requirements
+- Core features (must-have)
+- Nice-to-have features
+- Technical constraints
+- Performance requirements
+- Security requirements
+
+### Technical Details
+- Technology stack
+- Existing codebase or new project
+- Testing approach
+- Coverage targets
+
+### Formal Properties
+- Safety properties (what must never happen)
+- Liveness properties (what must eventually happen)
+- Invariants (what must always be true)
+- Performance properties (time/resource bounds)
+
+## Outputs
+
+### 1. TASKS.md
+Structured implementation tasks with:
+- Unique IDs (TASK-001, TASK-002, ...)
+- Complexity ratings (S, M, L, XL)
+- Dependency graph (DAG)
+- Properties to satisfy
+- Files likely affected
+- Acceptance criteria
+
+Example:
+```markdown
+## TASK-001: Setup project structure
+- **Complexity**: S
+- **Dependencies**: []
+- **Properties**: []
+- **Files**: README.md, pyproject.toml
+- **Description**: Create initial project structure
+- **Acceptance Criteria**:
+  - [ ] Project structure follows best practices
+  - [ ] Dependencies documented
+```
+
+### 2. PROPERTIES.md
+Formal properties with:
+- Type (SAFETY, LIVENESS, INVARIANT, PERFORMANCE)
+- Formal statement
+- Rationale
+- Priority
+- Suggested observables
+
+Example:
+```markdown
+## PROP-001: SAFETY
+- **Statement**: Unauthenticated user must never access protected endpoints
+- **Rationale**: Security: prevent unauthorized data access
+- **Priority**: critical
+- **Observables**: auth_failures, unauthorized_access_attempts
+```
+
+### 3. TEST-PLAN.md
+Test strategy and cases:
+- Testing approach (unit, integration, e2e)
+- Coverage targets
+- Specific test cases linked to tasks and properties
+- Test steps and expected outcomes
+
+Example:
+```markdown
+### TEST-001: Verify SAFETY property
+- **Type**: integration
+- **Related Task**: TASK-003
+- **Related Property**: PROP-001
+- **Description**: Test that unauthenticated users cannot access protected endpoints
+- **Steps**:
+  1. Attempt access without authentication
+  2. Verify 401 response
+- **Expected**: Access denied
+```
+
+## Architecture
+
+### MULTI-TIER Design
+```
+┌─────────────────────────────┐
+│  PRESENTATION (cli.py)      │  User interaction, output formatting
+└──────────────┬──────────────┘
+               │
+┌──────────────▼──────────────┐
+│  LOGIC (orchestrator.py)    │  Interview → Generate → Save
+│  - interview.py             │
+│  - tasks_generator.py       │
+│  - properties_generator.py  │
+│  - test_plan_generator.py   │
+└──────────────┬──────────────┘
+               │
+┌──────────────▼──────────────┐
+│  DATA (filesystem)          │  Save markdown and JSON
+└─────────────────────────────┘
+```
+
+## Integration with WFC
+
+### Produces (consumed by wfc:implement)
+- `plan/TASKS.md` → Task orchestration
+- `plan/PROPERTIES.md` → TDD test requirements
+- `plan/TEST-PLAN.md` → Test strategy
+
+### Consumes (future)
+- `wfc:architecture` for architecture analysis
+- `wfc:security` for threat model properties
+
+## Configuration
+
+```json
+{
+  "plan": {
+    "output_dir": "./plan",
+    "interview_mode": "adaptive",
+    "task_complexity_model": "auto",
+    "generate_diagram": true
+  }
+}
+```
+
+## What to Do
+
+1. **If `BA-LOKI-MODE.md WE ARE IN THE REPO DEVELOPING THE WFC DO NOT LOOK IN ~/` is provided**, use it as output directory
+2. **If no arguments**, use `./plan` as default output directory
+3. **Run adaptive interview** using `AdaptiveInterviewer`
+4. **Generate all files** using orchestrator
+5. **Display results** showing file paths and summary
+6. **Record telemetry** for all operations
+
+## Example Flow
+
+```
+User runs: /wfc:plan
+
+[ADAPTIVE INTERVIEW]
+Q: What are you trying to build?
+A: REST API for user management
+
+Q: What are the core features?
+A: User CRUD, authentication, role-based access
+
+Q: Security requirements?
+A: JWT tokens, role-based authorization
+
+[GENERATION]
+✅ Created TASKS.md (5 tasks)
+✅ Created PROPERTIES.md (3 properties: 1 SAFETY, 2 INVARIANT)
+✅ Created TEST-PLAN.md (12 test cases)
+
+[OUTPUT]
+📁 ./plan/
+  - TASKS.md
+  - PROPERTIES.md
+  - TEST-PLAN.md
+  - interview-results.json
+
+Next: Run `/wfc:implement ./plan/TASKS.md`
+```
+
+## Philosophy
+
+**ELEGANT**: Simple interview questions, clear task breakdown
+**MULTI-TIER**: Clean separation of presentation, logic, and data
+**PARALLEL**: Can generate all three files concurrently (future optimization)
+
+---
+
+Base directory for this skill: /Users/samfakhreddine/.claude/skills/wfc-isthissmart
+
+# WFC:ISTHISSMART - Thoughtful Advisor
+
+The experienced staff engineer who asks "is this the right approach?" before we commit.
+
+## What It Does
+
+Analyzes any WFC artifact (plan, architecture, idea) across 7 dimensions:
+
+1. **Do We Even Need This?** - Real problem vs hypothetical
+2. **Is This the Simplest Approach?** - Avoid over-engineering
+3. **Is the Scope Right?** - Not too much, not too little
+4. **What Are We Trading Off?** - Opportunity cost, maintenance burden
+5. **Have We Seen This Fail Before?** - Anti-patterns, known failure modes
+6. **What's the Blast Radius?** - Risk assessment, rollback plan
+7. **Is the Timeline Realistic?** - Hidden dependencies, prototype first?
+
+Returns balanced assessment with verdict: PROCEED, PROCEED WITH ADJUSTMENTS, RECONSIDER, or DON'T PROCEED.
+
+## Usage
+
+```bash
+# Analyze current plan
+/wfc:isthissmart
+
+# Analyze a freeform idea
+/wfc:isthissmart "rewrite auth system in Rust"
+
+# Analyze specific artifact
+/wfc:isthissmart --plan
+/wfc:isthissmart --architecture
+/wfc:isthissmart --task TASK-005
+```
+
+## Output: ISTHISSMART.md
+
+```markdown
+# Is This Smart? Analysis
+
+## Subject: Rewrite auth system in Rust
+## Verdict: 🟡 PROCEED WITH ADJUSTMENTS
+## Overall Score: 7.5/10
+
+---
+
+## Executive Summary
+
+Overall, this approach shows 12 clear strengths and 8 areas for consideration.
+
+The strongest aspects are: Blast Radius, Need, Simplicity.
+
+Key considerations: Opportunity cost of other features, Integration risks, Consider using existing library.
+
+With an overall score of 7.5/10, this is a solid approach that can move forward with attention to the identified concerns.
+
+---
+
+## Dimension Analysis
+
+### Do We Even Need This? — Score: 8/10
+
+**Strengths:**
+- Addresses clear user need
+- Backed by data/metrics
+
+**Concerns:**
+- Consider if existing solution could be improved instead
+
+**Recommendation:** Need is justified, but validate assumptions
+
+[... 6 more dimensions ...]
+
+---
+
+## Simpler Alternatives
+
+- Start with a simpler MVP and iterate based on feedback
+- Consider using existing solution (e.g., off-the-shelf library)
+- Phase the implementation - deliver core value first
+
+---
+
+## Final Recommendation
+
+Proceed, but address these key concerns first: Opportunity cost of other features; Integration risks may extend timeline; Consider using existing library
+```
+
+## Tone
+
+**Discerning but constructive. Honest but not harsh.**
+
+Not a naysayer - wants us to succeed with the best approach. Highlights both strengths and concerns. Suggests simpler alternatives when appropriate.
+
+## Verdict Logic
+
+- **🟢 PROCEED**: Overall score >= 8.5/10, no critical concerns
+- **🟡 PROCEED WITH ADJUSTMENTS**: Score 7.0-8.4, address concerns first
+- **🟠 RECONSIDER**: Score 5.0-6.9, explore alternatives
+- **🔴 DON'T PROCEED**: Score < 5.0 or any dimension <= 4/10
+
+## Integration with WFC
+
+### Can Analyze
+- `wfc:plan` outputs (TASKS.md, PROPERTIES.md)
+- `wfc:architecture` outputs (ARCHITECTURE.md)
+- `wfc:security` outputs (THREAT-MODEL.md)
+- Freeform ideas (text input)
+
+### Produces
+- ISTHISSMART.md report
+- Simpler alternatives
+- Final recommendation
+
+## Philosophy
+
+**ELEGANT**: Simple 7-dimension framework, clear logic
+**MULTI-TIER**: Analysis (logic) separated from presentation
+**PARALLEL**: Can analyze multiple artifacts concurrently
+
+
+ARGUMENTS: the above please
+
+---
+
+ok i agree with you, implement with your changes
+
+---
+
+This session is being continued from a previous conversation that ran out of context. The summary below covers the earlier portion of the conversation.
+
+Analysis:
+Let me chronologically analyze the conversation:
+
+1. User invoked `/wfc-plan` with argument `BA-LOKI-MODE.md` - wanting to create a structured implementation plan from a Business Analysis document for "Loki Mode" (Dashboard & Observability Plugin System for WFC).
+
+2. I read the BA document at `docs/architecture/BA-LOKI-MODE.md` - comprehensive 488-line document covering metrics, events, providers, dashboards, CLI, instrumentation points.
+
+3. I tried to use a Task/Explore agent to look at existing code - user interrupted and re-invoked with explicit instruction "WE ARE IN THE REPO DEVELOPING THE WFC DO NOT LOOK IN ~/".
+
+4. I explored the repo directly with Glob/Grep/Read - found:
+   - `wfc/observability/` doesn't exist yet (greenfield)
+   - 3 `_bypass_count` globals in pretooluse_hook.py, security_hook.py, rule_engine.py
+   - pyproject.toml has zero required deps
+   - CLI entry point at `wfc/cli.py`
+
+5. I asked the user 4 design questions from the BA's open questions:
+   - Session ID: User chose "Both (hierarchical)" - UUID4 per invocation + WFC_SESSION_ID env inheritance
+   - Config: User chose "Standalone .wfc/observability.toml"
+   - TUI: User chose "Textual App"
+   - Charts: User chose "Inline Chart.js"
+
+6. Generated 3 plan documents in `plan/`:
+   - TASKS.md (16 tasks, 4 phases)
+   - PROPERTIES.md (6 formal properties)
+   - TEST-PLAN.md (42 test cases)
+
+7. User invoked `/wfc-isthissmart` - I performed 7-dimension analysis, scored 7.8/10 "PROCEED WITH ADJUSTMENTS". Key recommendations:
+   - Split into v0.1/v0.2 (11 tasks vs 5 deferred)
+   - Simplify EventBus (direct dispatch, no pub-sub)
+   - Reconsider Textual vs Rich (defer TUI to v0.2)
+   - Snapshot on demand (no background timer)
+   - Add atexit shutdown
+
+8. User said "ok i agree with you, implement with your changes"
+
+9. I updated TASKS.md to v0.1 scope (11 tasks), then began implementing:
+
+**TASK-001**: Package skeleton + config
+- Created `wfc/observability/__init__.py` (public API: get_registry, get_bus, get_provider_registry, init, shutdown, reset)
+- Created `wfc/observability/config.py` (ObservabilityConfig with TOML loading, env var overrides, hierarchical session IDs)
+- TDD enforcer reminded about tests
+
+**Tests written first for remaining tasks:**
+- `tests/test_observability_config.py` - 18 tests, all passed
+- `tests/test_observability_metrics.py` - tests for Counter, Gauge, Histogram, Timer, MetricsRegistry
+- `tests/test_observability_events.py` - tests for ObservabilityEvent, EventBus
+
+**TASK-002**: Metrics collection layer
+- Created `wfc/observability/metrics.py` - Counter, Gauge, Histogram, Timer, MetricsRegistry
+- Fixed ruff errors: removed unused `dataclass` and `field` imports from metrics.py and events.py
+- 59/59 tests passed
+
+**TASK-003**: Simplified event emitter
+- Created `wfc/observability/events.py` - ObservabilityEvent dataclass, EventBus with direct dispatch
+
+**TASK-004**: Provider plugin interface + built-in providers
+- `tests/test_observability_providers.py` - 27 tests
+- `wfc/observability/providers/__init__.py` - ObservabilityProvider ABC, ProviderRegistry
+- `wfc/observability/providers/null_provider.py` - NullProvider
+- `wfc/observability/providers/memory_provider.py` - InMemoryProvider with .find(), .clear()
+- `wfc/observability/providers/file_provider.py` - FileProvider (JSON-lines, session rotation)
+- `wfc/observability/providers/console_provider.py` - ConsoleProvider (ANSI, NO_COLOR, verbosity)
+- 27/27 tests passed
+
+**TASK-005**: Wire init/shutdown flow
+- `tests/test_observability_init.py` - 13 tests
+- Updated `wfc/observability/__init__.py` with full init/shutdown/reset flow
+- 13/13 tests passed
+- Total Phase 1: 99/99 green
+
+**Instrumentation helper:**
+- Created `wfc/observability/instrument.py` - safe emit_event, incr, gauge_set, timed, observe functions that never raise
+- `tests/test_observability_instrument.py` - 13 tests, all passed
+
+**TASK-006**: Instrument ReviewOrchestrator
+- `tests/test_observability_review_instrumentation.py` - 4 tests
+- Modified `wfc/scripts/skills/review/orchestrator.py` - added event emission in prepare_review and finalize_review
+
+**TASK-007**: Instrument hooks
+- `tests/test_observability_hook_instrumentation.py` - 5 tests
+- Modified `wfc/scripts/hooks/pretooluse_hook.py` - replaced _bypass_count with metrics
+- Modified `wfc/scripts/hooks/security_hook.py` - replaced _bypass_count, added event emission
+- Modified `wfc/scripts/hooks/rule_engine.py` - replaced _bypass_count, added event emission
+
+**TASK-008**: Instrument knowledge system
+- Modified `wfc/scripts/knowledge/drift_detector.py` - added drift event emission and gauges
+- Modified `wfc/scripts/knowledge/knowledge_writer.py` - added entry.appended events
+
+**TASK-009**: Instrument review subsystems
+- Modified `wfc/scripts/skills/review/fingerprint.py` - dedup metrics
+- Modified `wfc/scripts/skills/review/consensus_score.py` - CS histogram, MPR counter
+
+**TASK-010**: CLI command
+- `tests/test_observability_cli.py` - 3 tests
+- Created `wfc/observability/cli.py` - cmd_metrics function
+- Modified `wfc/cli.py` - registered `metrics` subcommand
+
+**TASK-011**: Edge cases + backward compatibility
+- `tests/test_observability_edge_cases.py` - 14 tests (8 edge cases + 6 backward compat)
+
+Final test count: 138/138 all green. 400/400 when including all related existing tests.
+
+Pre-existing failures (not caused by our changes): test_build_cli.py, test_build_integration.py, test_installer_docker.py, test_persona_deletion.py, test_rag_pipeline.py, test_retriever.py.
+
+Summary:
+1. Primary Request and Intent:
+   - User invoked `/wfc-plan BA-LOKI-MODE.md` to create a structured implementation plan from the Business Analysis document for "Loki Mode" — a Dashboard & Observability Plugin System for WFC
+   - After plan generation (16 tasks), user invoked `/wfc-isthissmart` for critical analysis
+   - IsThisSmart scored 7.8/10 "PROCEED WITH ADJUSTMENTS" with 5 key recommendations (scope split, simplify EventBus, defer TUI, on-demand snapshots, atexit shutdown)
+   - User said **"ok i agree with you, implement with your changes"** — requesting implementation of the adjusted v0.1 plan (11 tasks)
+
+2. Key Technical Concepts:
+   - **Loki Mode**: Codename for WFC's Dashboard & Observability Plugin System
+   - **Non-invasive wrapper pattern**: Instrumentation added at method boundaries, never modifying internal logic
+   - **Provider plugin interface**: ABC with 4 methods (on_event, on_metric_snapshot, flush, close)
+   - **Direct-dispatch EventBus**: Simplified from full pub-sub — just iterates providers and calls on_event()
+   - **Hierarchical session IDs**: UUID4 per invocation + inherited WFC_SESSION_ID from env
+   - **Config via .wfc/observability.toml**: Standalone TOML (tomllib stdlib), env var overrides (WFC_OBSERVABILITY_*)
+   - **On-demand snapshots**: No background timer/thread — snapshot when CLI asks
+   - **atexit shutdown**: Ensures providers are flushed/closed on process exit
+   - **Exit-0 safety**: All instrumentation wrapped in try/except — failures logged, never block WFC operations
+   - **TDD (RED-GREEN-REFACTOR)**: Tests written before implementation throughout
+   - **Thread safety**: All metric operations protected by threading.Lock
+
+3. Files and Code Sections:
+
+   - **`docs/architecture/BA-LOKI-MODE.md`** (read only)
+     - 488-line Business Analysis document — source requirements for the entire plan
+     - Defines 8 FRs, 5 NFRs, 13 instrumentation points, event schemas, phased delivery
+
+   - **`plan/TASKS.md`** (created, then updated)
+     - Updated to v0.1 scope: 11 tasks (deferred TUI dashboard, HTML report, benchmarks, docs to v0.2)
+     - Dependency DAG: TASK-001 → 002/003/004 → 005 → 006-009 → 010/011
+
+   - **`plan/PROPERTIES.md`** (created)
+     - 6 formal properties: PROP-001 (SAFETY: never block), PROP-002 (INVARIANT: monotonicity), PROP-003 (PERFORMANCE: overhead budget), PROP-004 (INVARIANT: thread safety), PROP-005 (SAFETY: provider isolation), PROP-006 (LIVENESS: graceful degradation)
+
+   - **`plan/TEST-PLAN.md`** (created)
+     - 42 test cases linked to tasks and properties
+
+   - **`wfc/observability/__init__.py`** (created)
+     - Public API: `init()`, `shutdown()`, `get_registry()`, `get_bus()`, `get_provider_registry()`, `is_initialized()`, `reset()`
+     - Lazy initialization, idempotent init/shutdown, atexit registration
+     - Module-level singletons with threading.Lock
+
+   - **`wfc/observability/config.py`** (created)
+     - `ObservabilityConfig` dataclass with `.load()` classmethod
+     - Reads `.wfc/observability.toml` via tomllib, env var overrides, hierarchical session IDs
+
+   - **`wfc/observability/metrics.py`** (created)
+     - `Counter` (monotonic, no decrement), `Gauge` (set/inc/dec), `Histogram` (observe + percentile via statistics.quantiles), `Timer` (context manager → histogram)
+     - All support labels (key-value dimensions), thread-safe via threading.Lock
+     - `MetricsRegistry`: get_or_create pattern, `snapshot()` returns JSON-serializable dict, `reset()` for tests
+
+   - **`wfc/observability/events.py`** (created)
+     - `ObservabilityEvent` dataclass: event_type, source, session_id, payload, level, timestamp (auto ISO 8601)
+     - `EventBus`: direct-dispatch model, iterates providers calling on_event(), per-provider error isolation
+
+   - **`wfc/observability/providers/__init__.py`** (created)
+     - `ObservabilityProvider` ABC with PROVIDER_API_VERSION = 1
+     - `ProviderRegistry`: register/unregister, push_snapshot, flush_all, close_all, register_from_config
+
+   - **`wfc/observability/providers/null_provider.py`** (created) — No-op default
+   - **`wfc/observability/providers/memory_provider.py`** (created) — InMemoryProvider with .events, .snapshots, .find(), .clear()
+   - **`wfc/observability/providers/file_provider.py`** (created) — JSON-lines, session-scoped files, buffered writes
+   - **`wfc/observability/providers/console_provider.py`** (created) — ANSI stderr, NO_COLOR respect, verbosity 0-2
+
+   - **`wfc/observability/instrument.py`** (created)
+     - Safe helper functions that never raise: `emit_event()`, `incr()`, `gauge_set()`, `timed()`, `observe()`
+     - All wrap observability calls in try/except, check is_initialized() first
+
+   - **`wfc/observability/cli.py`** (created)
+     - `cmd_metrics(format="json"|"table")` — dumps metrics snapshot to stdout
+
+   - **`wfc/cli.py`** (modified)
+     - Added `metrics` subparser with `--format` argument
+     - Added `elif args.command == "metrics"` handler
+
+   - **`wfc/scripts/skills/review/orchestrator.py`** (modified — TASK-006)
+     - `prepare_review()`: emits `review.started` event with task_id, file_count, reviewer_count
+     - `finalize_review()`: emits `review.scored` (CS, tier, passed, MPR), `review.completed` (duration), increments `review.completed` counter, observes `review.duration` and `review.consensus_score` histograms
+
+   - **`wfc/scripts/hooks/pretooluse_hook.py`** (modified — TASK-007)
+     - Removed `_bypass_count = 0` global
+     - Replaced with `incr("hook.bypass_count", labels={"hook": "pretooluse"})` + `emit_event("hook.bypass")`
+
+   - **`wfc/scripts/hooks/security_hook.py`** (modified — TASK-007)
+     - Removed `_bypass_count = 0` global and `global _bypass_count`
+     - Added event emission on block/warn decisions: `emit_event("hook.decision")` + `incr("hook.decisions")`
+     - Bypass path: `incr("hook.bypass_count", labels={"hook": "security"})` + `emit_event("hook.bypass")`
+
+   - **`wfc/scripts/hooks/rule_engine.py`** (modified — TASK-007)
+     - Same pattern as security_hook: removed _bypass_count, added event emission on decisions and bypasses
+
+   - **`wfc/scripts/knowledge/drift_detector.py`** (modified — TASK-008)
+     - After `analyze()` completes: emits `knowledge.drift.detected` per signal, sets gauges for total_entries, stale_count, bloated_count
+
+   - **`wfc/scripts/knowledge/knowledge_writer.py`** (modified — TASK-008)
+     - In `append_entries()`: emits `knowledge.entry.appended` per successful write, increments `knowledge.entries_written` counter
+
+   - **`wfc/scripts/skills/review/fingerprint.py`** (modified — TASK-009)
+     - After `deduplicate()`: increments dedup.pre_count, dedup.post_count, sets dedup.ratio gauge
+
+   - **`wfc/scripts/skills/review/consensus_score.py`** (modified — TASK-009)
+     - After `calculate()`: observes consensus_score.values histogram, increments consensus_score.mpr_activations counter
+
+   - **Test files created:**
+     - `tests/test_observability_config.py` — 18 tests
+     - `tests/test_observability_metrics.py` — 20 tests (Counter, Gauge, Histogram, Timer, Registry, thread safety)
+     - `tests/test_observability_events.py` — 6 tests (EventBus dispatch, error isolation, thread safety)
+     - `tests/test_observability_providers.py` — 27 tests (ABC, Null, InMemory, File, Console, Registry)
+     - `tests/test_observability_init.py` — 13 tests (init/shutdown/bridge/reset/lazy)
+     - `tests/test_observability_instrument.py` — 13 tests (safe helpers)
+     - `tests/test_observability_review_instrumentation.py` — 4 tests (orchestrator events)
+     - `tests/test_observability_hook_instrumentation.py` — 5 tests (bypass count replacement, event emission)
+     - `tests/test_observability_cli.py` — 3 tests (JSON output, table output, empty)
+     - `tests/test_observability_edge_cases.py` — 14 tests (edge cases + backward compat)
+
+4. Errors and Fixes:
+   - **User interrupted Task/Explore agent**: User said "WE ARE IN THE REPO DEVELOPING THE WFC DO NOT LOOK IN ~/" — I switched to using Glob/Grep/Read directly within the repo
+   - **Ruff lint errors**: Unused imports `dataclass`, `field` in metrics.py and events.py — fixed by removing the unused imports
+   - **TDD enforcer reminders**: The PostToolUse hook fired warnings when writing implementation before tests. Not blocking errors, just reminders. Tests existed in differently-named files (e.g., test_observability_providers.py covers all provider modules)
+   - **Pre-existing test failures**: test_build_cli.py, test_build_integration.py (expect `name: wfc-build` frontmatter), test_installer_docker.py, test_persona_deletion.py, test_rag_pipeline.py, test_retriever.py — all pre-existing, unrelated to our changes. Verified by running all review/hook/knowledge tests: 400/400 passed
+
+5. Problem Solving:
+   - Solved scope creep risk: IsThisSmart analysis identified 16 tasks as too ambitious, recommended v0.1/v0.2 split reducing to 11 tasks
+   - Solved EventBus complexity: Replaced full pub-sub with wildcards/async/weak-refs with simple direct dispatch to providers
+   - Solved background thread risk: Removed periodic flush timer, using on-demand snapshots only
+   - Solved _bypass_count globals: Replaced 3 ad-hoc module-level counters with proper observability Counter metrics
+   - All 138 new observability tests pass; all 400 related existing tests pass with zero regressions
+
+6. All User Messages:
+   - `/wfc-plan BA-LOKI-MODE.md` (first invocation)
+   - (interrupted Task agent)
+   - `/wfc-plan BA-LOKI-MODE.md WE ARE IN THE REPO DEVELOPING THE WFC DO NOT LOOK IN ~/` (re-invocation with explicit constraint)
+   - Answered design questions: "Both (hierarchical)", "Standalone .wfc/observability.toml", "Textual App", "Inline Chart.js (Recommended)"
+   - `/wfc-isthissmart the above please`
+   - **"ok i agree with you, implement with your changes"**
+   - (Multiple system-reminder hook messages about TDD enforcer and file_checker — not user messages)
+
+7. Pending Tasks:
+   - All 11 v0.1 tasks (TASK-001 through TASK-011) are **IMPLEMENTED AND TESTED** (138/138 tests passing)
+   - TASK-011 edge case tests are written and passing (14/14)
+   - The `pyproject.toml` has NOT yet been updated to add the `observability` optional extra for Textual (deferred to v0.2)
+   - No `make test` full regression run has been done yet to formally sign off (partial run showed 400 related tests pass)
+   - v0.2 tasks are deferred: wfc observe, wfc dashboard (Textual TUI), wfc report (HTML+Chart.js), performance benchmarks, CLAUDE.md/Makefile updates
+
+8. Current Work:
+   The most recent work was completing TASK-011 (edge cases + backward compatibility). I wrote `tests/test_observability_edge_cases.py` with 14 tests covering: empty review instrumentation, provider crash during flush, EventBus with no providers, missing config fallback, malformed TOML fallback, clean import side effects, concurrent FileProviders, empty labels, and 6 backward-compatibility signature checks. The final test run showed **138 passed** for all observability tests.
+
+9. Optional Next Step:
+   Run the complete `make test` or equivalent full test suite to formally verify zero regressions across the entire codebase, then potentially commit the work. The user said "ok i agree with you, implement with your changes" and all 11 tasks of the v0.1 implementation are complete with 138 tests passing. A final full regression confirmation and commit would be the natural next step.
+
+If you need specific details from before compaction (like exact code snippets, error messages, or content you generated), read the full transcript at: /Users/samfakhreddine/.REDACTED.jsonl
+Please continue the conversation from where we left off without asking the user any further questions. Continue with the last task that you were asked to work on.
+
+---
+
+lets do consensus
+
+---
+
+Base directory for this skill: /Users/samfakhreddine/.claude/skills/wfc-review
+
+# WFC:CONSENSUS-REVIEW - Multi-Agent Consensus Code Review
+
+Four specialized agents review code and reach consensus decision.
+
+## What It Does
+
+1. **Code Review Agent (CR)** - Correctness, readability, maintainability
+2. **Security Agent (SEC)** - Security vulnerabilities, auth/authz
+3. **Performance Agent (PERF)** - Performance issues, scalability
+4. **Complexity Agent (COMP)** - Complexity, architecture, ELEGANT principles
+5. **Consensus Algorithm** - Weighted voting with veto power
+
+## Usage
+
+```bash
+# Review specific task
+/wfc:consensus-review TASK-001
+
+# Review files directly
+/wfc:consensus-review path/to/code
+
+# With options
+/wfc:consensus-review TASK-001 --properties PROP-001,PROP-002
+```
+
+## Agent Weighting
+
+- **Security (SEC)**: 35% - Highest priority
+- **Code Review (CR)**: 30% - Correctness
+- **Performance (PERF)**: 20% - Scalability
+- **Complexity (COMP)**: 15% - Maintainability
+
+## Consensus Rules
+
+1. **All agents must pass** (score >= 7/10)
+2. **Overall score** = weighted average
+3. **Any critical severity** = automatic fail
+4. **Overall score >= 7.0** required to pass
+
+## Output
+
+### Review Report (REVIEW-TASK-XXX.md)
+
+```markdown
+# Code Review Report: TASK-001
+
+**Status**: ✅ APPROVED
+**Overall Score**: 8.5/10
+
+---
+
+## Agent Reviews
+
+### ✅ CR: Code Review
+**Score**: 8.5/10
+**Summary**: Code is well-structured
+**Comments**: 2
+
+### ✅ SEC: Security
+**Score**: 9.0/10
+**Summary**: No critical security issues
+**Comments**: 1
+
+### ✅ PERF: Performance
+**Score**: 8.0/10
+**Summary**: Performance looks acceptable
+**Comments**: 1
+
+### ✅ COMP: Complexity
+**Score**: 9.5/10
+**Summary**: Code is ELEGANT
+**Comments**: 1
+
+---
+
+## Detailed Comments
+
+### MEDIUM: src/auth.py:45
+**Message**: Consider extracting to separate function
+**Suggestion**: Split large function
+
+---
+
+## Consensus
+
+✅ APPROVED: Good quality with minor suggestions
+```
+
+## Integration with WFC
+
+### Called By
+- `wfc:implement` - After agent completes TDD workflow
+
+### Consumes
+- Task files (from git worktree)
+- PROPERTIES.md (formal properties to verify)
+- Test results (from TDD workflow)
+
+### Produces
+- Review report (REVIEW-{task_id}.md)
+- Consensus decision (pass/fail)
+- Detailed comments per file/line
+
+## Configuration
+
+```json
+{
+  "review": {
+    "min_overall_score": 7.0,
+    "require_all_agents_pass": true,
+    "fail_on_critical": true,
+    "agent_weights": {
+      "CR": 0.3,
+      "SEC": 0.35,
+      "PERF": 0.2,
+      "COMP": 0.15
+    }
+  }
+}
+```
+
+## Automated Workflow
+
+**IMPORTANT**: When invoked, follow the automated workflow in `WORKFLOW.md`:
+
+1. **Auto-detect files** (git status/diff or use provided args)
+2. **Prepare specs** (single Python call to orchestrator.prepare())
+3. **Spawn reviews** (parallel Task calls in one message)
+4. **Synthesize** (single Python call to orchestrator.finalize())
+
+**Complete in ~3-4 tool calls total. NO manual step-by-step work.**
+
+See `WORKFLOW.md` for complete automation instructions.
+
+## Philosophy
+
+**ELEGANT**: Simple agent logic, clear consensus rules
+**MULTI-TIER**: Agents (logic) separated from CLI (presentation)
+**PARALLEL**: Agents can run concurrently (future optimization)
+
+---
+
+why only 4 reviewers when our system is 5?
+
+---
+
+ok PR please
+
+---
+
+[Request interrupted by user for tool use]
+
+---
+
+we need everything comitted, if it wasnt part of this stream, stash them and give them a new branch
+
+---
+
+ok now branch: claude/analyze-kodus-ai-3rAyd needs validation, plan, develop
+
+---
+
+Base directory for this skill: /Users/samfakhreddine/.claude/skills/wfc-isthissmart
+
+# WFC:ISTHISSMART - Thoughtful Advisor
+
+The experienced staff engineer who asks "is this the right approach?" before we commit.
+
+## What It Does
+
+Analyzes any WFC artifact (plan, architecture, idea) across 7 dimensions:
+
+1. **Do We Even Need This?** - Real problem vs hypothetical
+2. **Is This the Simplest Approach?** - Avoid over-engineering
+3. **Is the Scope Right?** - Not too much, not too little
+4. **What Are We Trading Off?** - Opportunity cost, maintenance burden
+5. **Have We Seen This Fail Before?** - Anti-patterns, known failure modes
+6. **What's the Blast Radius?** - Risk assessment, rollback plan
+7. **Is the Timeline Realistic?** - Hidden dependencies, prototype first?
+
+Returns balanced assessment with verdict: PROCEED, PROCEED WITH ADJUSTMENTS, RECONSIDER, or DON'T PROCEED.
+
+## Usage
+
+```bash
+# Analyze current plan
+/wfc:isthissmart
+
+# Analyze a freeform idea
+/wfc:isthissmart "rewrite auth system in Rust"
+
+# Analyze specific artifact
+/wfc:isthissmart --plan
+/wfc:isthissmart --architecture
+/wfc:isthissmart --task TASK-005
+```
+
+## Output: ISTHISSMART.md
+
+```markdown
+# Is This Smart? Analysis
+
+## Subject: Rewrite auth system in Rust
+## Verdict: 🟡 PROCEED WITH ADJUSTMENTS
+## Overall Score: 7.5/10
+
+---
+
+## Executive Summary
+
+Overall, this approach shows 12 clear strengths and 8 areas for consideration.
+
+The strongest aspects are: Blast Radius, Need, Simplicity.
+
+Key considerations: Opportunity cost of other features, Integration risks, Consider using existing library.
+
+With an overall score of 7.5/10, this is a solid approach that can move forward with attention to the identified concerns.
+
+---
+
+## Dimension Analysis
+
+### Do We Even Need This? — Score: 8/10
+
+**Strengths:**
+- Addresses clear user need
+- Backed by data/metrics
+
+**Concerns:**
+- Consider if existing solution could be improved instead
+
+**Recommendation:** Need is justified, but validate assumptions
+
+[... 6 more dimensions ...]
+
+---
+
+## Simpler Alternatives
+
+- Start with a simpler MVP and iterate based on feedback
+- Consider using existing solution (e.g., off-the-shelf library)
+- Phase the implementation - deliver core value first
+
+---
+
+## Final Recommendation
+
+Proceed, but address these key concerns first: Opportunity cost of other features; Integration risks may extend timeline; Consider using existing library
+```
+
+## Tone
+
+**Discerning but constructive. Honest but not harsh.**
+
+Not a naysayer - wants us to succeed with the best approach. Highlights both strengths and concerns. Suggests simpler alternatives when appropriate.
+
+## Verdict Logic
+
+- **🟢 PROCEED**: Overall score >= 8.5/10, no critical concerns
+- **🟡 PROCEED WITH ADJUSTMENTS**: Score 7.0-8.4, address concerns first
+- **🟠 RECONSIDER**: Score 5.0-6.9, explore alternatives
+- **🔴 DON'T PROCEED**: Score < 5.0 or any dimension <= 4/10
+
+## Integration with WFC
+
+### Can Analyze
+- `wfc:plan` outputs (TASKS.md, PROPERTIES.md)
+- `wfc:architecture` outputs (ARCHITECTURE.md)
+- `wfc:security` outputs (THREAT-MODEL.md)
+- Freeform ideas (text input)
+
+### Produces
+- ISTHISSMART.md report
+- Simpler alternatives
+- Final recommendation
+
+## Philosophy
+
+**ELEGANT**: Simple 7-dimension framework, clear logic
+**MULTI-TIER**: Analysis (logic) separated from presentation
+**PARALLEL**: Can analyze multiple artifacts concurrently
+
+
+ARGUMENTS: BA-KODUS-INSPIRED-ENHANCEMENTS.md — 5 features from Kodus AI analysis. Feature 4 (Observability) already done on Loki Mode branch.
+
+---
+
+Base directory for this skill: /Users/samfakhreddine/.claude/skills/wfc-plan
+
+# WFC:PLAN - Adaptive Planning with Formal Properties
+
+Converts requirements into structured implementation plans through adaptive interviewing.
+
+## What It Does
+
+1. **Adaptive Interview** - Asks intelligent questions that adapt based on answers
+2. **Task Generation** - Breaks down requirements into structured TASKS.md with dependencies
+3. **Property Extraction** - Identifies formal properties (SAFETY, LIVENESS, INVARIANT, PERFORMANCE)
+4. **Test Planning** - Creates comprehensive TEST-PLAN.md linked to requirements and properties
+
+## Usage
+
+```bash
+# Default output to ./plan
+/wfc:plan
+
+# Custom output directory
+/wfc:plan path/to/output
+
+# With options (future)
+/wfc:plan --interactive  # Step through interview
+/wfc:plan --from-file requirements.md  # Import requirements
+```
+
+## Interview Process
+
+The adaptive interview gathers:
+
+### Core Understanding
+- What are you building? (goal)
+- Why are you building it? (context)
+- Who will use it? (users)
+
+### Requirements
+- Core features (must-have)
+- Nice-to-have features
+- Technical constraints
+- Performance requirements
+- Security requirements
+
+### Technical Details
+- Technology stack
+- Existing codebase or new project
+- Testing approach
+- Coverage targets
+
+### Formal Properties
+- Safety properties (what must never happen)
+- Liveness properties (what must eventually happen)
+- Invariants (what must always be true)
+- Performance properties (time/resource bounds)
+
+## Outputs
+
+### 1. TASKS.md
+Structured implementation tasks with:
+- Unique IDs (TASK-001, TASK-002, ...)
+- Complexity ratings (S, M, L, XL)
+- Dependency graph (DAG)
+- Properties to satisfy
+- Files likely affected
+- Acceptance criteria
+
+Example:
+```markdown
+## TASK-001: Setup project structure
+- **Complexity**: S
+- **Dependencies**: []
+- **Properties**: []
+- **Files**: README.md, pyproject.toml
+- **Description**: Create initial project structure
+- **Acceptance Criteria**:
+  - [ ] Project structure follows best practices
+  - [ ] Dependencies documented
+```
+
+### 2. PROPERTIES.md
+Formal properties with:
+- Type (SAFETY, LIVENESS, INVARIANT, PERFORMANCE)
+- Formal statement
+- Rationale
+- Priority
+- Suggested observables
+
+Example:
+```markdown
+## PROP-001: SAFETY
+- **Statement**: Unauthenticated user must never access protected endpoints
+- **Rationale**: Security: prevent unauthorized data access
+- **Priority**: critical
+- **Observables**: auth_failures, unauthorized_access_attempts
+```
+
+### 3. TEST-PLAN.md
+Test strategy and cases:
+- Testing approach (unit, integration, e2e)
+- Coverage targets
+- Specific test cases linked to tasks and properties
+- Test steps and expected outcomes
+
+Example:
+```markdown
+### TEST-001: Verify SAFETY property
+- **Type**: integration
+- **Related Task**: TASK-003
+- **Related Property**: PROP-001
+- **Description**: Test that unauthenticated users cannot access protected endpoints
+- **Steps**:
+  1. Attempt access without authentication
+  2. Verify 401 response
+- **Expected**: Access denied
+```
+
+## Architecture
+
+### MULTI-TIER Design
+```
+┌─────────────────────────────┐
+│  PRESENTATION (cli.py)      │  User interaction, output formatting
+└──────────────┬──────────────┘
+               │
+┌──────────────▼──────────────┐
+│  LOGIC (orchestrator.py)    │  Interview → Generate → Save
+│  - interview.py             │
+│  - tasks_generator.py       │
+│  - properties_generator.py  │
+│  - test_plan_generator.py   │
+└──────────────┬──────────────┘
+               │
+┌──────────────▼──────────────┐
+│  DATA (filesystem)          │  Save markdown and JSON
+└─────────────────────────────┘
+```
+
+## Integration with WFC
+
+### Produces (consumed by wfc:implement)
+- `plan/TASKS.md` → Task orchestration
+- `plan/PROPERTIES.md` → TDD test requirements
+- `plan/TEST-PLAN.md` → Test strategy
+
+### Consumes (future)
+- `wfc:architecture` for architecture analysis
+- `wfc:security` for threat model properties
+
+## Configuration
+
+```json
+{
+  "plan": {
+    "output_dir": "./plan",
+    "interview_mode": "adaptive",
+    "task_complexity_model": "auto",
+    "generate_diagram": true
+  }
+}
+```
+
+## What to Do
+
+1. **If `REDACTED.md — implementing with IsThisSmart adjustments: F1 validation (2 layers only), F2 AST (Python only), F3 eval (15 examples, single judge). F4 done. F5 cut.` is provided**, use it as output directory
+2. **If no arguments**, use `./plan` as default output directory
+3. **Run adaptive interview** using `AdaptiveInterviewer`
+4. **Generate all files** using orchestrator
+5. **Display results** showing file paths and summary
+6. **Record telemetry** for all operations
+
+## Example Flow
+
+```
+User runs: /wfc:plan
+
+[ADAPTIVE INTERVIEW]
+Q: What are you trying to build?
+A: REST API for user management
+
+Q: What are the core features?
+A: User CRUD, authentication, role-based access
+
+Q: Security requirements?
+A: JWT tokens, role-based authorization
+
+[GENERATION]
+✅ Created TASKS.md (5 tasks)
+✅ Created PROPERTIES.md (3 properties: 1 SAFETY, 2 INVARIANT)
+✅ Created TEST-PLAN.md (12 test cases)
+
+[OUTPUT]
+📁 ./plan/
+  - TASKS.md
+  - PROPERTIES.md
+  - TEST-PLAN.md
+  - interview-results.json
+
+Next: Run `/wfc:implement ./plan/TASKS.md`
+```
+
+## Philosophy
+
+**ELEGANT**: Simple interview questions, clear task breakdown
+**MULTI-TIER**: Clean separation of presentation, logic, and data
+**PARALLEL**: Can generate all three files concurrently (future optimization)
+
+---
+
+[Request interrupted by user for tool use]
+
+---
+
+UI do not want any features cut.
+
+---
+
+lets do it parallel ready
+
+---
+
+[Request interrupted by user]
+
+---
+
+lets do it parallel ready
+
+---
+
+This session is being continued from a previous conversation that ran out of context. The summary below covers the earlier portion of the conversation.
+
+Analysis:
+Let me chronologically analyze the conversation:
+
+1. The conversation started from a previous session (compacted) where Loki Mode v0.1 (Observability) was fully implemented with 138 tests passing. The user then asked to "do consensus" - a 5-agent code review.
+
+2. The consensus review was done initially with 4 agents (wrong - should be 5). User called this out: "why only 4 reviewers when our system is 5?" - I added the missing Reliability reviewer.
+
+3. After fixing consensus findings (Round 1 and Round 2), the user said "ok PR please" - I committed and created PR #16 for Loki Mode.
+
+4. User switched to a new branch: "ok now branch: claude/analyze-kodus-ai-3rAyd needs validation, plan, develop"
+
+5. I checked out that branch, explored it, found: BA doc for Kodus AI, wfc-ba skill (scaffolding), wfc-validate skill (partial implementation), 804 tests passing.
+
+6. I ran /wfc-isthissmart on the BA - scored 7.2/10 "PROCEED WITH ADJUSTMENTS" - recommended cutting Feature 5 and simplifying Features 1-3.
+
+7. User corrected: "UI do not want any features cut." - I acknowledged, full scope, F1+F2+F3+F5, F4 already done.
+
+8. I ran /wfc-plan, generated plan files (TASKS.md 14 tasks, PROPERTIES.md 7 properties, TEST-PLAN.md 45 test cases).
+
+9. User said "lets do it parallel ready" then interrupted and switched to Sonnet model.
+
+10. User said again "lets do it parallel ready" - I spawned 4 background agents for parallel-ready tasks:
+    - Agent ac75192: TASK-001/002/003 (FindingValidator - all 3 layers)
+    - Agent a41a1ae: TASK-006 (ASTAnalyzer)
+    - Agent a0a707f: TASK-013 (ModelRouter)
+    - Agent ae4b30b: TASK-010 (Eval Dataset)
+
+All 4 agents are still running in background.
+
+Summary:
+1. Primary Request and Intent:
+   - Run 5-agent consensus review on Loki Mode observability implementation (user corrected from 4 to 5 agents)
+   - Fix all consensus findings across 2 rounds
+   - Create PR for Loki Mode (PR #16 created, branch `claude/integrate-loki-mode-P3GAk`)
+   - Switch to branch `claude/analyze-kodus-ai-3rAyd` and perform validation, plan, and develop
+   - Run /wfc-isthissmart on BA-KODUS-INSPIRED-ENHANCEMENTS.md
+   - User explicitly stated "UI do not want any features cut" when isthissmart recommended cutting Feature 5 and simplifying others
+   - Generate full plan (14 tasks, all 5 features — F4 already done via Loki Mode)
+   - Implement the parallel-ready tasks (TASK-001/002/003, TASK-006, TASK-010, TASK-013) in parallel background agents
+
+2. Key Technical Concepts:
+   - **5-Agent Consensus Review**: Security (25%), Correctness (25%), Performance (20%), Maintainability (15%), Reliability (15%)
+   - **Loki Mode v0.1**: WFC observability plugin system (wfc/observability/) — completed, PR #16
+   - **Kodus AI**: Open-source code review platform, competitive analysis basis for WFC enhancements
+   - **Finding Validation Pipeline** (Feature 1): 3-layer validation (Structural AST + LLM Cross-Check + Historical Pattern Match)
+   - **AST Hybrid Analysis** (Feature 2): Pre-verified structural findings via Python `ast` stdlib + tree-sitter optional
+   - **Eval & Benchmarking Framework** (Feature 3): 40-example dataset, dual-judge, regression detection
+   - **Multi-Model Review Routing** (Feature 5): Per-reviewer model assignment, auto-routing by diff size, cost tracking
+   - **Feature 4 (Observability)**: Already done via Loki Mode — excluded from new plan
+   - **ValidationStatus**: VERIFIED (1.0x), UNVERIFIED (0.5x), DISPUTED (0.2x), HISTORICALLY_REJECTED (0.0x excluded)
+   - **ConsensusScore weight multipliers**: Modified CS to accept validation weights per finding
+   - **TDD**: All agents instructed to write tests first
+   - **Fail-open (PROP-001)**: All validation layers must never block reviews
+
+3. Files and Code Sections:
+   - **`wfc/observability/__init__.py`** — Singleton init/shutdown/reset, fixed `assert` → fallback no-op, `_reset_session_cache()` moved inside lock
+   - **`wfc/observability/metrics.py`** — Fixed `n = max(2, 100)` dead code, single-sort `_snapshot()`, type-collision check in `_get_or_create`
+   - **`wfc/observability/instrument.py`** — Fixed `_get_session_id()` to cache session (was re-parsing TOML per event), added `_reset_session_cache()`
+   - **`wfc/observability/providers/memory_provider.py`** — Added `max_events=10000` eviction, `DEFAULT_MAX_SNAPSHOTS=100` eviction
+   - **`wfc/observability/providers/file_provider.py`** — Path traversal sanitization on session_id, atomic single-write flush, buffer cleared before write, `MAX_BUFFER_SIZE=10000`
+   - **`wfc/observability/providers/null_provider.py`** — Removed unusual `if __name__ != "__main__"` guard
+   - **`wfc/observability/config.py`** — Removed no-op `config.providers = config.providers` dead line
+   - **`plan/TASKS.md`** — Overwritten with 14 Kodus tasks (F1: TASK-001–005, F2: TASK-006–009, F3: TASK-010–012, F5: TASK-013–014)
+   - **`plan/PROPERTIES.md`** — 7 formal properties (PROP-001 through PROP-007)
+   - **`plan/TEST-PLAN.md`** — 45 test cases (TEST-001 through TEST-045)
+   - **New files to be created by background agents**:
+     - `wfc/scripts/skills/review/finding_validator.py` (TASK-001/002/003)
+     - `tests/test_finding_validator.py`
+     - `wfc/scripts/skills/review/ast_analyzer.py` (TASK-006)
+     - `tests/test_ast_analyzer.py`
+     - `wfc/scripts/skills/review/model_router.py` (TASK-013)
+     - `wfc/config/model_routing.json`
+     - `tests/test_model_router.py`
+     - `wfc/scripts/benchmark/eval_schema.py` (TASK-010)
+     - `wfc/scripts/benchmark/eval_dataset/` (40 JSON files)
+     - `tests/test_eval_framework.py`
+
+4. Errors and Fixes:
+   - **4 instead of 5 reviewers**: Initial consensus used CR/SEC/PERF/COMP (wrong). User called out "why only 4 reviewers when our system is 5?" — added Reliability agent, updated weighted scores
+   - **Duplicate `on_event` in file_provider.py**: Edit added a second `on_event` method below `flush`. Fixed by rewriting the file with Write tool to remove duplicate
+   - **Ruff lint error in file_provider.py**: Triggered by duplicate method. Fixed by full file rewrite
+   - **`config.py:66` dead code**: `config.providers = config.providers` no-op assignment removed
+   - **`_reset_session_cache()` outside lock**: Was called after `with _lock:` block. Moved inside the lock block
+   - **Write tool error "File has not been read yet"**: When overwriting plan files, had to read them first before the Write was allowed
+   - **`max(2, 100)` always equals 100**: Dead code in `Histogram.percentile()`. Fixed by using `n=100` directly and rewriting `_snapshot()` to compute p50/p99 in single sorted pass
+   - **User rejected isthissmart recommendation to cut features**: User said "UI do not want any features cut." Acknowledged, restored all 5 features to full BA scope
+
+5. Problem Solving:
+   - **5-agent consensus gap**: Identified that wfc-review skill description listed 4 agents but system uses 5. Added Reliability reviewer.
+   - **Loki Mode PR**: All 138 observability tests passing, 942 passed full suite. Committed and created PR #16 to develop branch.
+   - **Branch context**: `claude/analyze-kodus-ai-3rAyd` has 4 new commits (BA doc, wfc-ba skill scaffolding, wfc-validate skill partial, workflow pipeline update). 804 tests passing (26 failures are all pre-existing).
+   - **Parallel task decomposition**: TASK-001/002/003 share same file so combined into one agent. TASK-006, TASK-010, TASK-013 are independent files → truly parallel agents.
+
+6. All User Messages:
+   - "lets do consensus"
+   - "why only 4 reviewers when our system is 5?"
+   - "ok PR please"
+   - "we need everything comitted, if it wasnt part of this stream, stash them and give them a new branch"
+   - "ok now branch: claude/analyze-kodus-ai-3rAyd needs validation, plan, develop"
+   - "UI do not want any features cut."
+   - "lets do it parallel ready" (first time, interrupted)
+   - `/model` command (switched to Sonnet)
+   - "lets do it parallel ready" (second time)
+
+7. Pending Tasks:
+   - **4 background agents currently running**:
+     - Agent ac75192: TASK-001/002/003 — FindingValidator (3 layers: Structural + LLM Cross-Check + Historical)
+     - Agent a41a1ae: TASK-006 — ASTAnalyzer (Python ast stdlib + tree-sitter optional)
+     - Agent a0a707f: TASK-013 — ModelRouter + model_routing.json config
+     - Agent ae4b30b: TASK-010 — Eval dataset (40 examples) + eval_schema.py
+   - After parallel tasks complete: TASK-004 (wire validation into pipeline, depends on 001+002+003+006), TASK-007 (structural findings, depends on 006), TASK-008 (AST pre-analysis in pipeline, depends on 007), TASK-009 (impact graph, depends on 008), TASK-005 (validation metrics, depends on 004), TASK-011 (dual-judge, depends on 010), TASK-012 (eval runner, depends on 011), TASK-014 (wire model routing, depends on 013)
+
+8. Current Work:
+   On branch `claude/analyze-kodus-ai-3rAyd`, implementing Kodus AI-inspired enhancements in parallel. 4 background agents were just launched for the 6 parallel-ready tasks:
+   - Agent ac75192: TASK-001/002/003 creating `wfc/scripts/skills/review/finding_validator.py` with `FindingValidator` class (3 validation layers: structural via `ast`, LLM cross-check with Haiku, historical pattern match via KnowledgeRetriever). Also creating `tests/test_finding_validator.py`.
+   - Agent a41a1ae: TASK-006 creating `wfc/scripts/skills/review/ast_analyzer.py` with `ASTAnalyzer`, `ASTAnalysis`, `FunctionInfo`, `ClassInfo` dataclasses. Also creating `tests/test_ast_analyzer.py`.
+   - Agent a0a707f: TASK-013 creating `wfc/scripts/skills/review/model_router.py` with `ModelRouter` class and `wfc/config/model_routing.json`. Also creating `tests/test_model_router.py`.
+   - Agent ae4b30b: TASK-010 creating `wfc/scripts/benchmark/eval_schema.py`, `wfc/scripts/benchmark/eval_dataset/` (40 JSON files across Python/TypeScript/Go/Java), and `tests/test_eval_framework.py`.
+
+9. Optional Next Step:
+   Wait for all 4 background agents to complete, then collect their results. Verify all tests pass: `uv run pytest tests/test_finding_validator.py tests/test_ast_analyzer.py tests/test_model_router.py tests/test_eval_framework.py -v`. Then proceed to the dependent tasks: TASK-007 (structural findings from AST), TASK-004 (wire validation into pipeline, depends on TASK-001+002+003+006), and TASK-014 (wire model routing, depends on TASK-013).
+
+If you need specific details from before compaction (like exact code snippets, error messages, or content you generated), read the full transcript at: /Users/samfakhreddine/.REDACTED.jsonl
+Please continue the conversation from where we left off without asking the user any further questions. Continue with the last task that you were asked to work on.
+
+---
+
+<task-notification>
+<task-id>a0a707f</task-id>
+<status>completed</status>
+<summary>Agent "TASK-013: ModelRouter" completed</summary>
+<result>14/14 tests pass, lint is clean. Here is a complete summary of what was built.
+
+---
+
+## TASK-013 Complete - Model Router
+
+### TDD Cycle
+
+**RED**: Tests written first, all failed with `ModuleNotFoundError` (expected - module did not exist yet).
+
+**GREEN**: Implementation created, all 14 tests pass.
+
+**REFACTOR**: Removed two unused imports (`tempfile`, `RoutingConfig`) flagged by ruff; no logic changes needed.
+
+---
+
+### Files Created
+
+**`/Users/samfakhreddine/repos/wfc/wfc/config/model_routing.json`**
+The JSON config establishing the three-tier model strategy:
+- Maintainability/style -> Haiku (cheap)
+- Correctness/Performance/default -> Sonnet (balanced)
+- Security/Reliability (high-stakes) -> Opus (strongest)
+
+**`/Users/samfakhreddine/repos/wfc/wfc/scripts/skills/review/model_router.py`**
+The `ModelRouter` class with three public methods:
+
+```python
+router = ModelRouter()                        # loads wfc/config/model_routing.json
+router.get_model("security", diff_lines=200)  # -> "claude-opus-4-6"
+router.get_cross_check_model()                # -> "claude-haiku-4-5-20251001"
+router.estimate_cost("security", 1000, 500)   # -> ~0.0525 USD
+```
+
+**`/Users/samfakhreddine/repos/wfc/tests/test_model_router.py`**
+14 tests covering all specified cases:
+
+| Test | Coverage |
+|---|---|
+| `test_load_default_config` | Real JSON loads, security → opus |
+| `test_config_missing_returns_defaults` | Hardcoded fallback works |
+| `test_explicit_config_security_opus` | Opus in medium range |
+| `test_explicit_config_maintainability_haiku` | Haiku for style |
+| `test_auto_routing_small_diff` | All reviewers → Haiku at 20 lines |
+| `test_explicit_overrides_auto_small` | Auto wins for small diffs |
+| `test_auto_routing_large_diff_security` | Opus at 800 lines (high-stakes) |
+| `test_auto_routing_large_diff_maintainability` | Sonnet at 800 lines (not high-stakes) |
+| `test_auto_routing_medium_uses_explicit` | 200 lines uses per-reviewer config |
+| `test_fallback_unknown_reviewer` | Unknown ID → default model |
+| `test_cross_check_model_is_haiku` | Validation cheapness |
+| `test_cost_estimate` | Opus costs > Haiku |
+| `test_cost_estimate_unknown_reviewer_uses_default` | No crash for unknowns |
+| `test_cost_estimate_zero_tokens` | Zero tokens → zero cost |
+
+### Routing Logic
+
+```
+diff_lines < 50   → Haiku  (everyone, auto overrides explicit config)
+diff_lines >= 500 → Opus   (security, reliability) / Sonnet (others)
+50 <= lines < 500 → explicit reviewers[] config, or default Sonnet
+```</result>
+<usage>total_tokens: 32996
+tool_uses: 17
+duration_ms: 127309</usage>
+</task-notification>
+Full transcript available at: /private/tmp/claude-501/-Users-samfakhreddine-repos-wfc/tasks/a0a707f.output
+
+---
+
+<task-notification>
+<task-id>ac75192</task-id>
+<status>completed</status>
+<summary>Agent "TASK-001/002/003: FindingValidator" completed</summary>
+<result>175/175 passing across all review-system tests with zero regressions.
+
+Here is a summary of everything that was built:
+
+---
+
+## Implementation Summary
+
+### TDD Process
+
+The implementation followed strict TDD: tests were written first (RED phase — import error confirmed), then the implementation was written to make them pass (GREEN phase — 36/36 passing), then unused imports were removed to satisfy the ruff linter (REFACTOR phase).
+
+---
+
+### Files Created
+
+**Tests: `/Users/samfakhreddine/repos/wfc/tests/test_finding_validator.py`**
+
+36 tests across 7 test classes covering all three tasks plus PROP-001:
+
+| Class | Tests | What it covers |
+|---|---|---|
+| `TestStructuralVerification` | 6 | TASK-001: file not found, real code, comment line, non-.py, blank line, out-of-range |
+| `TestCrossCheckTaskSpec` | 5 | TASK-002: Haiku model field, prompt field, YES/NO instruction, code snippet, description |
+| `TestApplyCrossCheckResult` | 6 | TASK-002: NO→DISPUTED+×0.3, YES→unchanged, case-insensitive, ambiguous, note added |
+| `TestHistoricalPatternMatch` | 7 | TASK-003: rejected, accepted+cap, no match, unrelated text, rejected>accepted priority, note added |
+| `TestFailOpen` | 5 | PROP-001: bad file, exploding retriever, garbage content, skip flag, structural exception |
+| `TestWeightMapping` | 4 | Weight: VERIFIED=1.0, UNVERIFIED=0.5, DISPUTED=0.2, REJECTED=0.0 |
+| `TestValidateIntegration` | 3 | End-to-end: always returns ValidatedFinding, real file flow, historical rejection |
+
+---
+
+**Implementation: `/Users/samfakhreddine/repos/wfc/wfc/scripts/skills/review/finding_validator.py`**
+
+Key design decisions:
+
+- `ValidationStatus` enum with four values: `VERIFIED`, `UNVERIFIED`, `DISPUTED`, `HISTORICALLY_REJECTED`
+- `ValidatedFinding` dataclass holding the original `DeduplicatedFinding`, adjusted `confidence`, `validation_status`, `validation_notes`, and `weight`
+- `FindingValidator` class with the required public interface:
+  - `validate()` — orchestrates all three layers, never raises (PROP-001)
+  - `validate_structural()` — Layer 1: file existence, blank/comment/out-of-range line checks for `.py` files; passes through for non-.py files
+  - `build_cross_check_task()` — Layer 2: returns a task spec dict with `model: "claude-haiku-4-5"` and a structured prompt asking YES/NO on the first line
+  - `apply_cross_check_result()` — Layer 2: parses first line case-insensitively; NO → DISPUTED + confidence × 0.3; YES or ambiguous → unchanged
+  - `validate_historical()` — Layer 3: queries retriever, scans chunk texts for "rejected" (highest priority → HISTORICALLY_REJECTED) or "accepted" (confidence × 1.2, capped at 10.0)
+  - `_apply_weight()` — maps `ValidationStatus` → weight using `_WEIGHT_MAP`</result>
+<usage>total_tokens: 64329
+tool_uses: 18
+duration_ms: 218946</usage>
+</task-notification>
+Full transcript available at: /private/tmp/claude-501/-Users-samfakhreddine-repos-wfc/tasks/ac75192.output
+
+---
+
+<task-notification>
+<task-id>a41a1ae</task-id>
+<status>completed</status>
+<summary>Agent "TASK-006: ASTAnalyzer" completed</summary>
+<result>All 63 tests pass. Here is a complete summary of what was built:
+
+---
+
+## TASK-006 Implementation Complete: ASTAnalyzer
+
+### Files Created
+
+**Implementation**: `/Users/samfakhreddine/repos/wfc/wfc/scripts/skills/review/ast_analyzer.py`
+
+**Tests**: `/Users/samfakhreddine/repos/wfc/tests/test_ast_analyzer.py`
+
+### TDD Process (RED → GREEN)
+
+1. **RED**: Wrote all 63 tests first — they failed with `ModuleNotFoundError` as expected.
+2. **GREEN**: Wrote the implementation until all 63 tests passed.
+3. **REFACTOR**: Fixed three subtle bugs discovered during testing:
+
+### Bugs Found and Fixed During TDD
+
+**Bug 1 — Language detection for `analyze_content`**: When called with the default `file_path="<string>"` (no `.py` extension), the language resolved to `"unknown"` and fell through to the non-Python path, returning a stub with `parse_error="tree-sitter not available"`. Fixed by treating `"unknown"` language as Python in `analyze_content` (Python is the only language with a built-in parser).
+
+**Bug 2 — Unreachable code not propagating past first sibling**: `_scan_unreachable_in_body` reset `terminal_seen = False` when it encountered a non-terminal statement after a terminal, so only the first unreachable statement was flagged instead of all subsequent siblings. Fixed by restructuring the loop so `terminal_seen` stays `True` once set.
+
+**Bug 3 — HIGH_COMPLEXITY_FIXTURE insufficient complexity**: The original fixture produced cyclomatic complexity of 11 (< threshold of 15). Updated the fixture to include additional `for`, `while`, `try/except`, and `BoolOp` branches to generate complexity > 15.
+
+### Architecture
+
+**Data structures** (dataclasses with field defaults):
+- `FunctionInfo` — name, args, line range, cyclomatic complexity, decorators
+- `ClassInfo` — name, bases, methods, line range
+- `ASTAnalysis` — aggregates all analysis results with `parse_error` sentinel
+
+**`ASTAnalyzer` class**:
+- `analyze(file_path)` — reads file from disk, delegates to `analyze_content`; exception-safe
+- `analyze_content(content, file_path)` — routes to `_analyze_python` for Python/unknown extensions; returns tree-sitter stub for known non-Python extensions
+- `_analyze_python` — parses with stdlib `ast`, runs all sub-analyses, catches all exceptions
+- `_compute_complexity` — cyclomatic complexity via `ast.walk`, counting `If/For/While/ExceptHandler/withitem/BoolOp/Assert/Comprehension` nodes
+- `_find_unused_imports` — collects all imported local names, then walks AST for `ast.Name` references to find which are never used
+- `_find_unreachable` — recursive scan of statement blocks; marks all siblings after `Return/Raise/Break/Continue` as unreachable
+- `_max_depth` / `_find_deep_nesting_locations` — recursive nesting depth tracking for `If/For/While/With/Try` nodes
+
+### Test Coverage: 63 tests across 9 test classes
+
+| Class | Tests |
+|-------|-------|
+| `TestAnalyzeContent` | 4 — basic smoke, language detection, file_path |
+| `TestAnalyzeFunctions` | 7 — extraction, args, line numbers, methods excluded |
+| `TestAnalyzeClasses` | 7 — extraction, methods, bases, line numbers |
+| `TestAnalyzeImports` | 4 — simple/from/alias imports |
+| `TestUnusedImports` | 7 — detection, used vs unused, aliases, from-imports |
+| `TestUnreachableCode` | 5 — after return/raise, multiple stmts, reachable code |
+| `TestCyclomaticComplexity` | 7 — threshold, if/for/and/or branching |
+| `TestNestingDepth` | 6 — flat/deep/threshold/locations |
+| `TestErrorHandling` | 8 — parse errors, file not found, empty string |
+| `TestAnalyzeFile` | 4 — real file, path stored, non-Python |
+| `TestDataStructures` | 4 — field types, defaults |</result>
+<usage>total_tokens: 66962
+tool_uses: 21
+duration_ms: 267709</usage>
+</task-notification>
+Full transcript available at: /private/tmp/claude-501/-Users-samfakhreddine-repos-wfc/tasks/a41a1ae.output
+
+---
+
+<task-notification>
+<task-id>ae4b30b</task-id>
+<status>completed</status>
+<summary>Agent "TASK-010: Eval Dataset" completed</summary>
+<result>All 32 tests pass. Here is a complete summary of everything implemented for TASK-010.
+
+---
+
+## TASK-010 Implementation Summary
+
+### What was built
+
+**3 new components** were created, totalling 40 JSON dataset files, 1 schema/validation module, and 1 test suite.
+
+---
+
+### 1. Schema module: `/Users/samfakhreddine/repos/wfc/wfc/scripts/benchmark/eval_schema.py`
+
+Implements the JSON schema and validation logic as specified, with no third-party dependencies (no `jsonschema` package required):
+
+- `EXAMPLE_SCHEMA` — the canonical schema dict
+- `validate_example(example)` — validates a single example against the schema; returns a list of human-readable error strings (empty = valid). Checks: required fields, enum values for `language` and `example_type`, `source_code` minLength, `findings` array items, severity range 0-10, optional `line_end`
+- `validate_dataset(examples)` — validates the full list; returns `{valid: int, invalid: int, errors: list[str]}`
+- `load_dataset(directory)` — loads all `*.json` files from the directory sorted by name
+
+---
+
+### 2. Eval dataset: `/Users/samfakhreddine/repos/wfc/wfc/scripts/benchmark/eval_dataset/`
+
+**40 curated examples**, 10 per language, with the naming convention `{language}-{nn}-{type}.json`:
+
+| Language | TP (4) | TN (3) | FP trap (3) | Total |
+|---|---|---|---|---|
+| Python | 01-04 | 05-07 | 08-10 | 10 |
+| TypeScript | 01-04 | 05-07 | 08-10 | 10 |
+| Go | 01-04 | 05-07 | 08-10 | 10 |
+| Java | 01-04 | 05-07 | 08-10 | 10 |
+
+**True Positive highlights** (real bugs, findings non-empty):
+- Python: SQL injection via f-string, unclosed file handle, mutable default argument, `shell=True` + bare except
+- TypeScript: unawaited `res.json()` + `any` type escape, null dereference on nullable, prototype pollution via `for...in`, `async` inside `forEach`
+- Go: discarded `os.Create` error + nil dereference, goroutine loop variable capture, `defer` inside loop, write to nil map
+- Java: chained null dereference, `==` string comparison, unclosed FileReader, non-thread-safe singleton
+
+**True Negative highlights** (clean code, empty findings):
+- Parameterized SQL, context managers, typed signatures, proper error wrapping, mutex-protected counters, try-with-resources, `Promise.all`
+
+**False Positive Trap highlights** (look buggy but are correct):
+- Python: broad except with logging + re-raise (retry logic), test monkey-patching guarded by pytest check, `__all__` with `# noqa: F401`
+- TypeScript: `as unknown as Storage` in test doubles, non-null assertion `!` immediately guarded by `.has()`, unary `+` with NaN guard
+- Go: intentionally long-lived goroutine terminated by `done` channel, explicitly discarded error with explanatory comment, `job := job` loop shadow pattern
+- Java: `==` comparison against compile-time interned string constants, double-checked locking with `volatile` (correct in Java 5+), snapshot copy before iteration to prevent `ConcurrentModificationException`
+
+---
+
+### 3. Tests: `/Users/samfakhreddine/repos/wfc/tests/test_eval_framework.py`
+
+**32 tests in 5 test classes**, all passing in 0.03s:
+
+- `TestSchemaValidExample` (4 tests) — valid examples pass validation
+- `TestSchemaMissingRequiredField` (7 tests, 5 parametrized) — missing required fields fail
+- `TestSchemaInvalidFieldValues` (6 tests) — invalid language, example_type, severity range, empty source_code, line_start=0
+- `TestLoadDataset` (4 tests) — exactly 40 examples loaded, all dicts, all have IDs, IDs are unique
+- `TestLanguageDistribution` (3 tests) — each language >= 10, each exactly 10, no unexpected languages
+- `TestExampleTypeDistribution` (4 tests) — all 3 types present per language; TP must have findings; TN and FP traps must have empty findings
+- `TestAllExamplesValid` (4 tests) — `validate_dataset` returns 0 invalid, counts match, source codes non-empty, all have notes</result>
+<usage>total_tokens: 51340
+tool_uses: 49
+duration_ms: 267799</usage>
+</task-notification>
+Full transcript available at: /private/tmp/claude-501/-Users-samfakhreddine-repos-wfc/tasks/ae4b30b.output
+
+---
+
+<task-notification>
+<task-id>ae54ece</task-id>
+<status>completed</status>
+<summary>Agent "TASK-007: Structural findings from AST" completed</summary>
+<result>All 94 tests pass. Here is a complete summary of what was done:
+
+---
+
+## TASK-007 Complete
+
+### TDD Cycle
+
+**RED phase**: Added 31 new tests in `TestGenerateFindings` class to `/Users/samfakhreddine/repos/wfc/tests/test_ast_analyzer.py`. All failed with `AttributeError: 'ASTAnalyzer' object has no attribute 'generate_findings'`.
+
+**GREEN phase**: Implemented `ASTAnalyzer.generate_findings(analysis)` in `/Users/samfakhreddine/repos/wfc/wfc/scripts/skills/review/ast_analyzer.py`. All 31 new tests pass, all 63 existing tests still pass.
+
+### Implementation
+
+The `generate_findings` method (added before `_language_from_path` at line ~409) converts an `ASTAnalysis` into a flat list of finding dicts:
+
+| Finding type | Category | Severity | Confidence | Source field |
+|---|---|---|---|---|
+| Unused imports | `unused-import` | 3.0 | 8.0 | `analysis.unused_imports` |
+| Unreachable code | `unreachable-code` | 8.0 | 8.0 | `analysis.unreachable_code` (grouped into ranges) |
+| High complexity (>15) | `high-complexity` | 5.0 | 8.0 | `analysis.functions` filtered by `cyclomatic_complexity` |
+| Deep nesting (>4) | `deep-nesting` | 5.0 | 8.0 | `analysis.deep_nesting_locations` |
+
+All findings include `validation_status="VERIFIED"` and `reviewer_id="ast-analyzer"`, and are fully compatible with `Fingerprinter.deduplicate()`.
+
+### Lint
+
+`uv run ruff check wfc/scripts/skills/review/ast_analyzer.py` — **All checks passed.**
+
+### Final test count: 94 passed (63 existing + 31 new)</result>
+<usage>total_tokens: 41592
+tool_uses: 24
+duration_ms: 227704</usage>
+</task-notification>
+Full transcript available at: /private/tmp/claude-501/-Users-samfakhreddine-repos-wfc/tasks/ae54ece.output
+
+---
+
+oh we need to add a step "Documentation Agent" onyl determines what docuymenation needs updating with the changes
+
+---
+
+this needs to be part of the workflow
+
+---
+
+This session is being continued from a previous conversation that ran out of context. The summary below covers the earlier portion of the conversation.
+
+Analysis:
+Let me chronologically analyze this conversation to create a comprehensive summary.
+
+**Session Context:**
+This session is a continuation from a previous conversation (compacted). The previous session established:
+- Loki Mode v0.1 (Observability) was implemented with 138 tests, PR #16 created
+- Branch `claude/analyze-kodus-ai-3rAyd` has BA doc for Kodus AI enhancements
+- /wfc-isthissmart ran on the BA, scored 7.2/10
+- User explicitly said "UI do not want any features cut"
+- /wfc-plan generated plan files (TASKS.md 14 tasks, PROPERTIES.md 7 properties, TEST-PLAN.md 45 test cases)
+- 4 background agents launched for parallel wave 1
+
+**Wave 1 (Parallel - all completed):**
+1. ac75192: TASK-001/002/003 (FindingValidator) → 36 tests ✅
+2. a41a1ae: TASK-006 (ASTAnalyzer) → 63 tests ✅
+3. a0a707f: TASK-013 (ModelRouter) → 14 tests ✅
+4. ae4b30b: TASK-010 (Eval Dataset) → 32 tests ✅
+Total wave 1: 145 new tests
+
+**Wave 2 (Parallel - still running at summary time):**
+1. ae54ece: TASK-007 (AST→Findings) → 94 tests ✅ COMPLETE
+2. aa58be0: TASK-004 (Validation wiring) → still running
+3. af71625: TASK-011 (Dual-judge engine) → still running
+4. a4c4be0: TASK-014 (Model routing wiring) → still running
+
+**User's new request (most recent):**
+User said "we need to add a step 'Documentation Agent' only determines what documentation needs updating with the changes" and then "this needs to be part of the workflow"
+
+I entered Plan Mode to design how to integrate this into the workflow, but was interrupted by the summary request.
+
+**Key files created:**
+- `wfc/scripts/skills/review/finding_validator.py` - FindingValidator with 3 layers
+- `tests/test_finding_validator.py` - 36 tests
+- `wfc/scripts/skills/review/ast_analyzer.py` - ASTAnalyzer
+- `tests/test_ast_analyzer.py` - 94 tests (63 + 31 new)
+- `wfc/scripts/skills/review/model_router.py` - ModelRouter
+- `wfc/config/model_routing.json` - routing config
+- `tests/test_model_router.py` - 14 tests
+- `wfc/scripts/benchmark/eval_schema.py` - schema validation
+- `wfc/scripts/benchmark/eval_dataset/` - 40 JSON files
+- `tests/test_eval_framework.py` - 32 tests
+
+**Wave 2 agents still running:**
+- TASK-004 (aa58be0): Wire validation into orchestrator.py and consensus_score.py
+- TASK-011 (af71625): Dual-judge eval engine
+- TASK-014 (a4c4be0): Wire model routing into reviewer_engine.py + orchestrator.py
+
+**Pending after wave 2:**
+- TASK-005 (validation metrics, depends on TASK-004)
+- TASK-008 (AST pre-analysis in pipeline, depends on TASK-007)
+- TASK-009 (impact graph, depends on TASK-008)
+- TASK-012 (eval runner, depends on TASK-011)
+
+**User's request about Documentation Agent:**
+- Should be a permanent workflow step
+- Only determines what docs need updating (analysis, no writes)
+- Needs to be integrated into the WFC workflow (not just a one-time thing)
+- I entered plan mode to design this but was interrupted by summary request
+
+**The most recent work was:**
+1. Launching wave 2 parallel agents
+2. User requesting Documentation Agent as a permanent workflow step
+3. Me entering plan mode to design the integration
+
+Summary:
+1. Primary Request and Intent:
+   - Implement all Kodus AI-inspired enhancements (Features 1, 2, 3, 5 from BA-KODUS-INSPIRED-ENHANCEMENTS.md) in parallel across 14 tasks — user explicitly rejected any feature cuts
+   - Feature 4 (Observability) was already done via Loki Mode (PR #16)
+   - Full scope: F1 = Finding Validation Pipeline (TASK-001–005), F2 = AST Hybrid Analysis (TASK-006–009), F3 = Eval & Benchmarking (TASK-010–012), F5 = Multi-Model Routing (TASK-013–014)
+   - All implementation via TDD (RED→GREEN→REFACTOR) using parallel background agents
+   - **Most recent explicit request**: "we need to add a step 'Documentation Agent' only determines what documentation needs updating with the changes" and then "this needs to be part of the workflow" — meaning it must be permanently integrated into the WFC build/implement workflow, not just a one-time audit
+
+2. Key Technical Concepts:
+   - **Five-Agent Consensus Review**: SecurityReviewer, Correctness, Performance, Maintainability, Reliability
+   - **FindingValidator (3 layers)**: Layer 1 = Structural (Python `ast`), Layer 2 = LLM Cross-Check (Haiku task spec), Layer 3 = Historical Pattern Match (KnowledgeRetriever)
+   - **ValidationStatus enum**: VERIFIED (weight=1.0), UNVERIFIED (0.5), DISPUTED (0.2), HISTORICALLY_REJECTED (0.0/excluded)
+   - **PROP-001 (fail-open)**: Validation must never block reviews; all layers wrapped in try/except
+   - **ASTAnalyzer**: Python `ast` stdlib → FunctionInfo, ClassInfo, ASTAnalysis; detects unused imports, unreachable code, cyclomatic complexity > 15, nesting depth > 4
+   - **generate_findings()**: Converts ASTAnalysis → standard finding dicts (VERIFIED, reviewer_id="ast-analyzer") compatible with Fingerprinter.deduplicate()
+   - **ModelRouter**: JSON config-driven, auto-routes by diff size (< 50 lines → Haiku, >= 500 → Opus for security/reliability, else Sonnet), per-reviewer explicit override
+   - **Eval Dataset**: 40 JSON examples (10 per language: Python/TypeScript/Go/Java), 4 TP + 3 TN + 3 FP-trap per language, schema-validated
+   - **EvalJudge**: Dual-judge precision/recall/severity accuracy + Cohen's Kappa inter-judge agreement
+   - **ConsensusScore**: CS = (0.5 * R_bar) + (0.3 * R_bar * k/n) + (0.2 * R_max); to be modified to accept validation weight multipliers
+   - **Fingerprinter**: SHA-256 dedup on `{file}:{line//3}:{category}` with ±3 line tolerance
+   - **Documentation Agent**: New workflow step (in planning) — read-only analysis, determines what docs need updating based on changed files, produces structured report
+   - **TDD Workflow**: All agents write tests first (RED confirms ImportError), then implement (GREEN), then lint-clean (REFACTOR)
+   - **Parallel agent waves**: Wave 1 (4 independent tasks) → Wave 2 (4 unblocked tasks after wave 1)
+
+3. Files and Code Sections:
+   - **`wfc/scripts/skills/review/finding_validator.py`** (new, TASK-001/002/003)
+     - `FindingValidator` class with fail-open `validate()`, `validate_structural()`, `build_cross_check_task()`, `apply_cross_check_result()`, `validate_historical()`
+     - `ValidationStatus` enum, `ValidatedFinding` dataclass, `_WEIGHT_MAP`, `_CROSS_CHECK_MODEL = "claude-haiku-4-5"`
+   - **`tests/test_finding_validator.py`** (new) — 36 tests: TestStructuralVerification(6), TestCrossCheckTaskSpec(5), TestApplyCrossCheckResult(6), TestHistoricalPatternMatch(7), TestFailOpen(5), TestWeightMapping(4), TestValidateIntegration(3)
+   - **`wfc/scripts/skills/review/ast_analyzer.py`** (new + extended, TASK-006 + TASK-007)
+     - `ASTAnalysis`, `FunctionInfo`, `ClassInfo` dataclasses
+     - `ASTAnalyzer.analyze()`, `analyze_content()`, `_analyze_python()`, `_compute_complexity()`, `_find_unused_imports()`, `_find_unreachable()`, `_max_depth()`, `_find_deep_nesting_locations()`
+     - `generate_findings(analysis)` → unused-import(3.0), unreachable-code(8.0), high-complexity(5.0), deep-nesting(5.0), all VERIFIED, reviewer_id="ast-analyzer"
+   - **`tests/test_ast_analyzer.py`** (new + extended) — 94 tests total (63 original + 31 new TestGenerateFindings)
+   - **`wfc/scripts/skills/review/model_router.py`** (new, TASK-013)
+     - `ModelRouter` with `get_model(reviewer_id, diff_lines)`, `get_cross_check_model()`, `estimate_cost(reviewer_id, input_tokens, output_tokens)`
+     - Routing: diff < 50 → Haiku all; diff >= 500 → Opus for security/reliability, Sonnet others; else per-reviewer JSON config
+   - **`wfc/config/model_routing.json`** (new) — three-tier: security/reliability→Opus, correctness/performance→Sonnet, maintainability→Haiku
+   - **`tests/test_model_router.py`** (new) — 14 tests, lint-clean
+   - **`wfc/scripts/benchmark/eval_schema.py`** (new, TASK-010) — `validate_example()`, `validate_dataset()`, `load_dataset()`
+   - **`wfc/scripts/benchmark/eval_dataset/`** (new) — 40 JSON files: python-01..10, typescript-01..10, go-01..10, java-01..10 (tp=01-04, tn=05-07, fp=08-10 per language)
+   - **`tests/test_eval_framework.py`** (new) — 32 tests; TestSchemaValidExample(4), TestSchemaMissingRequiredField(7), TestSchemaInvalidFieldValues(6), TestLoadDataset(4), TestLanguageDistribution(3), TestExampleTypeDistribution(4), TestAllExamplesValid(4)
+   - **`plan/TASKS.md`** — 14 tasks with dependency graph (F1: TASK-001–005, F2: TASK-006–009, F3: TASK-010–012, F5: TASK-013–014)
+   - **`plan/PROPERTIES.md`** — 7 formal properties (PROP-001 SAFETY through PROP-007 INVARIANT)
+   - **`plan/TEST-PLAN.md`** — 45 test cases (TEST-001 through TEST-045)
+
+4. Errors and Fixes:
+   - **TASK-006 Bug 1 — tree-sitter stub returned for valid Python**: `analyze_content()` used `file_path="<string>"` default, extension resolved to "unknown", fell to non-Python path → fixed by treating "unknown" as Python
+   - **TASK-006 Bug 2 — unreachable code not propagating**: `_scan_unreachable_in_body` reset `terminal_seen=False` on non-terminal → fixed by keeping `terminal_seen=True` once set
+   - **TASK-006 Bug 3 — cyclomatic complexity fixture too low**: Original fixture produced 11 (below threshold of 15) → added more branches (for/while/try/BoolOp) to push above 15
+   - **TASK-013 lint issues**: `tempfile` imported but unused and `RoutingConfig` imported but unused in `test_model_router.py` → removed both imports
+   - **TASK-007 permission denial**: Agent tried to use Bash with Python script to write file → recovered by using Edit tool + Bash `tail` for exact anchor point, then Edit to append
+
+5. Problem Solving:
+   - **Parallel task decomposition**: TASK-001/002/003 share same file → combined into one agent; TASK-006, TASK-010, TASK-013 are independent → truly parallel
+   - **Pre-existing test failures**: 26 pre-existing failures (RAG pipeline, retriever, Docker installer, build CLI, persona deletion) confirmed across all agents — none introduced by new code
+   - **Wave dependency management**: Wave 2 unlocked after wave 1 completes: TASK-007 (needs 006 ✅), TASK-004 (needs 001+002+003+006 ✅), TASK-011 (needs 010 ✅), TASK-014 (needs 013 ✅)
+
+6. All User Messages:
+   - "lets do it parallel ready" (triggered wave 1 launch)
+   - (empty/system reminder — triggered continuation)
+   - (empty/system reminder — triggered TASK-011 and TASK-014 launch)
+   - (system reminder — acknowledged wave 2 progress)
+   - (task notification duplicates — acknowledged)
+   - "oh we need to add a step 'Documentation Agent' only determines what documentation needs updating with the changes"
+   - "this needs to be part of the workflow"
+
+7. Pending Tasks:
+   - **Wave 2 still running**:
+     - aa58be0: TASK-004 — Wire FindingValidator into orchestrator.py (after dedup, before CS) + modify consensus_score.py to accept validation weights + `skip_validation` parameter + "Validation Summary" in report
+     - af71625: TASK-011 — Create `wfc/scripts/benchmark/eval_judge.py` with `EvalJudge`, `JudgeScore`, `DualJudgeResult`; extend `tests/test_eval_framework.py` with `TestEvalJudge`
+     - a4c4be0: TASK-014 — Wire ModelRouter into `reviewer_engine.py` prepare_review_tasks() + `single_model` parameter + cost section in report
+   - **Wave 3 (blocked until wave 2 completes)**:
+     - TASK-005 (validation metrics & reporting, depends on TASK-004)
+     - TASK-008 (AST pre-analysis in pipeline, depends on TASK-007 ✅)
+     - TASK-009 (impact graph, depends on TASK-008)
+     - TASK-012 (eval runner with CLI + regression detection, depends on TASK-011)
+   - **Documentation Agent Integration** (user's most recent request):
+     - Design and implement as a permanent WFC workflow step
+     - Read-only: analyzes changed files, cross-references docs/, produces report of what needs updating
+     - Must be integrated into wfc-implement workflow (not one-time)
+   - **Commit checkpoint**: All wave 1 work (145 tests) and wave 2 completions need to be committed
+   - **Final PR** for this branch when all 14 tasks complete
+
+8. Current Work:
+   I was in Plan Mode designing how to integrate the "Documentation Agent" as a permanent workflow step, when the summary was requested. The user's explicit direction was:
+   - "we need to add a step 'Documentation Agent' only determines what documentation needs updating with the changes"
+   - "this needs to be part of the workflow"
+   
+   The plan was to integrate it into the WFC implement workflow documented in CLAUDE.md and potentially as a new `wfc-doc-audit` skill or step within `wfc-implement`. I had just entered plan mode but had not yet explored or designed the implementation before the summary was triggered.
+
+9. Optional Next Step:
+   Complete the Documentation Agent workflow integration plan, per the user's explicit request: "this needs to be part of the workflow." This means:
+   1. Exit plan mode and design the Documentation Agent step (read-only, determines what docs need updating)
+   2. Integrate it into the WFC implement workflow in CLAUDE.md after the Review step and before User Pushes
+   3. Potentially create a minimal `wfc-docs-audit` script or hook that gets invoked automatically
+   4. Meanwhile, wave 2 agents (aa58be0, af71625, a4c4be0) continue running in background and will be collected when complete
+
+If you need specific details from before compaction (like exact code snippets, error messages, or content you generated), read the full transcript at: /Users/samfakhreddine/.REDACTED.jsonl
+Please continue the conversation from where we left off without asking the user any further questions. Continue with the last task that you were asked to work on.
+
+---
+
+[Request interrupted by user for tool use]

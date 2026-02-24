@@ -1,0 +1,50 @@
+{
+  "cli_version": "0.4.5",
+  "checkpoint_id": "da487abf47e8",
+  "session_id": "f7de43a6-720b-4d11-9580-38395ee94a7a",
+  "strategy": "manual-commit",
+  "created_at": "2026-02-22T23:59:56.392003Z",
+  "branch": "claude/ast-metrics-integration-1771804600",
+  "checkpoints_count": 8,
+  "files_touched": [
+    "docs/concepts/AST_CONTEXT.md",
+    "plans/HISTORY.md",
+    "plans/plan_ast_metrics_integration_20260222/PROPERTIES.md",
+    "plans/plan_ast_metrics_integration_20260222/TASKS.md",
+    "plans/plan_ast_metrics_integration_20260222/TEST-PLAN.md",
+    "plans/plan_ast_metrics_integration_20260222/VALIDATE.md",
+    "plans/plan_ast_metrics_integration_20260222/interview-results.json",
+    "plans/plan_ast_metrics_integration_20260222/revision-log.md",
+    "tests/test_ast_metrics_integration.py",
+    "wfc/references/reviewers/correctness/PROMPT.md",
+    "wfc/references/reviewers/maintainability/PROMPT.md",
+    "wfc/references/reviewers/performance/PROMPT.md",
+    "wfc/references/reviewers/reliability/PROMPT.md",
+    "wfc/references/reviewers/security/PROMPT.md",
+    "wfc/scripts/ast_analyzer/__init__.py",
+    "wfc/scripts/ast_analyzer/cache_writer.py",
+    "wfc/scripts/ast_analyzer/language_detection.py",
+    "wfc/scripts/ast_analyzer/metrics_extractor.py",
+    "wfc/scripts/orchestrators/review/orchestrator.py"
+  ],
+  "agent": "Claude Code",
+  "turn_id": "6e2131d9da80",
+  "transcript_identifier_at_start": "ad419e88-bdd5-4764-ae88-21934a1d283d",
+  "token_usage": {
+    "input_tokens": 550,
+    "cache_creation_tokens": 576395,
+    "cache_read_tokens": 20595370,
+    "output_tokens": 1532,
+    "api_call_count": 211
+  },
+  "initial_attribution": {
+    "calculated_at": "2026-02-22T23:59:55.972932Z",
+    "agent_lines": 2202,
+    "human_added": 642,
+    "human_modified": 17,
+    "human_removed": 0,
+    "total_committed": 2861,
+    "agent_percentage": 76.96609577070954
+  },
+  "transcript_path": ".claude/projects/-Users-samfakhreddine-repos-wfc/f7de43a6-720b-4d11-9580-38395ee94a7a.jsonl"
+}

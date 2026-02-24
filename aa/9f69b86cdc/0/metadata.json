@@ -1,0 +1,33 @@
+{
+  "cli_version": "0.4.5",
+  "checkpoint_id": "aa9f69b86cdc",
+  "session_id": "558241d6-1b1a-49db-9a64-d522165180eb",
+  "strategy": "manual-commit",
+  "created_at": "2026-02-21T22:58:25.539945Z",
+  "branch": "feat/rest-api-implementation",
+  "checkpoints_count": 2,
+  "files_touched": [
+    "docker-compose.rest-api.yml",
+    "docs/REST_API.md"
+  ],
+  "agent": "Claude Code",
+  "turn_id": "c9436c83912e",
+  "transcript_identifier_at_start": "91a4c66e-e97f-4d6d-b04e-d73ab1a8fd57",
+  "token_usage": {
+    "input_tokens": 7929,
+    "cache_creation_tokens": 1865601,
+    "cache_read_tokens": 39225112,
+    "output_tokens": 1943,
+    "api_call_count": 401
+  },
+  "initial_attribution": {
+    "calculated_at": "2026-02-21T22:58:23.319207Z",
+    "agent_lines": 0,
+    "human_added": 0,
+    "human_modified": 8,
+    "human_removed": 0,
+    "total_committed": 0,
+    "agent_percentage": 0
+  },
+  "transcript_path": ".claude/projects/-Users-samfakhreddine-repos-wfc/558241d6-1b1a-49db-9a64-d522165180eb.jsonl"
+}

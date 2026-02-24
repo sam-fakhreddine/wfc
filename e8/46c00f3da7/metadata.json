@@ -1,0 +1,71 @@
+{
+  "cli_version": "0.4.5",
+  "checkpoint_id": "e846c00f3da7",
+  "strategy": "manual-commit",
+  "branch": "feat/rest-api-implementation",
+  "checkpoints_count": 2,
+  "files_touched": [
+    ".env.dev.example",
+    ".env.prod.example",
+    ".env.test.example",
+    "docker-compose.dev.yml",
+    "docker-compose.prod.yml",
+    "docker-compose.test.yml",
+    "docker-compose.traefik.yml",
+    "docs/MULTI_ENVIRONMENT.md",
+    "docs/TRAEFIK_DEPLOYMENT.md",
+    "prometheus.yml",
+    "wfc-deploy.sh"
+  ],
+  "sessions": [
+    {
+      "metadata": "/e8/46c00f3da7/0/metadata.json",
+      "transcript": "/e8/46c00f3da7/0/full.jsonl",
+      "context": "/e8/46c00f3da7/0/context.md",
+      "content_hash": "/e8/46c00f3da7/0/content_hash.txt",
+      "prompt": "/e8/46c00f3da7/0/prompt.txt"
+    },
+    {
+      "metadata": "/e8/46c00f3da7/1/metadata.json",
+      "transcript": "/e8/46c00f3da7/1/full.jsonl",
+      "context": "/e8/46c00f3da7/1/context.md",
+      "content_hash": "/e8/46c00f3da7/1/content_hash.txt",
+      "prompt": "/e8/46c00f3da7/1/prompt.txt"
+    },
+    {
+      "metadata": "/e8/46c00f3da7/2/metadata.json",
+      "transcript": "/e8/46c00f3da7/2/full.jsonl",
+      "context": "/e8/46c00f3da7/2/context.md",
+      "content_hash": "/e8/46c00f3da7/2/content_hash.txt",
+      "prompt": "/e8/46c00f3da7/2/prompt.txt"
+    },
+    {
+      "metadata": "/e8/46c00f3da7/3/metadata.json",
+      "transcript": "/e8/46c00f3da7/3/full.jsonl",
+      "context": "/e8/46c00f3da7/3/context.md",
+      "content_hash": "/e8/46c00f3da7/3/content_hash.txt",
+      "prompt": "/e8/46c00f3da7/3/prompt.txt"
+    },
+    {
+      "metadata": "/e8/46c00f3da7/4/metadata.json",
+      "transcript": "/e8/46c00f3da7/4/full.jsonl",
+      "context": "/e8/46c00f3da7/4/context.md",
+      "content_hash": "/e8/46c00f3da7/4/content_hash.txt",
+      "prompt": "/e8/46c00f3da7/4/prompt.txt"
+    },
+    {
+      "metadata": "/e8/46c00f3da7/5/metadata.json",
+      "transcript": "/e8/46c00f3da7/5/full.jsonl",
+      "context": "/e8/46c00f3da7/5/context.md",
+      "content_hash": "/e8/46c00f3da7/5/content_hash.txt",
+      "prompt": "/e8/46c00f3da7/5/prompt.txt"
+    }
+  ],
+  "token_usage": {
+    "input_tokens": 24458,
+    "cache_creation_tokens": 4670619,
+    "cache_read_tokens": 109308413,
+    "output_tokens": 59664,
+    "api_call_count": 1067
+  }
+}

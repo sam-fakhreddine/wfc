@@ -1,0 +1,35 @@
+{
+  "cli_version": "0.4.5",
+  "checkpoint_id": "bc4015b08f79",
+  "session_id": "558241d6-1b1a-49db-9a64-d522165180eb",
+  "strategy": "manual-commit",
+  "created_at": "2026-02-22T22:37:38.035725Z",
+  "branch": "main",
+  "checkpoints_count": 4,
+  "files_touched": [
+    "wfc/references/prompts/finding-validator.md",
+    "wfc/references/prompts/response-parser.md",
+    "wfc/scripts/orchestrators/review/agentic_validator.py",
+    "wfc/scripts/orchestrators/review/finding_validator.py"
+  ],
+  "agent": "Claude Code",
+  "turn_id": "b910c94d2bae",
+  "transcript_identifier_at_start": "91a4c66e-e97f-4d6d-b04e-d73ab1a8fd57",
+  "token_usage": {
+    "input_tokens": 8540,
+    "cache_creation_tokens": 3204227,
+    "cache_read_tokens": 57866083,
+    "output_tokens": 3362,
+    "api_call_count": 584
+  },
+  "initial_attribution": {
+    "calculated_at": "2026-02-22T22:37:34.804728Z",
+    "agent_lines": 0,
+    "human_added": 78,
+    "human_modified": 61,
+    "human_removed": 0,
+    "total_committed": 78,
+    "agent_percentage": 0
+  },
+  "transcript_path": ".claude/projects/-Users-samfakhreddine-repos-wfc/558241d6-1b1a-49db-9a64-d522165180eb.jsonl"
+}

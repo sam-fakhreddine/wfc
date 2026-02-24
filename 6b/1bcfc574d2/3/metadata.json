@@ -1,0 +1,32 @@
+{
+  "cli_version": "0.4.5",
+  "checkpoint_id": "6b1bcfc574d2",
+  "session_id": "e2111fe2-5340-4bed-9ae8-71f62140f54e",
+  "strategy": "manual-commit",
+  "created_at": "2026-02-22T15:55:49.438926Z",
+  "branch": "feat/ci-phase2-pragmatic",
+  "checkpoints_count": 1,
+  "files_touched": [
+    "uv.lock"
+  ],
+  "agent": "Claude Code",
+  "turn_id": "f0c934558a67",
+  "transcript_identifier_at_start": "65929f2a-efc9-447c-8176-c99fa18a5066",
+  "token_usage": {
+    "input_tokens": 3944,
+    "cache_creation_tokens": 1461168,
+    "cache_read_tokens": 32876324,
+    "output_tokens": 3056,
+    "api_call_count": 337
+  },
+  "initial_attribution": {
+    "calculated_at": "2026-02-22T15:55:47.356594Z",
+    "agent_lines": 15,
+    "human_added": 0,
+    "human_modified": 0,
+    "human_removed": 0,
+    "total_committed": 15,
+    "agent_percentage": 100
+  },
+  "transcript_path": ".claude/projects/-Users-samfakhreddine-repos-wfc/e2111fe2-5340-4bed-9ae8-71f62140f54e.jsonl"
+}

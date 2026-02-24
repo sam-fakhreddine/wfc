@@ -1,0 +1,71 @@
+{
+  "cli_version": "0.4.5",
+  "checkpoint_id": "bc4015b08f79",
+  "strategy": "manual-commit",
+  "branch": "main",
+  "checkpoints_count": 14,
+  "files_touched": [
+    "wfc/references/prompts/finding-validator.md",
+    "wfc/references/prompts/response-parser.md",
+    "wfc/scripts/orchestrators/review/agentic_validator.py",
+    "wfc/scripts/orchestrators/review/finding_validator.py"
+  ],
+  "sessions": [
+    {
+      "metadata": "/bc/4015b08f79/0/metadata.json",
+      "transcript": "/bc/4015b08f79/0/full.jsonl",
+      "context": "/bc/4015b08f79/0/context.md",
+      "content_hash": "/bc/4015b08f79/0/content_hash.txt",
+      "prompt": "/bc/4015b08f79/0/prompt.txt"
+    },
+    {
+      "metadata": "/bc/4015b08f79/1/metadata.json",
+      "transcript": "/bc/4015b08f79/1/full.jsonl",
+      "context": "/bc/4015b08f79/1/context.md",
+      "content_hash": "/bc/4015b08f79/1/content_hash.txt",
+      "prompt": "/bc/4015b08f79/1/prompt.txt"
+    },
+    {
+      "metadata": "/bc/4015b08f79/2/metadata.json",
+      "transcript": "/bc/4015b08f79/2/full.jsonl",
+      "context": "/bc/4015b08f79/2/context.md",
+      "content_hash": "/bc/4015b08f79/2/content_hash.txt",
+      "prompt": "/bc/4015b08f79/2/prompt.txt"
+    },
+    {
+      "metadata": "/bc/4015b08f79/3/metadata.json",
+      "transcript": "/bc/4015b08f79/3/full.jsonl",
+      "context": "/bc/4015b08f79/3/context.md",
+      "content_hash": "/bc/4015b08f79/3/content_hash.txt",
+      "prompt": "/bc/4015b08f79/3/prompt.txt"
+    },
+    {
+      "metadata": "/bc/4015b08f79/4/metadata.json",
+      "transcript": "/bc/4015b08f79/4/full.jsonl",
+      "context": "/bc/4015b08f79/4/context.md",
+      "content_hash": "/bc/4015b08f79/4/content_hash.txt",
+      "prompt": "/bc/4015b08f79/4/prompt.txt"
+    },
+    {
+      "metadata": "/bc/4015b08f79/5/metadata.json",
+      "transcript": "/bc/4015b08f79/5/full.jsonl",
+      "context": "/bc/4015b08f79/5/context.md",
+      "content_hash": "/bc/4015b08f79/5/content_hash.txt",
+      "prompt": "/bc/4015b08f79/5/prompt.txt"
+    },
+    {
+      "metadata": "/bc/4015b08f79/6/metadata.json",
+      "transcript": "/bc/4015b08f79/6/full.jsonl",
+      "context": "/bc/4015b08f79/6/context.md",
+      "content_hash": "/bc/4015b08f79/6/content_hash.txt",
+      "prompt": "/bc/4015b08f79/6/prompt.txt"
+    }
+  ],
+  "token_usage": {
+    "input_tokens": 26216,
+    "cache_creation_tokens": 6777084,
+    "cache_read_tokens": 143972011,
+    "output_tokens": 61661,
+    "api_call_count": 1408
+  }
+}

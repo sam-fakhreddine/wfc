@@ -1,0 +1,44 @@
+{
+  "cli_version": "0.4.5",
+  "checkpoint_id": "d661204d24d8",
+  "session_id": "c3500f56-5305-4381-926e-9a7423c9e94d",
+  "strategy": "manual-commit",
+  "created_at": "2026-02-21T03:48:19.776856Z",
+  "branch": "claude/add-prompt-fixer-and-doctor",
+  "checkpoints_count": 1,
+  "files_touched": [
+    "VALIDATE.md",
+    "plans/HISTORY.json",
+    "plans/HISTORY.md",
+    "plans/ORCHESTRATOR_DELEGATION_ROOT_CAUSE.md",
+    "plans/plan_fix_prompt_fixer_doctor_20260220_072925/PROPERTIES.md",
+    "plans/plan_fix_prompt_fixer_doctor_20260220_072925/TASKS.md",
+    "plans/plan_fix_prompt_fixer_doctor_20260220_072925/TEST-PLAN.md",
+    "plans/plan_fix_prompt_fixer_doctor_20260220_072925/VALIDATE.md",
+    "plans/plan_fix_prompt_fixer_doctor_20260220_072925/interview-results.json",
+    "plans/plan_fix_prompt_fixer_doctor_20260220_072925/plan-audit_20260220_073200.json",
+    "plans/plan_fix_prompt_fixer_doctor_20260220_072925/revision-log.md",
+    "plans/plan_validate_fixes_20260220/PROPERTIES.md",
+    "plans/plan_validate_fixes_20260220/TASKS.md",
+    "plans/plan_validate_fixes_20260220/TEST-PLAN.md"
+  ],
+  "agent": "Claude Code",
+  "turn_id": "2fa230894363",
+  "token_usage": {
+    "input_tokens": 1008,
+    "cache_creation_tokens": 460083,
+    "cache_read_tokens": 3845370,
+    "output_tokens": 314,
+    "api_call_count": 44
+  },
+  "initial_attribution": {
+    "calculated_at": "2026-02-21T03:48:18.850975Z",
+    "agent_lines": 4226,
+    "human_added": 8175,
+    "human_modified": 0,
+    "human_removed": 0,
+    "total_committed": 12401,
+    "agent_percentage": 34.077896943794855
+  },
+  "transcript_path": ".claude/projects/-Users-samfakhreddine-repos-wfc/c3500f56-5305-4381-926e-9a7423c9e94d.jsonl"
+}

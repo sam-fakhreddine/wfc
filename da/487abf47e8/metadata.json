@@ -1,0 +1,94 @@
+{
+  "cli_version": "0.4.5",
+  "checkpoint_id": "da487abf47e8",
+  "strategy": "manual-commit",
+  "branch": "claude/ast-metrics-integration-1771804600",
+  "checkpoints_count": 10,
+  "files_touched": [
+    "docs/concepts/AST_CONTEXT.md",
+    "plans/HISTORY.md",
+    "plans/plan_ast_metrics_integration_20260222/PROPERTIES.md",
+    "plans/plan_ast_metrics_integration_20260222/TASKS.md",
+    "plans/plan_ast_metrics_integration_20260222/TEST-PLAN.md",
+    "plans/plan_ast_metrics_integration_20260222/VALIDATE.md",
+    "plans/plan_ast_metrics_integration_20260222/interview-results.json",
+    "plans/plan_ast_metrics_integration_20260222/plan-audit.json.txt",
+    "plans/plan_ast_metrics_integration_20260222/revision-log.md",
+    "tests/test_ast_metrics_integration.py",
+    "wfc/references/reviewers/correctness/PROMPT.md",
+    "wfc/references/reviewers/maintainability/PROMPT.md",
+    "wfc/references/reviewers/performance/PROMPT.md",
+    "wfc/references/reviewers/reliability/PROMPT.md",
+    "wfc/references/reviewers/security/PROMPT.md",
+    "wfc/scripts/ast_analyzer/__init__.py",
+    "wfc/scripts/ast_analyzer/cache_writer.py",
+    "wfc/scripts/ast_analyzer/language_detection.py",
+    "wfc/scripts/ast_analyzer/metrics_extractor.py",
+    "wfc/scripts/orchestrators/review/orchestrator.py"
+  ],
+  "sessions": [
+    {
+      "metadata": "/da/487abf47e8/0/metadata.json",
+      "transcript": "/da/487abf47e8/0/full.jsonl",
+      "context": "/da/487abf47e8/0/context.md",
+      "content_hash": "/da/487abf47e8/0/content_hash.txt",
+      "prompt": "/da/487abf47e8/0/prompt.txt"
+    },
+    {
+      "metadata": "/da/487abf47e8/1/metadata.json",
+      "transcript": "/da/487abf47e8/1/full.jsonl",
+      "context": "/da/487abf47e8/1/context.md",
+      "content_hash": "/da/487abf47e8/1/content_hash.txt",
+      "prompt": "/da/487abf47e8/1/prompt.txt"
+    },
+    {
+      "metadata": "/da/487abf47e8/2/metadata.json",
+      "transcript": "/da/487abf47e8/2/full.jsonl",
+      "context": "/da/487abf47e8/2/context.md",
+      "content_hash": "/da/487abf47e8/2/content_hash.txt",
+      "prompt": "/da/487abf47e8/2/prompt.txt"
+    },
+    {
+      "metadata": "/da/487abf47e8/3/metadata.json",
+      "transcript": "/da/487abf47e8/3/full.jsonl",
+      "context": "/da/487abf47e8/3/context.md",
+      "content_hash": "/da/487abf47e8/3/content_hash.txt",
+      "prompt": "/da/487abf47e8/3/prompt.txt"
+    },
+    {
+      "metadata": "/da/487abf47e8/4/metadata.json",
+      "transcript": "/da/487abf47e8/4/full.jsonl",
+      "context": "/da/487abf47e8/4/context.md",
+      "content_hash": "/da/487abf47e8/4/content_hash.txt",
+      "prompt": "/da/487abf47e8/4/prompt.txt"
+    },
+    {
+      "metadata": "/da/487abf47e8/5/metadata.json",
+      "transcript": "/da/487abf47e8/5/full.jsonl",
+      "context": "/da/487abf47e8/5/context.md",
+      "content_hash": "/da/487abf47e8/5/content_hash.txt",
+      "prompt": "/da/487abf47e8/5/prompt.txt"
+    },
+    {
+      "metadata": "/da/487abf47e8/6/metadata.json",
+      "transcript": "/da/487abf47e8/6/full.jsonl",
+      "context": "/da/487abf47e8/6/context.md",
+      "content_hash": "/da/487abf47e8/6/content_hash.txt",
+      "prompt": "/da/487abf47e8/6/prompt.txt"
+    },
+    {
+      "metadata": "/da/487abf47e8/7/metadata.json",
+      "transcript": "/da/487abf47e8/7/full.jsonl",
+      "context": "/da/487abf47e8/7/context.md",
+      "content_hash": "/da/487abf47e8/7/content_hash.txt",
+      "prompt": "/da/487abf47e8/7/prompt.txt"
+    }
+  ],
+  "token_usage": {
+    "input_tokens": 32706,
+    "cache_creation_tokens": 6584993,
+    "cache_read_tokens": 146666547,
+    "output_tokens": 62406,
+    "api_call_count": 1453
+  }
+}

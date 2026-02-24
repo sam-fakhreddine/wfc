@@ -1,0 +1,34 @@
+{
+  "cli_version": "0.4.5",
+  "checkpoint_id": "1638e9898849",
+  "session_id": "cfb09f29-507d-4081-9ea6-33240433d48e",
+  "strategy": "manual-commit",
+  "created_at": "2026-02-21T04:28:49.596884Z",
+  "branch": "claude/fix-consensus-review-critical-issues-1771647949",
+  "checkpoints_count": 0,
+  "files_touched": [
+    "run_real_consensus_review.py",
+    "test_consensus_review.py"
+  ],
+  "agent": "Claude Code",
+  "turn_id": "550d71c049eb",
+  "checkpoint_transcript_start": 540,
+  "transcript_lines_at_start": 540,
+  "token_usage": {
+    "input_tokens": 2165,
+    "cache_creation_tokens": 274305,
+    "cache_read_tokens": 3302949,
+    "output_tokens": 73,
+    "api_call_count": 35
+  },
+  "initial_attribution": {
+    "calculated_at": "2026-02-21T04:28:49.293645Z",
+    "agent_lines": 285,
+    "human_added": 0,
+    "human_modified": 2,
+    "human_removed": 2,
+    "total_committed": 287,
+    "agent_percentage": 99.30313588850174
+  },
+  "transcript_path": ".claude/projects/-Users-samfakhreddine-repos-wfc/cfb09f29-507d-4081-9ea6-33240433d48e.jsonl"
+}

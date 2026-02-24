@@ -1,0 +1,33 @@
+{
+  "cli_version": "0.4.5",
+  "checkpoint_id": "da487abf47e8",
+  "session_id": "558241d6-1b1a-49db-9a64-d522165180eb",
+  "strategy": "manual-commit",
+  "created_at": "2026-02-22T23:59:48.857487Z",
+  "branch": "claude/ast-metrics-integration-1771804600",
+  "checkpoints_count": 1,
+  "files_touched": [
+    "plans/HISTORY.md",
+    "wfc/scripts/orchestrators/review/orchestrator.py"
+  ],
+  "agent": "Claude Code",
+  "turn_id": "b910c94d2bae",
+  "transcript_identifier_at_start": "91a4c66e-e97f-4d6d-b04e-d73ab1a8fd57",
+  "token_usage": {
+    "input_tokens": 8540,
+    "cache_creation_tokens": 3204227,
+    "cache_read_tokens": 57866083,
+    "output_tokens": 3362,
+    "api_call_count": 584
+  },
+  "initial_attribution": {
+    "calculated_at": "2026-02-22T23:59:45.544295Z",
+    "agent_lines": 0,
+    "human_added": 2645,
+    "human_modified": 15,
+    "human_removed": 0,
+    "total_committed": 2660,
+    "agent_percentage": 0
+  },
+  "transcript_path": ".claude/projects/-Users-samfakhreddine-repos-wfc/558241d6-1b1a-49db-9a64-d522165180eb.jsonl"
+}

@@ -1,0 +1,61 @@
+{
+  "cli_version": "0.4.5",
+  "checkpoint_id": "50b6d6f3b1a4",
+  "strategy": "manual-commit",
+  "branch": "feat/rest-api-implementation",
+  "checkpoints_count": 3,
+  "files_touched": [
+    ".github/workflows/ci.yml"
+  ],
+  "sessions": [
+    {
+      "metadata": "/50/b6d6f3b1a4/0/metadata.json",
+      "transcript": "/50/b6d6f3b1a4/0/full.jsonl",
+      "context": "/50/b6d6f3b1a4/0/context.md",
+      "content_hash": "/50/b6d6f3b1a4/0/content_hash.txt",
+      "prompt": "/50/b6d6f3b1a4/0/prompt.txt"
+    },
+    {
+      "metadata": "/50/b6d6f3b1a4/1/metadata.json",
+      "transcript": "/50/b6d6f3b1a4/1/full.jsonl",
+      "context": "/50/b6d6f3b1a4/1/context.md",
+      "content_hash": "/50/b6d6f3b1a4/1/content_hash.txt",
+      "prompt": "/50/b6d6f3b1a4/1/prompt.txt"
+    },
+    {
+      "metadata": "/50/b6d6f3b1a4/2/metadata.json",
+      "transcript": "/50/b6d6f3b1a4/2/full.jsonl",
+      "context": "/50/b6d6f3b1a4/2/context.md",
+      "content_hash": "/50/b6d6f3b1a4/2/content_hash.txt",
+      "prompt": "/50/b6d6f3b1a4/2/prompt.txt"
+    },
+    {
+      "metadata": "/50/b6d6f3b1a4/3/metadata.json",
+      "transcript": "/50/b6d6f3b1a4/3/full.jsonl",
+      "context": "/50/b6d6f3b1a4/3/context.md",
+      "content_hash": "/50/b6d6f3b1a4/3/content_hash.txt",
+      "prompt": "/50/b6d6f3b1a4/3/prompt.txt"
+    },
+    {
+      "metadata": "/50/b6d6f3b1a4/4/metadata.json",
+      "transcript": "/50/b6d6f3b1a4/4/full.jsonl",
+      "context": "/50/b6d6f3b1a4/4/context.md",
+      "content_hash": "/50/b6d6f3b1a4/4/content_hash.txt",
+      "prompt": "/50/b6d6f3b1a4/4/prompt.txt"
+    },
+    {
+      "metadata": "/50/b6d6f3b1a4/5/metadata.json",
+      "transcript": "/50/b6d6f3b1a4/5/full.jsonl",
+      "context": "/50/b6d6f3b1a4/5/context.md",
+      "content_hash": "/50/b6d6f3b1a4/5/content_hash.txt",
+      "prompt": "/50/b6d6f3b1a4/5/prompt.txt"
+    }
+  ],
+  "token_usage": {
+    "input_tokens": 24527,
+    "cache_creation_tokens": 4819326,
+    "cache_read_tokens": 111304101,
+    "output_tokens": 59849,
+    "api_call_count": 1082
+  }
+}

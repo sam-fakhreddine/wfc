@@ -1,0 +1,52 @@
+{
+  "cli_version": "0.4.5",
+  "checkpoint_id": "da487abf47e8",
+  "session_id": "e2e7a891-0583-49a4-abad-e5c8bd79801b",
+  "strategy": "manual-commit",
+  "created_at": "2026-02-22T23:59:55.801611Z",
+  "branch": "claude/ast-metrics-integration-1771804600",
+  "checkpoints_count": 0,
+  "files_touched": [
+    "plans/plan_ast_metrics_integration_20260222/TASKS.md",
+    "plans/plan_ast_metrics_integration_20260222/VALIDATE.md",
+    "plans/plan_ast_metrics_integration_20260222/plan-audit.json.txt",
+    "plans/plan_ast_metrics_integration_20260222/revision-log.md",
+    "wfc/references/reviewers/maintainability/PROMPT.md",
+    "tests/test_ast_metrics_integration.py",
+    "wfc/scripts/ast_analyzer/__init__.py",
+    "wfc/scripts/ast_analyzer/metrics_extractor.py",
+    "plans/HISTORY.md",
+    "plans/plan_ast_metrics_integration_20260222/PROPERTIES.md",
+    "plans/plan_ast_metrics_integration_20260222/TEST-PLAN.md",
+    "wfc/references/reviewers/correctness/PROMPT.md",
+    "wfc/references/reviewers/performance/PROMPT.md",
+    "wfc/references/reviewers/reliability/PROMPT.md",
+    "wfc/scripts/ast_analyzer/cache_writer.py",
+    "wfc/scripts/ast_analyzer/language_detection.py",
+    "plans/plan_ast_metrics_integration_20260222/interview-results.json",
+    "wfc/references/reviewers/security/PROMPT.md",
+    "wfc/scripts/orchestrators/review/orchestrator.py",
+    "docs/concepts/AST_CONTEXT.md"
+  ],
+  "agent": "Claude Code",
+  "transcript_identifier_at_start": "1b08ae65-eb73-4997-aadc-a64cc7afa29f",
+  "checkpoint_transcript_start": 2001,
+  "transcript_lines_at_start": 2001,
+  "token_usage": {
+    "input_tokens": 281,
+    "cache_creation_tokens": 655152,
+    "cache_read_tokens": 23623146,
+    "output_tokens": 22184,
+    "api_call_count": 221
+  },
+  "initial_attribution": {
+    "calculated_at": "2026-02-22T23:59:54.795644Z",
+    "agent_lines": 2212,
+    "human_added": 426,
+    "human_modified": 17,
+    "human_removed": 0,
+    "total_committed": 2655,
+    "agent_percentage": 83.31450094161958
+  },
+  "transcript_path": ".claude/projects/-Users-samfakhreddine-repos-wfc/e2e7a891-0583-49a4-abad-e5c8bd79801b.jsonl"
+}
