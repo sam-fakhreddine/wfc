@@ -385,8 +385,8 @@ Use template for config files:
 ## See Also
 
 - `docs/quality/QUALITY_GATE.md` - Quality gate documentation
-- `wfc/scripts/language_detector.py` - Language detection logic
-- `wfc/scripts/quality_checker.py` - Multi-language quality checker
+- WFC uses `wfc/scripts/language_detector.py` for language detection logic
+- WFC uses `wfc/scripts/quality_checker.py` for multi-language quality checking
 
 ---
 

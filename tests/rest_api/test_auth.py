@@ -96,7 +96,11 @@ class TestAPIKeyStore:
         assert api_key not in raw_content
 
         assert "api_key_hash" in store_data["proj1"]
-        assert len(store_data["proj1"]["api_key_hash"]) == 64
+        stored_hash = store_data["proj1"]["api_key_hash"]
+        assert ":" in stored_hash
+        salt_hex, hash_hex = stored_hash.split(":", 1)
+        assert len(salt_hex) == 32
+        assert len(hash_hex) == 64
 
     def test_created_at_stored(self, tmp_store):
         """created_at timestamp should be stored."""

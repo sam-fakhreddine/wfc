@@ -430,12 +430,14 @@ def _cmd_info(_args) -> None:
     """CLI command: show repo and PR info (user-facing output)."""
     repo = detect_repo()
     pr = get_pr_info()
-    print(f"Repo:      {repo.full_name}")
-    print(f"PR:        #{pr.number} — {pr.title}")
-    print(f"Branch:    {pr.head_ref} → {pr.base_ref}")
-    print(f"State:     {pr.state} | Mergeable: {pr.mergeable} | Merge state: {pr.merge_state}")
-    print(f"Draft:     {pr.draft}")
-    print(f"URL:       {pr.url}")
+    logger.info("Repo:      %s", repo.full_name)
+    logger.info("PR:        #%s — %s", pr.number, pr.title)
+    logger.info("Branch:    %s → %s", pr.head_ref, pr.base_ref)
+    logger.info(
+        "State:     %s | Mergeable: %s | Merge state: %s", pr.state, pr.mergeable, pr.merge_state
+    )
+    logger.info("Draft:     %s", pr.draft)
+    logger.info("URL:       %s", pr.url)
 
 
 def _cmd_checks(args) -> None:
@@ -452,7 +454,7 @@ def _cmd_checks(args) -> None:
         icon = "❌" if c.conclusion == "failure" else "✅" if c.conclusion == "success" else "⏳"
         print(f"{icon} {c.status:<10} {c.name:<45} {c.url}")
 
-    print(f"\n✅ {len(passed)}  ❌ {len(failed)}  ⏳ {len(pending)}")
+    logger.info("✅ %s  ❌ %s  ⏳ %s", len(passed), len(failed), len(pending))
     if failed:
         sys.exit(1)
 
@@ -462,17 +464,31 @@ def _cmd_request_review(args) -> None:
     reviewer = args.reviewer
     request_review(reviewer)
     display = COPILOT_REVIEWER if reviewer.lower() == "copilot" else reviewer
-    print(f"✅ Review requested from: {display}")
+    logger.info("✅ Review requested from: %s", display)
 
 
 def _cmd_comment(args) -> None:
     """CLI command: add comment (user-facing output)."""
     url = add_pr_comment(args.body)
-    print(f"✅ Comment posted: {url}")
+    logger.info("✅ Comment posted: %s", url)
 
 
-if __name__ == "__main__":
+def _configure_cli_logging() -> None:
+    """
+    Configure logging for CLI usage without overriding existing handlers.
+
+    Keeps output clean (message only) while allowing callers embedding this
+    module to supply their own logging configuration.
+    """
+    root = logging.getLogger()
+    if not root.handlers:
+        logging.basicConfig(level=logging.INFO, format="%(message)s", stream=sys.stdout)
+
+
+def main() -> None:
     import argparse
+
+    _configure_cli_logging()
 
     parser = argparse.ArgumentParser(description="GitHub helper utilities")
     sub = parser.add_subparsers(dest="cmd", required=True)
@@ -495,5 +511,9 @@ if __name__ == "__main__":
     try:
         parsed.func(parsed)
     except GHError as exc:
-        print(f"Error: {exc}", file=sys.stderr)
+        logger.error("Error: %s", exc)
         sys.exit(1)
+
+
+if __name__ == "__main__":
+    main()

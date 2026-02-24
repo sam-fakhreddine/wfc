@@ -117,13 +117,13 @@ security_hook.py (pattern checker)
 patterns/*.json   hook_state.py (dedup)
 ```
 
-### Key Files
+### Key Files (WFC Codebase)
 
-- `wfc/scripts/hooks/pretooluse_hook.py` - Main entry point
-- `wfc/scripts/hooks/security_hook.py` - Pattern matching engine
-- `wfc/scripts/hooks/hook_state.py` - Session state for deduplication
-- `wfc/scripts/hooks/patterns/security.json` - Core security patterns
-- `wfc/scripts/hooks/patterns/github_actions.json` - CI/CD patterns
+- WFC uses `wfc/scripts/hooks/pretooluse_hook.py` as the main entry point
+- WFC uses `wfc/scripts/hooks/security_hook.py` for pattern matching
+- WFC uses `wfc/scripts/hooks/hook_state.py` for session state/deduplication
+- WFC uses `wfc/scripts/hooks/patterns/security.json` for core security patterns
+- WFC uses `wfc/scripts/hooks/patterns/github_actions.json` for CI/CD patterns
 
 ## Integration with WFC
 

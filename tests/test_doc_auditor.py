@@ -180,16 +180,20 @@ class TestFindMissingDocstrings:
         """New function added in diff without docstring → reported."""
         py_file = tmp_path / "mymod.py"
         py_file.write_text(
-            textwrap.dedent("""\
+            textwrap.dedent(
+                """\
                 def my_func(x):
                     return x + 1
-            """),
+            """
+            ),
             encoding="utf-8",
         )
-        diff = textwrap.dedent("""\
+        diff = textwrap.dedent(
+            """\
             +def my_func(x):
             +    return x + 1
-        """)
+        """
+        )
 
         auditor = self._auditor()
         missing = auditor._find_missing_docstrings(
@@ -203,18 +207,22 @@ class TestFindMissingDocstrings:
         """New function with a docstring → not reported as missing."""
         py_file = tmp_path / "mymod2.py"
         py_file.write_text(
-            textwrap.dedent("""\
+            textwrap.dedent(
+                """\
                 def well_documented(x):
                     \"\"\"Return x + 1.\"\"\"
                     return x + 1
-            """),
+            """
+            ),
             encoding="utf-8",
         )
-        diff = textwrap.dedent("""\
+        diff = textwrap.dedent(
+            """\
             +def well_documented(x):
             +    \"\"\"Return x + 1.\"\"\"
             +    return x + 1
-        """)
+        """
+        )
 
         auditor = self._auditor()
         missing = auditor._find_missing_docstrings(
@@ -314,7 +322,8 @@ class TestOrchestratorIntegration:
         for rid in REVIEWER_IDS:
             d = reviewers_dir / rid
             d.mkdir()
-            prompt = textwrap.dedent(f"""\
+            prompt = textwrap.dedent(
+                f"""\
                 # {rid.title()} Reviewer
 
                 ## Identity
@@ -327,7 +336,8 @@ class TestOrchestratorIntegration:
                 ```json
                 {{"severity": "1", "description": "ok"}}
                 ```
-            """)
+            """
+            )
             (d / "PROMPT.md").write_text(prompt, encoding="utf-8")
             (d / "KNOWLEDGE.md").write_text(f"# {rid}\n- known.\n", encoding="utf-8")
 
