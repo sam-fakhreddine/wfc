@@ -14,12 +14,13 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import TYPE_CHECKING, Optional
 
+from wfc.scripts.ast_analyzer.cache_writer import write_ast_cache
+
 from .consensus_score import ConsensusScore, ConsensusScoreResult
 from .doc_auditor import DocAuditor, DocAuditReport
 from .finding_validator import FindingValidator, ValidationStatus
 from .fingerprint import Fingerprinter
 from .reviewer_engine import ReviewerEngine
-from wfc.scripts.ast_analyzer.cache_writer import write_ast_cache
 
 if TYPE_CHECKING:
     from wfc.scripts.knowledge.retriever import KnowledgeRetriever

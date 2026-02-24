@@ -2,7 +2,7 @@
 
 ## Subject: Multi-Tenant WFC Service Architecture
 
-## Verdict: 🟡 PROCEED WITH ADJUSTMENTS
+## Verdict: PROCEED WITH ADJUSTMENTS
 
 ## Overall Score: 6.9/10
 
@@ -87,7 +87,7 @@ With an overall score of **6.9/10**, this is a solid technical approach that req
 
 **Strengths:**
 
-- Risk table identifies some costs: PostgreSQL connection exhaustion, disk usage (500MB × 50), API cost spike
+- Risk table identifies some costs: PostgreSQL connection exhaustion, disk usage (500MB x 50), API cost spike
 - Explicit exclusions: Section 8 (Out of Scope) acknowledges what's NOT being built
 - Dependency list: New dependencies clearly enumerated (FastAPI, PostgreSQL, Redis, etc.)
 
@@ -135,7 +135,7 @@ With an overall score of **6.9/10**, this is a solid technical approach that req
 
 **Strengths:**
 
-- Risk impact matrix: Likelihood × Impact for 9 specific risks
+- Risk impact matrix: Likelihood x Impact for 9 specific risks
 - Mitigation strategies documented: Each risk has concrete mitigation (e.g., "Set max_connections=100")
 - Rollback acknowledged: PostgreSQL schema migration includes "rollback capability"
 
@@ -214,18 +214,18 @@ Don't build both interfaces. Validate which use case is real:
 
 ## Final Recommendation
 
-**🟡 PROCEED WITH ADJUSTMENTS**
+**PROCEED WITH ADJUSTMENTS**
 
 This BA document is technically sound and well-structured, but needs validation and simplification before implementation:
 
 ### STOP - Validate First (1 week)
 
-1. **Survey current users**: Are ≥5 users managing multiple projects or hitting concurrent limits?
+1. **Survey current users**: Are >=5 users managing multiple projects or hitting concurrent limits?
 2. **Check telemetry**: Any actual corruption/collision events logged?
 3. **Build Tier 0 MVP**: Just ProjectContext + FileLock + namespaced worktrees (Week 1 only)
 4. **Test Tier 0**: Run 6 concurrent reviews - does this solve 80% of the problem?
 
-**Decision gate**: If Tier 0 solves the problem OR <5 users report demand → STOP HERE
+**Decision gate**: If Tier 0 solves the problem OR <5 users report demand -> STOP HERE
 
 ### IF Validated - Proceed Carefully (6-10 weeks)
 
@@ -246,7 +246,7 @@ This BA document is technically sound and well-structured, but needs validation 
 
 ### Critical Questions to Answer Before Coding
 
-1. **Demand**: How many users requested this? (Need ≥5)
+1. **Demand**: How many users requested this? (Need >=5)
 2. **Simplicity**: Can ProjectContext + FileLock alone solve this?
 3. **Scope**: Is M6 (interface choice) really part of multi-tenancy?
 4. **Trade-offs**: What's the maintenance cost of PostgreSQL + Redis?
