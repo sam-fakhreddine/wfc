@@ -131,3 +131,15 @@ def resolve_repo_name() -> str:
         raise ValueError(f"Resolved repo name {name!r} does not match r'^[a-zA-Z0-9_-]+$'.")
 
     return name
+
+
+def read_full_body(path: Path) -> str:
+    """Read the full content of a SKILL.md file.
+
+    Args:
+        path: Path to a SKILL.md file.
+
+    Returns:
+        Full file content as a string.
+    """
+    return path.read_text(encoding="utf-8")

@@ -6,10 +6,13 @@ import stat
 from pathlib import Path
 from unittest import mock
 
+import pytest
+
 
 from wfc.scripts.orchestrators.skill_validator_llm.report_writer import (
     get_branch,
     write_report,
+    write_stage_report,
 )
 
 
@@ -160,3 +163,50 @@ def test_write_report_branch_with_slash(tmp_path: Path) -> None:
 
     assert report_path.exists()
     assert (tmp_path / ".wfc" / "projects" / "wfc" / "branches" / "claude").is_dir()
+
+
+def test_write_stage_report_creates_correct_filename(tmp_path: Path, monkeypatch) -> None:
+    monkeypatch.setattr(Path, "home", classmethod(lambda cls: tmp_path))
+    path = write_stage_report("wfc-test", "logic", "content", "wfc", "main")
+    assert path.name == "wfc-test-logic.md"
+
+
+def test_write_stage_report_file_permissions(tmp_path: Path, monkeypatch) -> None:
+    monkeypatch.setattr(Path, "home", classmethod(lambda cls: tmp_path))
+    path = write_stage_report("wfc-test", "discovery", "content", "wfc", "main")
+    assert stat.S_IMODE(path.stat().st_mode) == 0o600
+
+
+def test_write_stage_report_dir_permissions(tmp_path: Path, monkeypatch) -> None:
+    monkeypatch.setattr(Path, "home", classmethod(lambda cls: tmp_path))
+    path = write_stage_report("wfc-test", "edge_case", "content", "wfc", "main")
+    assert stat.S_IMODE(path.parent.stat().st_mode) == 0o700
+
+
+def test_write_stage_report_invalid_skill_name_raises(tmp_path: Path, monkeypatch) -> None:
+    monkeypatch.setattr(Path, "home", classmethod(lambda cls: tmp_path))
+    with pytest.raises(ValueError, match="skill_name"):
+        write_stage_report("../evil", "discovery", "content", "wfc", "main")
+    assert not list(tmp_path.glob("**/*.md"))
+
+
+def test_write_stage_report_invalid_stage_raises(tmp_path: Path, monkeypatch) -> None:
+    monkeypatch.setattr(Path, "home", classmethod(lambda cls: tmp_path))
+    with pytest.raises(ValueError, match="stage"):
+        write_stage_report("wfc-test", "invalid_stage", "content", "wfc", "main")
+
+
+def test_write_stage_report_all_valid_stages(tmp_path: Path, monkeypatch) -> None:
+    monkeypatch.setattr(Path, "home", classmethod(lambda cls: tmp_path))
+    for stage in ("discovery", "logic", "edge_case"):
+        path = write_stage_report("wfc-skill", stage, f"{stage} content", "wfc", "main")
+        assert path.exists()
+        assert stage in path.name
+
+
+def test_write_report_backward_compat(tmp_path: Path, monkeypatch) -> None:
+    """Existing write_report() still works unchanged."""
+    monkeypatch.setattr(Path, "home", classmethod(lambda cls: tmp_path))
+    path = write_report("wfc-test", "report content", "wfc", "main")
+    assert path.exists()
+    assert path.name == "wfc-test.md"

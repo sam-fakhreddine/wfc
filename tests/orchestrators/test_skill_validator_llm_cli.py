@@ -33,7 +33,7 @@ def test_estimate_cost_zero() -> None:
 
 def test_estimate_cost_positive() -> None:
     cost = _estimate_cost(1000)
-    assert abs(cost - 0.003) < 1e-9
+    assert abs(cost - 0.0105) < 1e-9
 
 
 def test_find_skill_dirs_returns_only_dirs_with_skill_md(tmp_path: Path) -> None:
@@ -58,40 +58,65 @@ def test_find_skill_dirs_sorted(tmp_path: Path) -> None:
     assert [r.name for r in result] == sorted(r.name for r in result)
 
 
-def test_validate_skill_dry_run(tmp_path: Path, capsys) -> None:
+def test_validate_skill_returns_dict_of_stage_results(tmp_path: Path) -> None:
     skill_dir = tmp_path / "wfc-test"
     skill_dir.mkdir()
     (skill_dir / "SKILL.md").write_text("---\nname: wfc-test\ndescription: A test skill.\n---\n")
 
-    result = _validate_skill(skill_dir, stage="discovery", dry_run=True)
+    with (
+        mock.patch(
+            "wfc.scripts.orchestrators.skill_validator_llm.cli.run_discovery",
+            return_value="discovery report",
+        ),
+        mock.patch(
+            "wfc.scripts.orchestrators.skill_validator_llm.cli.run_logic",
+            return_value="logic report",
+        ),
+        mock.patch(
+            "wfc.scripts.orchestrators.skill_validator_llm.cli.run_edge_case",
+            return_value="edge report",
+        ),
+    ):
+        result = _validate_skill(
+            skill_dir, stages=["discovery", "logic", "edge_case"], offline=False
+        )
 
-    assert "DRY-RUN" in result
-    assert "wfc-test" in result
-    captured = capsys.readouterr()
-    assert "Would call API" in captured.out
+    assert result == {
+        "discovery": "discovery report",
+        "logic": "logic report",
+        "edge_case": "edge report",
+    }
 
 
-def test_validate_skill_uses_template_when_present(tmp_path: Path) -> None:
+def test_validate_skill_offline_returns_stub_content(tmp_path: Path) -> None:
     skill_dir = tmp_path / "wfc-test"
     skill_dir.mkdir()
     (skill_dir / "SKILL.md").write_text("---\nname: wfc-test\ndescription: Test desc.\n---\n")
-    tmpl_dir = skill_dir / "assets" / "templates"
-    tmpl_dir.mkdir(parents=True)
-    (tmpl_dir / "discovery-prompt.txt").write_text("name: ${skill_name}\ndesc: ${description}\n")
 
-    result = _validate_skill(skill_dir, stage="discovery", dry_run=True)
+    with (
+        mock.patch(
+            "wfc.scripts.orchestrators.skill_validator_llm.cli.run_discovery",
+            return_value="[OFFLINE STUB — no API call made] discovery",
+        ),
+    ):
+        result = _validate_skill(skill_dir, stages=["discovery"], offline=True)
 
-    assert "wfc-test" in result
+    assert "OFFLINE STUB" in result["discovery"]
 
 
-def test_validate_skill_no_template_falls_back(tmp_path: Path) -> None:
+def test_validate_skill_single_stage(tmp_path: Path) -> None:
     skill_dir = tmp_path / "wfc-test"
     skill_dir.mkdir()
     (skill_dir / "SKILL.md").write_text("---\nname: wfc-test\ndescription: Fallback test.\n---\n")
 
-    result = _validate_skill(skill_dir, stage="discovery", dry_run=True)
+    with mock.patch(
+        "wfc.scripts.orchestrators.skill_validator_llm.cli.run_logic",
+        return_value="logic only",
+    ):
+        result = _validate_skill(skill_dir, stages=["logic"], offline=False)
 
-    assert "wfc-test" in result
+    assert list(result.keys()) == ["logic"]
+    assert result["logic"] == "logic only"
 
 
 def test_retry_with_backoff_success_first_try() -> None:
@@ -210,7 +235,7 @@ def test_parser_yes_flag() -> None:
 def test_parser_stage_default() -> None:
     parser = _build_parser()
     args = parser.parse_args(["--all"])
-    assert args.stage == "discovery"
+    assert args.stage is None
 
 
 def test_parser_stage_custom() -> None:
@@ -308,6 +333,12 @@ def test_main_all_yes_writes_reports(tmp_path: Path, capsys) -> None:
     skills_root = tmp_path / "skills"
     _make_skill(skills_root, "wfc-alpha")
 
+    stage_results = {
+        "discovery": "disc report",
+        "logic": "logic report",
+        "edge_case": "edge report",
+    }
+
     with (
         mock.patch(
             "wfc.scripts.orchestrators.skill_validator_llm.cli._SKILLS_ROOT",
@@ -322,14 +353,18 @@ def test_main_all_yes_writes_reports(tmp_path: Path, capsys) -> None:
             return_value="main",
         ),
         mock.patch(
-            "wfc.scripts.orchestrators.skill_validator_llm.cli.write_report",
+            "wfc.scripts.orchestrators.skill_validator_llm.cli.write_stage_report",
             return_value=tmp_path / "report.md",
         ) as mock_write,
+        mock.patch(
+            "wfc.scripts.orchestrators.skill_validator_llm.cli._validate_skill",
+            return_value=stage_results,
+        ),
     ):
         rc = main(["--all", "--yes"])
 
     assert rc == 0
-    mock_write.assert_called_once()
+    assert mock_write.call_count == 3
 
 
 def test_main_all_no_skills_returns_1(tmp_path: Path) -> None:
@@ -378,3 +413,135 @@ def test_main_all_without_yes_aborts_on_no(tmp_path: Path, capsys) -> None:
 
     assert rc == 0
     assert "Aborted" in capsys.readouterr().out
+
+
+def test_stage_flag_invalid_exits_1(capsys) -> None:
+    """--stage with invalid value returns exit code 1 without making git calls."""
+    rc = main(["--all", "--stage", "invalid_stage"])
+    assert rc == 1
+    err = capsys.readouterr().err
+    assert "invalid" in err.lower() or "valid" in err.lower()
+
+
+def test_stage_flag_discovery_only(tmp_path: Path, capsys) -> None:
+    """--stage discovery runs only the discovery stage."""
+    skill_dir = _make_skill(tmp_path, "wfc-solo")
+
+    with (
+        mock.patch(
+            "wfc.scripts.orchestrators.skill_validator_llm.cli.resolve_repo_name",
+            return_value="wfc",
+        ),
+        mock.patch(
+            "wfc.scripts.orchestrators.skill_validator_llm.cli.get_branch",
+            return_value="main",
+        ),
+        mock.patch(
+            "wfc.scripts.orchestrators.skill_validator_llm.cli.write_stage_report",
+            return_value=tmp_path / "report.md",
+        ) as mock_write,
+        mock.patch(
+            "wfc.scripts.orchestrators.skill_validator_llm.cli._validate_skill",
+            return_value={"discovery": "disc report"},
+        ),
+    ):
+        rc = main([str(skill_dir), "--stage", "discovery"])
+
+    assert rc == 0
+    mock_write.assert_called_once()
+
+
+def test_offline_flag_no_api_calls(tmp_path: Path, capsys) -> None:
+    """--offline flag prints [OFFLINE] messages and does not call the API."""
+    skill_dir = _make_skill(tmp_path, "wfc-offline")
+
+    with (
+        mock.patch(
+            "wfc.scripts.orchestrators.skill_validator_llm.cli.resolve_repo_name",
+            return_value="wfc",
+        ),
+        mock.patch(
+            "wfc.scripts.orchestrators.skill_validator_llm.cli.get_branch",
+            return_value="main",
+        ),
+        mock.patch(
+            "wfc.scripts.orchestrators.skill_validator_llm.cli.write_stage_report",
+            return_value=tmp_path / "report.md",
+        ),
+        mock.patch(
+            "wfc.scripts.orchestrators.skill_validator_llm.cli.run_discovery",
+            return_value="[OFFLINE STUB — no API call made] discovery",
+        ) as mock_disc,
+        mock.patch(
+            "wfc.scripts.orchestrators.skill_validator_llm.cli.run_logic",
+            return_value="[OFFLINE STUB — no API call made] logic",
+        ) as mock_logic,
+        mock.patch(
+            "wfc.scripts.orchestrators.skill_validator_llm.cli.run_edge_case",
+            return_value="[OFFLINE STUB — no API call made] edge",
+        ) as mock_edge,
+    ):
+        rc = main([str(skill_dir), "--offline"])
+
+    assert rc == 0
+    mock_disc.assert_called_once_with(skill_dir.resolve(), offline=True)
+    mock_logic.assert_called_once_with(skill_dir.resolve(), offline=True)
+    mock_edge.assert_called_once_with(skill_dir.resolve(), offline=True)
+
+
+def test_dry_run_shows_per_stage_cost(tmp_path: Path, capsys) -> None:
+    """--dry-run for a single skill shows per-stage cost breakdown."""
+    skill_dir = _make_skill(tmp_path, "wfc-cost")
+
+    with (
+        mock.patch(
+            "wfc.scripts.orchestrators.skill_validator_llm.cli.resolve_repo_name",
+            return_value="wfc",
+        ),
+        mock.patch(
+            "wfc.scripts.orchestrators.skill_validator_llm.cli.get_branch",
+            return_value="main",
+        ),
+    ):
+        rc = main([str(skill_dir), "--dry-run"])
+
+    assert rc == 0
+    out = capsys.readouterr().out
+    assert "DRY-RUN" in out
+    assert "discovery" in out
+    assert "logic" in out
+    assert "edge_case" in out
+
+
+def test_full_pipeline_writes_three_reports(tmp_path: Path, capsys) -> None:
+    """Running all 3 stages for one skill writes exactly 3 reports."""
+    skill_dir = _make_skill(tmp_path, "wfc-full")
+
+    stage_results = {
+        "discovery": "disc report",
+        "logic": "logic report",
+        "edge_case": "edge report",
+    }
+
+    with (
+        mock.patch(
+            "wfc.scripts.orchestrators.skill_validator_llm.cli.resolve_repo_name",
+            return_value="wfc",
+        ),
+        mock.patch(
+            "wfc.scripts.orchestrators.skill_validator_llm.cli.get_branch",
+            return_value="main",
+        ),
+        mock.patch(
+            "wfc.scripts.orchestrators.skill_validator_llm.cli.write_stage_report",
+            return_value=tmp_path / "report.md",
+        ) as mock_write,
+        mock.patch(
+            "wfc.scripts.orchestrators.skill_validator_llm.cli._validate_skill",
+            return_value=stage_results,
+        ),
+    ):
+        rc = main([str(skill_dir)])
+
+    assert rc == 0
+    assert mock_write.call_count == 3

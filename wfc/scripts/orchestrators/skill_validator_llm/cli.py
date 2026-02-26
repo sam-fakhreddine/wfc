@@ -11,18 +11,22 @@ from __future__ import annotations
 
 import argparse
 import random
-import string
 import sys
 import time
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from pathlib import Path
 from typing import Callable, TypeVar
 
-from .report_writer import get_branch, write_report
+from .report_writer import get_branch, write_stage_report
 from .skill_reader import parse_frontmatter, resolve_repo_name
+from .stages import run_discovery, run_edge_case, run_logic
 
 _SKILLS_ROOT = Path(__file__).parents[3] / "skills"
+_VALID_STAGES: frozenset[str] = frozenset({"discovery", "logic", "edge_case"})
+_ALL_STAGES: list[str] = ["discovery", "logic", "edge_case"]
 _INPUT_RATE_PER_TOKEN = 0.000003
+_OUTPUT_RATE_PER_TOKEN = 0.000015
+_EST_OUTPUT_MULTIPLIER = 0.5
 _MAX_WORKERS = 5
 
 T = TypeVar("T")
@@ -84,8 +88,9 @@ def _estimate_tokens(text: str) -> int:
 
 
 def _estimate_cost(tokens: int) -> float:
-    """Estimate USD cost from token count."""
-    return tokens * _INPUT_RATE_PER_TOKEN
+    """Estimate USD cost from input token count (includes estimated output)."""
+    output_tokens = int(tokens * _EST_OUTPUT_MULTIPLIER)
+    return tokens * _INPUT_RATE_PER_TOKEN + output_tokens * _OUTPUT_RATE_PER_TOKEN
 
 
 def _find_skill_dirs(skills_root: Path) -> list[Path]:
@@ -95,43 +100,33 @@ def _find_skill_dirs(skills_root: Path) -> list[Path]:
 
 def _validate_skill(
     skill_path: Path,
-    stage: str,
-    dry_run: bool,
-) -> str:
-    """Run LLM discovery validation for one skill.
-
-    Loads the discovery prompt template from the skill's
-    ``assets/templates/discovery-prompt.txt``, formats it with the skill
-    name and description, then calls the API (stubbed in this PR).
+    stages: list[str],
+    offline: bool,
+) -> dict[str, str]:
+    """Run LLM validation for one skill across the given stages.
 
     Args:
         skill_path: Path to the skill directory.
-        stage: Validation stage identifier (e.g. "discovery").
-        dry_run: If True, print stub message and return mock response.
+        stages: List of stage names to run in order.
+        offline: If True, use offline stubs (no API calls).
 
     Returns:
-        Report content string.
+        Dict mapping stage name to report content string.
+        On stage failure, remaining stages are skipped; the error is re-raised.
     """
-    skill_md = skill_path / "SKILL.md"
-    frontmatter = parse_frontmatter(skill_md)
-    skill_name: str = frontmatter.get("name", skill_path.name)
-    description: str = frontmatter.get("description", "")
-
-    template_path = skill_path / "assets" / "templates" / "discovery-prompt.txt"
-    if template_path.exists():
-        raw_template = template_path.read_text(encoding="utf-8")
-        prompt = string.Template(raw_template).safe_substitute(
-            skill_name=skill_name, description=description
-        )
-    else:
-        prompt = f"name: {skill_name}\ndescription: {description}\n\nStage: {stage}\n"
-
-    if dry_run:
-        print(f"[DRY-RUN] Would call API for {skill_name}")
-        return f"# DRY-RUN: {skill_name}\n\nPrompt length: {len(prompt)} chars\n"
-
-    print(f"[STUB] Would call API for {skill_name}")
-    return f"# STUB: {skill_name}\n\nPrompt length: {len(prompt)} chars\n"
+    _STAGE_RUNNERS = {
+        "discovery": run_discovery,
+        "logic": run_logic,
+        "edge_case": run_edge_case,
+    }
+    results: dict[str, str] = {}
+    for stage in stages:
+        runner = _STAGE_RUNNERS[stage]
+        if offline:
+            print(f"[OFFLINE] {stage}: {skill_path.name}")
+        report = runner(skill_path, offline=offline)
+        results[stage] = report
+    return results
 
 
 def _build_parser() -> argparse.ArgumentParser:
@@ -154,8 +149,13 @@ def _build_parser() -> argparse.ArgumentParser:
     )
     parser.add_argument(
         "--stage",
-        default="discovery",
-        help="Validation stage to run (default: discovery).",
+        default=None,
+        help="Validation stage to run: discovery, logic, edge_case. Default: run all stages.",
+    )
+    parser.add_argument(
+        "--offline",
+        action="store_true",
+        help="Skip API calls; write offline stub reports. Safe for CI usage.",
     )
     parser.add_argument(
         "--dry-run",
@@ -181,6 +181,18 @@ def main(argv: list[str] | None = None) -> int:
     parser = _build_parser()
     args = parser.parse_args(argv)
 
+    stages_to_run: list[str]
+    if args.stage is not None:
+        if args.stage not in _VALID_STAGES:
+            print(
+                f"Error: invalid --stage {args.stage!r}. Valid stages: {sorted(_VALID_STAGES)}",
+                file=sys.stderr,
+            )
+            return 1
+        stages_to_run = [args.stage]
+    else:
+        stages_to_run = _ALL_STAGES
+
     if not args.all_skills and args.skill_path is None:
         parser.print_help()
         return 1
@@ -202,31 +214,34 @@ def main(argv: list[str] | None = None) -> int:
             fm = parse_frontmatter(skill_path / "SKILL.md")
             name = fm.get("name", skill_path.name)
             desc = fm.get("description", "")
-            tokens = _estimate_tokens(name + desc)
-            cost = _estimate_cost(tokens)
+            tokens_per_stage = _estimate_tokens(name + desc)
             print(f"[DRY-RUN] Skill: {name}")
-            print(f"[DRY-RUN] Estimated tokens: {tokens}")
-            print(f"[DRY-RUN] Estimated cost:   ${cost:.6f}")
-            print(f"[DRY-RUN] Stage: {args.stage}")
+            for stage in stages_to_run:
+                cost = _estimate_cost(tokens_per_stage)
+                print(f"[DRY-RUN]   Stage {stage}: ~{tokens_per_stage} tokens, ~${cost:.6f}")
+            total_cost = _estimate_cost(tokens_per_stage) * len(stages_to_run)
+            print(f"[DRY-RUN] Total estimated cost: ${total_cost:.6f}")
             print("[DRY-RUN] No API calls will be made.")
             return 0
 
-        def _run() -> str:
-            return _validate_skill(skill_path, args.stage, dry_run=False)
+        def _run() -> dict[str, str]:
+            return _validate_skill(skill_path, stages_to_run, offline=args.offline)
 
         try:
-            report_content = retry_with_backoff(_run)
+            stage_reports = retry_with_backoff(_run)
         except Exception as exc:  # noqa: BLE001
             print(f"Error validating {skill_path.name}: {exc}", file=sys.stderr)
             return 1
 
-        report_path = write_report(
-            skill_name=skill_path.name,
-            report_content=report_content,
-            repo=repo,
-            branch=branch,
-        )
-        print(f"Report written: {report_path}")
+        for stage, report_content in stage_reports.items():
+            report_path = write_stage_report(
+                skill_name=skill_path.name,
+                stage=stage,
+                report_content=report_content,
+                repo=repo,
+                branch=branch,
+            )
+            print(f"Report written: {report_path}")
         return 0
 
     skill_dirs = _find_skill_dirs(_SKILLS_ROOT)
@@ -243,13 +258,13 @@ def main(argv: list[str] | None = None) -> int:
         except Exception:  # noqa: BLE001
             pass
 
-    total_cost = _estimate_cost(total_tokens)
+    total_cost = _estimate_cost(total_tokens) * len(stages_to_run)
 
     if args.dry_run:
         print(f"[DRY-RUN] Skills found: {len(skill_dirs)}")
         print(f"[DRY-RUN] Estimated total tokens: {total_tokens}")
         print(f"[DRY-RUN] Estimated total cost:   ${total_cost:.6f}")
-        print(f"[DRY-RUN] Stage: {args.stage}")
+        print(f"[DRY-RUN] Stages: {stages_to_run}")
         print("[DRY-RUN] No API calls will be made.")
         return 0
 
@@ -263,24 +278,28 @@ def main(argv: list[str] | None = None) -> int:
     errors: list[tuple[str, Exception]] = []
     reports: list[Path] = []
 
-    def _run_one(sd: Path) -> tuple[str, str]:
-        content = retry_with_backoff(lambda: _validate_skill(sd, args.stage, dry_run=False))
-        return sd.name, content
+    def _run_one(sd: Path) -> tuple[str, dict[str, str]]:
+        stage_results = retry_with_backoff(
+            lambda: _validate_skill(sd, stages_to_run, offline=args.offline)
+        )
+        return sd.name, stage_results
 
     with ThreadPoolExecutor(max_workers=_MAX_WORKERS) as executor:
         future_to_skill = {executor.submit(_run_one, sd): sd for sd in skill_dirs}
         for future in as_completed(future_to_skill):
             sd = future_to_skill[future]
             try:
-                skill_name, report_content = future.result()
-                report_path = write_report(
-                    skill_name=skill_name,
-                    report_content=report_content,
-                    repo=repo,
-                    branch=branch,
-                )
-                reports.append(report_path)
-                print(f"OK  {skill_name}: {report_path}")
+                skill_name, stage_results = future.result()
+                for stage, report_content in stage_results.items():
+                    report_path = write_stage_report(
+                        skill_name=skill_name,
+                        stage=stage,
+                        report_content=report_content,
+                        repo=repo,
+                        branch=branch,
+                    )
+                    reports.append(report_path)
+                print(f"OK  {skill_name}: {len(stage_results)} stage(s) written")
             except Exception as exc:  # noqa: BLE001
                 errors.append((sd.name, exc))
                 print(f"ERR {sd.name}: {exc}", file=sys.stderr)
@@ -291,7 +310,7 @@ def main(argv: list[str] | None = None) -> int:
             print(f"  - {skill_name}: {exc}", file=sys.stderr)
         return 1
 
-    print(f"\n{len(reports)} skill(s) validated successfully.")
+    print(f"\n{len(reports)} report(s) written for {len(skill_dirs)} skill(s).")
     return 0
 
 

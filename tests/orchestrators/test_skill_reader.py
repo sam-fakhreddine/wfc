@@ -11,6 +11,7 @@ import pytest
 from wfc.scripts.orchestrators.skill_validator_llm.skill_reader import (
     build_dir_tree,
     parse_frontmatter,
+    read_full_body,
     resolve_repo_name,
 )
 
@@ -184,3 +185,18 @@ def test_resolve_repo_name_special_chars_raises() -> None:
     with mock.patch.dict(os.environ, {"WFC_CORPUS_REPO": "name with spaces"}):
         with pytest.raises(ValueError):
             resolve_repo_name()
+
+
+def test_read_full_body_returns_complete_content(tmp_path: Path) -> None:
+    skill_md = tmp_path / "SKILL.md"
+    content = "---\nname: wfc-test\n---\n\n## Workflow\nStep 1.\n"
+    skill_md.write_text(content, encoding="utf-8")
+    assert read_full_body(skill_md) == content
+
+
+def test_read_full_body_includes_frontmatter(tmp_path: Path) -> None:
+    skill_md = tmp_path / "SKILL.md"
+    skill_md.write_text("---\nname: wfc-foo\ndescription: bar\n---\n", encoding="utf-8")
+    body = read_full_body(skill_md)
+    assert "---" in body
+    assert "name: wfc-foo" in body

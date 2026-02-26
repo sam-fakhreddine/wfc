@@ -1,0 +1,11 @@
+## Hallucination Risks
+- **Step 3** assumes the user has already set WFC_CORPUS_REPO but this is not documented in the skill triggers or prerequisites. An agent may hallucinate that this variable exists.
+- **Workflow step 5** references "the report" without specifying which of the 4 stage reports is meant.
+
+## Ambiguous Steps
+- "Run validation" — does not specify which stage(s) to run by default.
+- "Write to corpus" — ambiguous whether this happens after each stage or after all stages complete.
+
+## Missing Context
+- No mention of what happens when ANTHROPIC_SKILLS_VALIDATOR is unset during non-dry-run.
+- No retry behavior documented for the user.
