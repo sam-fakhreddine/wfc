@@ -40,7 +40,7 @@ def call_api(prompt: str, system_prompt: str = "", use_thinking: bool = False) -
             "Export your Anthropic API key to run LLM validation."
         )
 
-    client = anthropic.Anthropic(api_key=api_key)
+    client = anthropic.Anthropic(api_key=api_key, timeout=120.0)
 
     messages: list[dict] = [{"role": "user", "content": prompt}]
 

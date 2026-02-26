@@ -11,13 +11,13 @@ from ..skill_reader import parse_frontmatter
 _STAGE = "discovery"
 _OFFLINE_STUB = (
     "[OFFLINE STUB — no API call made]\n\n"
-    "# Discovery: {skill_name}\n\n"
+    "# Discovery: ${skill_name}\n\n"
     "Offline mode — no LLM call was made.\n"
 )
 
 _HARDCODED_PROMPT = """\
-name: {skill_name}
-description: {description}
+name: ${skill_name}
+description: ${description}
 
 Find routing gaps and ambiguity in the above skill description.
 
@@ -55,7 +55,7 @@ def run(skill_path: Path, offline: bool = False) -> str:
     description = frontmatter.get("description", "")
 
     if offline:
-        return _OFFLINE_STUB.format(skill_name=skill_name)
+        return string.Template(_OFFLINE_STUB).safe_substitute(skill_name=skill_name)
 
     template_path = _get_template_path()
     if template_path.exists():
@@ -64,6 +64,8 @@ def run(skill_path: Path, offline: bool = False) -> str:
             skill_name=skill_name, description=description
         )
     else:
-        prompt = _HARDCODED_PROMPT.format(skill_name=skill_name, description=description)
+        prompt = string.Template(_HARDCODED_PROMPT).safe_substitute(
+            skill_name=skill_name, description=description
+        )
 
     return call_api(prompt, use_thinking=True)

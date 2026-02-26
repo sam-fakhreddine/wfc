@@ -11,15 +11,15 @@ from ..skill_reader import parse_frontmatter, read_full_body
 _STAGE = "edge_case"
 _OFFLINE_STUB = (
     "[OFFLINE STUB — no API call made]\n\n"
-    "# Edge Case: {skill_name}\n\n"
+    "# Edge Case: ${skill_name}\n\n"
     "Offline mode — no LLM call was made.\n"
 )
 
 _HARDCODED_PROMPT = """\
-Skill name: {skill_name}
+Skill name: ${skill_name}
 
 Full skill definition:
-{skill_body}
+${skill_body}
 
 Stress-test this skill for boundary conditions and edge cases.
 
@@ -65,13 +65,15 @@ def run(skill_path: Path, offline: bool = False) -> str:
         skill_name = skill_path.name
 
     if offline:
-        return _OFFLINE_STUB.format(skill_name=skill_name)
+        return string.Template(_OFFLINE_STUB).safe_substitute(skill_name=skill_name)
 
     template_path = _get_template_path()
     if template_path.exists():
         raw = template_path.read_text(encoding="utf-8")
         prompt = string.Template(raw).safe_substitute(skill_name=skill_name, skill_body=skill_body)
     else:
-        prompt = _HARDCODED_PROMPT.format(skill_name=skill_name, skill_body=skill_body)
+        prompt = string.Template(_HARDCODED_PROMPT).safe_substitute(
+            skill_name=skill_name, skill_body=skill_body
+        )
 
     return call_api(prompt, use_thinking=False)

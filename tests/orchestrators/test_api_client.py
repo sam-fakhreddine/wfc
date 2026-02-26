@@ -79,7 +79,10 @@ class TestCallApiBasic:
                 result = api_client.call_api("Test prompt")
 
         assert result == "Hello from the model"
-        MockClient.assert_called_once_with(api_key="test-key")  # pragma: allowlist secret
+        MockClient.assert_called_once_with(
+            api_key="test-key",  # pragma: allowlist secret
+            timeout=120.0,
+        )
         call_kwargs = instance.messages.create.call_args[1]
         assert call_kwargs["model"] == "claude-sonnet-4-6"
         assert call_kwargs["messages"] == [{"role": "user", "content": "Test prompt"}]

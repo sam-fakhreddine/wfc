@@ -73,6 +73,8 @@ def write_report(
 
 
 _SAFE_SKILL_NAME_RE = re.compile(r"^[a-zA-Z0-9_-]+$")
+_SAFE_REPO_NAME_RE = re.compile(r"^[a-zA-Z0-9_-]+$")
+_SAFE_BRANCH_RE = re.compile(r"^[a-zA-Z0-9_./-]+$")
 _VALID_STAGES: frozenset[str] = frozenset({"discovery", "logic", "edge_case"})
 
 
@@ -94,19 +96,26 @@ def write_stage_report(
         skill_name: The skill identifier. Must match r'^[a-zA-Z0-9_-]+$'.
         stage: Validation stage. Must be one of: discovery, logic, edge_case.
         report_content: The full text content of the report.
-        repo: Repository name (e.g. "wfc").
+        repo: Repository name (e.g. "wfc"). Must match r'^[a-zA-Z0-9_-]+$'.
         branch: Branch name (e.g. "claude/wfc-skill-validator-llm-phase2").
+            Must match r'^[a-zA-Z0-9_./-]+$' and must not contain "..".
 
     Returns:
         Path to the written report file.
 
     Raises:
-        ValueError: If skill_name or stage fails validation.
+        ValueError: If skill_name, stage, repo, or branch fails validation.
     """
     if not _SAFE_SKILL_NAME_RE.match(skill_name):
         raise ValueError(f"Invalid skill_name {skill_name!r}: must match r'^[a-zA-Z0-9_-]+$'.")
     if stage not in _VALID_STAGES:
         raise ValueError(f"Invalid stage {stage!r}: must be one of {sorted(_VALID_STAGES)}.")
+    if not _SAFE_REPO_NAME_RE.match(repo):
+        raise ValueError(f"Invalid repo {repo!r}: must match r'^[a-zA-Z0-9_-]+$'.")
+    if not _SAFE_BRANCH_RE.match(branch) or ".." in branch:
+        raise ValueError(
+            f"Invalid branch {branch!r}: must match r'^[a-zA-Z0-9_./-]+$' and must not contain '..'."
+        )
 
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
     report_dir = (
