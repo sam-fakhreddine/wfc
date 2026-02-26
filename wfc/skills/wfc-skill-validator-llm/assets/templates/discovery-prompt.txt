@@ -1,8 +1,8 @@
 I am building an Agent Skill based on the agentskills.io spec.
 Agents will decide whether to load this skill based entirely on the YAML metadata below.
 
-name: {skill_name}
-description: {description}
+name: ${skill_name}
+description: ${description}
 
 Your job is to find faults, routing gaps, and ambiguity. Based strictly on this description:
 1. Generate 3 realistic user prompts you are 100% confident SHOULD trigger this skill.

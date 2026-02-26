@@ -18,6 +18,7 @@ def get_branch() -> str:
             capture_output=True,
             text=True,
             check=True,
+            timeout=10,
         )
         branch = result.stdout.strip()
         return branch if branch else "unknown"

@@ -111,6 +111,7 @@ def resolve_repo_name() -> str:
                 capture_output=True,
                 text=True,
                 check=True,
+                timeout=10,
             )
             name = Path(result.stdout.strip()).name
         except (subprocess.CalledProcessError, FileNotFoundError):
