@@ -251,6 +251,45 @@ def test_run_no_name_mismatch_no_warning(tmp_path: Path) -> None:
     assert "Warning" not in first_three_lines
 
 
+def test_run_uses_directory_name_for_report_lookup(tmp_path: Path) -> None:
+    """find_latest_stage_report must be called with skill_path.name (dir name),
+    not the frontmatter 'name' field — they can differ (e.g. wfc-review dir vs
+    wfc-consensus-review frontmatter name)."""
+    skill_dir = tmp_path / "wfc-review"
+    skill_dir.mkdir()
+    (skill_dir / "SKILL.md").write_text(
+        "---\nname: wfc-consensus-review\ndescription: test\n---\n## Body\n"
+    )
+    prior_file = tmp_path / "prior.md"
+    prior_file.write_text("prior report")
+
+    with (
+        mock.patch(
+            "wfc.scripts.orchestrators.skill_validator_llm.stages.refinement.find_latest_stage_report",
+            return_value=prior_file,
+        ) as mock_find,
+        mock.patch(
+            "wfc.scripts.orchestrators.skill_validator_llm.stages.refinement.call_api",
+            return_value="Trigger Clarity: 5/10\nScope Accuracy: 5/10\nStep Clarity: 5/10\n",
+        ),
+        mock.patch(
+            "wfc.scripts.orchestrators.skill_validator_llm.stages.refinement.resolve_repo_name",
+            return_value="wfc",
+        ),
+        mock.patch(
+            "wfc.scripts.orchestrators.skill_validator_llm.stages.refinement.get_branch",
+            return_value="test-branch",
+        ),
+    ):
+        run(skill_dir)
+
+    for call_args in mock_find.call_args_list:
+        assert call_args[0][0] == "wfc-review", (
+            f"Expected 'wfc-review' but got {call_args[0][0]!r} — "
+            "report lookup must use directory name, not frontmatter name"
+        )
+
+
 def test_run_real_template_loads() -> None:
     template_path = _get_template_path()
     assert template_path.exists(), f"Template not found at: {template_path}"

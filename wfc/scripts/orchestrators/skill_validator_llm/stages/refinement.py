@@ -94,10 +94,11 @@ def run(skill_path: Path, offline: bool = False) -> str:
     repo = resolve_repo_name()
     branch = get_branch()
 
+    report_skill_name = skill_path.name
     prior_stages = ["discovery", "logic", "edge_case"]
     prior_texts: dict[str, str] = {}
     for stage in prior_stages:
-        report_path = find_latest_stage_report(skill_name, stage, repo, branch)
+        report_path = find_latest_stage_report(report_skill_name, stage, repo, branch)
         prior_texts[stage] = report_path.read_text(encoding="utf-8")
 
     template_path = _get_template_path()
