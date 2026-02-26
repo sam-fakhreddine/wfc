@@ -1,0 +1,30 @@
+I am building an Agent Skill based on the agentskills.io spec.
+Agents will decide whether to load this skill based entirely on the YAML metadata below.
+
+name: {skill_name}
+description: {description}
+
+Your job is to find faults, routing gaps, and ambiguity. Based strictly on this description:
+1. Generate 3 realistic user prompts you are 100% confident SHOULD trigger this skill.
+2. Generate 3 user prompts that sound similar but SHOULD NOT trigger this skill.
+3. Critique the description: Is it too broad? Too narrow? Ambiguous? Does it overlap with similar skills?
+   Suggest an optimized rewrite that eliminates routing gaps.
+
+Format your response as:
+
+## Positive Triggers
+- [prompt 1]
+- [prompt 2]
+- [prompt 3]
+
+## Negative Triggers
+- [prompt 1]
+- [prompt 2]
+- [prompt 3]
+
+## Critique
+**Severity**: [INFO|WARNING|CRITICAL]
+[Your critique here]
+
+## Suggested Rewrite
+[Improved description here]
