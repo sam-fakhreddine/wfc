@@ -1,90 +1,93 @@
 ---
 name: wfc-playground
-description: Creates self-contained interactive HTML playgrounds for visual exploration of configurations, designs, and data. Generates single-file HTML with inline CSS/JS and no external dependencies. Use when you want to explore color palettes, test configurations, visualize data, or create interactive concept maps. Triggers on "create playground", "interactive explorer", "visual playground", or explicit /wfc-playground. Ideal for design exploration, data visualization, and interactive prototyping. Not for production UI components.
+description: >
+  Generates a single self-contained HTML file (inline CSS + JS, zero external
+  dependencies, no build step) for throwaway visual exploration. All HTML is
+  synthesized at generation time — no template files are read from disk.
+
+  TRIGGER only when the explicit goal is a browser-openable, single-file,
+  static HTML sandbox with no backend, no framework, and no deployment intent.
+  Prefer explicit invocation via /wfc-playground.
+
+  TRIGGER phrases (affirmative construction required — negated forms do NOT
+  trigger): "create a self-contained HTML playground", "build a throwaway
+  visual explorer", "single-file HTML sandbox", "static HTML prototype",
+  /wfc-playground [topic].
+
+  NOTE: "wfc" is legacy naming. This skill has no Wave Function Collapse
+  functionality. See "Not for" section below.
 license: MIT
 ---
 
-# WFC:PLAYGROUND - Interactive Playground Generator
+# WFC:PLAYGROUND — Static HTML Explorer Generator
 
-Creates self-contained interactive HTML playgrounds for visual exploration.
+## Not for
 
-## What It Does
+- Wave Function Collapse generation or any procedural/generative algorithm
+- React, Vue, Svelte, Angular, or any framework-based component output
+- Production dashboards, deployed UI, or any output shipped to end users
+- Embeddable widgets, iframe content, or components integrated into existing pages
+- Tools requiring live data connections (databases, APIs, OAuth, network requests)
+- Multi-file projects, npm packages, or output requiring a build step or server
+- Accessibility-compliant (WCAG) UI — generated output makes no a11y guarantees
+- Coding sandboxes or REPL environments (CodePen/JSFiddle-style)
+- Mobile-first or responsive layouts
+- Any request phrased in the negative ("I do NOT want a playground") or as a
+  meta-question about the skill itself
 
-1. **Selects template** based on request type (design, data, concept)
-2. **Customizes** for the specific exploration need
-3. **Generates** single self-contained .html file
-4. **No dependencies** - inline CSS/JS, opens in any browser
+Synthesizes a single self-contained `.html` file for one-off visual exploration.
+No files are read from disk. No external dependencies. No backend. No framework.
 
-## Usage
+---
 
-```bash
-# Design exploration
-/wfc-playground "color palette explorer"
-/wfc-playground "typography scale playground"
-/wfc-playground "spacing system visualizer"
+## Execution Steps
 
-# Data exploration
-/wfc-playground "JSON data explorer"
-/wfc-playground "API response viewer"
-/wfc-playground "query builder"
+### Step 1 — Classify Request into One Pattern
 
-# Concept exploration
-/wfc-playground "system architecture map"
-/wfc-playground "feature dependency graph"
-/wfc-playground "concept relationship explorer"
-```
+Apply the first matching rule:
 
-## Templates
+| If request mentions… | Use pattern |
+|---|---|
+| Color, spacing, typography, visual design properties | **Design** |
+| JSON, tables, structured data, filtering, search | **Data** |
+| Nodes, relationships, graphs, dependencies, concept links | **Concept** |
+| None of the above, or ambiguous | **Design** (default — inject HTML comment noting assumption) |
 
-### Design Playground
+If the request spans multiple patterns, use the pattern with the most matching
+signals. Do not ask for clarification. Do not merge patterns. Record the chosen
+pattern in an HTML comment at the top of the output file.
 
-Interactive controls for visual design exploration:
+If the request implies live backend connectivity (database queries, API calls,
+auth tokens), do not generate this skill's output. State: "This request requires
+live data connectivity. wfc-playground generates static UI only. Use a
+backend-capable skill."
 
-- Color pickers, sliders, toggles
-- Live preview panel
-- Generated CSS/config output
-- Copy-to-clipboard
+### Step 2 — Apply Fixed Customization Rules
 
-### Data Explorer
+Customization is limited to the following variables. All other structure is fixed.
 
-Interactive data visualization and manipulation:
+**All patterns:**
 
-- JSON tree view
-- Filter/search
-- Table/chart views
-- Export options
+- Page `<title>` and visible heading: derived from user's topic string
+- Seed data / default values: use any data provided by user verbatim (inline as
+  JS const); if no data provided, use clearly labeled placeholder values
+- If user provides a dataset larger than 500 items: truncate to first 100 items
+  and inject a visible warning: `<!-- WARNING: input truncated to 100 items -->`
 
-### Concept Map
+**Design pattern only:**
 
-Interactive node-based exploration:
+- Control types: map user's design properties to the nearest available control
+  (color → `<input type="color">`, numeric → `<input type="range">`,
+  toggle → `<input type="checkbox">`, text → `<input type="text">`)
+- Output panel format: CSS custom properties block (`--property-name: value;`)
 
-- Draggable nodes
-- Relationship lines
-- Zoom/pan
-- Category coloring
+**Data pattern only:**
 
-## Output
+- Default view: JSON tree if input is nested; flat table if input is array of
+  objects; raw text if neither
+- Output panel format: current filtered/visible JSON state
 
-Single `.html` file with:
+**Concept pattern only:**
 
-- Left panel: Interactive controls
-- Right panel: Live preview
-- Bottom panel: Generated output with copy button
-- No external dependencies (all inline)
-
-## Architecture
-
-```
-User Request -> Template Selection -> Customization -> HTML Generation
-```
-
-Templates are in `wfc/assets/templates/playground/`:
-
-- `design.html` - Design playground base
-- `data-explorer.html` - Data exploration base
-- `concept-map.html` - Concept mapping base
-
-## Philosophy
-
-**ELEGANT**: Single file, no dependencies
-**PROGRESSIVE**: Template -> Customize -> Generate
+- Node positions: distribute evenly in a grid; user may drag to reposition
+- Relationship lines: SV

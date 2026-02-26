@@ -1,155 +1,54 @@
 ---
 name: wfc-vibe
-description: "Natural brainstorming mode with smart transitions to structured workflows. Detects when scope grows and suggests planning. Passive reminders every ~10 messages. Easy transitions - say 'let's plan this' to move to wfc-plan or wfc-build. Triggers on 'vibe', 'brainstorm', 'explore ideas', or explicit /wfc-vibe. Ideal for early-stage ideation. Not for implementation."
+description: >
+  Activates for open-ended, pre-structure ideation where no plan, task,
+  artifact, or implementation target exists yet. For early-stage exploration:
+  generating possibilities, questioning assumptions, expanding problem space
+  without committing to a solution.
+
+  LOAD when ALL of: user signals open-ended exploration with no existing
+  artifact (/wfc-vibe, or 'brainstorm', 'explore ideas', 'let's ideate' —
+  semantic intent required, not substring match); no concrete artifact
+  referenced; no specific implementation target stated.
+
+  Not for: 'vibe' as sentiment or negation; concrete artifact present (file,
+  function, schema) → wfc-build; organizing already-formed ideas → wfc-plan;
+  specific technical decisions → wfc-build; implementation, debugging,
+  refactoring, or architecture review of existing systems.
+
+  Does not hand off programmatically — produces a context summary and
+  instructs user to invoke /wfc-plan or /wfc-build explicitly.
 license: MIT
 ---
 
-# wfc-vibe - Natural Brainstorming Mode
+# wfc-vibe — Open-Ended Ideation Mode
 
-**Conversational mode for stream-of-consciousness brainstorming with smart transitions to structured workflows**
+Conversational mode for pre-structure brainstorming. No artifact, plan, or
+implementation target exists yet. The user is expanding the problem space,
+not solving a defined problem.
 
-## What It Does
+## Activation Conditions
 
-Natural chat interface that lets you brainstorm freely without workflow enforcement:
+Load this skill only when:
 
-1. **Vibe naturally** - Just talk, no formal structure required
-2. **Smart detection** - Recognizes when scope grows large (not annoying)
-3. **Passive reminders** - Subtle hints every ~10 messages
-4. **Easy transitions** - Say "let's plan this" to move to wfc-plan or wfc-build
+1. User expresses open-ended exploration with **no referenced artifact**
+2. Trigger is semantic (intent to ideate freely), not substring (the word "vibe" alone is insufficient)
+3. No specific technical decision, named file, or existing system is the subject
 
-## When to Use
+If any concrete artifact or implementation target is present at load time, do not activate — route to wfc-build.
 
-**Use wfc-vibe when:**
+## What This Skill Does
 
-- ✅ Brainstorming ideas
-- ✅ Exploring possibilities
-- ✅ Stream-of-consciousness thinking
-- ✅ Not ready to commit to implementation
+- Responds conversationally without imposing workflow structure
+- Tracks topics, candidate features, and open questions mentioned during the session
+- Issues a single scope-growth suggestion if the user's own project grows beyond 3 distinct features with first-person ownership signals ("we need", "I want to add", "let's include")
+- Issues a single passive reminder at approximately 10 user turns if no transition has occurred and no closure signal is present
+- Produces a structured context summary when the user signals transition intent
 
-**Transition to planning when:**
+## What This Skill Does Not Do
 
-- ⚠️ Scope growing large (>3 features)
-- ⚠️ Ready to implement
-- ⚠️ Need structured breakdown
-
-## Usage
-
-```bash
-# Start vibe session (default mode in Claude Code)
-# Just start chatting naturally - no special command needed
-
-# When ready to plan:
-"let's plan this"
-"I want to implement this"
-"let's build this"
-```
-
-## Philosophy
-
-**CHILL:** Natural conversation, no pressure
-**SMART:** Detects planning opportunities (not annoying)
-**SMOOTH:** Easy transition with context preservation
-
-**Not like ChatGPT/Gemini:** No constant "want me to create?" interruptions
-
-## Key Behaviors
-
-### What wfc-vibe DOES
-
-- ✅ Respond naturally like normal chat
-- ✅ Track conversation context
-- ✅ Passive reminder every ~10 messages (8-12 randomized)
-- ✅ Detect when scope grows large (once per conversation)
-- ✅ Smooth transition with relevant context summary
-
-### What wfc-vibe DOESN'T DO
-
-- ❌ Force workflow transitions
-- ❌ Interrupt natural flow
-- ❌ Ask "want to plan?" constantly
-- ❌ Be pushy or eager about planning
-
-## Smart Detection
-
-Suggests planning when:
-
-- Multiple features mentioned (>3)
-- Architecture discussion detected
-- Many files mentioned (>5)
-- Complexity indicators ("refactor", "migrate", "system")
-
-**Max 1 suggestion per conversation** - not annoying
-
-## Transition Preview
-
-When you say "let's plan this":
-
-```
-📋 I'll help you plan this. Here's what I captured:
-
-Goal: Build a REST API for user management
-Features:
-  - User authentication
-  - Role-based access control
-  - Audit logging
-Estimated complexity: M
-
-Route to: wfc-build (simple) or wfc-plan (complex)?
-```
-
-## Configuration
-
-```json
-{
-  "vibe": {
-    "reminder_frequency": [8, 12],
-    "max_scope_suggestions": 1,
-    "context_summarization_timeout": 5000,
-    "transition_preview": true
-  }
-}
-```
-
-## Examples
-
-### Natural Brainstorming
-
-```
-You: I'm thinking about adding user authentication
-Claude: What kind of auth are you considering?
-You: JWT tokens, maybe with Redis for sessions
-Claude: Makes sense. How about the user model?
-You: Probably email, password hash, role
-...
-(after 10 messages)
-💡 *Tip: Say 'let's plan this' anytime to move to implementation*
-```
-
-### Scope Growing
-
-```
-You: We need auth, RBAC, audit logging, email notifications, webhooks
-Claude: 💭 *This is growing into a sizable project. Consider using /wfc-plan to structure it when ready.*
-```
-
-### Smooth Transition
-
-```
-You: let's plan this
-
-Claude:
-📋 I'll help you plan this. Here's what I captured:
-
-Goal: User management system with auth and RBAC
-Features: authentication, roles, audit logs, email
-Tech: JWT, Redis, PostgreSQL
-Complexity: M (2-3 agents)
-
-Ready to start with /wfc-build? (yes/no)
-```
-
-## Integration
-
-- **Transitions to:** wfc-build (simple) or wfc-plan (complex)
-- **Context:** Relevant info extracted automatically
-- **Telemetry:** Tracks vibe sessions, transitions, suggestions
+- Does not transfer control to wfc-plan or wfc-build programmatically
+- Does not track state across context truncations or session restarts; counter-based guarantees (scope suggestion once, reminder at ~10 turns) apply to a single uninterrupted session only
+- Does not emit telemetry
+- Does not size complexity or estimate agent counts — those fields are omitted from transition output
+- Does not trigger scope suggestions on

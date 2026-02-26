@@ -1,87 +1,93 @@
 ---
 name: wfc-newskill
-description: Meta-skill for creating new WFC skills. Conducts structured interview to understand skill requirements, generates skill prompt and SKILL.md structure, and optionally auto-builds implementation using wfc-plan → wfc-implement workflow. Use when extending WFC with new capabilities or creating custom workflow automations. Triggers on "create a new skill", "build a WFC skill for", "I want to add a skill that", or explicit /wfc-newskill. Ideal for WFC extension and custom automation. Not for general feature implementation or one-off scripts.
+description: >
+  Meta-skill for scaffolding a new, reusable WFC skill conforming to the
+  agentskills.io specification. Conducts a structured requirements interview,
+  produces a {skill-name}-prompt.md using the WFC skill template, and
+  optionally chains into wfc-plan → wfc-implement for full build-out.
+
+  INVOKE when the user's unambiguous intent is to CREATE A NEW, NAMED,
+  REUSABLE WFC SKILL that does not yet exist. Required signals: the user
+  must explicitly describe a new capability to be packaged as a WFC skill
+  file. Canonical phrases: "create a new WFC skill", "build a WFC skill for
+  [capability]", "I want to add a WFC skill that [does X]", "extend WFC with
+  a new skill", "/wfc-newskill".
+
+  DO NOT INVOKE for any request where the output is not a new
+  agentskills.io-spec skill file, or where the named skill already exists
+  in the registry. See "Not for" section below.
 license: MIT
 ---
 
 # WFC:NEWSKILL - Meta-Skill Builder
 
-The skill that builds skills. WFC builds itself.
+## Not for
 
-## What It Does
+- Implementing features, modules, or integrations in an existing codebase
+  — use wfc-implement. Indicator: output is application code, not a skill
+  file.
+- One-off scripts, cron jobs, or standalone automations whose output is not
+  a SKILL.md artifact.
+- Workflow design, process planning, or project decomposition — use
+  wfc-plan. Indicator: user's desired output is a plan or TASKS.md.
+- Modifying, refactoring, or debugging an existing WFC skill — use
+  wfc-implement. Indicator: target skill already exists by name.
+- Invoking or running an existing WFC skill. Indicator: user names a
+  specific existing skill rather than describing a new capability.
+- Re-scaffolding a skill whose name already exists in the WFC registry
+  without explicit --force flag.
+- Modifying WFC core infrastructure, routing logic, or registry mechanisms
+  — these are not addressable as skill files.
+- Any request where "skill" is used in everyday language to mean ability or
+  feature, not a WFC skill file artifact.
 
-1. **Interviews** user about the new skill (adaptive questioning)
-2. **Generates** Claude Code agentic prompt following WFC conventions
-3. **Optionally** auto-builds using `wfc-plan` → `wfc-implement`
+Scaffolds new WFC skills. Produces a spec-compliant prompt file and,
+optionally, builds and places the implementation.
 
 ## Usage
 
 ```bash
-# Interview mode - generate prompt only
+# Interview mode — produce prompt file only
 /wfc-newskill
 
-# Auto-build mode - generate and build
+# Auto-build mode — produce prompt file, then invoke wfc-plan → wfc-implement
 /wfc-newskill --build
-
-# Bootstrap from conversation
-/wfc-newskill --from-chat
 ```
 
-## Interview Domains
+**Removed flags**: `--from-chat` is not implemented. Do not attempt to
+infer requirements from conversation history.
 
-Gathers requirements across 8 skill dimensions:
+## Pre-flight Checks
 
-1. **Purpose & Trigger** - What does it do? Slash command name?
-2. **Input** - What does it receive?
-3. **Output** - What does it produce?
-4. **Agents** - Multi-agent or single-agent?
-5. **Integration** - Which WFC skills does it integrate with?
-6. **Configuration** - What's configurable?
-7. **Telemetry** - What should be tracked?
-8. **Properties** - Any formal properties?
+Before beginning the interview, verify:
 
-## Output
+1. Proposed skill name does not match any existing entry in the WFC skill
+   registry. If it does, halt and report the conflict. Do not proceed without
+   `--force`.
+2. If `--build` is specified, verify that `wfc-plan` and `wfc-implement` are
+   available as registered commands. If either is missing, downgrade to
+   interview-only mode and notify the user before proceeding.
 
-### Generated Prompt ({skill-name}-prompt.md)
+## Interview Process
 
-Complete Claude Code agentic prompt following WFC patterns:
+Ask the following questions in order. Questions marked **[required]** must
+receive a substantive answer before generation proceeds. If the user provides
+a non-answer ("I don't know", blank, or equivalent) to a required question,
+re-prompt once with a clarifying example. If still unresolved, halt and
+explain that generation cannot proceed without this information.
 
-- YAML front matter (name, description, user-invocable)
-- Purpose and usage
-- Inputs/outputs
-- Integration points
-- Configuration schema
-- Telemetry specification
-- ELEGANT/MULTI-TIER/PARALLEL philosophy
+Do not reorder, skip, or add questions beyond those listed. Do not describe
+this process as "adaptive."
 
-### Optional: Auto-Build
-
-When `--build` flag is used:
-
-1. Feeds prompt into `wfc-plan` → generates TASKS.md
-2. Feeds TASKS.md into `wfc-implement` → builds the skill
-3. Registers new skill as working slash command
-
-## Meta-Recursive Magic
-
-WFC can build itself:
-
-```bash
-# Build a new skill to analyze database schemas
-/wfc-newskill --build
-> What should this skill do?
-> "Analyze database schema and generate data models"
-
-[Interview...]
-
-[Auto-build using wfc-plan → wfc-implement...]
-
-# New skill is ready
-/wfc-db-schema path/to/schema.sql
-```
-
-## Philosophy
-
-**ELEGANT**: Simple interview, template-based generation
-**MULTI-TIER**: Interview → Generation → Build (clean layers)
-**PARALLEL**: Meta-recursive (builds itself)
+1. **[required] Purpose**: What should this skill do? Describe the
+   capability in one or two sentences.
+2. **[required] Trigger / Name**: What slash command name should invoke it?
+   (Format: `wfc-{name}`, alphanumeric and hyphens only, max 32 characters.)
+   Normalize the name to lowercase with hyphens; show the normalized name to
+   the user and confirm before continuing.
+3. **[required] Input**: What does the skill receive? (Files, flags,
+   arguments, stdin, none.)
+4. **[required] Output**: What does the skill produce? (Files written,
+   stdout, side effects, none.)
+5. **[optional] Agent structure**: Single-agent or multi-agent? If
+   multi-agent, how many agents and what are their roles?

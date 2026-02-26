@@ -1,6 +1,23 @@
 ---
 name: wfc-observe
-description: Observability instrumentation generator that derives monitoring from formal properties. Maps PROPERTIES.md (SAFETY, LIVENESS, PERFORMANCE) to concrete observables, generates metrics collectors, alert rules, and dashboard panel configurations. Use when implementing observability for new features or improving monitoring coverage. Triggers on "add observability", "generate monitoring", "create alerts from properties", or explicit /wfc-observe. Ideal for SRE work, production readiness, and proactive monitoring. Not for log analysis or incident investigation.
+description: >
+  Generates observability artifacts — metric stubs, alert rule skeletons, and
+  dashboard panel specs — by mapping formal property specifications to signals.
+
+  REQUIRED: A PROPERTIES.md with at least one SAFETY, LIVENESS, INVARIANT, or
+  PERFORMANCE property with explicit numeric bounds where thresholds are needed.
+  If absent, skill declines and offers to scaffold a PROPERTIES.md template.
+  Also requires target platform (Prometheus/Alertmanager, OpenTelemetry,
+  Datadog, or CloudWatch) and target language/metrics library.
+
+  INVOKE when user explicitly provides a PROPERTIES.md AND asks to derive
+  monitoring artifacts from it; a production readiness review requires
+  property-to-observable mapping; or user runs /wfc-observe with a properties
+  file present and platform context specified.
+
+  Not for: generic instrumentation without a formal property source; incident
+  investigation; post-incident gap analysis; log analysis; IaC for monitoring
+  infrastructure; reviewing existing artifacts.
 license: MIT
 ---
 

@@ -1,6 +1,21 @@
 ---
 name: wfc-export
-description: Multi-platform skill export that converts WFC skills into formats compatible with other AI coding tools. Supports OpenCode, Codex, Gemini CLI, GitHub Copilot, Kiro CLI, Cursor, and Factory Droid. Reads WFC skill SKILL.md files and generates platform-specific configurations. Triggers on "export skills", "convert for copilot", "sync to opencode", or explicit /wfc-export. Ideal when adopting WFC skills in multi-tool teams. Not for internal WFC development.
+description: >
+  Converts WFC-format SKILL.md files into platform-specific configs for
+  external AI coding tools (OpenCode, Codex, Gemini CLI, GitHub Copilot,
+  Kiro CLI, Cursor, Factory Droid). Requires WFC SKILL.md files to already
+  exist — does not create or edit them. Conversions may be lossy; warnings
+  surface dropped MCP servers, truncated descriptions, and unmapped tools.
+
+  TRIGGER when user wants to export a WFC SKILL.md to a named platform,
+  generate a platform config from an existing SKILL.md, sync WFC skills to
+  an external tool, or run /wfc-export [--to <platform>] [--all] [--dry-run]
+  [--skills <names>].
+
+  Not for: requests not originating from a WFC SKILL.md; converting scripts
+  or arbitrary code to platform formats; creating backups; importing external
+  configs into WFC format (one-directional: WFC SKILL.md → platform);
+  creating, editing, or linting WFC SKILL.md files.
 license: MIT
 ---
 
