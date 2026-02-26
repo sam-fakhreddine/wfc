@@ -77,7 +77,7 @@ jobs:
 
       - name: Install dependencies
         run: |
-          uv pip install --system -e ".[dev,mcp,api]"
+          uv pip install --system -e ".[dev,mcp,api,llm-validate]"
 
       - name: Install WFC skills
         run: |
