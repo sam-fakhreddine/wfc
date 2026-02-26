@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import os
+import threading
 
 try:
     import anthropic
@@ -15,9 +16,33 @@ _MODEL = "claude-sonnet-4-6"
 _THINKING_BUDGET = 8000
 _THINKING_BETA = "interleaved-thinking-2025-05-14"
 
+_usage_local = threading.local()
+
+
+def get_accumulated_usage() -> dict[str, int]:
+    """Return the accumulated token counts for the current thread.
+
+    Returns:
+        Dict with keys "input_tokens" and "output_tokens".
+    """
+    return {
+        "input_tokens": getattr(_usage_local, "input_tokens", 0),
+        "output_tokens": getattr(_usage_local, "output_tokens", 0),
+    }
+
+
+def reset_accumulated_usage() -> None:
+    """Reset the thread-local token accumulator to zero."""
+    _usage_local.input_tokens = 0
+    _usage_local.output_tokens = 0
+
 
 def call_api(prompt: str, system_prompt: str = "", use_thinking: bool = False) -> str:
     """Call the Anthropic API and return the text response.
+
+    Token usage is accumulated in a thread-local counter. Call
+    ``reset_accumulated_usage()`` before a run and ``get_accumulated_usage()``
+    after to read actual input/output token counts.
 
     Args:
         prompt: User message content.
@@ -64,5 +89,15 @@ def call_api(prompt: str, system_prompt: str = "", use_thinking: bool = False) -
         response = client.beta.messages.create(betas=[_THINKING_BETA], **kwargs)
     else:
         response = client.messages.create(**kwargs)
+
+    try:
+        _usage_local.input_tokens = (
+            getattr(_usage_local, "input_tokens", 0) + response.usage.input_tokens
+        )
+        _usage_local.output_tokens = (
+            getattr(_usage_local, "output_tokens", 0) + response.usage.output_tokens
+        )
+    except AttributeError:
+        pass
 
     return "".join(block.text for block in response.content if block.type == "text")

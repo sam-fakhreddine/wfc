@@ -26,10 +26,12 @@ def _make_thinking_block(summary: str):
     return block
 
 
-def _make_response(*blocks):
+def _make_response(*blocks, input_tokens: int = 100, output_tokens: int = 50):
     """Return a mock Anthropic Messages response with the given content blocks."""
     response = mock.MagicMock()
     response.content = list(blocks)
+    response.usage.input_tokens = input_tokens
+    response.usage.output_tokens = output_tokens
     return response
 
 
@@ -263,6 +265,80 @@ class TestExtendedThinking:
                 result = api_client.call_api("prompt")
 
         assert result == "Hello world"
+
+
+class TestTokenAccumulator:
+    def test_reset_clears_counts(self):
+        """reset_accumulated_usage sets both counters to zero."""
+        from wfc.scripts.orchestrators.skill_validator_llm.api_client import (
+            get_accumulated_usage,
+            reset_accumulated_usage,
+        )
+
+        reset_accumulated_usage()
+        assert get_accumulated_usage() == {"input_tokens": 0, "output_tokens": 0}
+
+    def test_call_api_accumulates_tokens(self):
+        """call_api adds response.usage counts to the thread-local accumulator."""
+        from wfc.scripts.orchestrators.skill_validator_llm import api_client
+
+        response = _make_response(_make_text_block("hello"), input_tokens=120, output_tokens=60)
+        api_client.reset_accumulated_usage()
+
+        with mock.patch.dict("os.environ", {"ANTHROPIC_SKILLS_VALIDATOR": "test-key"}):
+            with mock.patch(
+                "wfc.scripts.orchestrators.skill_validator_llm.api_client.anthropic.Anthropic"
+            ) as MockClient:
+                instance = MockClient.return_value
+                instance.messages.create.return_value = response
+                api_client.call_api("prompt")
+
+        usage = api_client.get_accumulated_usage()
+        assert usage["input_tokens"] == 120
+        assert usage["output_tokens"] == 60
+
+    def test_accumulates_across_multiple_calls(self):
+        """Token counts accumulate across successive call_api calls in the same thread."""
+        from wfc.scripts.orchestrators.skill_validator_llm import api_client
+
+        response = _make_response(_make_text_block("hello"), input_tokens=100, output_tokens=50)
+        api_client.reset_accumulated_usage()
+
+        with mock.patch.dict("os.environ", {"ANTHROPIC_SKILLS_VALIDATOR": "test-key"}):
+            with mock.patch(
+                "wfc.scripts.orchestrators.skill_validator_llm.api_client.anthropic.Anthropic"
+            ) as MockClient:
+                instance = MockClient.return_value
+                instance.messages.create.return_value = response
+                api_client.call_api("prompt1")
+                api_client.call_api("prompt2")
+
+        usage = api_client.get_accumulated_usage()
+        assert usage["input_tokens"] == 200
+        assert usage["output_tokens"] == 100
+
+    def test_missing_usage_attribute_does_not_raise(self):
+        """If response.usage is missing, call_api logs a best-effort zero and does not raise."""
+        from wfc.scripts.orchestrators.skill_validator_llm import api_client
+
+        response = mock.MagicMock()
+        response.content = [_make_text_block("result")]
+        del response.usage
+
+        api_client.reset_accumulated_usage()
+
+        with mock.patch.dict("os.environ", {"ANTHROPIC_SKILLS_VALIDATOR": "test-key"}):
+            with mock.patch(
+                "wfc.scripts.orchestrators.skill_validator_llm.api_client.anthropic.Anthropic"
+            ) as MockClient:
+                instance = MockClient.return_value
+                instance.messages.create.return_value = response
+                result = api_client.call_api("prompt")
+
+        assert result == "result"
+        usage = api_client.get_accumulated_usage()
+        assert usage["input_tokens"] == 0
+        assert usage["output_tokens"] == 0
 
 
 class TestFixtureFiles:

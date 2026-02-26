@@ -18,6 +18,7 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 from pathlib import Path
 from typing import Callable, TypeVar
 
+from .api_client import get_accumulated_usage, reset_accumulated_usage
 from .report_writer import get_branch, write_stage_report, write_summary_report
 from .skill_reader import parse_frontmatter, resolve_repo_name
 from .stages import run_discovery, run_edge_case, run_logic, run_refinement
@@ -75,7 +76,10 @@ def retry_with_backoff(
                 raise
             last_exc = exc
             if attempt < max_retries - 1:
-                delay = base_delay * (2**attempt) + random.uniform(0, 0.5)
+                if "RateLimit" in type(exc).__name__:
+                    delay = 60.0 + random.uniform(0, 10.0)
+                else:
+                    delay = base_delay * (2**attempt) + random.uniform(0, 0.5)
                 time.sleep(delay)
 
     if last_exc is None:  # pragma: no cover — impossible but makes type-checker happy
@@ -114,19 +118,26 @@ def _validate_skill(
     skill_path: Path,
     stages: list[str],
     offline: bool,
+    after_stage: Callable[[str, str], None] | None = None,
 ) -> dict[str, str]:
     """Run LLM validation for one skill across the given stages.
+
+    Each stage is run in order. If ``after_stage`` is provided it is called
+    immediately after each stage completes with ``(stage_name, report_content)``,
+    allowing callers to flush reports to disk before the next stage reads them.
 
     Args:
         skill_path: Path to the skill directory.
         stages: List of stage names to run in order.
         offline: If True, use offline stubs (no API calls).
+        after_stage: Optional callback invoked after each stage with
+            ``(stage_name, report_content)``.
 
     Returns:
         Dict mapping stage name to report content string.
         On stage failure, remaining stages are skipped; the error is re-raised.
     """
-    _STAGE_RUNNERS = {
+    _stage_runners: dict[str, Callable] = {
         "discovery": run_discovery,
         "logic": run_logic,
         "edge_case": run_edge_case,
@@ -134,11 +145,13 @@ def _validate_skill(
     }
     results: dict[str, str] = {}
     for stage in stages:
-        runner = _STAGE_RUNNERS[stage]
+        runner = _stage_runners[stage]
         if offline:
             print(f"[OFFLINE] {stage}: {skill_path.name}")
         report = runner(skill_path, offline=offline)
         results[stage] = report
+        if after_stage is not None:
+            after_stage(stage, report)
     return results
 
 
@@ -237,24 +250,30 @@ def main(argv: list[str] | None = None) -> int:
             print("[DRY-RUN] No API calls will be made.")
             return 0
 
-        def _run() -> dict[str, str]:
-            return _validate_skill(skill_path, stages_to_run, offline=args.offline)
+        reset_accumulated_usage()
+        written_single: list[Path] = []
 
-        try:
-            stage_reports = retry_with_backoff(_run)
-        except Exception as exc:  # noqa: BLE001
-            print(f"Error validating {skill_path.name}: {exc}", file=sys.stderr)
-            return 1
-
-        for stage, report_content in stage_reports.items():
-            report_path = write_stage_report(
+        def _flush_single(stage: str, report_content: str) -> None:
+            path = write_stage_report(
                 skill_name=skill_path.name,
                 stage=stage,
                 report_content=report_content,
                 repo=repo,
                 branch=branch,
             )
-            print(f"Report written: {report_path}")
+            written_single.append(path)
+            print(f"Report written: {path}")
+
+        def _run() -> dict[str, str]:
+            return _validate_skill(
+                skill_path, stages_to_run, offline=args.offline, after_stage=_flush_single
+            )
+
+        try:
+            stage_reports = retry_with_backoff(_run)
+        except Exception as exc:  # noqa: BLE001
+            print(f"Error validating {skill_path.name}: {exc}", file=sys.stderr)
+            return 1
 
         if "refinement" in stage_reports:
             health_score = _extract_health_score(stage_reports["refinement"])
@@ -266,6 +285,11 @@ def main(argv: list[str] | None = None) -> int:
                 )
                 print(f"Summary written: {summary_path}")
 
+        usage = get_accumulated_usage()
+        in_tok = usage.get("input_tokens", 0)
+        out_tok = usage.get("output_tokens", 0)
+        cost = in_tok * _INPUT_RATE_PER_TOKEN + out_tok * _OUTPUT_RATE_PER_TOKEN
+        print(f"Tokens — input: {in_tok:,}  output: {out_tok:,}  (~${cost:.4f})")
         return 0
 
     skill_dirs = _find_skill_dirs(_SKILLS_ROOT)
@@ -302,34 +326,57 @@ def main(argv: list[str] | None = None) -> int:
     errors: list[tuple[str, Exception]] = []
     reports: list[Path] = []
     summary_entries: list[dict] = []
+    total_input = 0
+    total_output = 0
 
-    def _run_one(sd: Path) -> tuple[str, dict[str, str], float | None]:
-        stage_results = retry_with_backoff(
-            lambda: _validate_skill(sd, stages_to_run, offline=args.offline)
-        )
+    def _run_one(sd: Path) -> tuple[str, list[Path], float | None, dict[str, int]]:
+        reset_accumulated_usage()
+        written: list[Path] = []
+        stage_results: dict[str, str] = {}
+
+        _stage_runners_local: dict[str, Callable] = {
+            "discovery": run_discovery,
+            "logic": run_logic,
+            "edge_case": run_edge_case,
+            "refinement": run_refinement,
+        }
+
+        for stage in stages_to_run:
+            runner = _stage_runners_local[stage]
+            report = retry_with_backoff(lambda r=runner: r(sd, offline=args.offline))
+            stage_results[stage] = report
+            path = write_stage_report(
+                skill_name=sd.name,
+                stage=stage,
+                report_content=report,
+                repo=repo,
+                branch=branch,
+            )
+            written.append(path)
+
         health_score = None
         if "refinement" in stage_results:
             health_score = _extract_health_score(stage_results["refinement"])
-        return sd.name, stage_results, health_score
+        usage = get_accumulated_usage()
+        return sd.name, written, health_score, usage
 
     with ThreadPoolExecutor(max_workers=_MAX_WORKERS) as executor:
         future_to_skill = {executor.submit(_run_one, sd): sd for sd in skill_dirs}
         for future in as_completed(future_to_skill):
             sd = future_to_skill[future]
             try:
-                skill_name, stage_results, health_score = future.result()
-                for stage, report_content in stage_results.items():
-                    report_path = write_stage_report(
-                        skill_name=skill_name,
-                        stage=stage,
-                        report_content=report_content,
-                        repo=repo,
-                        branch=branch,
-                    )
-                    reports.append(report_path)
+                skill_name, written, health_score, usage = future.result()
+                reports.extend(written)
+                in_tok = usage.get("input_tokens", 0)
+                out_tok = usage.get("output_tokens", 0)
+                total_input += in_tok
+                total_output += out_tok
                 if health_score is not None:
                     summary_entries.append({"skill": skill_name, "score": health_score})
-                print(f"OK  {skill_name}: {len(stage_results)} stage(s) written")
+                print(
+                    f"OK  {skill_name}: {len(written)} stage(s) written"
+                    f"  [in={in_tok:,} out={out_tok:,}]"
+                )
             except Exception as exc:  # noqa: BLE001
                 errors.append((sd.name, exc))
                 print(f"ERR {sd.name}: {exc}", file=sys.stderr)
@@ -344,7 +391,11 @@ def main(argv: list[str] | None = None) -> int:
         summary_path = write_summary_report(summary_entries, repo=repo, branch=branch)
         print(f"Summary written: {summary_path}")
 
-    print(f"\n{len(reports)} report(s) written for {len(skill_dirs)} skill(s).")
+    actual_cost = total_input * _INPUT_RATE_PER_TOKEN + total_output * _OUTPUT_RATE_PER_TOKEN
+    print(
+        f"\nTotal tokens — input: {total_input:,}  output: {total_output:,}  (~${actual_cost:.4f})"
+    )
+    print(f"{len(reports)} report(s) written for {len(skill_dirs)} skill(s).")
     return 0
 
 

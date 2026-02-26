@@ -185,6 +185,32 @@ def test_retry_with_backoff_exhausts_retries_and_raises() -> None:
             retry_with_backoff(fn, max_retries=3, base_delay=0.0)
 
 
+def test_retry_with_backoff_rate_limit_uses_long_delay() -> None:
+    """RateLimitError triggers a 60s+ sleep instead of the short exponential backoff."""
+    sleep_calls: list[float] = []
+
+    class FakeRateLimitError(Exception):
+        pass
+
+    FakeRateLimitError.__name__ = "RateLimitError"
+
+    call_count = 0
+
+    def fn() -> str:
+        nonlocal call_count
+        call_count += 1
+        if call_count == 1:
+            raise FakeRateLimitError("rate limit")
+        return "ok"
+
+    with mock.patch("time.sleep", side_effect=lambda d: sleep_calls.append(d)):
+        result = retry_with_backoff(fn, max_retries=3, base_delay=1.0)
+
+    assert result == "ok"
+    assert len(sleep_calls) == 1
+    assert sleep_calls[0] >= 60.0
+
+
 def test_retry_with_backoff_connection_error_retried() -> None:
     call_count = 0
 
@@ -250,6 +276,18 @@ def test_parser_mutually_exclusive_skill_path_and_all(capsys) -> None:
     parser = _build_parser()
     with pytest.raises(SystemExit):
         parser.parse_args(["/some/path", "--all"])
+
+
+def _make_validate_side_effect(results: dict):
+    """Return a side_effect for _validate_skill that invokes the after_stage callback."""
+
+    def side_effect(skill_path, stages, offline, after_stage=None):
+        for stage in stages:
+            if stage in results and after_stage is not None:
+                after_stage(stage, results[stage])
+        return {s: results[s] for s in stages if s in results}
+
+    return side_effect
 
 
 def _make_skill(root: Path, name: str) -> Path:
@@ -335,12 +373,6 @@ def test_main_all_yes_writes_reports(tmp_path: Path, capsys) -> None:
     skills_root = tmp_path / "skills"
     _make_skill(skills_root, "wfc-alpha")
 
-    stage_results = {
-        "discovery": "disc report",
-        "logic": "logic report",
-        "edge_case": "edge report",
-    }
-
     with (
         mock.patch(
             "wfc.scripts.orchestrators.skill_validator_llm.cli._SKILLS_ROOT",
@@ -359,14 +391,26 @@ def test_main_all_yes_writes_reports(tmp_path: Path, capsys) -> None:
             return_value=tmp_path / "report.md",
         ) as mock_write,
         mock.patch(
-            "wfc.scripts.orchestrators.skill_validator_llm.cli._validate_skill",
-            return_value=stage_results,
+            "wfc.scripts.orchestrators.skill_validator_llm.cli.run_discovery",
+            return_value="disc report",
+        ),
+        mock.patch(
+            "wfc.scripts.orchestrators.skill_validator_llm.cli.run_logic",
+            return_value="logic report",
+        ),
+        mock.patch(
+            "wfc.scripts.orchestrators.skill_validator_llm.cli.run_edge_case",
+            return_value="edge report",
+        ),
+        mock.patch(
+            "wfc.scripts.orchestrators.skill_validator_llm.cli.run_refinement",
+            return_value="refinement report",
         ),
     ):
         rc = main(["--all", "--yes"])
 
     assert rc == 0
-    assert mock_write.call_count == 3
+    assert mock_write.call_count == 4
 
 
 def test_main_all_no_skills_returns_1(tmp_path: Path) -> None:
@@ -444,7 +488,7 @@ def test_stage_flag_discovery_only(tmp_path: Path, capsys) -> None:
         ) as mock_write,
         mock.patch(
             "wfc.scripts.orchestrators.skill_validator_llm.cli._validate_skill",
-            return_value={"discovery": "disc report"},
+            side_effect=_make_validate_side_effect({"discovery": "disc report"}),
         ),
     ):
         rc = main([str(skill_dir), "--stage", "discovery"])
@@ -540,7 +584,7 @@ def test_full_pipeline_writes_three_reports(tmp_path: Path, capsys) -> None:
         ) as mock_write,
         mock.patch(
             "wfc.scripts.orchestrators.skill_validator_llm.cli._validate_skill",
-            return_value=stage_results,
+            side_effect=_make_validate_side_effect(stage_results),
         ),
     ):
         rc = main([str(skill_dir)])
@@ -605,7 +649,9 @@ def test_stage_flag_refinement_valid(tmp_path: Path) -> None:
         ) as mock_summary,
         mock.patch(
             "wfc.scripts.orchestrators.skill_validator_llm.cli._validate_skill",
-            return_value={"refinement": "Health Score: 6.0 / 10\ndetails"},
+            side_effect=_make_validate_side_effect(
+                {"refinement": "Health Score: 6.0 / 10\ndetails"}
+            ),
         ),
     ):
         rc = main([str(skill_dir), "--stage", "refinement"])
@@ -646,7 +692,9 @@ def test_single_skill_refinement_writes_summary(tmp_path: Path, capsys) -> None:
         ) as mock_summary,
         mock.patch(
             "wfc.scripts.orchestrators.skill_validator_llm.cli._validate_skill",
-            return_value={"refinement": "Health Score: 7.3 / 10\ndetails"},
+            side_effect=_make_validate_side_effect(
+                {"refinement": "Health Score: 7.3 / 10\ndetails"}
+            ),
         ),
     ):
         rc = main([str(skill_dir), "--stage", "refinement"])
@@ -683,7 +731,7 @@ def test_single_skill_no_refinement_no_summary(tmp_path: Path) -> None:
         ) as mock_summary,
         mock.patch(
             "wfc.scripts.orchestrators.skill_validator_llm.cli._validate_skill",
-            return_value={"discovery": "disc report"},
+            side_effect=_make_validate_side_effect({"discovery": "disc report"}),
         ),
     ):
         rc = main([str(skill_dir), "--stage", "discovery"])
@@ -697,8 +745,6 @@ def test_main_all_yes_with_refinement_writes_summary(tmp_path: Path, capsys) -> 
     skills_root = tmp_path / "skills"
     _make_skill(skills_root, "wfc-alpha")
     _make_skill(skills_root, "wfc-beta")
-
-    stage_results = {"refinement": "Health Score: 8.0 / 10\ndetails"}
 
     with (
         mock.patch(
@@ -722,8 +768,8 @@ def test_main_all_yes_with_refinement_writes_summary(tmp_path: Path, capsys) -> 
             return_value=tmp_path / "summary.md",
         ) as mock_summary,
         mock.patch(
-            "wfc.scripts.orchestrators.skill_validator_llm.cli._validate_skill",
-            return_value=stage_results,
+            "wfc.scripts.orchestrators.skill_validator_llm.cli.run_refinement",
+            return_value="Health Score: 8.0 / 10\ndetails",
         ),
     ):
         rc = main(["--all", "--yes", "--stage", "refinement"])
@@ -741,8 +787,6 @@ def test_main_all_yes_discovery_only_no_summary(tmp_path: Path) -> None:
     """--all --yes --stage discovery does NOT call write_summary_report."""
     skills_root = tmp_path / "skills"
     _make_skill(skills_root, "wfc-alpha")
-
-    stage_results = {"discovery": "disc report"}
 
     with (
         mock.patch(
@@ -765,8 +809,8 @@ def test_main_all_yes_discovery_only_no_summary(tmp_path: Path) -> None:
             "wfc.scripts.orchestrators.skill_validator_llm.cli.write_summary_report",
         ) as mock_summary,
         mock.patch(
-            "wfc.scripts.orchestrators.skill_validator_llm.cli._validate_skill",
-            return_value=stage_results,
+            "wfc.scripts.orchestrators.skill_validator_llm.cli.run_discovery",
+            return_value="disc report",
         ),
     ):
         rc = main(["--all", "--yes", "--stage", "discovery"])
