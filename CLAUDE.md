@@ -49,18 +49,25 @@ uv run pytest tests/test_file.py -v  # single test file
 ## Architecture
 
 ```
-wfc/
-├── scripts/orchestrators/   # review, build, claude_md pipelines
+wfc/                         # Repo — source code only
+├── scripts/orchestrators/   # Python orchestration (review, build, vibe)
 ├── scripts/hooks/           # PreToolUse/PostToolUse infrastructure
 ├── scripts/knowledge/       # RAG knowledge system
-├── references/reviewers/    # 5 reviewer PROMPT.md + KNOWLEDGE.md
-├── gitwork/                 # git operations (worktree-manager.sh)
+├── references/reviewers/    # 5 reviewer PROMPT.md + KNOWLEDGE.md (file I/O, NOT Python imports)
+├── gitwork/                 # git operations via worktree-manager.sh
 └── skills/                  # Agent Skills packages
 
-~/.claude/skills/wfc-*/      # 30 installed skills
+~/.claude/skills/wfc-*/      # 33 installed skills
+
+~/.wfc/projects/{repo}/branches/{branch}/   # Dev artifacts (Documentation is Infrastructure)
+├── plans/                   # Timestamped plan directories
+├── reviews/                 # wfc-review artifacts
+├── ba/                      # Business analysis documents
+├── experiments/             # Spikes, proofs-of-concept, explorations
+└── docs/                    # All generated documentation
 ```
 
-**Review:** 5 fixed reviewers (Security, Correctness, Performance, Maintainability, Reliability).
+**Review:** 5 fixed reviewers (Security, Correctness, Performance, Maintainability, Reliability). NOT dynamically selected, NOT 56 personas.
 CS formula: `(0.5 × R̄) + (0.3 × R̄ × k/n) + (0.2 × R_max)`. MPR: if R_max ≥ 8.5 from Security/Reliability → CS elevated.
 
 ## Absolute Rules
@@ -71,7 +78,8 @@ CS formula: `(0.5 × R̄) + (0.3 × R̄ × k/n) + (0.2 × R_max)`. MPR: if R_max
 - **Code:** `make format` before commit. `make check-all` before PR. Never commit failing tests. Never skip pre-commit hooks.
 - **Worktrees:** `bash wfc/gitwork/scripts/worktree-manager.sh create <name>`. Never bare `git worktree add`.
 - **Knowledge:** `/wfc-compound` after solving non-trivial problems (>15 min).
-- **Workspace:** Dev artifacts in `.development/` (gitignored). Never commit summaries or scratch notes.
+- **Workspace:** All dev artifacts in `~/.wfc/projects/{repo}/branches/{branch}/` — plans, reviews, ba, experiments, docs. Never commit dev artifacts to the repo. **Documentation is Infrastructure** — never discard generated docs; store them in `~/.wfc`.
+- **Experiments:** Spikes and proofs-of-concept go to `~/.wfc/projects/{repo}/branches/{branch}/experiments/`. Never in the repo root or `.development/`.
 - **Tokens:** Never send full file content to reviewers. Always use file reference architecture.
 - **Parallel Execution:** Use parallel Task calls in single message when agents are independent. Follow PARALLEL principle from WFC philosophy.
 
