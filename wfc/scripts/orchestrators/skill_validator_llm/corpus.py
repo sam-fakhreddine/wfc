@@ -100,7 +100,7 @@ def append_entries(corpus_path: Path, new_entries: list[dict]) -> None:
     corpus = load_corpus(corpus_path)
 
     index: dict[tuple, dict] = {}
-    for entry in corpus["entries"]:
+    for entry in corpus.get("entries", []):
         key: tuple = (entry["message"], entry["skill"], entry["routing_label"])
         index[key] = entry
 

@@ -77,7 +77,7 @@ def test_validate_skill_uses_template_when_present(tmp_path: Path) -> None:
     (skill_dir / "SKILL.md").write_text("---\nname: wfc-test\ndescription: Test desc.\n---\n")
     tmpl_dir = skill_dir / "assets" / "templates"
     tmpl_dir.mkdir(parents=True)
-    (tmpl_dir / "discovery-prompt.txt").write_text("name: {skill_name}\ndesc: {description}\n")
+    (tmpl_dir / "discovery-prompt.txt").write_text("name: ${skill_name}\ndesc: ${description}\n")
 
     result = _validate_skill(skill_dir, stage="discovery", dry_run=True)
 

@@ -11,6 +11,7 @@ from __future__ import annotations
 
 import argparse
 import random
+import string
 import sys
 import time
 from concurrent.futures import ThreadPoolExecutor, as_completed
@@ -20,7 +21,7 @@ from typing import Callable, TypeVar
 from .report_writer import get_branch, write_report
 from .skill_reader import parse_frontmatter, resolve_repo_name
 
-_SKILLS_ROOT = Path(__file__).parents[4] / "skills"
+_SKILLS_ROOT = Path(__file__).parents[3] / "skills"
 _INPUT_RATE_PER_TOKEN = 0.000003
 _MAX_WORKERS = 5
 
@@ -72,7 +73,8 @@ def retry_with_backoff(
                 delay = base_delay * (2**attempt) + random.uniform(0, 0.5)
                 time.sleep(delay)
 
-    assert last_exc is not None
+    if last_exc is None:  # pragma: no cover — impossible but makes type-checker happy
+        raise RuntimeError("retry_with_backoff: exhausted retries but no exception captured")
     raise last_exc
 
 
@@ -117,16 +119,18 @@ def _validate_skill(
 
     template_path = skill_path / "assets" / "templates" / "discovery-prompt.txt"
     if template_path.exists():
-        template = template_path.read_text(encoding="utf-8")
-        prompt = template.format(skill_name=skill_name, description=description)
+        raw_template = template_path.read_text(encoding="utf-8")
+        prompt = string.Template(raw_template).safe_substitute(
+            skill_name=skill_name, description=description
+        )
     else:
         prompt = f"name: {skill_name}\ndescription: {description}\n\nStage: {stage}\n"
 
     if dry_run:
-        print(f"[DRY-RUN stub] Would call API for {skill_name}")
+        print(f"[DRY-RUN] Would call API for {skill_name}")
         return f"# DRY-RUN: {skill_name}\n\nPrompt length: {len(prompt)} chars\n"
 
-    print(f"[DRY-RUN stub] Would call API for {skill_name}")
+    print(f"[STUB] Would call API for {skill_name}")
     return f"# STUB: {skill_name}\n\nPrompt length: {len(prompt)} chars\n"
 
 
