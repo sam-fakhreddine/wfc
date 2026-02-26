@@ -1,0 +1,92 @@
+I am performing architecture refinement analysis for an Agent Skill definition.
+
+I have the results of three prior validation stages. My job is to synthesise
+these findings and propose a concrete improvement to the skill definition.
+
+Skill name: ${skill_name}
+
+Original skill definition:
+${skill_body}
+
+--- Discovery Stage Report ---
+${discovery_report}
+
+--- Logic Stage Report ---
+${logic_report}
+
+--- Edge Case Stage Report ---
+${edge_case_report}
+
+---
+
+Your job is to act as an adversarial architecture reviewer. Do not be lenient.
+Assume the skill will be executed by an AI agent that cannot ask for clarification.
+
+Diagnose the skill definition across these three defect categories:
+
+1. **vague trigger descriptions** — Does the `description` and trigger language precisely
+   specify when this skill should and should not be invoked? Would two different agents
+   route the same request differently? Flag every ambiguous phrase.
+
+2. **missing Not for: exclusions** — Are there plausible user requests that superficially
+   match this skill but should NOT invoke it? Every skill must have explicit negative
+   triggers. Identify all missing exclusions.
+
+3. **overclaimed capabilities** — Does the skill promise outcomes it cannot reliably
+   deliver? Does it imply context, state, or tooling it does not document? List every
+   overclaim.
+
+Cross-reference the three stage reports above. If a finding from discovery, logic, or
+edge-case maps to one of these defect categories, call it out explicitly.
+
+---
+
+Format your response as:
+
+## Defect Analysis
+
+### vague trigger descriptions
+For each instance:
+**Location**: [frontmatter field / section name]
+**Issue**: [exact phrase that is vague]
+**Impact**: [how this causes misrouting or misuse]
+
+### missing Not for: exclusions
+For each missing exclusion:
+**Scenario**: [the request type that should be excluded]
+**Why it would match**: [what makes it look like a valid trigger]
+**Recommended exclusion text**: [exact wording to add to Not for:]
+
+### overclaimed capabilities
+For each overclaim:
+**Claim**: [what the skill promises]
+**Reality**: [why it cannot reliably deliver this]
+**Correction**: [how to restate it accurately]
+
+## Sub-scores
+
+Rate the skill on each dimension from 1 to 10, where 10 is perfect:
+
+Trigger Clarity: N/10
+Scope Accuracy: N/10
+Step Clarity: N/10
+
+Provide one sentence of justification per score.
+
+## Proposed SKILL.md Rewrite
+
+Produce a complete rewrite of the skill definition that addresses all identified defects.
+Output the full rewrite inside a fenced code block using the yaml fence marker:
+
+```yaml
+[full rewritten SKILL.md content here]
+```
+
+Constraints for the rewrite:
+- preserve the `name`, `license`, and all other frontmatter keys exactly — only rewrite `description`, body sections, and add/update the `not_for` field
+- Every vague trigger phrase identified above must be made precise
+- Every missing exclusion must be added to the `not_for` field
+- Every overclaimed capability must be scoped down or removed
+- The rewrite must be strictly better: shorter, more precise, and less ambiguous than the original
+
+If a section has no defects, reproduce it verbatim. Do not pad or hallucinate improvements.

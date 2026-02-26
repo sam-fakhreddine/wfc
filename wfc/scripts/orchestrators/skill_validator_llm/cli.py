@@ -11,19 +11,20 @@ from __future__ import annotations
 
 import argparse
 import random
+import re
 import sys
 import time
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from pathlib import Path
 from typing import Callable, TypeVar
 
-from .report_writer import get_branch, write_stage_report
+from .report_writer import get_branch, write_stage_report, write_summary_report
 from .skill_reader import parse_frontmatter, resolve_repo_name
-from .stages import run_discovery, run_edge_case, run_logic
+from .stages import run_discovery, run_edge_case, run_logic, run_refinement
 
 _SKILLS_ROOT = Path(__file__).parents[3] / "skills"
-_VALID_STAGES: frozenset[str] = frozenset({"discovery", "logic", "edge_case"})
-_ALL_STAGES: list[str] = ["discovery", "logic", "edge_case"]
+_VALID_STAGES: frozenset[str] = frozenset({"discovery", "logic", "edge_case", "refinement"})
+_ALL_STAGES: list[str] = ["discovery", "logic", "edge_case", "refinement"]
 _INPUT_RATE_PER_TOKEN = 0.000003
 _OUTPUT_RATE_PER_TOKEN = 0.000015
 _EST_OUTPUT_MULTIPLIER = 0.5
@@ -98,6 +99,17 @@ def _find_skill_dirs(skills_root: Path) -> list[Path]:
     return sorted(p for p in skills_root.iterdir() if p.is_dir() and (p / "SKILL.md").exists())
 
 
+def _extract_health_score(report: str) -> float | None:
+    """Extract health score from a refinement report string.
+
+    Returns the float score (e.g. 7.3) or None if the header is absent.
+    """
+    m = re.search(r"Health Score:\s*(\d+(?:\.\d+)?)\s*/\s*10", report)
+    if m:
+        return float(m.group(1))
+    return None
+
+
 def _validate_skill(
     skill_path: Path,
     stages: list[str],
@@ -118,6 +130,7 @@ def _validate_skill(
         "discovery": run_discovery,
         "logic": run_logic,
         "edge_case": run_edge_case,
+        "refinement": run_refinement,
     }
     results: dict[str, str] = {}
     for stage in stages:
@@ -150,7 +163,7 @@ def _build_parser() -> argparse.ArgumentParser:
     parser.add_argument(
         "--stage",
         default=None,
-        help="Validation stage to run: discovery, logic, edge_case. Default: run all stages.",
+        help="Validation stage to run: discovery, logic, edge_case, refinement. Default: run all stages.",
     )
     parser.add_argument(
         "--offline",
@@ -242,6 +255,17 @@ def main(argv: list[str] | None = None) -> int:
                 branch=branch,
             )
             print(f"Report written: {report_path}")
+
+        if "refinement" in stage_reports:
+            health_score = _extract_health_score(stage_reports["refinement"])
+            if health_score is not None:
+                summary_path = write_summary_report(
+                    [{"skill": skill_path.name, "score": health_score}],
+                    repo=repo,
+                    branch=branch,
+                )
+                print(f"Summary written: {summary_path}")
+
         return 0
 
     skill_dirs = _find_skill_dirs(_SKILLS_ROOT)
@@ -277,19 +301,23 @@ def main(argv: list[str] | None = None) -> int:
 
     errors: list[tuple[str, Exception]] = []
     reports: list[Path] = []
+    summary_entries: list[dict] = []
 
-    def _run_one(sd: Path) -> tuple[str, dict[str, str]]:
+    def _run_one(sd: Path) -> tuple[str, dict[str, str], float | None]:
         stage_results = retry_with_backoff(
             lambda: _validate_skill(sd, stages_to_run, offline=args.offline)
         )
-        return sd.name, stage_results
+        health_score = None
+        if "refinement" in stage_results:
+            health_score = _extract_health_score(stage_results["refinement"])
+        return sd.name, stage_results, health_score
 
     with ThreadPoolExecutor(max_workers=_MAX_WORKERS) as executor:
         future_to_skill = {executor.submit(_run_one, sd): sd for sd in skill_dirs}
         for future in as_completed(future_to_skill):
             sd = future_to_skill[future]
             try:
-                skill_name, stage_results = future.result()
+                skill_name, stage_results, health_score = future.result()
                 for stage, report_content in stage_results.items():
                     report_path = write_stage_report(
                         skill_name=skill_name,
@@ -299,6 +327,8 @@ def main(argv: list[str] | None = None) -> int:
                         branch=branch,
                     )
                     reports.append(report_path)
+                if health_score is not None:
+                    summary_entries.append({"skill": skill_name, "score": health_score})
                 print(f"OK  {skill_name}: {len(stage_results)} stage(s) written")
             except Exception as exc:  # noqa: BLE001
                 errors.append((sd.name, exc))
@@ -309,6 +339,10 @@ def main(argv: list[str] | None = None) -> int:
         for skill_name, exc in errors:
             print(f"  - {skill_name}: {exc}", file=sys.stderr)
         return 1
+
+    if summary_entries:
+        summary_path = write_summary_report(summary_entries, repo=repo, branch=branch)
+        print(f"Summary written: {summary_path}")
 
     print(f"\n{len(reports)} report(s) written for {len(skill_dirs)} skill(s).")
     return 0

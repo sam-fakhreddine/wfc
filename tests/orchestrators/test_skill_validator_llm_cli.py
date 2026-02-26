@@ -8,9 +8,11 @@ from unittest import mock
 import pytest
 
 from wfc.scripts.orchestrators.skill_validator_llm.cli import (
+    _ALL_STAGES,
     _build_parser,
     _estimate_cost,
     _estimate_tokens,
+    _extract_health_score,
     _find_skill_dirs,
     _validate_skill,
     main,
@@ -545,3 +547,253 @@ def test_full_pipeline_writes_three_reports(tmp_path: Path, capsys) -> None:
 
     assert rc == 0
     assert mock_write.call_count == 3
+
+
+def test_all_stages_includes_refinement() -> None:
+    """_ALL_STAGES must list all 4 stages with refinement last."""
+    assert _ALL_STAGES == ["discovery", "logic", "edge_case", "refinement"]
+
+
+def test_extract_health_score_valid() -> None:
+    """Parses a well-formed Health Score header and returns the float."""
+    report = "## Analysis\n\nHealth Score: 7.3 / 10\n\nSome more text."
+    assert _extract_health_score(report) == 7.3
+
+
+def test_extract_health_score_integer_value() -> None:
+    """Health Score header with an integer value (e.g. 8 / 10) returns float."""
+    report = "Health Score: 8 / 10"
+    assert _extract_health_score(report) == 8.0
+
+
+def test_extract_health_score_missing() -> None:
+    """Returns None when the Health Score header is absent."""
+    assert _extract_health_score("no header here") is None
+
+
+def test_extract_health_score_empty_string() -> None:
+    """Returns None for an empty string."""
+    assert _extract_health_score("") is None
+
+
+def test_extract_health_score_with_whitespace_variants() -> None:
+    """Handles varied whitespace around the score and slash."""
+    report = "Health Score:  9.5  /  10"
+    assert _extract_health_score(report) == 9.5
+
+
+def test_stage_flag_refinement_valid(tmp_path: Path) -> None:
+    """--stage refinement is accepted and runs only refinement."""
+    skill_dir = _make_skill(tmp_path, "wfc-refine")
+
+    with (
+        mock.patch(
+            "wfc.scripts.orchestrators.skill_validator_llm.cli.resolve_repo_name",
+            return_value="wfc",
+        ),
+        mock.patch(
+            "wfc.scripts.orchestrators.skill_validator_llm.cli.get_branch",
+            return_value="main",
+        ),
+        mock.patch(
+            "wfc.scripts.orchestrators.skill_validator_llm.cli.write_stage_report",
+            return_value=tmp_path / "report.md",
+        ) as mock_write,
+        mock.patch(
+            "wfc.scripts.orchestrators.skill_validator_llm.cli.write_summary_report",
+            return_value=tmp_path / "summary.md",
+        ) as mock_summary,
+        mock.patch(
+            "wfc.scripts.orchestrators.skill_validator_llm.cli._validate_skill",
+            return_value={"refinement": "Health Score: 6.0 / 10\ndetails"},
+        ),
+    ):
+        rc = main([str(skill_dir), "--stage", "refinement"])
+
+    assert rc == 0
+    mock_write.assert_called_once()
+    mock_summary.assert_called_once()
+
+
+def test_stage_flag_invalid_value_exits_1(capsys) -> None:
+    """--stage with unknown value returns exit code 1 with error on stderr."""
+    rc = main(["--all", "--stage", "invalid_val"])
+    assert rc == 1
+    err = capsys.readouterr().err
+    assert "invalid_val" in err or "invalid" in err.lower()
+
+
+def test_single_skill_refinement_writes_summary(tmp_path: Path, capsys) -> None:
+    """After refinement on a single skill, write_summary_report is called once."""
+    skill_dir = _make_skill(tmp_path, "wfc-refine2")
+
+    with (
+        mock.patch(
+            "wfc.scripts.orchestrators.skill_validator_llm.cli.resolve_repo_name",
+            return_value="wfc",
+        ),
+        mock.patch(
+            "wfc.scripts.orchestrators.skill_validator_llm.cli.get_branch",
+            return_value="main",
+        ),
+        mock.patch(
+            "wfc.scripts.orchestrators.skill_validator_llm.cli.write_stage_report",
+            return_value=tmp_path / "report.md",
+        ),
+        mock.patch(
+            "wfc.scripts.orchestrators.skill_validator_llm.cli.write_summary_report",
+            return_value=tmp_path / "summary.md",
+        ) as mock_summary,
+        mock.patch(
+            "wfc.scripts.orchestrators.skill_validator_llm.cli._validate_skill",
+            return_value={"refinement": "Health Score: 7.3 / 10\ndetails"},
+        ),
+    ):
+        rc = main([str(skill_dir), "--stage", "refinement"])
+
+    assert rc == 0
+    mock_summary.assert_called_once_with(
+        [{"skill": "wfc-refine2", "score": 7.3}],
+        repo="wfc",
+        branch="main",
+    )
+    out = capsys.readouterr().out
+    assert "Summary written:" in out
+
+
+def test_single_skill_no_refinement_no_summary(tmp_path: Path) -> None:
+    """When refinement is not in stage_reports, write_summary_report is NOT called."""
+    skill_dir = _make_skill(tmp_path, "wfc-norefine")
+
+    with (
+        mock.patch(
+            "wfc.scripts.orchestrators.skill_validator_llm.cli.resolve_repo_name",
+            return_value="wfc",
+        ),
+        mock.patch(
+            "wfc.scripts.orchestrators.skill_validator_llm.cli.get_branch",
+            return_value="main",
+        ),
+        mock.patch(
+            "wfc.scripts.orchestrators.skill_validator_llm.cli.write_stage_report",
+            return_value=tmp_path / "report.md",
+        ),
+        mock.patch(
+            "wfc.scripts.orchestrators.skill_validator_llm.cli.write_summary_report",
+        ) as mock_summary,
+        mock.patch(
+            "wfc.scripts.orchestrators.skill_validator_llm.cli._validate_skill",
+            return_value={"discovery": "disc report"},
+        ),
+    ):
+        rc = main([str(skill_dir), "--stage", "discovery"])
+
+    assert rc == 0
+    mock_summary.assert_not_called()
+
+
+def test_main_all_yes_with_refinement_writes_summary(tmp_path: Path, capsys) -> None:
+    """--all --yes running refinement calls write_summary_report once with all skills."""
+    skills_root = tmp_path / "skills"
+    _make_skill(skills_root, "wfc-alpha")
+    _make_skill(skills_root, "wfc-beta")
+
+    stage_results = {"refinement": "Health Score: 8.0 / 10\ndetails"}
+
+    with (
+        mock.patch(
+            "wfc.scripts.orchestrators.skill_validator_llm.cli._SKILLS_ROOT",
+            skills_root,
+        ),
+        mock.patch(
+            "wfc.scripts.orchestrators.skill_validator_llm.cli.resolve_repo_name",
+            return_value="wfc",
+        ),
+        mock.patch(
+            "wfc.scripts.orchestrators.skill_validator_llm.cli.get_branch",
+            return_value="main",
+        ),
+        mock.patch(
+            "wfc.scripts.orchestrators.skill_validator_llm.cli.write_stage_report",
+            return_value=tmp_path / "report.md",
+        ),
+        mock.patch(
+            "wfc.scripts.orchestrators.skill_validator_llm.cli.write_summary_report",
+            return_value=tmp_path / "summary.md",
+        ) as mock_summary,
+        mock.patch(
+            "wfc.scripts.orchestrators.skill_validator_llm.cli._validate_skill",
+            return_value=stage_results,
+        ),
+    ):
+        rc = main(["--all", "--yes", "--stage", "refinement"])
+
+    assert rc == 0
+    mock_summary.assert_called_once()
+    call_args = mock_summary.call_args
+    entries = call_args[0][0] if call_args[0] else call_args[1]["entries"]
+    assert len(entries) == 2
+    out = capsys.readouterr().out
+    assert "Summary written:" in out
+
+
+def test_main_all_yes_discovery_only_no_summary(tmp_path: Path) -> None:
+    """--all --yes --stage discovery does NOT call write_summary_report."""
+    skills_root = tmp_path / "skills"
+    _make_skill(skills_root, "wfc-alpha")
+
+    stage_results = {"discovery": "disc report"}
+
+    with (
+        mock.patch(
+            "wfc.scripts.orchestrators.skill_validator_llm.cli._SKILLS_ROOT",
+            skills_root,
+        ),
+        mock.patch(
+            "wfc.scripts.orchestrators.skill_validator_llm.cli.resolve_repo_name",
+            return_value="wfc",
+        ),
+        mock.patch(
+            "wfc.scripts.orchestrators.skill_validator_llm.cli.get_branch",
+            return_value="main",
+        ),
+        mock.patch(
+            "wfc.scripts.orchestrators.skill_validator_llm.cli.write_stage_report",
+            return_value=tmp_path / "report.md",
+        ),
+        mock.patch(
+            "wfc.scripts.orchestrators.skill_validator_llm.cli.write_summary_report",
+        ) as mock_summary,
+        mock.patch(
+            "wfc.scripts.orchestrators.skill_validator_llm.cli._validate_skill",
+            return_value=stage_results,
+        ),
+    ):
+        rc = main(["--all", "--yes", "--stage", "discovery"])
+
+    assert rc == 0
+    mock_summary.assert_not_called()
+
+
+def test_dry_run_shows_four_stage_cost_lines(tmp_path: Path, capsys) -> None:
+    """--dry-run for a single skill shows cost lines for all 4 stages."""
+    skill_dir = _make_skill(tmp_path, "wfc-drycost")
+
+    with (
+        mock.patch(
+            "wfc.scripts.orchestrators.skill_validator_llm.cli.resolve_repo_name",
+            return_value="wfc",
+        ),
+        mock.patch(
+            "wfc.scripts.orchestrators.skill_validator_llm.cli.get_branch",
+            return_value="main",
+        ),
+    ):
+        rc = main([str(skill_dir), "--dry-run"])
+
+    assert rc == 0
+    out = capsys.readouterr().out
+    assert "discovery" in out
+    assert "logic" in out
+    assert "edge_case" in out
+    assert "refinement" in out
