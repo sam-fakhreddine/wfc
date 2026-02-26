@@ -1,6 +1,6 @@
 ---
 name: wfc-sync
-description: Sync project rules and skills with codebase state. Discovers undocumented patterns, updates stale rules, creates project context, and identifies new conventions. Triggers on "sync rules", "update project rules", "discover patterns", "sync project", or explicit /wfc-sync. Use after major refactors, onboarding, or when rules drift from reality.
+description: Sync project rules and skills with codebase state. Discovers undocumented patterns, updates stale rules, creates project context, and identifies new conventions. Triggers on "sync rules", "update project rules", "discover patterns", "sync project", or explicit /wfc-sync. Use after major refactors, onboarding, or when rules drift from reality. Not for initial project setup (use /wfc-init).
 license: MIT
 ---
 

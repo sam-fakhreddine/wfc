@@ -95,29 +95,25 @@ class TestDiffSignalExtraction:
 
     def test_extract_file_paths_from_diff_headers(self) -> None:
         """Extract file paths from --- a/file and +++ b/file lines."""
-        diff = textwrap.dedent(
-            """\
+        diff = textwrap.dedent("""\
             --- a/src/main.py
             +++ b/src/main.py
             @@ -1,3 +1,5 @@
             +import os
-        """
-        )
+        """)
         retriever = KnowledgeRetriever.__new__(KnowledgeRetriever)
         signals = retriever.extract_diff_signals(diff)
         assert "src/main.py" in signals
 
     def test_extract_function_names_python(self) -> None:
         """Extract Python function/class names from def/class lines."""
-        diff = textwrap.dedent(
-            """\
+        diff = textwrap.dedent("""\
             +++ b/app.py
             @@ -10,0 +11,3 @@
             +def validate_input(data):
             +    pass
             +class UserService:
-        """
-        )
+        """)
         retriever = KnowledgeRetriever.__new__(KnowledgeRetriever)
         signals = retriever.extract_diff_signals(diff)
         assert "validate_input" in signals
@@ -125,25 +121,21 @@ class TestDiffSignalExtraction:
 
     def test_extract_function_names_javascript(self) -> None:
         """Extract JS function names from function keyword lines."""
-        diff = textwrap.dedent(
-            """\
+        diff = textwrap.dedent("""\
             +++ b/index.js
             +function handleRequest(req, res) {
-        """
-        )
+        """)
         retriever = KnowledgeRetriever.__new__(KnowledgeRetriever)
         signals = retriever.extract_diff_signals(diff)
         assert "handleRequest" in signals
 
     def test_extract_import_statements(self) -> None:
         """Extract import module names."""
-        diff = textwrap.dedent(
-            """\
+        diff = textwrap.dedent("""\
             +++ b/app.py
             +import subprocess
             +from pathlib import Path
-        """
-        )
+        """)
         retriever = KnowledgeRetriever.__new__(KnowledgeRetriever)
         signals = retriever.extract_diff_signals(diff)
         assert "subprocess" in signals
@@ -157,12 +149,10 @@ class TestDiffSignalExtraction:
 
     def test_diff_with_no_recognizable_patterns(self) -> None:
         """Diff with only plain text changes still extracts changed lines."""
-        diff = textwrap.dedent(
-            """\
+        diff = textwrap.dedent("""\
             +++ b/readme.txt
             +This is a documentation update.
-        """
-        )
+        """)
         retriever = KnowledgeRetriever.__new__(KnowledgeRetriever)
         signals = retriever.extract_diff_signals(diff)
         assert "readme.txt" in signals
@@ -427,8 +417,7 @@ class TestReviewerEngineIntegration:
         for reviewer_id in REVIEWER_IDS:
             d = tmp_path / reviewer_id
             d.mkdir()
-            prompt = textwrap.dedent(
-                f"""\
+            prompt = textwrap.dedent(f"""\
                 # {reviewer_id.title()} Reviewer Agent
 
                 ## Identity
@@ -444,8 +433,7 @@ class TestReviewerEngineIntegration:
                 ```json
                 {{"severity": "<1-10>", "description": "<what>"}}
                 ```
-            """
-            )
+            """)
             (d / "PROMPT.md").write_text(prompt, encoding="utf-8")
             knowledge = f"# KNOWLEDGE.md -- {reviewer_id.title()}\n\n- Known pattern.\n"
             (d / "KNOWLEDGE.md").write_text(knowledge, encoding="utf-8")

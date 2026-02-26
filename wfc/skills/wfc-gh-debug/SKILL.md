@@ -1,6 +1,6 @@
 ---
 name: wfc-gh-debug
-description: GitHub Actions CI failure debugger. Fetches failing workflow run logs via gh CLI, identifies root causes across common failure categories (lint, tests, type errors, missing deps, secrets, infra), proposes targeted fixes, and optionally applies them. Use when CI checks are failing on a PR or branch. Triggers on "failing checks", "CI is red", "fix CI", "debug workflow", or explicit /wfc-gh-debug.
+description: GitHub Actions CI failure debugger. Fetches failing workflow run logs via gh CLI, identifies root causes across common failure categories (lint, tests, type errors, missing deps, secrets, infra), proposes targeted fixes, and optionally applies them. Use when CI checks are failing on a PR or branch. Triggers on "failing checks", "CI is red", "fix CI", "debug workflow", or explicit /wfc-gh-debug. Not for local test failures or non-CI issues.
 license: MIT
 ---
 

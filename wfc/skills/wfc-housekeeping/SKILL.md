@@ -1,6 +1,6 @@
 ---
 name: wfc-housekeeping
-description: Systematic project hygiene — clean dead code, stale branches, orphaned files, unused imports, and development artifacts. Runs analysis first, presents findings for approval, then executes cleanup with full test validation. Use for periodic maintenance, pre-release cleanup, or technical debt reduction.
+description: Systematic project hygiene — clean dead code, stale branches, orphaned files, unused imports, and development artifacts. Runs analysis first, presents findings for approval, then executes cleanup with full test validation. Use for periodic maintenance, pre-release cleanup, or technical debt reduction. Not for feature development or active work-in-progress branches.
 license: MIT
 ---
 

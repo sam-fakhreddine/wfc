@@ -1,6 +1,6 @@
 ---
 name: wfc-build
-description: Intentional Vibe coding - quick adaptive interview, then delegate to subagent(s) for TDD implementation with quality checks and consensus review. Orchestrator asks clarifying questions, assesses complexity (1 agent vs multi-agent), spawns subagents via Task tool, and coordinates review/merge. Perfect for "just build this" requests without heavy upfront planning. Still uses git worktrees, quality gates, and consensus review.
+description: Intentional Vibe coding - quick adaptive interview, then delegate to subagent(s) for TDD implementation with quality checks and consensus review. Orchestrator asks clarifying questions, assesses complexity (1 agent vs multi-agent), spawns subagents via Task tool, and coordinates review/merge. Perfect for "just build this" requests without heavy upfront planning. Still uses git worktrees, quality gates, and consensus review. Not for large multi-component features (use /wfc-plan + /wfc-implement).
 license: MIT
 ---
 

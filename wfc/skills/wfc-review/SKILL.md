@@ -1,5 +1,5 @@
 ---
-name: wfc-consensus-review
+name: wfc-review
 description: Five-agent consensus code review using fixed expert reviewers (Security, Correctness, Performance, Maintainability, Reliability). Analyzes code via two-phase workflow (prepare tasks, finalize results), deduplicates findings with SHA-256 fingerprinting, and calculates a Consensus Score (CS) with Minority Protection Rule. Use when user requests code review, PR analysis, security assessment, or quality checks. Triggers on "review this code", "check for security issues", "analyze this PR", "is this code good", or explicit /wfc-consensus-review. Ideal for feature implementations, refactoring, API changes, and security-sensitive code. Not for simple typo fixes, documentation-only changes, or trivial updates.
 license: MIT
 ---
