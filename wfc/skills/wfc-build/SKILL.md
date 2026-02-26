@@ -1,6 +1,19 @@
 ---
 name: wfc-build
-description: Intentional Vibe coding - quick adaptive interview, then delegate to subagent(s) for TDD implementation with quality checks and consensus review. Orchestrator asks clarifying questions, assesses complexity (1 agent vs multi-agent), spawns subagents via Task tool, and coordinates review/merge. Perfect for "just build this" requests without heavy upfront planning. Still uses git worktrees, quality gates, and consensus review. Not for large multi-component features (use /wfc-plan + /wfc-implement).
+description: >
+  Trigger when a user makes an open-ended request to BUILD, CREATE, IMPLEMENT, ADD,
+  or CODE something new without a complete specification or formal task list. Canonical
+  triggers: "just build X", "make me a Y", "implement Z", "add [feature] to [system]",
+  "can you code this up?", "build it however you think is best."
+
+  Runs a clarifying interview (2–5 questions), reads the codebase, assesses complexity
+  for single-agent vs. multi-agent execution, then delegates implementation to subagents
+  via TDD with quality gates and review before creating a PR.
+
+  NOT FOR: reviewing code without implementing; architecture planning with explicit
+  no-implementation instruction; debugging unknown failures; requests with a complete
+  spec already provided; trivial one-line changes (typo, rename); projects requiring
+  more than 3 parallel workstreams (use wfc-plan instead).
 license: MIT
 ---
 

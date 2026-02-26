@@ -2,24 +2,24 @@
 name: wfc-security
 description: >
   Architectural security analysis and threat modeling for SOFTWARE SYSTEMS
-  only. Requires a system description, architecture outline, or codebase
-  context — produces no output and prompts if none is provided.
+  only. Requires system description, architecture outline, or codebase context
+  as input — prompts for context if none is provided.
 
-  Performs: STRIDE threat modeling; trust boundary and attack surface mapping;
-  dependency manifest analysis (training-data knowledge, NOT a live CVE scan);
-  hardcoded secrets pattern review across files explicitly provided.
+  Performs: STRIDE threat modeling; attack surface mapping; dependency manifest
+  analysis for known vulnerable versions (NOT a live CVE scan); hardcoded
+  secrets pattern review across explicitly provided files.
 
-  TRIGGERS: "threat model this", "STRIDE analysis", "attack surface mapping",
-  "prepare for security audit", "security architecture review", "check
-  dependency manifest", "scan for hardcoded secrets". Ambiguous phrases
-  ("find security issues", "security analysis"): clarify whether subject is
-  a system/architecture (route here) or file/code block (wfc-review).
+  Trigger phrases: "threat model this [system/service]", "STRIDE analysis",
+  "attack surface mapping", "prepare for security audit", "security
+  architecture review", "check dependency manifest for vulnerabilities".
 
-  Not for: reviewing files or PRs for bugs; remediating vulnerabilities;
-  secure code guidance; generic "find bugs"; physical security; requests
-  with no input; re-running when output files exist (use --overwrite).
+  Not for:
+  - Code-level review of files, functions, or PRs → wfc-consensus-review
+  - Specific vulnerability remediation (SQL injection, XSS, auth bypass)
+  - Physical security, organizational policy, or non-software systems
+  - Live CVE lookup or real-time vulnerability feeds
+  - Filesystem scanning — only reviews files explicitly provided
 license: MIT
-
 ---
 
 # WFC:SECURITY - Security Analysis & Threat Modeling

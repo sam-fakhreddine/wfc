@@ -1,25 +1,21 @@
 ---
 name: wfc-safeguard
-description: >
-  Installs a write-time security pattern detector by modifying
-  .claude/settings.json (DESTRUCTIVE — confirm intent before invoking).
-  Registers a PreToolUse hook intercepting Write, Edit, and Bash calls,
-  checking content against regex patterns for dangerous constructs.
+description: >-
+  Installs a write-time security pattern detector by registering a PreToolUse
+  hook in .claude/settings.json (DESTRUCTIVE — modifies project config).
+  Intercepts Write, Edit, and Bash calls to block or warn on dangerous patterns.
 
-  INVOKE when user explicitly wants to: install security hooks in
-  .claude/settings.json; block dangerous code patterns at write time;
-  register a PreToolUse hook for security linting; run /wfc-safeguard.
+  TRIGGERS: "install the wfc-safeguard hook", "block eval and innerHTML
+  automatically", "configure write-time security linting", /wfc-safeguard.
 
-  PATTERN COVERAGE (JS/TS, Python, SQL, GitHub Actions YAML only):
-  Blocks: eval(), new Function(), os.system(), subprocess shell=True,
-  rm -rf on system/home paths, ${{ github.event.* }} in Actions run steps.
-  Warns: .innerHTML, dangerouslySetInnerHTML, pickle.load(),
+  COVERS (JS/TS, Python, SQL, GitHub Actions YAML): blocks eval(), new
+  Function(), os.system(), subprocess shell=True, rm -rf on system/home paths,
+  ${{github.event.*}} in Actions run steps; warns on innerHTML, pickle.load(),
   child_process.exec, hardcoded secrets, raw SQL concatenation.
 
-  Not for: auditing existing code (use wfc-security); security explanations;
-  one-off file checks; GitHub Actions CI/CD setup; Go, Rust, Java, C/C++,
-  Ruby, or PHP projects; removing or verifying existing hooks.
-
+  NOT FOR: auditing already-written code (use wfc-security); explaining security
+  concepts; one-off file checks; Go/Rust/Java/C++/Ruby/PHP-only projects;
+  removing or disabling previously installed hooks.
 license: MIT
 ---
 

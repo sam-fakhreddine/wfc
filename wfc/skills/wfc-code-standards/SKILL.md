@@ -1,6 +1,22 @@
 ---
 name: wfc-code-standards
-description: Language-agnostic coding standards for all WFC projects. Enforces the Defensive Programming Standard (DPS) across 13 dimensions: architecture (three-tier, SOLID, immutability by default), code quality (500-line limit, DRY, fail-fast at boundaries), boundary validation (schema-first, reject unknown), state management (enumerated states, guarded transitions), error contracts (structured errors with correlation IDs), retry/timeout (bounded retries, explicit backoff), observability (structured logging, metrics, correlation IDs), concurrency safety (no shared mutable state), security (parameterized queries, least privilege, rate limiting), configuration (explicit defaults, fail-fast startup), infrastructure (health checks, graceful shutdown, DLQ), testing (unit/integration/e2e, required negative categories), async safety (never block event loop), and dependency management (lock files, CVE scanning). Referenced by all language-specific skills. Not a user-invocable skill.
+description: >
+  ROUTING RULE — Load ONLY when a prompt explicitly references a WFC (Woodland
+  Financial Corp) project, the WFC Defensive Programming Standard ("DPS"), or a
+  specific DPS dimension (DPS-1 through DPS-11).
+
+  Defines the WFC DPS: three-tier architecture (SOLID, immutability), code quality
+  (500-line limit, DRY, fail-fast), boundary validation (schema-first), state
+  management (enumerated states), error contracts (structured errors, correlation
+  IDs), retry/timeout (bounded retries, backoff), observability (structured logging,
+  metrics), concurrency safety, security (parameterized queries, least privilege),
+  configuration (fail-fast startup), infrastructure (health checks, DLQ), testing
+  (required negative categories), dependency management (CVE scanning). Language
+  skills take routing precedence.
+
+  NOT FOR: general questions without a WFC or DPS reference; language-scoped WFC
+  questions when a language skill exists; infrastructure provisioning or CI/CD;
+  defensive programming for non-WFC projects.
 license: MIT
 ---
 

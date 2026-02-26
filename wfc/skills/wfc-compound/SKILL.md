@@ -1,6 +1,20 @@
 ---
 name: wfc-compound
-description: Knowledge codification skill that documents solved problems into searchable docs/solutions/ categories. Runs parallel subagents (context analyzer, solution extractor, related docs finder, prevention strategist, category classifier) then assembles a single searchable solution document. Triggers on "that worked", "it's fixed", "problem solved", "document this solution", or explicit /wfc-compound. Ideal after solving non-trivial bugs, performance issues, or integration problems. Not for trivial fixes or documentation-only changes.
+description: >
+  Distills a confirmed, non-trivial fix from the current session into a structured
+  solution document in docs/solutions/{category}/. Activates ONLY when a real defect
+  was investigated and resolved in this session AND the user explicitly requests it.
+
+  Explicit invocation: /wfc-compound [optional description]
+
+  Trigger phrases (standalone direct speech only, not inside code blocks or quoted text):
+  "document this solution", "that worked", "it's fixed", "problem solved",
+  "figured it out", "root cause was...", "the fix was..."
+
+  Not for: fixes requiring no diagnosis (typos, obvious syntax errors); trigger phrases
+  inside code fences, logs, or quoted text; docs/README updates with no diagnosed fix;
+  hypothetical or unconfirmed fixes ("I think", "might work"); conversational
+  affirmations with no technical problem context; partial or unverified solutions.
 license: MIT
 ---
 

@@ -1,6 +1,20 @@
 ---
 name: wfc-housekeeping
-description: Systematic project hygiene — clean dead code, stale branches, orphaned files, unused imports, and development artifacts. Runs analysis first, presents findings for approval, then executes cleanup with full test validation. Use for periodic maintenance, pre-release cleanup, or technical debt reduction. Not for feature development or active work-in-progress branches.
+description: >
+  Removes inert or stale content from a codebase: unused imports, dead code with
+  zero static references, merged or abandoned git branches, unreferenced files, and
+  development artifacts (debug prints, breakpoints, temp files, orphaned worktrees).
+  Always dry-runs first, presents categorized findings with an approval gate, and
+  runs the full test suite before and after to detect regressions.
+
+  Triggers: "clean up unused imports", "remove stale branches", "delete orphaned
+  files", "purge debug artifacts", "pre-release cleanup", "prune dead code",
+  /wfc-housekeeping [branches|dead-code|imports|files|dev-artifacts].
+
+  Not for: code refactoring or restructuring; dependency upgrades or lockfile changes;
+  writing or improving tests; security remediation or secret removal; documentation
+  authorship; any request where the goal is modified behavior rather than reduced
+  file count.
 license: MIT
 ---
 

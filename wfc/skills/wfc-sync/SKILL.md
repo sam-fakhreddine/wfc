@@ -1,6 +1,25 @@
 ---
 name: wfc-sync
-description: Sync project rules and skills with codebase state. Discovers undocumented patterns, updates stale rules, creates project context, and identifies new conventions. Triggers on "sync rules", "update project rules", "discover patterns", "sync project", or explicit /wfc-sync. Use after major refactors, onboarding, or when rules drift from reality. Not for initial project setup (use /wfc-init).
+description: >
+  Audits and updates WFC agent skill rules and project convention files in
+  .claude/rules/ and .claude/skills/ to reflect the current codebase state.
+  Reads existing rule files and SKILL.md definitions, searches for undocumented
+  patterns, flags contradictions, and writes updated .md files. No source code
+  is modified.
+
+  Trigger phrases: "sync WFC rules", "update WFC rules", "my WFC rules are out
+  of date", "sync agent rules with the codebase", "agent rules are stale",
+  "discover undocumented conventions", "run /wfc-sync". Also invoke after a
+  major refactor or during initial WFC onboarding.
+
+  Not for:
+  - Git operations: branch sync, git pull/push, merge
+  - Linter config changes: ESLint, Prettier, Stylelint, Rubocop
+  - CI/CD pipeline configuration (GitHub Actions, Jenkins)
+  - Database schema migrations or ORM config
+  - Dependency installation or lockfile updates
+  - File/cloud storage sync (rsync, S3)
+  - Source code, test files, or infrastructure config modification
 license: MIT
 ---
 

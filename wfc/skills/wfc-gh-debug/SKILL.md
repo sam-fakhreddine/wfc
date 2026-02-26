@@ -1,6 +1,20 @@
 ---
 name: wfc-gh-debug
-description: GitHub Actions CI failure debugger. Fetches failing workflow run logs via gh CLI, identifies root causes across common failure categories (lint, tests, type errors, missing deps, secrets, infra), proposes targeted fixes, and optionally applies them. Use when CI checks are failing on a PR or branch. Triggers on "failing checks", "CI is red", "fix CI", "debug workflow", or explicit /wfc-gh-debug. Not for local test failures or non-CI issues.
+description: >
+  Debugs failing GitHub Actions CI workflow runs on a PR or branch via the gh CLI.
+  Fetches run logs, classifies root causes (lint, format, test, type, import,
+  permission, secret, infra/runner), reports findings with log evidence, and applies
+  fixes only when the user explicitly requests it.
+
+  Triggers: "GitHub Actions failing", "Actions check failing", "workflow run failed",
+  "CI is red on GitHub", "debug GitHub Actions", "fix my Actions run",
+  "why did my GitHub Actions fail", /wfc-gh-debug.
+
+  Not for: GitLab CI, CircleCI, Jenkins, Bitbucket Pipelines, or any CI system not
+  accessible via gh CLI; PR policy gates (reviewer approvals, CODEOWNERS, branch
+  protection); external status checks not backed by GitHub Actions (Vercel, Codecov);
+  Dependabot/Renovate PRs with upstream breakage; runtime errors in deployed
+  environments after a successful CI run.
 license: MIT
 ---
 

@@ -1,6 +1,19 @@
 ---
 name: wfc-python
-description: Python-specific development standards for WFC projects. Inherits universal standards from wfc-code-standards. Adds Python 3.12+ syntax, black formatting, full typing, PEP 562, UV toolchain, and preferred libraries (structlog, orjson, httpx, pydantic, FastAPI, pytest). Referenced by wfc-build, wfc-implement, wfc-test, and wfc-review. Not a user-invocable skill.
+description: >-
+  Internal skill — loaded automatically by wfc-build, wfc-implement, wfc-test,
+  and wfc-review when ALL true: (1) target codebase language is Python,
+  (2) project is a WFC project (wfc- namespace in pyproject.toml, WFC manifest,
+  or explicit user confirmation), and (3) task involves writing, reviewing,
+  testing, or scaffolding application code. Not directly user-invocable.
+  Adds Python-specific requirements on top of wfc-code-standards: Python 3.12+
+  syntax, black + ruff + mypy --strict toolchain, UV package management, PEP
+  562 lazy imports, mandated libraries (structlog, orjson, httpx, pydantic,
+  FastAPI, pytest with anyio).
+  Not for: general Python questions; WFC projects in a non-Python language;
+  standalone scripts or notebooks with no WFC affiliation; explanatory requests
+  with no code generation; non-application Python (CI helpers, migration
+  scripts) unless WFC standards are explicitly requested.
 license: MIT
 ---
 

@@ -1,10 +1,11 @@
 ---
 name: wfc-newskill
 description: >
-  Meta-skill for scaffolding a new, reusable WFC skill conforming to the
-  agentskills.io specification. Conducts a structured requirements interview,
-  produces a {skill-name}-prompt.md using the WFC skill template, and
-  optionally chains into wfc-plan → wfc-implement for full build-out.
+  Meta-skill for scaffolding a new, reusable WFC (Workflow Control Framework)
+  skill conforming to the agentskills.io specification. Conducts a structured
+  requirements interview across defined dimensions, produces a
+  {skill-name}-prompt.md file using the WFC skill template, and optionally
+  chains into wfc-plan → wfc-implement for full build-out.
 
   INVOKE when the user's unambiguous intent is to CREATE A NEW, NAMED,
   REUSABLE WFC SKILL that does not yet exist. Required signals: the user
@@ -13,9 +14,9 @@ description: >
   [capability]", "I want to add a WFC skill that [does X]", "extend WFC with
   a new skill", "/wfc-newskill".
 
-  DO NOT INVOKE for any request where the output is not a new
-  agentskills.io-spec skill file, or where the named skill already exists
-  in the registry. See "Not for" section below.
+  DO NOT INVOKE (see not_for below) for any request where the output is not
+  a new agentskills.io-spec skill file, or where the named skill already
+  exists in the registry.
 license: MIT
 ---
 

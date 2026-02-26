@@ -1,20 +1,20 @@
 ---
 name: wfc-prompt-fixer
-description: >
+description: >-
   Diagnoses and rewrites existing Claude prompts (system prompts, user-turn
-  templates, or WFC Agent Skill descriptions) producing poor or broken results.
-
-  Pipeline: Analyzer grades A-F against 15 scored dimensions and 17 named
-  antipatterns → Fixer rewrites C-F prompts preserving task statement, output
-  format, and constraints → Reporter validates and summarizes. A/B prompts
-  skip the Fixer. Batch mode (--batch) processes in groups of 4.
-
-  WFC mode: auto-enabled when filename is SKILL.md or PROMPT.md, path matches
-  wfc/skills/ or wfc/references/reviewers/, AND frontmatter has a wfc field.
-
-  Not for: writing new prompts from scratch; prompts for non-Claude models
-  (GPT-4, Gemini, Llama); code review of code that generates prompts;
-  explaining a prompt without fixing it; comparing prompts.
+  templates, or WFC Agent Skill descriptions) producing poor, inconsistent,
+  or structurally broken results. Pipeline: Analyzer grades A–F against 14
+  scored dimensions and 17 named antipatterns → Fixer rewrites C–F prompts,
+  preserving task statement, output format, and constraints → Reporter
+  validates and summarizes. A/B prompts skip Fixer. --batch processes in
+  groups of 4. WFC mode (SKILL.md or PROMPT.md in wfc/skills/ or
+  wfc/references/reviewers/ with wfc frontmatter) adds AP-15/AP-16/AP-17.
+  --auto-pr creates branches and PRs when a valid git remote is detected.
+  TRIGGER: "fix this prompt", "prompt produces inconsistent results",
+  "optimize for Claude 4", "batch-fix WFC skill prompts", /wfc-prompt-fixer.
+  Not for: new prompts from scratch; non-Claude model prompts; explaining a
+  prompt without fixing it; comparing multiple prompts; scaffold files with
+  no prompt body.
 license: MIT
 ---
 

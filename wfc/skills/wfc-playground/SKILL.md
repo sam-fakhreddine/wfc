@@ -9,13 +9,16 @@ description: >
   static HTML sandbox with no backend, no framework, and no deployment intent.
   Prefer explicit invocation via /wfc-playground.
 
-  TRIGGER phrases (affirmative construction required — negated forms do NOT
-  trigger): "create a self-contained HTML playground", "build a throwaway
-  visual explorer", "single-file HTML sandbox", "static HTML prototype",
-  /wfc-playground [topic].
+  TRIGGER phrases (all must carry affirmative construction — negated forms do
+  NOT trigger):
+    - "create a self-contained HTML playground"
+    - "build a throwaway visual explorer"
+    - "single-file HTML sandbox"
+    - "static HTML prototype"
+    - /wfc-playground [topic]
 
   NOTE: "wfc" is legacy naming. This skill has no Wave Function Collapse
-  functionality. See "Not for" section below.
+  functionality.
 license: MIT
 ---
 

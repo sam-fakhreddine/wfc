@@ -1,21 +1,17 @@
 ---
 name: wfc-plan
-description: >
-  Generates a structured implementation plan for features or refactors spanning
-  multiple files, modules, or teams. Produces: TASKS.md (ordered tasks with
-  dependency graph), PROPERTIES.md (formal requirements typed as SAFETY,
-  LIVENESS, INVARIANT, or PERFORMANCE), and TEST-PLAN.md (acceptance and
-  integration test strategy). Conducts a clarifying interview first.
-
-  TRIGGER when user: invokes /wfc-plan; asks to "break down", "plan out", or
-  "create a structured plan for" a multi-component feature; mentions needing
-  TASKS.md, PROPERTIES.md, or TEST-PLAN.md; or starts a feature touching
-  more than one module with explicit dependency ordering.
-
-  Not for: single-file edits, patches, or bug fixes; refactoring with no
-  cross-cutting dependencies; architectural Q&A with no file output; effort
-  estimation or backlog grooming; exploratory conversations; revising an
-  existing plan on disk.
+description: >-
+  Generates a structured, multi-file implementation plan for software features
+  or refactors spanning multiple files, modules, or teams. Produces three
+  artifacts: TASKS.md (ordered tasks with dependency graph), PROPERTIES.md
+  (non-functional requirements typed SAFETY/LIVENESS/INVARIANT/PERFORMANCE),
+  and TEST-PLAN.md (acceptance and integration test strategy). Conducts a
+  clarifying interview before generating.
+  TRIGGER: /wfc-plan (hard trigger); "break down" / "plan out" a multi-component
+  feature; user mentions TASKS.md, PROPERTIES.md, or TEST-PLAN.md by name;
+  starting a feature touching more than one module with dependency ordering.
+  Not for: single-file edits or bug fixes; refactoring one service; Q&A with
+  no files written; effort estimation or backlog grooming; diagnosing defects.
 license: MIT
 ---
 

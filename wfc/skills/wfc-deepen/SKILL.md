@@ -1,6 +1,18 @@
 ---
 name: wfc-deepen
-description: Post-plan research enhancement that spawns parallel research subagents to deepen an existing plan with external best practices, framework documentation, codebase patterns, and past solutions. Takes a plan directory as input and enriches TASKS.md, PROPERTIES.md, and TEST-PLAN.md with research findings. Triggers on "deepen this plan", "research more", "enhance the plan", or explicit /wfc-deepen. Ideal after /wfc-plan when you want more thorough research without re-planning. Not for creating new plans.
+description: >
+  Enriches an EXISTING plan directory (produced by /wfc-plan) with parallel research
+  subagents. Reads TASKS.md, PROPERTIES.md, and TEST-PLAN.md, dispatches up to 4
+  subagents against local codebase patterns, docs/solutions/, and package manifests,
+  then appends sourced findings. Requires a non-empty TASKS.md to activate.
+
+  Triggers: /wfc-deepen, /wfc-deepen <path>, "deepen this plan",
+  "add research to the plan", "pull in best practices for this plan",
+  "enrich the plan with codebase patterns".
+
+  Not for: general research with no existing plan; structural plan edits (adding,
+  removing, or reprioritizing tasks); new plan creation; pre-planning research;
+  vague "research more" requests where no plan directory is unambiguously present.
 license: MIT
 ---
 

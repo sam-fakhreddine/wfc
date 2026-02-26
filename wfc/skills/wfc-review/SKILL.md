@@ -1,23 +1,21 @@
 ---
 name: wfc-review
-description: >
-  Multi-expert consensus code review for executable source code. Runs five
-  specialist reviewers (Security, Correctness, Performance, Maintainability,
-  Reliability) in parallel. Produces a Consensus Score (CS) with
-  deduplicated, prioritized findings.
+description: >-
+  Runs five specialist reviewers (Security, Correctness, Performance,
+  Maintainability, Reliability) in parallel and produces a Consensus Score
+  with deduplicated, prioritized findings for executable source code.
 
-  ROUTE HERE when ALL of: (1) user has provided executable source code in a
-  supported language (.py, .js, .ts, .go, .java, .rb, .php, .rs, .c, .cpp,
-  .sql) as a paste, file path, or PR diff; (2) user requests review, quality
-  assessment, or merge/deploy readiness evaluation; (3) request is not
-  style-only or explanation-only.
+  TRIGGERS: "review this code", "analyze this PR", "check for bugs or
+  vulnerabilities", "is this safe to merge", "is this safe to deploy",
+  "/wfc-review".
 
-  TRIGGERS: "review this code", "analyze this PR", "is this implementation
-  correct", "check for bugs or vulnerabilities", "safe to merge", /wfc-review.
+  REQUIRES: executable source code provided (.py, .js, .ts, .go, .java, .rb,
+  .php, .rs, .c, .cpp, .sql) AND an explicit review or merge/deploy goal.
 
-  Not for: non-code artifacts (design docs, prose specs, config-only YAML);
-  CVE lookups, dependency audits, Dockerfile scanning; linting or style-only;
-  code explanation; debugging a runtime error; IaC-only reviews.
+  NOT FOR: design docs, README files, or config-only files with no logic;
+  CVE/dependency audits or SAST scanning; linting or style-only requests;
+  code explanation or tutoring; debugging a specific runtime error;
+  infrastructure-as-code only (Terraform, Kubernetes, Helm).
 license: MIT
 ---
 

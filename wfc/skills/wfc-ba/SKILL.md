@@ -1,6 +1,19 @@
 ---
 name: wfc-ba
-description: Business analysis and requirements gathering skill. Conducts structured stakeholder interviews, competitive analysis, gap analysis, and generates planner-ready BA documents with MoSCoW requirements, integration seams, acceptance criteria, and risk assessment. Use when starting new features that need requirements clarity before planning. Triggers on "analyze requirements", "gather requirements", "business analysis", or explicit /wfc-ba. Not for implementation tasks or code review.
+description: >
+  Business analysis and structured requirements gathering for software features. Use
+  when clarifying WHAT to build before planning HOW — new features, mid-development
+  re-scoping, or legacy features lacking requirements. Triggers on: "business
+  analysis", "gather requirements for [feature]", "MoSCoW prioritization", "define
+  acceptance criteria", "competitive analysis", "gap analysis", or /wfc-ba.
+
+  Produces a BA document with MoSCoW requirements (user-stated only), integration
+  seams, acceptance criteria, and risk register — formatted for handoff to wfc-plan.
+  Does NOT perform sprint planning, architecture design, or code generation.
+
+  NOT FOR: technical code analysis; bug fixes with clear repro steps; backlog
+  grooming or sprint planning; post-mortems or retrospectives; refactoring with no
+  behavior change; single-file changes with obvious scope.
 license: MIT
 ---
 

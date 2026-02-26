@@ -1,25 +1,24 @@
 ---
 name: wfc-test
 description: >
-  Generates test cases from two formal input sources: (1) PROPERTIES.md with
-  SAFETY(...), LIVENESS(...), or INVARIANT(...) typed properties, and (2)
-  TASKS.md with Given/When/Then acceptance criteria. Produces a
+  Generates structured test cases from formal input sources: a PROPERTIES.md
+  file with SAFETY(...), LIVENESS(...), or INVARIANT(...) syntax, and/or a
+  TASKS.md file with Given/When/Then acceptance criteria. Produces a
   TRACEABILITY-REPORT.md identifying uncovered properties and criteria.
 
-  INVOKE only when ALL of: at least one conforming PROPERTIES.md or TASKS.md
-  exists; user explicitly requests test generation; user confirms target
-  language and test framework.
+  Invoke only when ALL are true: a conforming input document exists; user
+  explicitly requests test generation; target language and framework confirmed.
 
-  TRIGGERS: "generate tests from properties/requirements", "create tests from
-  PROPERTIES.md / TASKS.md", "derive test cases from formal properties",
-  /wfc-test.
+  Trigger phrases: "generate tests from properties/requirements", "create
+  tests from PROPERTIES.md / TASKS.md", "derive test cases from formal
+  properties", explicit /wfc-test command.
 
-  Not for: writing tests without conforming PROPERTIES.md or TASKS.md;
-  fuzz/generative testing (Hypothesis, fast-check); debugging or fixing
-  failing tests; running test suites; reporting coverage metrics; installing
-  test frameworks; authoring PROPERTIES.md or TASKS.md; requests containing
-  "debug", "fix failing", or "improve test coverage" without formal inputs.
-
+  Not for:
+  - Writing tests without a conforming PROPERTIES.md or TASKS.md as input
+  - Fuzz or generative testing (QuickCheck, Hypothesis, fast-check)
+  - Debugging or fixing failing tests
+  - Running or managing test suites
+  - Authoring or validating PROPERTIES.md or TASKS.md input documents
 license: MIT
 ---
 

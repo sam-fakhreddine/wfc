@@ -1,26 +1,20 @@
 ---
 name: wfc-retro
-description: >
-  Performs retrospective analysis of WFC telemetry for a completed time window.
-  Reads wfc-*.WNN.jsonl files under .development/wfc/ and produces a
-  structured improvement report.
-
-  REQUIRES ALL of: (a) user explicitly references WFC, agent workflows, or
-  workflow telemetry; (b) analysis targets a completed past period; (c)
-  wfc-*.WNN.jsonl files exist for that period.
+description: >-
+  Reads WFC JSONL telemetry for a completed period and produces a structured
+  retrospective report with metrics and improvement recommendations.
 
   TRIGGERS: "/wfc-retro", "run a WFC retrospective", "summarize agent task
-  performance for last sprint", "what bottlenecks in our WFC workflow this
-  month", "analyze WFC telemetry from the past [N] days/weeks", "show me the
-  Say:Do ratio for last sprint".
+  performance for last sprint", "analyze WFC telemetry from the past N days",
+  "show me the Say:Do ratio for last sprint".
 
-  Not for: specific failing tasks or live issues; requests not mentioning WFC
-  or workflow telemetry; product features, PRs, or tickets; future planning;
-  team ceremonies without WFC telemetry; raw log views or compliance reports;
-  periods under one completed day or in-progress tasks. Halts with a warning
-  if no JSONL files exist — does not fabricate reports.
+  REQUIRES: user references WFC/agent workflows AND targets a completed past
+  period AND wfc-*.WNN.jsonl files exist for that period.
+
+  NOT FOR: real-time monitoring, debugging a single failing task, requests
+  without WFC telemetry context, product feature analysis, future planning,
+  sprint planning, raw log views, or when no JSONL files exist for the period.
 license: MIT
-
 ---
 
 # WFC:RETRO — Workflow Controller Retrospective Analysis

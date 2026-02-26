@@ -1,6 +1,16 @@
 ---
 name: wfc-init
-description: Initialize WFC for a project by detecting languages and setting up appropriate quality tools (formatters, linters, test frameworks). Detects Python, JavaScript, TypeScript, Go, Rust, Java, Ruby, C#, and configures black/ruff, prettier/eslint, gofmt/golangci-lint, rustfmt/clippy, etc. Triggers on "initialize WFC", "setup quality tools", "configure project", or explicit /wfc-init. Ideal for onboarding new projects to WFC. Not for projects already configured.
+description: >-
+  Performs FIRST-TIME initialization of WFC on a project without an existing
+  .wfc/ directory or wfc.config.json. Detects languages (Python, JS/TS, Go,
+  Rust, Java, Ruby, C#) and generates .wfc/config.json wiring quality tools
+  (black/ruff, prettier/eslint, gofmt/golangci-lint, rustfmt/clippy, rubocop,
+  google-java-format, dotnet-format), Makefile targets, and optionally a
+  .pre-commit-config.yaml. Trigger: /wfc-init, "initialize WFC", "onboard this
+  project to WFC", "add WFC quality tools". Prerequisite: directory must exist
+  and must NOT already have .wfc/ or wfc.config.json. Not for: projects already
+  initialized (use wfc-configure), running existing quality checks, formatter
+  setup without WFC context, Docker/CI/CD config, or WFC toolchain install.
 license: MIT
 ---
 

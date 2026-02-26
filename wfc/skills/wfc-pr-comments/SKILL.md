@@ -1,6 +1,20 @@
 ---
 name: wfc-pr-comments
-description: Intelligent PR comment triage and fix system. Fetches PR review comments via gh CLI, evaluates each against architectural validity, scope, correctness, and codebase conventions, then fixes valid comments in parallel via subagents. Use when a PR has review comments to address. Triggers on "address PR comments", "fix PR feedback", "handle review comments", or explicit /wfc-pr-comments. Ideal for PRs with multiple review comments from humans or bots (Copilot, CodeRabbit, etc.). Not for creating PRs (use wfc-build) or code review (use wfc-review).
+description: >-
+  Fetches, triages, and fixes existing inline PR review thread comments via
+  the gh CLI and GitHub GraphQL API. Requires: gh auth configured, a PR with
+  unresolved inline review threads, wfc/scripts/github/pr_threads.py in the
+  repo root, and a PR number, URL, or detectable branch context.
+  For each unresolved thread, evaluates validity across architectural soundness,
+  scope, correctness, severity, and effort. Presents triage table for approval
+  before changes. Valid comments fixed by category-grouped subagents. Invalid
+  comments surfaced with skip rationale — never silently dropped. After pushing
+  fixes, replies to and resolves addressed threads on GitHub.
+  TRIGGER: "address PR comments", "fix PR feedback", "resolve open threads",
+  "respond to feedback on my PR", /wfc-pr-comments.
+  Not for: creating PRs (use wfc-build); original code review with no existing
+  comments (use wfc-review); read-only PR inspection; PR-level review bodies
+  not attached to a file/line; repos without pr_threads.py.
 license: MIT
 ---
 

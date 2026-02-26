@@ -1,20 +1,20 @@
 ---
 name: wfc-vibe
 description: >
-  Activates for open-ended, pre-structure ideation where no plan, task,
-  artifact, or implementation target exists yet. For early-stage exploration:
-  generating possibilities, questioning assumptions, expanding problem space
-  without committing to a solution.
+  Activates for open-ended, pre-structure ideation where no plan, task, or
+  implementation target exists yet. For early-stage exploration: generating
+  possibilities, questioning assumptions, expanding the problem space without
+  committing to a solution.
 
-  LOAD when ALL of: user signals open-ended exploration with no existing
-  artifact (/wfc-vibe, or 'brainstorm', 'explore ideas', 'let's ideate' —
-  semantic intent required, not substring match); no concrete artifact
-  referenced; no specific implementation target stated.
+  Load when: user signals open-ended exploration (/wfc-vibe, "brainstorm",
+  "explore ideas", "let's ideate" — semantic intent required, not substring
+  match); no concrete artifact referenced; no implementation target stated.
 
-  Not for: 'vibe' as sentiment or negation; concrete artifact present (file,
-  function, schema) → wfc-build; organizing already-formed ideas → wfc-plan;
-  specific technical decisions → wfc-build; implementation, debugging,
-  refactoring, or architecture review of existing systems.
+  Not for:
+  - "vibe" as sentiment, tone, or negation — no ideation intent
+  - Concrete artifact present (file, function, schema) → wfc-build
+  - Organizing already-formed ideas → wfc-plan
+  - Implementation, debugging, or architecture review of existing systems
 
   Does not hand off programmatically — produces a context summary and
   instructs user to invoke /wfc-plan or /wfc-build explicitly.

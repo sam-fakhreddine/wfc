@@ -1,21 +1,19 @@
 ---
 name: wfc-export
 description: >
-  Converts WFC-format SKILL.md files into platform-specific configs for
-  external AI coding tools (OpenCode, Codex, Gemini CLI, GitHub Copilot,
-  Kiro CLI, Cursor, Factory Droid). Requires WFC SKILL.md files to already
-  exist — does not create or edit them. Conversions may be lossy; warnings
-  surface dropped MCP servers, truncated descriptions, and unmapped tools.
+  Converts existing WFC-format SKILL.md files into platform-specific configuration
+  files for Copilot, Cursor, Gemini CLI, Kiro, OpenCode, Codex, and Factory Droid.
+  Strictly one-directional: WFC SKILL.md → external platform. Requires at least one
+  valid WFC SKILL.md in the project as source input.
 
-  TRIGGER when user wants to export a WFC SKILL.md to a named platform,
-  generate a platform config from an existing SKILL.md, sync WFC skills to
-  an external tool, or run /wfc-export [--to <platform>] [--all] [--dry-run]
-  [--skills <names>].
+  Triggers: /wfc-export [--to <platform>] [--all] [--dry-run] [--skills <names>]
+  [--output <dir>] [--allow-lossy] [--include-meta-skills]; "export WFC skills to
+  Copilot/Cursor/Gemini"; "sync WFC skills to external tool".
 
-  Not for: requests not originating from a WFC SKILL.md; converting scripts
-  or arbitrary code to platform formats; creating backups; importing external
-  configs into WFC format (one-directional: WFC SKILL.md → platform);
-  creating, editing, or linting WFC SKILL.md files.
+  Not for: importing or converting external platform configs into WFC format;
+  converting scripts, prompts, or arbitrary code into platform formats; creating or
+  editing SKILL.md files (use wfc-build); projects with no WFC SKILL.md source files;
+  exporting meta-skills (wfc-export, wfc-init, wfc-sync) without --include-meta-skills.
 license: MIT
 ---
 

@@ -1,6 +1,15 @@
 ---
 name: wfc-lfg
-description: Autonomous end-to-end pipeline that chains the full WFC workflow without stopping between steps. Runs plan, deepen, implement, review, resolve findings, and test in sequence. Triggers on "lfg", "ship it end to end", "full auto", "autonomous build", or explicit /wfc-lfg. Ideal for well-understood features where you trust the pipeline. Not for exploratory work or features requiring human decisions at each step.
+description: >-
+  Executes the full WFC pipeline unattended: plan → deepen → implement → review
+  → resolve → test → push PR. No human checkpoints. Terminal output is a PR on
+  success; halts with a structured report on failure. Requires git repo with
+  configured remote and authenticated gh CLI. Trigger: /wfc-lfg; "ship it end
+  to end"; "full wfc auto"; "full pipeline auto"; "lfg" at message START
+  followed by 5+ word feature description ("lfg add rate limiting to the API").
+  Not for: single-stage requests (route to that skill), deployment/infra tasks,
+  auth/encryption/compliance/PII features (need human review), requests with
+  approval gates, or vague feature descriptions under five words.
 license: MIT
 ---
 

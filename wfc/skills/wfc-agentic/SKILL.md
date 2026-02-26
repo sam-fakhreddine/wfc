@@ -1,6 +1,19 @@
 ---
 name: wfc-agentic
-description: "Generate GitHub Agentic Workflows (gh-aw) from natural language. Converts WFC task descriptions into gh-aw Markdown workflow files with proper frontmatter (triggers, permissions, safe-outputs, tools, engine selection) ready for compilation with gh aw compile. Supports all gh-aw engines (Copilot, Claude Code, Codex), trigger types (schedule, issues, PRs, slash commands, workflow_run), safe-output types (create-issue, create-pull-request, add-comment, push-to-pull-request-branch), and tool configurations (github MCP, web-fetch, bash, cache-memory). Use when creating CI/CD automation, issue triage bots, PR review workflows, documentation updaters, or any event-driven agentic task. Triggers on 'create agentic workflow', 'add gh-aw workflow', 'automate with GitHub Actions agent', or explicit /wfc-agentic. Not for traditional GitHub Actions YAML authoring or non-agentic workflows."
+description: >
+  Generates gh-aw (GitHub Agentic Workflow) Markdown files from natural language
+  descriptions, following the gh-aw spec compiled by `gh aw compile`. Use when the
+  user wants to create a .md workflow file with gh-aw YAML frontmatter, scaffold a
+  workflow using an AI engine (Copilot, Claude Code, or Codex), or configure
+  gh-aw-specific constructs (safe-outputs, tools, engine selection). Triggers on:
+  "create a gh-aw workflow", "add an agentic workflow file", "generate a .gh-aw.md",
+  or /wfc-agentic.
+
+  NOT FOR: standard GitHub Actions YAML authoring; non-gh-aw agentic frameworks
+  (LangChain, CrewAI, AutoGPT, Probot, GitHub Apps); modifying or debugging existing
+  gh-aw files; Copilot Extensions or copilot-instructions.md; any output not consumed
+  by `gh aw compile`.
+
 license: MIT
 ---
 

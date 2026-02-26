@@ -1,6 +1,25 @@
 ---
 name: wfc-validate
-description: Critical thinking advisor that analyzes plans, ideas, and technical approaches across 7 dimensions (feasibility, complexity, risk, value, alternatives, assumptions, trade-offs). Provides discerning but constructive feedback to ensure smart decisions before committing time and resources. Use when evaluating new features, architectural decisions, or technical approaches. Triggers on "is this a good idea", "should I do this", "analyze this approach", "what do you think of this plan", or explicit /wfc-validate. Ideal for architectural decisions, feature planning, and technology choices. Not for implementation details or code review.
+description: >
+  Strategic decision advisor that evaluates a proposed technical approach
+  across 7 structured dimensions before committing resources. Scope:
+  architectural decisions, library/framework selection, system design
+  proposals, infrastructure strategy, build-vs-buy decisions.
+
+  Trigger when ALL are true: subject is a proposed (not yet implemented)
+  technical approach; scoped at component/service/system level; user asks
+  whether to proceed, not how to implement it.
+
+  Trigger phrases: "is this a good idea", "should we adopt X", "evaluate this
+  architecture", "what are the trade-offs of this plan", explicit /wfc-validate.
+
+  Not for:
+  - Individual functions or code constructs below component scope
+  - Code review of existing code, even if framed as plan evaluation
+  - How-to questions or implementation tutorials
+  - Factual technology comparisons without a concrete adoption decision
+  - Non-technical planning: marketing, hiring, scheduling
+  - Empty or content-free input — returns INPUT_INSUFFICIENT
 license: MIT
 ---
 

@@ -1,21 +1,18 @@
 ---
 name: wfc-safeclaude
-description: >
-  Generates a Claude Code command allowlist by scanning the current project
-  and writing an optimized .claude/settings.local.json that pre-approves
-  low-risk commands by risk category. Reduces per-command approval prompts
-  without enabling unrestricted execution mode.
+description: >-
+  Scans the current project and writes .claude/settings.local.json to
+  pre-approve low-risk commands by risk category, reducing per-command approval
+  prompts without enabling unrestricted execution mode.
 
-  TRIGGER when user explicitly wants to: reduce Claude Code approval prompts
-  for specific commands; generate or update a .claude/settings.local.json
-  allowlist; set up auto-approve rules for a local project; run /wfc-safeclaude.
+  TRIGGERS: "reduce Claude Code approval prompts", "generate a command
+  allowlist", "set up auto-approve rules for this project", "/wfc-safeclaude".
 
-  Not for: disabling all Claude Code security prompts or YOLO mode; shell
-  command recommendations unrelated to Claude Code permissions; network, IP,
-  email, or infrastructure allowlists; any settings file outside .claude/;
-  production systems or CI/CD (use --strict); security audits of allowlists
-  (use wfc-security); general project setup; denylist commands (rm -rf,
-  git push --force, curl | bash, sudo, eval).
+  NOT FOR: disabling all Claude Code security prompts or enabling YOLO mode;
+  shell command recommendations unrelated to Claude Code permissions; network,
+  IP, or infrastructure allowlists; settings files outside .claude/; production
+  or shared CI/CD environments; security audits of existing allowlists;
+  commands on the permanent denylist (rm -rf, git push --force, curl | bash).
 license: MIT
 ---
 
