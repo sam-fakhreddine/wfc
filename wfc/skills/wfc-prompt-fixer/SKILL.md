@@ -1,6 +1,6 @@
 ---
 name: wfc-prompt-fixer
-description: Fix Claude prompts using a 3-agent pipeline (Analyzer → Fixer → Reporter). Diagnoses prompt quality against a rubric of 17 antipatterns, assigns grade A-F, rewrites to fix issues while preserving intent, and validates fixes adversarially. Works on any Claude prompt. Auto-detects WFC skill structure and adds WFC-specific checks for Agent Skills compliance, token management patterns, and TEAMCHARTER alignment. Supports batch mode processing up to 4 prompts in parallel. Auto-creates PRs for fixes.
+description: Fix Claude prompts using a 3-agent pipeline (Analyzer → Fixer → Reporter). Diagnoses prompt quality against a rubric of 17 antipatterns, assigns grade A-F, rewrites to fix issues while preserving intent, and validates fixes adversarially. Works on any Claude prompt. Auto-detects WFC skill structure and adds WFC-specific checks for Agent Skills compliance, token management patterns, and TEAMCHARTER alignment. Supports batch mode processing up to 4 prompts in parallel. Auto-creates PRs for fixes. Not for non-Claude prompts or general writing improvement.
 license: MIT
 ---
 

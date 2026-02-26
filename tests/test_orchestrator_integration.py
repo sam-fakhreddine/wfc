@@ -28,8 +28,7 @@ def reviewers_dir(tmp_path: Path) -> Path:
         d = tmp_path / reviewer_id
         d.mkdir()
 
-        prompt = textwrap.dedent(
-            f"""\
+        prompt = textwrap.dedent(f"""\
             # {reviewer_id.title()} Reviewer Agent
 
             ## Identity
@@ -45,8 +44,7 @@ def reviewers_dir(tmp_path: Path) -> Path:
             ```json
             {{"severity": "<1-10>", "description": "<what>"}}
             ```
-        """
-        )
+        """)
         (d / "PROMPT.md").write_text(prompt, encoding="utf-8")
 
         knowledge = f"# KNOWLEDGE.md -- {reviewer_id.title()}\n\n- Known pattern.\n"
