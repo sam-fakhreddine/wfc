@@ -29,6 +29,19 @@ _ALL_STAGES: list[str] = ["discovery", "logic", "edge_case", "refinement"]
 _INPUT_RATE_PER_TOKEN = 0.000003
 _OUTPUT_RATE_PER_TOKEN = 0.000015
 _EST_OUTPUT_MULTIPLIER = 0.5
+
+_STAGE_OVERHEAD_INPUT: dict[str, int] = {
+    "discovery": 8_500,
+    "logic": 500,
+    "edge_case": 500,
+    "refinement": 3_500,
+}
+_STAGE_OVERHEAD_OUTPUT: dict[str, int] = {
+    "discovery": 8_000,
+    "logic": 1_500,
+    "edge_case": 1_500,
+    "refinement": 2_000,
+}
 _MAX_WORKERS = 5
 
 T = TypeVar("T")
@@ -96,6 +109,21 @@ def _estimate_cost(tokens: int) -> float:
     """Estimate USD cost from input token count (includes estimated output)."""
     output_tokens = int(tokens * _EST_OUTPUT_MULTIPLIER)
     return tokens * _INPUT_RATE_PER_TOKEN + output_tokens * _OUTPUT_RATE_PER_TOKEN
+
+
+def _estimate_cost_per_skill(skill_tokens: int, stages: list[str]) -> float:
+    """Better cost estimate that accounts for per-stage overhead.
+
+    Includes thinking budget tokens (discovery), prompt template sizes,
+    prior-report inputs (refinement), and expected output volumes.
+    Calibrated against observed ~$7 for 31 skills / 4 stages.
+    """
+    total = 0.0
+    for stage in stages:
+        in_tok = skill_tokens + _STAGE_OVERHEAD_INPUT.get(stage, 0)
+        out_tok = int(skill_tokens * _EST_OUTPUT_MULTIPLIER) + _STAGE_OVERHEAD_OUTPUT.get(stage, 0)
+        total += in_tok * _INPUT_RATE_PER_TOKEN + out_tok * _OUTPUT_RATE_PER_TOKEN
+    return total
 
 
 def _find_skill_dirs(skills_root: Path) -> list[Path]:
@@ -299,25 +327,25 @@ def main(argv: list[str] | None = None) -> int:
         return 1
 
     total_tokens = 0
+    total_cost = 0.0
     for sd in skill_dirs:
         try:
             fm = parse_frontmatter(sd / "SKILL.md")
-            total_tokens += _estimate_tokens(fm.get("name", "") + fm.get("description", ""))
+            skill_tokens = _estimate_tokens(fm.get("name", "") + fm.get("description", ""))
+            total_tokens += skill_tokens
+            total_cost += _estimate_cost_per_skill(skill_tokens, stages_to_run)
         except Exception:  # noqa: BLE001
             pass
 
-    total_cost = _estimate_cost(total_tokens) * len(stages_to_run)
-
     if args.dry_run:
         print(f"[DRY-RUN] Skills found: {len(skill_dirs)}")
-        print(f"[DRY-RUN] Estimated total tokens: {total_tokens}")
-        print(f"[DRY-RUN] Estimated total cost:   ${total_cost:.6f}")
         print(f"[DRY-RUN] Stages: {stages_to_run}")
+        print(f"[DRY-RUN] Estimated cost: ${total_cost:.2f}  (±2× — extended thinking variance)")
         print("[DRY-RUN] No API calls will be made.")
         return 0
 
     if not args.yes:
-        print(f"Estimated cost for {len(skill_dirs)} skills: ${total_cost:.6f}")
+        print(f"Estimated cost for {len(skill_dirs)} skills: ~${total_cost:.2f} (±2× variance)")
         answer = input("Proceed? [y/N] ").strip().lower()
         if answer not in {"y", "yes"}:
             print("Aborted.")
