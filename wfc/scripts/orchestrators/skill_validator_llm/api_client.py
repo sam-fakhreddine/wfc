@@ -61,8 +61,8 @@ def call_api(prompt: str, system_prompt: str = "", use_thinking: bool = False) -
 
     if use_thinking:
         kwargs["thinking"] = {"type": "enabled", "budget_tokens": _THINKING_BUDGET}
-        kwargs["betas"] = [_THINKING_BETA]
-
-    response = client.messages.create(**kwargs)
+        response = client.beta.messages.create(betas=[_THINKING_BETA], **kwargs)
+    else:
+        response = client.messages.create(**kwargs)
 
     return "".join(block.text for block in response.content if block.type == "text")

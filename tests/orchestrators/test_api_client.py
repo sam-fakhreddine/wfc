@@ -188,7 +188,7 @@ class TestCacheControl:
 
 class TestExtendedThinking:
     def test_extended_thinking_params(self):
-        """When use_thinking=True, thinking and betas are included in the request."""
+        """When use_thinking=True, beta.messages.create is used with betas and thinking."""
         from wfc.scripts.orchestrators.skill_validator_llm import api_client
 
         response = _make_response(_make_text_block("thinking result"))
@@ -198,11 +198,11 @@ class TestExtendedThinking:
                 "wfc.scripts.orchestrators.skill_validator_llm.api_client.anthropic.Anthropic"
             ) as MockClient:
                 instance = MockClient.return_value
-                instance.messages.create.return_value = response
+                instance.beta.messages.create.return_value = response
 
                 api_client.call_api("prompt", use_thinking=True)
 
-        call_kwargs = instance.messages.create.call_args[1]
+        call_kwargs = instance.beta.messages.create.call_args[1]
         assert call_kwargs["thinking"] == {"type": "enabled", "budget_tokens": 8000}
         assert "interleaved-thinking-2025-05-14" in call_kwargs["betas"]
 
@@ -238,7 +238,7 @@ class TestExtendedThinking:
                 "wfc.scripts.orchestrators.skill_validator_llm.api_client.anthropic.Anthropic"
             ) as MockClient:
                 instance = MockClient.return_value
-                instance.messages.create.return_value = response
+                instance.beta.messages.create.return_value = response
 
                 result = api_client.call_api("prompt", use_thinking=True)
 
