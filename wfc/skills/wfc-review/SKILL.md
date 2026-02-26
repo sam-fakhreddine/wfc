@@ -1,6 +1,23 @@
 ---
 name: wfc-review
-description: Five-agent consensus code review using fixed expert reviewers (Security, Correctness, Performance, Maintainability, Reliability). Analyzes code via two-phase workflow (prepare tasks, finalize results), deduplicates findings with SHA-256 fingerprinting, and calculates a Consensus Score (CS) with Minority Protection Rule. Use when user requests code review, PR analysis, security assessment, or quality checks. Triggers on "review this code", "check for security issues", "analyze this PR", "is this code good", or explicit /wfc-consensus-review. Ideal for feature implementations, refactoring, API changes, and security-sensitive code. Not for simple typo fixes, documentation-only changes, or trivial updates.
+description: >
+  Multi-expert consensus code review for executable source code. Runs five
+  specialist reviewers (Security, Correctness, Performance, Maintainability,
+  Reliability) in parallel. Produces a Consensus Score (CS) with
+  deduplicated, prioritized findings.
+
+  ROUTE HERE when ALL of: (1) user has provided executable source code in a
+  supported language (.py, .js, .ts, .go, .java, .rb, .php, .rs, .c, .cpp,
+  .sql) as a paste, file path, or PR diff; (2) user requests review, quality
+  assessment, or merge/deploy readiness evaluation; (3) request is not
+  style-only or explanation-only.
+
+  TRIGGERS: "review this code", "analyze this PR", "is this implementation
+  correct", "check for bugs or vulnerabilities", "safe to merge", /wfc-review.
+
+  Not for: non-code artifacts (design docs, prose specs, config-only YAML);
+  CVE lookups, dependency audits, Dockerfile scanning; linting or style-only;
+  code explanation; debugging a runtime error; IaC-only reviews.
 license: MIT
 ---
 

@@ -1,6 +1,21 @@
 ---
 name: wfc-plan
-description: Adaptive planning system that converts requirements into structured implementation plans. Conducts intelligent interview to understand goals, then generates TASKS.md (with dependencies), PROPERTIES.md (formal properties like SAFETY, PERFORMANCE), and TEST-PLAN.md. Use when starting new features, projects, or refactoring efforts that need structured planning. Triggers on "plan this feature", "break down these requirements", "create implementation plan", or explicit /wfc-plan. Ideal for medium-to-large features requiring coordination. Not for quick bug fixes or single-file changes.
+description: >
+  Generates a structured implementation plan for features or refactors spanning
+  multiple files, modules, or teams. Produces: TASKS.md (ordered tasks with
+  dependency graph), PROPERTIES.md (formal requirements typed as SAFETY,
+  LIVENESS, INVARIANT, or PERFORMANCE), and TEST-PLAN.md (acceptance and
+  integration test strategy). Conducts a clarifying interview first.
+
+  TRIGGER when user: invokes /wfc-plan; asks to "break down", "plan out", or
+  "create a structured plan for" a multi-component feature; mentions needing
+  TASKS.md, PROPERTIES.md, or TEST-PLAN.md; or starts a feature touching
+  more than one module with explicit dependency ordering.
+
+  Not for: single-file edits, patches, or bug fixes; refactoring with no
+  cross-cutting dependencies; architectural Q&A with no file output; effort
+  estimation or backlog grooming; exploratory conversations; revising an
+  existing plan on disk.
 license: MIT
 ---
 

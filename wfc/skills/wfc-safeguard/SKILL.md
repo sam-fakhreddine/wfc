@@ -1,139 +1,55 @@
 ---
 name: wfc-safeguard
-description: Real-time security enforcement via PreToolUse hooks. Detects dangerous patterns (eval, innerHTML, os.system, hardcoded secrets, SQL injection, GitHub Actions injection) as code is written. Installs hooks into project's .claude/settings.json for automatic enforcement. Use when setting up security guardrails for a project. Triggers on "add security hooks", "enable security scanning", "protect against injection", or explicit /wfc-safeguard. Ideal for security-conscious development. Not for deep security audits (use wfc-security instead).
+description: >
+  Installs a write-time security pattern detector by modifying
+  .claude/settings.json (DESTRUCTIVE — confirm intent before invoking).
+  Registers a PreToolUse hook intercepting Write, Edit, and Bash calls,
+  checking content against regex patterns for dangerous constructs.
+
+  INVOKE when user explicitly wants to: install security hooks in
+  .claude/settings.json; block dangerous code patterns at write time;
+  register a PreToolUse hook for security linting; run /wfc-safeguard.
+
+  PATTERN COVERAGE (JS/TS, Python, SQL, GitHub Actions YAML only):
+  Blocks: eval(), new Function(), os.system(), subprocess shell=True,
+  rm -rf on system/home paths, ${{ github.event.* }} in Actions run steps.
+  Warns: .innerHTML, dangerouslySetInnerHTML, pickle.load(),
+  child_process.exec, hardcoded secrets, raw SQL concatenation.
+
+  Not for: auditing existing code (use wfc-security); security explanations;
+  one-off file checks; GitHub Actions CI/CD setup; Go, Rust, Java, C/C++,
+  Ruby, or PHP projects; removing or verifying existing hooks.
+
 license: MIT
 ---
 
-# WFC:SAFEGUARD - Real-Time Security Enforcement
+# WFC:SAFEGUARD - Write-Time Security Pattern Detection
 
-Catches dangerous code patterns in real time as they are written, before they reach your codebase.
+Detects common dangerous code patterns as they are written, before the tool call completes.
+This is lint-level detection via regex — it does not catch obfuscated, indirect, or runtime-evaluated patterns.
 
-## What It Does
+## Prerequisites
 
-WFC Safeguard installs a PreToolUse hook that intercepts every Write, Edit, and Bash tool call. It checks the content against a curated set of security patterns and either blocks the action (for critical issues) or warns (for potential risks).
+- Python 3.8+ available in PATH
+- Write access to `.claude/settings.json` in the project root
+- WFC hook scripts present at `wfc/scripts/hooks/` (see Key Files below)
 
-### Pattern Categories
+**This skill modifies `.claude/settings.json`.** If the file already exists, the hook entry is merged idempotently — existing configuration is preserved. Running `/wfc-safeguard` twice does not install the hook twice.
 
-**Blocked (action prevented)**:
+## What It Detects
 
-- `eval()` injection (Python, JavaScript)
-- `new Function()` code execution (JavaScript)
-- `os.system()` command injection (Python)
-- `subprocess` with `shell=True` (Python)
-- `rm -rf /` on system paths (Bash)
-- `rm -rf ~/` on home directory (Bash)
-- GitHub Actions script injection via `${{ github.event.* }}` (YAML)
+**Blocked (tool call prevented — exit code 2)**:
 
-**Warned (action allowed with notice)**:
+- `eval()` calls — Python and JavaScript (matches any use of `eval(`; does not distinguish argument type)
+- `new Function()` — JavaScript dynamic code execution
+- `os.system()` — Python command execution
+- `subprocess` with `shell=True` — Python
+- `rm -rf /`, `rm -rf /*`, `rm -rf ~/` — Bash destructive deletion on system/home paths
+- `${{ github.event.* }}` in `run:` steps — GitHub Actions expression injection (YAML only, scoped to run steps)
 
-- `.innerHTML` / `dangerouslySetInnerHTML` XSS risk (JavaScript/TypeScript)
-- `pickle.load()` deserialization risk (Python)
-- `child_process.exec` command injection (JavaScript)
-- Hardcoded secrets (`API_KEY = "..."`, etc.)
-- SQL string concatenation
-- `pull_request_target` in GitHub Actions
+**Warned (tool call proceeds — message to stderr)**:
 
-## Usage
-
-```bash
-# Enable security hooks for current project
-/wfc-safeguard
-
-# The hook is installed as a PreToolUse hook in .claude/settings.json
-# It runs automatically on every tool invocation
-```
-
-### How It Works
-
-1. Claude Code invokes a tool (Write, Edit, Bash)
-2. The PreToolUse hook receives the tool name and input as JSON on stdin
-3. Security patterns are checked against the content
-4. **Block**: Exit code 2 prevents the tool call, reason shown to user
-5. **Warn**: Warning printed to stderr, tool call proceeds
-6. **Pass**: No output, tool call proceeds normally
-
-### Session-Scoped Deduplication
-
-Warnings are shown once per file + pattern combination per session. If you already saw a warning about `pickle.load` in `data_loader.py`, you will not see it again until a new session.
-
-## Adding Custom Patterns
-
-Add new pattern files to `wfc/scripts/hooks/patterns/` as JSON:
-
-```json
-{
-  "patterns": [
-    {
-      "id": "my-pattern-id",
-      "pattern": "regex_pattern_here",
-      "description": "Human-readable description",
-      "action": "block",
-      "event": "file",
-      "languages": ["python", "javascript"]
-    }
-  ]
-}
-```
-
-### Pattern Fields
-
-| Field | Required | Description |
-|-------|----------|-------------|
-| `id` | Yes | Unique identifier for the pattern |
-| `pattern` | Yes | Regular expression to match against content |
-| `description` | Yes | Human-readable explanation of the risk |
-| `action` | Yes | `block` (prevent) or `warn` (allow with notice) |
-| `event` | Yes | `file` (Write/Edit tools) or `bash` (Bash tool) |
-| `languages` | No | List of languages this applies to (by file extension) |
-| `file_patterns` | No | Glob patterns for file paths (e.g., `.github/workflows/*.yml`) |
-
-### Supported Languages
-
-python, javascript, typescript, go, rust, java
-
-### File Extension Mapping
-
-| Extension | Language |
-|-----------|----------|
-| `.py` | python |
-| `.js`, `.jsx` | javascript |
-| `.ts`, `.tsx` | typescript |
-| `.go` | go |
-| `.rs` | rust |
-| `.java` | java |
-
-## Architecture
-
-```
-Claude Code Tool Call
-        |
-        v
-pretooluse_hook.py (main dispatcher)
-        |
-        v
-security_hook.py (pattern checker)
-        |           |
-        v           v
-patterns/*.json   hook_state.py (dedup)
-```
-
-### Key Files (WFC Codebase)
-
-- WFC uses `wfc/scripts/hooks/pretooluse_hook.py` as the main entry point
-- WFC uses `wfc/scripts/hooks/security_hook.py` for pattern matching
-- WFC uses `wfc/scripts/hooks/hook_state.py` for session state/deduplication
-- WFC uses `wfc/scripts/hooks/patterns/security.json` for core security patterns
-- WFC uses `wfc/scripts/hooks/patterns/github_actions.json` for CI/CD patterns
-
-## Integration with WFC
-
-- **wfc-security**: Deep STRIDE analysis (audit). Safeguard is real-time prevention.
-- **wfc-rules**: Custom project rules. Safeguard is built-in security patterns.
-- **wfc-review**: Consensus review catches issues post-hoc. Safeguard prevents them.
-
-## Safety Guarantees
-
-- Hook bugs NEVER block the user (all errors caught, exit 0)
-- Patterns use compiled, cached regexes for performance
-- State files auto-expire after 24 hours
-- No external dependencies required
+- `.innerHTML` / `dangerouslySetInnerHTML` — JavaScript/TypeScript XSS risk
+- `pickle.load()` — Python deserialization risk
+- `child_process.exec` — JavaScript command injection risk
+- Hardcoded string-literal secrets (`API_KEY = "..."

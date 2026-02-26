@@ -1,194 +1,70 @@
 ---
 name: wfc-safeclaude
-description: Project-specific command allowlist generator that creates safe, curated approval settings for Claude Code. Scans project to identify commonly-used commands (git, npm, pytest, etc.), categorizes by risk level, and generates optimized settings.json configuration. Eliminates constant approval prompts without enabling dangerous YOLO mode. Use when setting up new projects or reducing approval friction. Triggers on "reduce approval prompts", "generate safe commands", "create allowlist", or explicit /wfc-safeclaude. Ideal for project onboarding and developer experience. Not for bypassing security controls.
+description: >
+  Generates a Claude Code command allowlist by scanning the current project
+  and writing an optimized .claude/settings.local.json that pre-approves
+  low-risk commands by risk category. Reduces per-command approval prompts
+  without enabling unrestricted execution mode.
+
+  TRIGGER when user explicitly wants to: reduce Claude Code approval prompts
+  for specific commands; generate or update a .claude/settings.local.json
+  allowlist; set up auto-approve rules for a local project; run /wfc-safeclaude.
+
+  Not for: disabling all Claude Code security prompts or YOLO mode; shell
+  command recommendations unrelated to Claude Code permissions; network, IP,
+  email, or infrastructure allowlists; any settings file outside .claude/;
+  production systems or CI/CD (use --strict); security audits of allowlists
+  (use wfc-security); general project setup; denylist commands (rm -rf,
+  git push --force, curl | bash, sudo, eval).
 license: MIT
 ---
 
 # WFC:SAFECLAUDE - Safe Command Allowlist Generator
 
-Eliminates repetitive approval prompts without compromising safety.
+Generates a project-specific Claude Code command allowlist to reduce repetitive
+approval prompts for pre-vetted low-risk commands, without disabling all guardrails.
 
 ## The Problem
 
-Every new Claude Code session in a new project means approving `ls`, `cat`, `grep`, `git status`, `npm test` one by one. It's friction that adds zero safety value. But YOLO mode removes ALL guardrails.
+Every new Claude Code session in a new project means approving `ls`, `cat`, `grep`,
+`git status`, `npm test` one by one. It's friction that adds zero safety value.
+But unrestricted execution mode removes ALL guardrails.
 
-**safeclaude** finds the middle ground: project-specific allowlists.
+**safeclaude** finds the middle ground: a project-specific, user-reviewed allowlist.
 
 ## What It Does
 
-1. **Scans** project (language, frameworks, toolchain, structure)
-2. **Proposes** categorized allowlist (universal, git, language-specific, build/CI)
-3. **User reviews** and approves/modifies categories
-4. **Generates** `.claude/settings.local.json`
+1. **Scans** the project for known ecosystem signals (language, frameworks, toolchain)
+2. **Proposes** categorized command sets for user review
+3. **User explicitly approves or modifies** each category before any file is written
+4. **Writes** `.claude/settings.local.json` using only `allowedTools` keys supported by Claude Code
+
+**Important**: This skill writes a configuration file. Whether Claude Code honors the
+file depends on your Claude Code version. Verify the generated file is recognized before
+assuming approvals are active.
 
 ## Usage
 
 ```bash
-# Scan and generate allowlist
+# Scan and generate allowlist (interactive, requires explicit approval)
 /wfc-safeclaude
 
-# Show current allowlist
+# Show current allowlist (outputs "No allowlist found" if file absent)
 /wfc-safeclaude --show
 
-# Strict mode (read-only only)
+# Strict mode: read-only commands only — use for shared or sensitive projects
 /wfc-safeclaude --strict
 
-# Add specific command
-/wfc-safeclaude --add "docker compose up"
+# Add a specific command (validated against permanent denylist before writing)
+/wfc-safeclaude --add "docker ps"
 
-# Remove command
-/wfc-safeclaude --remove "rm -rf"
+# Remove a command (exact-match only; reports error if command not found)
+/wfc-safeclaude --remove "npm run build"
 
-# Reset and regenerate
+# Delete existing settings.local.json and regenerate from scratch (destructive — manual edits are lost)
 /wfc-safeclaude --reset
 ```
 
 ## Detection
 
-| Signal | Allows |
-|--------|--------|
-| `package.json` | npm, node, npx |
-| `package-lock.json` | npm (not yarn/pnpm) |
-| `pyproject.toml` | python, pip, pytest |
-| `Cargo.toml` | cargo, rustc, rustfmt |
-| `go.mod` | go, go test, go build |
-| `Dockerfile` | docker (read/inspect only) |
-| `.github/workflows/` | gh CLI |
-| `jest.config.*` | npm test with jest |
-
-## Categories
-
-### Universal (always safe)
-
-```
-ls, cat, grep, find, wc, diff, pwd, env, stat, which
-```
-
-### Git Read (always safe)
-
-```
-git status, git log, git diff, git show, git branch
-```
-
-### Git Write (approved per project)
-
-```
-git add, git commit, git push, git pull, git checkout
-```
-
-### Language-Specific (detected)
-
-```
-npm install, npm test, python, pytest, cargo build, go test
-```
-
-### Build/CI (detected)
-
-```
-npm run build, docker ps, docker logs, gh
-```
-
-### File Patterns
-
-- **Source dirs**: `src/**`, `lib/**` (read/write)
-- **Config dirs**: `.github/**` (read-only)
-- **Generated**: `node_modules/**`, `dist/**` (read-only)
-- **Never write**: `.env`, `.env.*`
-
-## Strict Mode
-
-```bash
-/wfc-safeclaude --strict
-```
-
-Generates **read-only** allowlist:
-
-- Universal safe commands ✅
-- Git read commands ✅
-- Language read commands ✅
-- NO git write ❌
-- NO build/CI ❌
-- NO file write patterns ❌
-
-Use for: production environments, shared codebases, auditing.
-
-## Output
-
-**`.claude/settings.local.json`**:
-
-```json
-{
-  "allowedCommands": [
-    "ls", "cat", "grep", "git status", "npm test"
-  ],
-  "filePatterns": {
-    "allowed": ["src/**", "tests/**"],
-    "readonly": [".github/**", ".env"]
-  },
-  "generated_by": "wfc-safeclaude",
-  "version": "1.0.0"
-}
-```
-
-## Safety Guarantees
-
-**Never proposed**:
-
-- Destructive commands (`rm -rf`, `git reset --hard`)
-- Secret writes (`.env` always read-only)
-- Generated dir writes (`node_modules`, `dist`)
-- Force operations (`git push --force`)
-
-**Always read-only**:
-
-- Environment files
-- Config directories
-- Generated/build artifacts
-
-## Example Session
-
-```
-User: /wfc-safeclaude
-
-🔍 Scanning project...
-✅ Detected: Node.js + TypeScript + Jest + Docker + GitHub Actions
-
-📋 Proposed Allowlist:
-
-Universal (38 commands)
-  ✅ ls, cat, grep, find, git status, ...
-
-Git Write (7 commands)
-  ⚠️  git add, git commit, git push, ...
-
-Language (5 commands)
-  ✅ npm install, npm test, npm run, node, npx
-
-Build/CI (4 commands)
-  ✅ npm run build, docker ps, docker logs, gh
-
-File Patterns
-  ✅ src/**, tests/** (read/write)
-  🔒 .github/**, .env (read-only)
-  🔒 node_modules/**, dist/** (read-only)
-
-Approve? (y/n/modify): y
-
-✅ Generated .claude/settings.local.json
-✅ 54 commands approved
-✅ No more approval prompts for this project
-```
-
-## Integration
-
-Works with WFC skills:
-
-- **wfc-implement** - Agents use approved commands without friction
-- **wfc-security** - Audit current allowlist vs best practices
-- **wfc-architecture** - Detect commands needed by architecture
-
-## Philosophy
-
-**ELEGANT**: Simple scanning, clear categories, explicit approval
-**MULTI-TIER**: Scanner → Generator → Settings (clean separation)
-**PARALLEL**: Can scan multiple projects concurrently
+The scanner checks for the following files at git root (or CW
