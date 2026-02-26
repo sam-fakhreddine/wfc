@@ -76,3 +76,7 @@ testpaths = ["tests"]
 python_files = ["test_*.py"]
 timeout = 30  # 30 seconds per test (fail-fast for hung tests)
 timeout_method = "thread"
+markers = [
+    "unit: fast unit tests with no external dependencies",
+    "integration: integration tests that may call external services",
+]
