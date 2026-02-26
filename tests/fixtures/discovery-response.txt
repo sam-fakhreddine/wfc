@@ -1,0 +1,16 @@
+## Positive Triggers
+- "validate my wfc-build skill description"
+- "check if my skill will route correctly"
+- "find routing gaps in wfc-review skill"
+
+## Negative Triggers
+- "run the wfc-build skill"
+- "review my code for bugs"
+- "install wfc skills"
+
+## Critique
+**Severity**: WARNING
+The description is moderately specific but overlaps with wfc-review for "review" terminology. Consider adding explicit "Not for:" negative triggers.
+
+## Suggested Rewrite
+LLM-based adversarial validator for WFC Agent Skill descriptions. Finds routing gaps, overlapping triggers, and ambiguous descriptions by stress-testing with generated positive/negative prompts. Not for: running skills, code review, or structural validation.

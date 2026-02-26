@@ -1,0 +1,103 @@
+"""api_client.py — Anthropic SDK wrapper for wfc-skill-validator-llm."""
+
+from __future__ import annotations
+
+import os
+import threading
+
+try:
+    import anthropic
+except ImportError as _err:
+    raise ImportError(
+        "Install wfc[llm-validate] to use LLM validation: uv pip install -e '.[llm-validate]'"
+    ) from _err
+
+_MODEL = "claude-sonnet-4-6"
+_THINKING_BUDGET = 8000
+_THINKING_BETA = "interleaved-thinking-2025-05-14"
+
+_usage_local = threading.local()
+
+
+def get_accumulated_usage() -> dict[str, int]:
+    """Return the accumulated token counts for the current thread.
+
+    Returns:
+        Dict with keys "input_tokens" and "output_tokens".
+    """
+    return {
+        "input_tokens": getattr(_usage_local, "input_tokens", 0),
+        "output_tokens": getattr(_usage_local, "output_tokens", 0),
+    }
+
+
+def reset_accumulated_usage() -> None:
+    """Reset the thread-local token accumulator to zero."""
+    _usage_local.input_tokens = 0
+    _usage_local.output_tokens = 0
+
+
+def call_api(prompt: str, system_prompt: str = "", use_thinking: bool = False) -> str:
+    """Call the Anthropic API and return the text response.
+
+    Token usage is accumulated in a thread-local counter. Call
+    ``reset_accumulated_usage()`` before a run and ``get_accumulated_usage()``
+    after to read actual input/output token counts.
+
+    Args:
+        prompt: User message content.
+        system_prompt: Optional system prompt. Applied with cache_control:ephemeral
+            when non-empty to enable prompt caching on repeated calls.
+        use_thinking: If True, enable extended thinking (Discovery stage only).
+            Thinking blocks are discarded; only text blocks are returned.
+
+    Returns:
+        Text content of the model response.
+
+    Raises:
+        EnvironmentError: If ANTHROPIC_SKILLS_VALIDATOR env var is not set.
+        ImportError: If anthropic package is not installed (raised at import time).
+    """
+    api_key = os.environ.get("ANTHROPIC_SKILLS_VALIDATOR")
+    if not api_key:
+        raise EnvironmentError(
+            "ANTHROPIC_SKILLS_VALIDATOR env var not set. "
+            "Export your Anthropic API key to run LLM validation."
+        )
+
+    client = anthropic.Anthropic(api_key=api_key, timeout=120.0)
+
+    messages: list[dict] = [{"role": "user", "content": prompt}]
+
+    kwargs: dict = {
+        "model": _MODEL,
+        "max_tokens": 4096,
+        "messages": messages,
+    }
+
+    if system_prompt:
+        kwargs["system"] = [
+            {
+                "type": "text",
+                "text": system_prompt,
+                "cache_control": {"type": "ephemeral"},
+            }
+        ]
+
+    if use_thinking:
+        kwargs["thinking"] = {"type": "enabled", "budget_tokens": _THINKING_BUDGET}
+        response = client.beta.messages.create(betas=[_THINKING_BETA], **kwargs)
+    else:
+        response = client.messages.create(**kwargs)
+
+    try:
+        _usage_local.input_tokens = (
+            getattr(_usage_local, "input_tokens", 0) + response.usage.input_tokens
+        )
+        _usage_local.output_tokens = (
+            getattr(_usage_local, "output_tokens", 0) + response.usage.output_tokens
+        )
+    except AttributeError:
+        pass
+
+    return "".join(block.text for block in response.content if block.type == "text")

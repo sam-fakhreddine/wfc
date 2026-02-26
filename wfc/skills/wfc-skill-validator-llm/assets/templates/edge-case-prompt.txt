@@ -1,0 +1,32 @@
+I am stress-testing an Agent Skill definition for edge case robustness.
+
+Skill name: ${skill_name}
+
+Full skill definition:
+${skill_body}
+
+Your job is to find boundary conditions, unusual inputs, and edge cases that would break this skill's routing or execution. Be adversarial and systematic.
+
+For each edge case:
+- What input or condition triggers it?
+- What breaks?
+- How severe is the impact?
+
+Format your response as:
+
+## Edge Cases
+
+For each edge case:
+
+### [Short descriptive title]
+**Severity**: HIGH | MEDIUM | LOW
+**Trigger**: [The specific input or condition]
+**What breaks**: [Routing failure / execution failure / degraded output / silent error]
+**Recommendation**: [How the skill definition should handle this]
+
+Severity guide:
+- HIGH: Skill fails entirely, produces wrong output, or routes incorrectly
+- MEDIUM: Skill produces degraded or incomplete output
+- LOW: Minor inconsistency or missing edge case documentation
+
+Identify at least 5 edge cases. If fewer than 5 genuine issues exist, note that.

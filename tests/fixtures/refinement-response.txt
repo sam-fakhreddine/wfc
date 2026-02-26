@@ -1,0 +1,41 @@
+## Defect Analysis
+
+### vague trigger descriptions
+The trigger "validate skill routing" is broad — an agent encountering "check if skill routes correctly" would not route here.
+
+**Recommendation**: Add specific triggers: "check skill routing", "test skill triggers", "validate skill description".
+
+### missing Not for: exclusions
+No "Not for:" field exists. This skill would incorrectly route for general code review requests.
+
+**Recommendation**: Add `not_for: "General code review; Runtime skill execution debugging"`.
+
+### overclaimed capabilities
+The description claims "finds routing gaps and ambiguity" but the logic stage only checks frontmatter — full SKILL.md body is not analyzed in discovery.
+
+**Recommendation**: Scope description to "analyzes skill frontmatter for routing gaps".
+
+## Health Scores
+
+Trigger Clarity: 5/10
+Scope Accuracy: 6/10
+Step Clarity: 7/10
+
+## Proposed Rewrite
+
+```yaml
+---
+name: wfc-skill-validator-llm
+description: LLM-based validator for WFC Agent Skills. Finds routing gaps in skill descriptions using adversarial prompting. Runs discovery, logic, edge_case, and refinement stages.
+triggers:
+  - validate skill routing
+  - check skill routing
+  - test skill triggers
+not_for: "General code review; Runtime skill execution; Non-WFC skill validation"
+license: MIT
+---
+
+# wfc-skill-validator-llm
+
+Validates WFC skill definitions against routing, logic, edge case, and architecture quality criteria.
+```
