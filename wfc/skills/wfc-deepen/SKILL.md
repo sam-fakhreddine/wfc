@@ -1,167 +1,194 @@
 ---
 name: wfc-deepen
-description: Post-plan research enhancement that spawns parallel research subagents to deepen an existing plan with external best practices, framework documentation, codebase patterns, and past solutions. Takes a plan directory as input and enriches TASKS.md, PROPERTIES.md, and TEST-PLAN.md with research findings. Triggers on "deepen this plan", "research more", "enhance the plan", or explicit /wfc-deepen. Ideal after /wfc-plan when you want more thorough research without re-planning. Not for creating new plans.
+description: >
+  Augments an existing /wfc-plan directory by researching codebase patterns,
+  project documentation, and dependency constraints to add supporting evidence
+  to tasks. Reads TASKS.md and PROPERTIES.md, simulates parallel analysis across
+  4 dimensions, and appends sourced findings as annotations. Does NOT modify
+  task structure, add/remove tasks, or write implementation steps.
+
+  Triggers: /wfc-deepen, /wfc-deepen <path>, "add research evidence to the plan",
+  "validate plan against codebase patterns", "annotate plan with known pitfalls",
+  "cross-reference plan with existing solutions".
+
+  Not for: writing or expanding task implementation steps; decomposing tasks into
+  subtasks; prioritizing or reordering tasks; adding or removing tasks; pre-planning
+  research before a plan directory exists; targeted research on specific questions
+  unrelated to plan validation; re-deepening plans with existing Research Findings
+  sections (use --force to override); general research with no plan context.
+
 license: MIT
 ---
 
-# WFC:DEEPEN - Sharpen the Plan
+# WFC:DEEPEN - Annotate Plan with Evidence
 
 **"Draft fast. Sharpen with evidence."**
 
 ## What It Does
 
-Injects parallel research into an existing plan without re-running the full planning cycle.
+Researches an existing plan directory to add supporting evidence, known pitfalls, and codebase pattern references to tasks—without modifying task structure or content.
 
-1. **Ingest** - Load the plan artifacts (TASKS.md, PROPERTIES.md, TEST-PLAN.md)
-2. **Investigate** - Dispatch parallel subagents for targeted evidence gathering
-3. **Annotate** - Weave findings into existing plan files as research addenda
-4. **Revalidate** - Confirm the annotated plan still clears validation
+1. **Locate** - Resolve plan directory from path argument or discovery
+2. **Ingest** - Load TASKS.md and PROPERTIES.md
+3. **Investigate** - Analyze codebase patterns, solutions docs, and dependencies
+4. **Annotate** - Append sourced findings as a dedicated section
+5. **Verify** - Confirm task IDs and structure remain intact
 
 ## Usage
 
 ```bash
-# Deepen the most recent plan
+# Deepen plan in current directory
 /wfc-deepen
 
-# Deepen a specific plan
+# Deepen specific plan directory
 /wfc-deepen plans/plan_oauth2_auth_20260218_140000/
 
-# Deepen with focus area
+# Deepen with security focus (filters findings to security-relevant items)
 /wfc-deepen --focus security
-/wfc-deepen --focus performance
+
+# Force re-deepen on already-annotated plan
+/wfc-deepen --force
 ```
 
-## When to Use
+## Path Resolution
 
-### Use wfc-deepen when
+When no path is provided:
 
-- Plan created quickly and needs more research
-- New information discovered after planning
-- Stakeholder feedback requires deeper analysis
-- Security/performance concerns need investigation
+1. Check current directory for `TASKS.md` → use current directory
+2. Check `./plans/` subdirectories for `TASKS.md` → sort by `TASKS.md` modification time
+3. If multiple candidates found → list them and abort with request for clarification
+4. If no candidates found → abort with error "No plan directory found"
 
-### Don't use when
+If path points to a file → resolve to parent directory.
 
-- Plan doesn't exist yet (use /wfc-plan)
-- Requirements changed fundamentally (re-plan instead)
-- Plan already validated with high score (>9.0)
+## Prerequisites
 
-## Parallel Research Agents
+Before dispatching research, verify:
 
-4 subagents run in parallel via Task tool:
+- `TASKS.md` exists and contains ≥1 valid task ID pattern (e.g., `TASK-###:` or `## Task`)
+- `TASKS.md` contains ≥100 tokens of semantic content
+- If `## Research Findings (wfc-deepen)` section already exists and `--force` is not set → abort with message
 
-| Agent | What It Researches | Enriches |
-|-------|-------------------|----------|
-| **Codebase Analyst** | Existing patterns, conventions, similar implementations in the repo | TASKS.md (files affected, patterns to follow) |
-| **Solutions Researcher** | `docs/solutions/` for past related problems, known pitfalls | TASKS.md (warnings, gotchas), TEST-PLAN.md (regression cases) |
-| **Best Practices** | External best practices, security guidelines, framework patterns | PROPERTIES.md (new properties), TEST-PLAN.md (edge cases) |
-| **Dependency Analyst** | Package versions, breaking changes, compatibility, CVEs | TASKS.md (dependency notes), PROPERTIES.md (SAFETY properties) |
+## Research Dimensions
 
-## Enrichment Process
+Four analysis dimensions are evaluated (sequentially or concurrently based on platform):
 
-### What Gets Added
+| Dimension | What It Analyzes | Output |
+|-----------|------------------|--------|
+| **Codebase Patterns** | Existing implementations, conventions, similar code in repo | Pattern references for relevant tasks |
+| **Solutions Docs** | `docs/solutions/` for related problems and known pitfalls | Warning annotations, regression test suggestions |
+| **Conventions** | Config files, README, inline documentation for stated standards | Convention notes for properties |
+| **Dependencies** | Package manifests and lockfiles for version constraints | Compatibility notes, deprecation warnings |
+
+**Important**: This skill does NOT access external package registries, CVE databases, or live documentation. All analysis is based on local files and general software engineering principles. For security-critical dependency verification, run external tools separately.
+
+## Annotation Format
+
+Findings are appended as a single section at the end of `TASKS.md`:
 
 ```markdown
-## TASK-003: Implement JWT Authentication
-- **Complexity**: M
-- **Dependencies**: [TASK-001]
-- **Properties**: [PROP-001, PROP-002]
-- **Files**: auth/jwt.py, auth/middleware.py
+---
 
-+ ## Research Findings (wfc-deepen)
-+ - **Codebase pattern**: See auth/session.py:45 for existing auth middleware pattern
-+ - **Known pitfall**: docs/solutions/security-issues/jwt-refresh-race.md
-+ - **Best practice**: Use RS256 over HS256 for multi-service architectures
-+ - **Dependency note**: PyJWT 2.8+ required for algorithm restriction
+## Research Findings (wfc-deepen)
+<!-- Generated: 2026-02-18T14:30:00Z -->
+<!-- Do not edit this section manually; regenerate with --force to update -->
+
+### TASK-003: Implement JWT Authentication
+- **Pattern**: See `auth/session.py:45` for existing middleware pattern
+- **Pitfall**: See `docs/solutions/security-issues/jwt-refresh-race.md`
+- **Convention**: Project uses dependency injection via `src/di/`
+
+### TASK-005: Token Refresh Logic
+- **Pitfall**: Race condition documented in solutions (see above)
+- **Dependency**: PyJWT constraint is ^2.8.0 in requirements.txt
+
+---
 ```
 
 ### What Doesn't Change
 
-- Task IDs, dependencies, and structure remain unchanged
-- Original acceptance criteria preserved
-- Plan validation hash updated in audit trail
+- Task IDs, dependencies, hierarchy, and acceptance criteria
+- Order and structure of existing tasks
+- Original plan content
 
-## Output
+### Conflict Resolution
 
-Enriched plan files in the same directory:
+If findings from different dimensions conflict (e.g., a pattern exists but the dependency is deprecated):
 
-- `TASKS.md` - Tasks annotated with research findings
-- `PROPERTIES.md` - New properties from security/performance research
-- `TEST-PLAN.md` - Additional test cases from edge case research
-- `deepen-log.md` - Record of what was researched and added
+1. Include both findings with a `**Resolution Required**` marker
+2. Do not attempt automatic resolution
+3. Log the conflict in `deepen-log.md` for manual review
 
-### Deepen Log Format
+## Output Files
+
+| File | Changes |
+|------|---------|
+| `TASKS.md` | Appends `## Research Findings (wfc-deepen)` section (or updates if --force) |
+| `PROPERTIES.md` | May append convention-derived properties |
+| `TEST-PLAN.md` | May append regression test suggestions from solutions |
+| `deepen-log.md` | Created/updated with research summary |
+
+## Deepen Log Format
 
 ```markdown
 # Deepen Log
 
-## Research Date
-2026-02-18T14:30:00Z
+## Session
+- **Timestamp**: 2026-02-18T14:30:00Z
+- **Plan**: plans/plan_oauth2_auth_20260218_140000/
+- **Focus**: general (or: security, performance, patterns, dependencies)
 
-## Plan
-plans/plan_oauth2_auth_20260218_140000/
+## Analysis Summary
+| Dimension | Files Analyzed | Findings |
+|-----------|----------------|----------|
+| Codebase Patterns | 12 | 3 relevant patterns |
+| Solutions Docs | 4 | 2 pitfalls, 1 regression test |
+| Conventions | 3 | 2 coding standards |
+| Dependencies | 2 | 1 deprecation warning |
 
-## Agents Run
-- Codebase Analyst: Found 3 relevant patterns
-- Solutions Researcher: Found 2 related solutions
-- Best Practices: Added 4 recommendations
-- Dependency Analyst: Found 1 CVE advisory
+## Conflicts Requiring Resolution
+- TASK-005: Existing pattern uses deprecated library (see findings)
 
-## Changes Made
-### TASKS.md
-- TASK-003: Added codebase pattern reference (auth/session.py)
-- TASK-005: Added known pitfall warning (JWT refresh race)
-
-### PROPERTIES.md
-- Added PROP-007: SAFETY - JWT algorithm must be restricted to RS256
-
-### TEST-PLAN.md
-- Added TEST-015: JWT refresh token race condition
-- Added TEST-016: Algorithm confusion attack prevention
+## Files Modified
+- TASKS.md: Added Research Findings section (47 lines)
+- TEST-PLAN.md: Added 1 regression test case
 ```
 
-## Integration with WFC
+## Focus Areas
 
-### Typical Flow
+The `--focus` flag filters which findings are included in output:
+
+- `security` → Include only security-relevant patterns, pitfalls, and dependency warnings
+- `performance` → Include only performance-relevant findings
+- `patterns` → Include only codebase pattern references
+- `dependencies` → Include only dependency and compatibility notes
+- (no flag) → Include all findings
+
+If `--focus` value is not in the above list → abort with error "Unknown focus area: X. Valid: security, performance, patterns, dependencies."
+
+## Integration with WFC
 
 ```
 /wfc-plan → /wfc-deepen → /wfc-implement
 ```
 
-Or within /wfc-build for complex features:
-
-```
-Interview → Plan → Deepen → Implement → Review
-```
-
-### Consumed By
-
-- **wfc-implement** - Reads enriched plan with research annotations
-- **wfc-review** - Uses research findings as review context
-
-### Consumes
-
-- Existing plan files (TASKS.md, PROPERTIES.md, TEST-PLAN.md)
-- `docs/solutions/` knowledge base
-- Codebase patterns (via grep/glob)
-- Package registries (for dependency analysis)
+- **Consumes**: Existing plan files, `docs/solutions/`, codebase files, package manifests
+- **Consumed by**: `wfc-implement` (reads annotated tasks), `wfc-review` (uses findings as review context)
 
 ## Configuration
 
 ```json
 {
   "deepen": {
-    "max_research_agents": 4,
-    "include_external_research": true,
     "focus_areas": ["security", "performance", "patterns", "dependencies"],
-    "token_budget_per_agent": 2000
+    "min_task_content_tokens": 100
   }
 }
 ```
 
 ## Philosophy
 
-**DECOUPLED**: Planning and evidence-gathering run as separate phases
-**CONCURRENT**: All research agents fire at once
-**ACCRETIVE**: Findings layer on top — nothing gets stripped
-**SOURCED**: Every annotation cites where it came from
+**READ-ONLY**: Never modifies existing task content, only appends
+**SOURCED**: Every finding cites a file path or specific source
+**ACCRETIVE**: Multiple deepen runs append, never replace (unless --force)
+**CONFLICT-EXPLICIT**: Conflicting findings are flagged, not silently resolved

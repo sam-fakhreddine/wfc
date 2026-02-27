@@ -1,0 +1,35 @@
+I am auditing an Agent Skill definition for internal logic consistency.
+
+Skill name: ${skill_name}
+
+Full skill definition:
+${skill_body}
+
+Your job is to find faults by simulating an agent executing this skill. Be adversarial and thorough.
+
+Identify every place where:
+1. The skill instructs the agent to do something that requires context never provided
+2. Steps are ambiguous enough that two different agents would interpret them differently
+3. The skill assumes external state or knowledge without documenting it
+
+Format your response as:
+
+## Hallucination Risks
+For each risk:
+**Step/Section**: [which part of the skill]
+**Risk**: [what the agent might hallucinate]
+**Trigger condition**: [what input causes this]
+
+## Ambiguous Steps
+For each ambiguity:
+**Step/Section**: [which part]
+**Ambiguity**: [how it can be interpreted differently]
+**Example interpretations**: [two or more different valid readings]
+
+## Missing Context
+For each gap:
+**Required context**: [what information is needed]
+**Where it's used**: [which step needs it]
+**Impact**: [what goes wrong without it]
+
+If no issues are found in a section, write "None identified."

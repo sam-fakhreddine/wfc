@@ -51,6 +51,11 @@ api = [
     "httpx>=0.27.0",
 ]
 
+# LLM-based skill validation (requires Anthropic API key)
+llm-validate = [
+    "anthropic>=0.40.0",
+]
+
 # All optional features
 all = [
     "wfc[tokens,dev,validation,mcp,api]",
@@ -76,3 +81,7 @@ testpaths = ["tests"]
 python_files = ["test_*.py"]
 timeout = 30  # 30 seconds per test (fail-fast for hung tests)
 timeout_method = "thread"
+markers = [
+    "unit: fast unit tests with no external dependencies",
+    "integration: integration tests that may call external services",
+]

@@ -1,105 +1,58 @@
 ---
 name: wfc-retro
-description: AI-powered retrospective analysis that examines WFC telemetry data to identify patterns, trends, and bottlenecks. Analyzes agent performance, review quality, task completion times, and common failure modes. Generates actionable recommendations for workflow improvement. Use after completing sprints, major features, or periodically for process improvement. Triggers on "run retrospective", "analyze recent work", "what can we improve", or explicit /wfc-retro. Ideal for team retrospectives and continuous improvement. Not for debugging specific issues or real-time monitoring.
+description: >-
+  Analyzes completed WFC (Workflow Controller) JSONL telemetry files to
+  calculate aggregated performance metrics (e.g., throughput, completion rates)
+  for a specific past period. Generates a standardized retrospective report
+  focusing on quantitative observation.
+
+  TRIGGERS: "/wfc-retro", "generate WFC retrospective", "calculate WFC
+  completion metrics for completed sprint", "aggregate WFC statistics for past
+  month", "report on Say:Do ratio for last week".
+
+  REQUIRES: user references WFC/agent workflows AND specifies a completed past
+  period (end date < current date) AND wfc-*.W[0-9][0-9].jsonl files exist for
+  that period.
+
+  NOT FOR: real-time monitoring, debugging a single failing task, root cause
+  analysis for specific errors, sprint planning (future), requests for the
+  current active sprint, raw log views, analyzing data without existing JSONL
+  files, analyzing time ranges exceeding 30 days, or calculating custom KPIs
+  outside the standard schema.
 license: MIT
 ---
 
-# WFC:RETRO - AI-Powered Retrospectives
+# WFC:RETRO — Workflow Controller Retrospective Analysis
 
-Analyzes WFC telemetry to identify improvements and optimize workflows.
+Reads WFC (Workflow Controller) JSONL telemetry, aggregates metrics for a
+completed period, and produces a structured report.
 
-## What It Does
+## Execution Logic
 
-1. **Telemetry Aggregator** - Reads wfc-*.WNN.jsonl files
-2. **Trend Analyzer** - Identifies patterns over time
-3. **Bottleneck Detector** - Finds slow/failing tasks
-4. **Recommendation Generator** - Actionable improvements
-5. **Values Alignment Tracker** - TEAMCHARTER values adherence via Say:Do ratio
+1. **Scope Validation**:
+    * Verify `current_date > requested_end_date`. If false, refuse execution
+        (Skill is for completed periods only).
+    * Verify file size/period length < 30 days to prevent context overflow.
 
-## Usage
+2. **File Resolution**:
+    * Scan for files matching pattern `wfc-*.W[0-9][0-9].jsonl`.
+    * Deduplicate records by `transaction_id` if overlapping files are found.
 
-```bash
-# Analyze last 7 days
-/wfc-retro
+3. **Data Ingestion & Cleaning**:
+    * Read JSONL lines. Skip malformed lines (logging count of skipped lines).
+    * Abort if valid record count is 0 (Report: "Insufficient Data").
 
-# Analyze last 30 days
-/wfc-retro --period 30d
+4. **Metric Calculation**:
+    * **Say:Do Ratio**: $\frac{\text{Tasks Completed}}{\text{Tasks Started}}$
+        (Note: 'Say' is defined as Intent Logged; 'Do' defined as Success Exit
+        Code).
+    * **Success Rate**: $\frac{\text{Exit Code 0}}{\text{Total Tasks}}$.
 
-# Analyze all time
-/wfc-retro --all
-
-# Analyze specific skill
-/wfc-retro --skill implement
-```
-
-## Analysis Dimensions
-
-- **Performance** - Slow tasks, timeouts, retries
-- **Quality** - Review failures, test failures, rollbacks
-- **Efficiency** - Agent utilization, parallel vs sequential
-- **Patterns** - Common failure modes, success patterns
-- **Values Alignment** - TEAMCHARTER values adherence across sprint
-
-## TEAMCHARTER Values Alignment
-
-Every retro report MUST include a **"## TEAMCHARTER Values Alignment"** section with the following subsections:
-
-### Say:Do Ratio
-
-Compute and display the Say:Do ratio using `wfc.scripts.memory.saydo.compute_say_do_ratio`.
-The ratio measures how accurately the team estimates and delivers:
-
-```
-Say:Do Ratio = tasks_completed_at_estimated_complexity / tasks_with_valid_complexity
-```
-
-A task is "on-estimate" when:
-
-- Estimated complexity matches actual complexity (S stayed S, M stayed M)
-- No re-estimation was needed
-- No quality gate failures
-
-Display format:
-
-```
-**Say:Do Ratio: 0.75** (6 of 8 tasks on-estimate)
-```
-
-### Values Adherence Chart
-
-Generate a Mermaid bar chart showing upheld vs violated counts per value using
-`wfc.scripts.memory.saydo.generate_values_mermaid_chart`. Data is aggregated from
-`ReflexionEntry.team_values_impact` fields via `aggregate_values_alignment`.
-
-### Recommendations
-
-Generate actionable recommendations tied to specific values using
-`wfc.scripts.memory.saydo.generate_values_recommendations`. Each recommendation
-MUST reference the specific TEAMCHARTER value and SHOULD include concrete examples when supporting telemetry is available (e.g., "Simplicity score
-dropped -- 3 tasks exceeded complexity budget").
-
-### Implementation Reference
-
-```python
-from wfc.scripts.memory.saydo import (
-    compute_say_do_ratio,
-    aggregate_values_alignment,
-    generate_values_mermaid_chart,
-    generate_values_recommendations,
-)
-```
-
-## Outputs
-
-- .development/summaries/RETRO-REPORT.md
-- Trend charts (Mermaid)
-- Values adherence chart (Mermaid xychart-beta)
-- Say:Do ratio
-- Top bottlenecks
-- Prioritized recommendations (including values-specific)
-
-## Philosophy
-
-**ELEGANT**: Learn from data, continuously improve
-**MULTI-TIER**: Analyze all tiers
-**PARALLEL**: Aggregate multiple telemetry files concurrently
+5. **Output Generation**:
+    * Do NOT generate improvement recommendations (hallucination risk).
+    * Generate report with the following strict schema:
+        * **Header**: Period Analyzed, Source Files Used.
+        * **Data Integrity**: Total Lines, Valid Lines, Skipped Errors.
+        * **Metrics**: Say:Do Ratio, Success Rate, Total Throughput.
+        * **Observations**: Bullet points of factual trends (e.g., "High
+            failure rate observed on Tuesdays").

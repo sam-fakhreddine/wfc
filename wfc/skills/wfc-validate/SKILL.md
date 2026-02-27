@@ -1,125 +1,105 @@
 ---
 name: wfc-validate
-description: Critical thinking advisor that analyzes plans, ideas, and technical approaches across 7 dimensions (feasibility, complexity, risk, value, alternatives, assumptions, trade-offs). Provides discerning but constructive feedback to ensure smart decisions before committing time and resources. Use when evaluating new features, architectural decisions, or technical approaches. Triggers on "is this a good idea", "should I do this", "analyze this approach", "what do you think of this plan", or explicit /wfc-validate. Ideal for architectural decisions, feature planning, and technology choices. Not for implementation details or code review.
+description: >
+  Strategic decision advisor that evaluates high-stakes technical proposals
+  (Architecture, Infrastructure, Tech Stack) across 7 dimensions. Use to validate
+  direction and trade-offs BEFORE committing resources.
+
+  Trigger STRICTLY when ALL are true:
+  1. Subject is a proposed architectural change, infrastructure strategy, or
+     strategic technology adoption.
+  2. Decision impacts system structure or resource allocation > 1 week of effort.
+  3. User asks "Should we...?" or "Is this viable?" (Strategic validation).
+
+  Trigger phrases: "evaluate this architecture", "should we migrate to",
+  "validate this design", "trade-offs of using X for Y", "/wfc-validate".
 license: MIT
 ---
 
-# WFC:VALIDATE - Thoughtful Advisor
+# WFC:VALIDATE - Strategic Advisor
 
-The experienced staff engineer who asks "is this the right approach?" before we commit.
+The experienced staff engineer who asks "Is this the right approach?" before we commit.
 
 ## What It Does
 
-Analyzes any WFC artifact (plan, architecture, idea) across 7 dimensions:
+Analyzes technical proposals against 7 dimensions to produce a risk-adjusted verdict. It separates the "What" from the "How" and identifies hidden costs.
 
-1. **Do We Even Need This?** - Real problem vs hypothetical
-2. **Is This the Simplest Approach?** - Avoid over-engineering
-3. **Is the Scope Right?** - Not too much, not too little
-4. **What Are We Trading Off?** - Opportunity cost, maintenance burden
-5. **Have We Seen This Fail Before?** - Anti-patterns, known failure modes
-6. **What's the Blast Radius?** - Risk assessment, rollback plan
-7. **Is the Timeline Realistic?** - Hidden dependencies, prototype first?
+## Input Requirements
 
-Returns balanced assessment with verdict: PROCEED, PROCEED WITH ADJUSTMENTS, RECONSIDER, or DON'T PROCEED.
+To avoid `INPUT_INSUFFICIENT` error, the input MUST contain:
 
-## Usage
+1. **The Proposal**: A clear description of the architectural change or strategy.
+2. **The Context**: System type, team size, and critical constraints (budget/time).
+3. **The Goal**: What problem is this solving?
 
-```bash
-# Analyze current plan
-/wfc-validate
+*Note: Flags like `--plan` or `--task` indicate that the input context contains specific artifacts (e.g., a `TASKS.md` block). The agent does not browse the filesystem; you must provide the content.*
 
-# Analyze a freeform idea
-/wfc-validate "rewrite auth system in Rust"
+## Analysis Dimensions
 
-# Analyze specific artifact
-/wfc-validate --plan
-/wfc-validate --architecture
-/wfc-validate --task TASK-005
-```
+1. **Need**: Real problem vs. hypothetical?
+2. **Simplicity**: Is this over-engineered?
+3. **Scope**: Is the boundary clear?
+4. **Trade-offs**: Opportunity cost and maintenance?
+5. **Failure Modes**: Anti-patterns and history?
+6. **Blast Radius**: Risk and rollback plan?
+7. **Feasibility**: Timeline and hidden dependencies?
+
+## Verdict Logic
+
+**Scoring**: Assign a score (1-10) for each dimension.
+
+- **Overall Score**: Arithmetic mean of the 7 dimensions.
+- **Critical Blocker**: Any dimension scoring <= 4 automatically triggers `DON'T PROCEED`.
+
+**Safety Override**: If the proposal introduces active security vulnerabilities or data loss risks without explicit mitigation, the verdict is `DON'T PROCEED`.
+
+**Verdicts**:
+
+- **PROCEED**: Score >= 8.5, no blockers.
+- **PROCEED WITH ADJUSTMENTS**: Score 7.0-8.4, address concerns first.
+- **RECONSIDER**: Score 5.0-6.9, explore alternatives.
+- **DON'T PROCEED**: Score < 5.0 or Critical Blocker present.
 
 ## Output: VALIDATE.md
 
 ```markdown
 # Validation Analysis
 
-## Subject: Rewrite auth system in Rust
-## Verdict: 🟡 PROCEED WITH ADJUSTMENTS
-## Overall Score: 7.5/10
+## Subject: [Input Proposal Title/ID]
+## Verdict: [VERDICT_CODE]
+## Overall Score: [X]/10
 
 ---
 
 ## Executive Summary
-
-Overall, this approach shows 12 clear strengths and 8 areas for consideration.
-
-The strongest aspects are: Blast Radius, Need, Simplicity.
-
-Key considerations: Opportunity cost of other features, Integration risks, Consider using existing library.
-
-With an overall score of 7.5/10, this is a solid approach that can move forward with attention to the identified concerns.
+[Brief overview of the proposal's viability]
 
 ---
 
 ## Dimension Analysis
 
-### Do We Even Need This? — Score: 8/10
+### [Dimension Name] — Score: [X]/10
+- **Assessment**: [Reasoning]
+- **Recommendation**: [Actionable advice]
 
-**Strengths:**
-- Addresses clear user need
-- Backed by data/metrics
-
-**Concerns:**
-- Consider if existing solution could be improved instead
-
-**Recommendation:** Need is justified, but validate assumptions
-
-[... 6 more dimensions ...]
+[... repeated for 7 dimensions ...]
 
 ---
 
 ## Simpler Alternatives
-
-- Start with a simpler MVP and iterate based on feedback
-- Consider using existing solution (e.g., off-the-shelf library)
-- Phase the implementation - deliver core value first
-
----
+- [List of 1-3 less complex approaches]
 
 ## Final Recommendation
-
-Proceed, but address these key concerns first: Opportunity cost of other features; Integration risks may extend timeline; Consider using existing library
+[Synthesis of the verdict and next steps]
 ```
 
 ## Tone
 
-**Discerning but constructive. Honest but not harsh.**
-
-Not a naysayer - wants us to succeed with the best approach. Highlights both strengths and concerns. Suggests simpler alternatives when appropriate.
-
-## Verdict Logic
-
-- **🟢 PROCEED**: Overall score >= 8.5/10, no critical concerns
-- **🟡 PROCEED WITH ADJUSTMENTS**: Score 7.0-8.4, address concerns first
-- **🟠 RECONSIDER**: Score 5.0-6.9, explore alternatives
-- **🔴 DON'T PROCEED**: Score < 5.0 or any dimension <= 4/10
-
-## Integration with WFC
-
-### Can Analyze
-
-- `wfc-plan` outputs (TASKS.md, PROPERTIES.md)
-- `wfc-architecture` outputs (ARCHITECTURE.md)
-- `wfc-security` outputs (THREAT-MODEL.md)
-- Freeform ideas (text input)
-
-### Produces
-
-- VALIDATE.md report
-- Simpler alternatives
-- Final recommendation
+**Discerning but constructive.**
+Honest about risks but focused on success. Suggests simpler alternatives rather than just blocking progress.
 
 ## Philosophy
 
-**ELEGANT**: Simple 7-dimension framework, clear logic
-**MULTI-TIER**: Analysis (logic) separated from presentation
-**PARALLEL**: Can analyze multiple artifacts concurrently
+**ELEGANT**: Simple framework, clear outcome.
+**STATELESS**: Requires all context to be provided in the prompt; implies no file system access.
+**SAFE**: Prioritizes security and feasibility over feature velocity.

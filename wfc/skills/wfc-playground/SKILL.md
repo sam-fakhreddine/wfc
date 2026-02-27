@@ -1,90 +1,152 @@
 ---
 name: wfc-playground
-description: Creates self-contained interactive HTML playgrounds for visual exploration of configurations, designs, and data. Generates single-file HTML with inline CSS/JS and no external dependencies. Use when you want to explore color palettes, test configurations, visualize data, or create interactive concept maps. Triggers on "create playground", "interactive explorer", "visual playground", or explicit /wfc-playground. Ideal for design exploration, data visualization, and interactive prototyping. Not for production UI components.
+description: >
+  Generates a single, self-contained HTML file with inline CSS and vanilla
+  JavaScript (no external dependencies, no CDNs, no build step). Use for
+  throwaway visual experiments, algorithm visualization, or CSS explorations
+  where all code is synthesized entirely by the LLM.
+
+  TRIGGER: Invoke ONLY when the request explicitly requests a browser-openable,
+  single-file, static HTML sandbox with zero external dependencies.
+
+  DO NOT trigger for: requests mentioning React/Vue/Angular, CDN libraries
+  (D3, Three.js, Chart.js), or production-ready output.
+
 license: MIT
 ---
 
-# WFC:PLAYGROUND - Interactive Playground Generator
+# WFC:PLAYGROUND — Static HTML Explorer Generator
 
-Creates self-contained interactive HTML playgrounds for visual exploration.
+## Not for
 
-## What It Does
+- Wave Function Collapse generation or any procedural/generative algorithm
+- React, Vue, Svelte, Angular, or any framework-based component output
+- Production dashboards, deployed UI, or any output shipped to end users
+- Embeddable widgets, iframe content, or components integrated into existing pages
+- Tools requiring live server-side connections (databases, APIs, OAuth, backend endpoints)
+- CDN-loaded libraries, npm packages, or external JavaScript/CSS imports
+- Multi-file projects or output requiring a build step or server
+- Accessibility-compliant (WCAG) UI — generated output makes no a11y guarantees
+- Coding sandboxes or REPL environments (CodePen/JSFiddle-style)
+- Mobile-first or responsive layouts
+- Dynamic client-side state viewers (localStorage, IndexedDB, SessionStorage inspectors)
+- Self-referential requests to visualize this skill's own definition or code
+- Requests with no discernible topic, data, design properties, or conceptual relationships
 
-1. **Selects template** based on request type (design, data, concept)
-2. **Customizes** for the specific exploration need
-3. **Generates** single self-contained .html file
-4. **No dependencies** - inline CSS/JS, opens in any browser
+Synthesizes a single self-contained `.html` file for one-off visual exploration.
+No files are read from disk. No external dependencies. No backend. No framework.
 
-## Usage
+---
 
-```bash
-# Design exploration
-/wfc-playground "color palette explorer"
-/wfc-playground "typography scale playground"
-/wfc-playground "spacing system visualizer"
+## Execution Steps
 
-# Data exploration
-/wfc-playground "JSON data explorer"
-/wfc-playground "API response viewer"
-/wfc-playground "query builder"
+### Step 1 — Classify Request into One Pattern
 
-# Concept exploration
-/wfc-playground "system architecture map"
-/wfc-playground "feature dependency graph"
-/wfc-playground "concept relationship explorer"
+Apply the first matching rule (evaluate in order):
+
+| If request PRIMARILY involves… | Use pattern |
+|---|---|
+| Numeric/textual properties affecting appearance (color, spacing, typography, opacity) | **Design** |
+| Structured records requiring filter/sort/search (JSON arrays, tables, data grids) | **Data** |
+| Entities and their relationships (nodes, edges, graphs, dependencies, hierarchies) | **Concept** |
+
+**Tie-breaking rules:**
+
+1. If multiple patterns have equal signals, prioritize: **Concept > Data > Design**
+2. If no pattern matches, return error comment: `<!-- ERROR: No matching pattern. Request must specify design properties, structured data, or entity relationships. -->`
+3. Do NOT default to Design for unrelated requests.
+
+**Rejection rule:**
+If the request requires server-side execution, OAuth, or real-time network calls, abort and respond:
+> "This request requires live backend connectivity. wfc-playground generates static UI only. Use a backend-capable skill."
+
+**Mock data clarification:**
+Requests to visualize *example* or *placeholder* data representing API responses ARE permitted. Only reject if the request requires actual network calls at runtime.
+
+Record the chosen pattern in an HTML comment at the top of the output:
+
+```html
+<!-- Pattern: [Design|Data|Concept] -->
 ```
 
-## Templates
+### Step 2 — Apply Pattern-Specific Rules
 
-### Design Playground
+**All patterns:**
 
-Interactive controls for visual design exploration:
+- Page `<title>` and visible `<h1>`: derived from user's topic string
+- Seed data: use user-provided data verbatim (inline as JS `const`)
+- If no data provided: use clearly labeled placeholder values with comment `// Placeholder data — replace with actual values`
+- Dataset size limit: count top-level array elements only. If >500, truncate to 100 and inject:
 
-- Color pickers, sliders, toggles
-- Live preview panel
-- Generated CSS/config output
-- Copy-to-clipboard
+  ```html
+  <!-- WARNING: Input truncated to 100 items (original: N items) -->
+  ```
 
-### Data Explorer
+**Design pattern:**
 
-Interactive data visualization and manipulation:
+- Control mapping:
+  | Property type | Control element |
+  |---|---|
+  | Color | `<input type="color">` |
+  | Numeric range | `<input type="range" min="0" max="100">` |
+  | Boolean toggle | `<input type="checkbox">` |
+  | Short text | `<input type="text">` |
+- If property has no clear mapping (e.g., "whimsy"), create a range input with labeled waypoints
+- Output panel: display current CSS custom properties block:
 
-- JSON tree view
-- Filter/search
-- Table/chart views
-- Export options
+  ```css
+  :root { --property-name: value; }
+  ```
 
-### Concept Map
+**Data pattern:**
 
-Interactive node-based exploration:
+- View selection:
+  | Input structure | Default view |
+  |---|---|
+  | Nested objects/arrays | Expandable JSON tree |
+  | Flat array of objects | Sortable/filterable HTML `<table>` |
+  | Neither | Raw `<pre>` text block |
+- Output panel: display current filtered/visible data state as JSON
 
-- Draggable nodes
-- Relationship lines
-- Zoom/pan
-- Category coloring
+**Concept pattern:**
 
-## Output
+- Node positions: distribute evenly in a CSS Grid (initial); make nodes draggable via JS
+- Relationship lines: SVG `<path>` elements positioned behind nodes, updated on drag
+- Node content: display entity name; if entity has properties matching Design or Data types, render them inline (e.g., color swatch for color property)
+- Layout: SVG layer (z-index: 0) + HTML node layer (z-index: 1)
 
-Single `.html` file with:
+### Step 3 — Generate Output File
 
-- Left panel: Interactive controls
-- Right panel: Live preview
-- Bottom panel: Generated output with copy button
-- No external dependencies (all inline)
+Produce a single HTML file with this structure:
 
-## Architecture
-
+```html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>[User Topic]</title>
+  <style>
+    /* [Pattern]-specific styles */
+    /* All CSS inline here */
+  </style>
+</head>
+<body>
+  <h1>[User Topic]</h1>
+  <!-- Pattern-specific UI controls -->
+  <!-- Output panel -->
+  <script>
+    // [Pattern]-specific logic
+    // Seed data
+    // Interaction handlers
+  </script>
+</body>
+</html>
 ```
-User Request -> Template Selection -> Customization -> HTML Generation
-```
 
-Templates are in `wfc/assets/templates/playground/`:
+**Quality requirements:**
 
-- `design.html` - Design playground base
-- `data-explorer.html` - Data exploration base
-- `concept-map.html` - Concept mapping base
-
-## Philosophy
-
-**ELEGANT**: Single file, no dependencies
-**PROGRESSIVE**: Template -> Customize -> Generate
+- All code must run when file is opened directly in browser (file:// protocol)
+- No `fetch()`, `XMLHttpRequest`, or external network calls
+- No `import` statements (ES modules require server)
+- All variables must be initialized before use

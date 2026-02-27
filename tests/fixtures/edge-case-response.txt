@@ -1,0 +1,17 @@
+## Edge Cases
+
+### SKILL.md with empty description
+**Severity**: HIGH
+An empty description string causes the discovery prompt template to substitute an empty `${description}`, producing a near-useless adversarial prompt. The LLM will likely hallucinate triggers.
+
+### skill_name containing path separators
+**Severity**: HIGH
+If frontmatter `name` field contains `/` or `..`, report file path construction could traverse outside the intended directory.
+
+### SKILL.md with no frontmatter delimiters
+**Severity**: MEDIUM
+`parse_frontmatter()` raises `ValueError`. The CLI catches this but the error message may not be actionable for users.
+
+### --all run on empty skills directory
+**Severity**: LOW
+Already handled: returns exit code 1 with "No skills found." message.

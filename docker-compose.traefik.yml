@@ -28,9 +28,8 @@ services:
       - "--certificatesresolvers.letsencrypt.acme.storage=/letsencrypt/acme.json"
       - "--certificatesresolvers.letsencrypt.acme.httpchallenge.entrypoint=web"
 
-      # Dashboard (optional, for monitoring)
+      # Dashboard (optional, for monitoring — secured via basicAuth middleware)
       - "--api.dashboard=true"
-      - "--api.insecure=true"  # Remove in production, use auth
 
       # Access logs
       - "--accesslog=true"
@@ -45,11 +44,15 @@ services:
       - traefik-letsencrypt:/letsencrypt
       - traefik-logs:/var/log/traefik
     labels:
-      # Dashboard route (optional)
+      # Dashboard route (secured with basicAuth)
       - "traefik.enable=true"
       - "traefik.http.routers.dashboard.rule=Host(`traefik.localhost`)"
       - "traefik.http.routers.dashboard.service=api@internal"
-      - "traefik.http.routers.dashboard.entrypoints=web"
+      - "traefik.http.routers.dashboard.entrypoints=websecure"
+      - "traefik.http.routers.dashboard.tls.certresolver=letsencrypt"
+      # htpasswd: admin/admin — change in production (generate via: htpasswd -nB admin)
+      - "traefik.http.middlewares.dashboard-auth.basicauth.users=admin:$$2y$$05$$PLACEHOLDER_HASH"
+      - "traefik.http.routers.dashboard.middlewares=dashboard-auth"
     networks:
       - wfc-network
 

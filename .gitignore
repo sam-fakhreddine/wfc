@@ -42,6 +42,10 @@ Thumbs.db
 *.log
 *.tmp
 .cache/
+.coverage
+.pytest_cache/
+.ruff_cache/
+MagicMock/
 
 # Project-specific
 wfc/personas/custom/*.json
@@ -61,6 +65,15 @@ wfc-*-prompt.md
 .development/
 test-results/
 validation/
+
+# WFC state — all dev artifacts live in ~/.wfc/projects/{repo}/branches/{branch}/
+# Documentation is Infrastructure: never discard, always archive to ~/.wfc
+plans/
+.wfc/
+ba/
+.wfc-review/
+experiments/
+tools/
 
 # Entire.io session data (local-only by default, privacy-first)
 .entire/

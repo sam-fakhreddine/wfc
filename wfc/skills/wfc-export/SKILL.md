@@ -1,33 +1,49 @@
 ---
 name: wfc-export
-description: Multi-platform skill export that converts WFC skills into formats compatible with other AI coding tools. Supports OpenCode, Codex, Gemini CLI, GitHub Copilot, Kiro CLI, Cursor, and Factory Droid. Reads WFC skill SKILL.md files and generates platform-specific configurations. Triggers on "export skills", "convert for copilot", "sync to opencode", or explicit /wfc-export. Ideal when adopting WFC skills in multi-tool teams. Not for internal WFC development.
+description: >
+  Exports WFC SKILL.md files to platform-specific configuration files. OUTPUT ONLY:
+  WFC → external format. Cannot import or sync external configs back to WFC. Requires
+  existing SKILL.md files with WFC frontmatter (name, description, license fields)
+  in the current working directory.
+
+  Supported platforms ONLY: copilot, cursor, gemini, kiro, opencode, codex, factory.
+
+  Triggers: /wfc-export --to <platform>; /wfc-export --all; "export WFC skills to
+  <platform>"; "generate <platform> config from WFC skills"; "convert SKILL.md to
+  <platform> instructions".
+
+  Not for: importing external configs to WFC; bidirectional sync; creating/editing
+  SKILL.md files (use wfc-build); converting non-WFC files; unsupported platforms
+  (Claude Code, Windsurf, Cline, Continue, Aider); lossless export to platforms with
+  character limits without --allow-lossy; skills requiring HTTP MCP servers exported
+  to stdio-only platforms; non-destructive merging with existing configs.
 license: MIT
 ---
 
 # WFC:EXPORT - Cross-Platform Skill Distribution
 
-**"Same quality guardrails, whichever IDE your team opens."**
+**"Same guardrails, whichever IDE your team opens."**
 
 ## What It Does
 
-Translates WFC skill definitions into native configs for 7+ AI coding platforms — same guardrails, different runtime.
+Translates WFC skill definitions into native configs for 7 AI coding platforms — one direction only.
 
-1. **Inventory** - Walk all WFC SKILL.md files
-2. **Translate** - Map to target platform schema
-3. **Emit** - Write platform-native config files
-4. **Validate** - Confirm generated output parses cleanly
+1. **Inventory** - Scan current working directory for SKILL.md files with valid WFC frontmatter (name, description, license)
+2. **Translate** - Map to target platform schema using tables below
+3. **Emit** - Write platform-native config files (WARNING: overwrites existing files)
+4. **Syntax-check** - Verify output is well-formed; does not guarantee platform schema compliance
 
 ## Usage
 
 ```bash
 # Export to specific platform
-/wfc-export --to opencode
 /wfc-export --to copilot
+/wfc-export --to cursor
 /wfc-export --to gemini
 /wfc-export --to codex
 /wfc-export --to kiro
-/wfc-export --to cursor
-/wfc-export --to droid
+/wfc-export --to opencode
+/wfc-export --to factory
 
 # Export all platforms
 /wfc-export --all
@@ -35,128 +51,135 @@ Translates WFC skill definitions into native configs for 7+ AI coding platforms 
 # Export specific skills only
 /wfc-export --to copilot --skills wfc-review,wfc-plan,wfc-build
 
-# Dry run
+# Dry run (show what would be written)
 /wfc-export --to opencode --dry-run
 
-# Custom output directory
+# Custom output directory (ignored for global-scope platforms: codex, opencode, factory)
 /wfc-export --to copilot --output ./exports/copilot/
+
+# Allow character limit truncation (required for Codex if descriptions >1024 chars)
+/wfc-export --to codex --allow-lossy
 ```
+
+**Valid --to values**: `copilot`, `cursor`, `gemini`, `codex`, `kiro`, `opencode`, `factory`
 
 ## Supported Platforms
 
 ### OpenCode
 
-**Output:** `~/.config/opencode/` or `.opencode/`
-**Format:** `opencode.json` + skill directories + agent markdown files
+**Scope:** Global (`~/.config/opencode/`) — `--output` flag ignored
+**Output:**
 
 ```
-.opencode/
-├── opencode.json          # Tool config
+~/.config/opencode/
+├── opencode.json
 ├── skills/
-│   ├── wfc-review/SKILL.md
-│   ├── wfc-plan/SKILL.md
-│   └── ...
+│   └── <skill-name>/SKILL.md
 └── agents/
-    ├── security-reviewer.md
-    └── ...
+    └── <agent-name>.md
 ```
 
 ### GitHub Copilot
 
-**Output:** `.github/`
-**Format:** `.agent.md` files with Copilot frontmatter
+**Scope:** Project (`.github/`)
+**Output:**
 
 ```
 .github/
 ├── copilot/
-│   ├── wfc-review.agent.md    # Copilot agent format
-│   ├── wfc-plan.agent.md
-│   └── ...
-└── copilot-mcp-config.json    # MCP server config
+│   └── <skill-name>.agent.md
+└── copilot-mcp-config.json
 ```
 
 **Copilot Agent Format:**
 
 ```markdown
 ---
-name: wfc-review
-description: Five-agent consensus code review
+name: <skill-name>
+description: <truncated to 1024 chars if needed>
 tools: Bash, Read, Write, Glob, Grep
 ---
-
-[SKILL.md content adapted for Copilot]
+[SKILL.md body content]
 ```
 
 ### Gemini CLI
 
-**Output:** `.gemini/`
-**Format:** TOML commands + skill directories
+**Scope:** Project (`.gemini/`)
+**Output:**
 
 ```
 .gemini/
 ├── commands/
-│   ├── wfc-review.toml
-│   ├── wfc-plan.toml
-│   └── ...
+│   └── <skill-name>.toml
 ├── skills/
-│   ├── wfc-review/SKILL.md
-│   └── ...
-└── settings.json              # MCP servers (stdio only)
+│   └── <skill-name>/SKILL.md
+└── settings.json
 ```
+
+**Note:** HTTP MCP servers are stripped. Only stdio MCP servers included in settings.json.
 
 ### Codex
 
-**Output:** `~/.codex/`
-**Format:** Prompts + skills (descriptions truncated to 1024 chars)
+**Scope:** Global (`~/.codex/`) — `--output` flag ignored
+**Output:**
 
 ```
 ~/.codex/
 ├── prompts/
-│   ├── wfc-review.md
-│   └── ...
+│   └── <skill-name>.md
 └── skills/
-    ├── wfc-review/SKILL.md
-    └── ...
+    └── <skill-name>/SKILL.md
 ```
+
+**Constraint:** Descriptions truncated to 1024 characters. Requires `--allow-lossy` if source exceeds limit.
 
 ### Kiro CLI
 
-**Output:** `.kiro/`
-**Format:** JSON agent configs + prompt markdown + steering files
+**Scope:** Project (`.kiro/`)
+**Output:**
 
 ```
 .kiro/
 ├── agents/
-│   ├── wfc-review.json
-│   ├── wfc-review-prompt.md
-│   └── ...
+│   ├── <skill-name>.json
+│   └── <skill-name>-prompt.md
 ├── skills/
-│   ├── wfc-review/SKILL.md
-│   └── ...
+│   └── <skill-name>/SKILL.md
 ├── steering/
-│   └── wfc-rules.md           # From CLAUDE.md
-└── mcp.json                   # MCP servers (stdio only)
+│   └── wfc-rules.md
+└── mcp.json
 ```
+
+**Note:** HTTP MCP servers are stripped. Only stdio MCP servers included in mcp.json.
 
 ### Cursor
 
-**Output:** `.cursor/`
-**Format:** Rules + agent configs
+**Scope:** Project (`.cursor/`)
+**Output:**
 
 ```
 .cursor/
 ├── rules/
-│   ├── wfc-review.md
-│   └── ...
+│   └── <skill-name>.md
 └── agents/
-    ├── wfc-review.json
-    └── ...
+    └── <skill-name>.json
+```
+
+**Cursor Agent Schema:**
+
+```json
+{
+  "name": "<skill-name>",
+  "description": "<description text>",
+  "instructions": "<path to rules/<skill-name>.md>"
+}
 ```
 
 ### Factory Droid
 
-**Output:** `~/.factory/`
-**Format:** Tool-mapped configs (Bash→Execute, Write→Create, etc.)
+**Scope:** Global (`~/.factory/`) — `--output` flag ignored
+**Output:** Tool-mapped configs (Bash→Execute, Write→Create, Read→ReadFile)
+**Status:** Partial support. Directory structure follows Codex pattern. Tool mapping applied to instruction text.
 
 ## Conversion Rules
 
@@ -165,64 +188,51 @@ tools: Bash, Read, Write, Glob, Grep
 | WFC Field | Copilot | Gemini | Kiro | OpenCode |
 |-----------|---------|--------|------|----------|
 | name | name | command_name | agent_id | skill_name |
-| description | description | description (truncated) | description | description |
+| description | description | description | description | description |
 | license | (dropped) | (dropped) | (dropped) | (dropped) |
 
 ### Content Adaptation
 
-- **Progressive disclosure**: SKILL.md content preserved as-is (under 500 lines)
-- **References**: Relative paths adjusted for target platform directory structure
-- **WFC-specific sections**: Configuration, Integration sections preserved but marked as WFC-native
-- **Tool references**: Mapped to platform equivalents where different
+- **Body content**: Preserved verbatim (no truncation unless platform requires)
+- **Line count**: Files >500 lines export with warning; no automatic summarization
+- **References**: Markdown links adjusted for target directory structure; referenced files NOT copied
+- **WFC-specific sections**: Configuration/Integration sections wrapped in `<!-- WFC-NATIVE --> ... <!-- /WFC-NATIVE -->`
+- **Tool references**: Preserved verbatim. No automatic tool name mapping. Manual review required.
 
 ### What Gets Exported
 
 | Component | Exported | Notes |
 |-----------|----------|-------|
-| SKILL.md | Yes | Core skill content |
-| References | Yes | Supporting docs |
-| Scripts | Platform-dependent | Only if platform supports execution |
-| Templates | Yes | HTML playground templates |
-| Reviewer prompts | Yes | As agent definitions |
-| MCP servers | stdio only | HTTP MCP servers skipped |
+| SKILL.md body | Yes | Preserved verbatim |
+| WFC frontmatter | Mapped | Per platform table |
+| stdio MCP servers | Yes | Copilot, Gemini, Kiro only |
+| HTTP MCP servers | No | Stripped with warning |
 
 ### What Doesn't Get Exported
 
-- Internal Python code (orchestrator.py, etc.)
+- Internal Python code
 - Test files
 - Telemetry infrastructure
-- WFC-specific CLI commands
+- WFC CLI commands
 - Git hooks
-
-## Integration with WFC
-
-### Consumed By
-
-- CI/CD pipelines (export on release)
-- Team onboarding (export for new developer's preferred tool)
-
-### Produces
-
-- Platform-specific config files
-- Export manifest (which skills exported to which platforms)
+- HTTP MCP server definitions (stripped)
 
 ## Configuration
 
+Located in `.wfc/export.json` in project root:
+
 ```json
 {
-  "export": {
-    "platforms": ["copilot", "gemini", "kiro", "opencode"],
-    "skills": "all",
-    "include_reviewers": true,
-    "include_references": true,
-    "output_base": "./exports"
-  }
+  "platforms": ["copilot", "gemini", "kiro", "opencode"],
+  "skills": "all",
+  "include_reviewers": true,
+  "output_base": "./exports"
 }
 ```
 
 ## Philosophy
 
-**POLYGLOT**: Same guardrails, any AI coding tool
-**LOSSLESS**: Skill logic survives the format swap
+**POLYGLOT**: Same guardrails, any supported AI coding tool
 **FILTERED**: Ship the signal, drop the scaffolding
-**ONE-SHOT**: Single invocation syncs every platform
+**ONE-SHOT**: Single invocation exports to every configured platform
+**DESTRUCTIVE**: Overwrites existing target files without backup
