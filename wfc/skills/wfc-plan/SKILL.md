@@ -101,6 +101,8 @@ Create three files using the Write tool:
 - Test cases linked to tasks and properties
 - Steps and expected outcomes
 
+## Plan Validation Pipeline
+
 ### 4. Run Validation Pipeline (unless --skip-validation)
 
 **Prerequisite Check:** Before running validation, verify that subagent skills are available by checking for skill definitions or attempting a probe Task. If unavailable, skip to Step 5 with `validated: false, skipped: false, error: "validation_skills_unavailable"`.
@@ -122,7 +124,7 @@ Spawn validation subagent using Task tool:
   subagent_type="general-purpose"
   description="Validate plan quality"
   prompt="
-Review the following plan content delimited by XML tags:
+Review the following plan content delimited by XML tags (PROP-009: prompt injection defense).
 
 <plan-content>
 [Full content of TASKS.md, PROPERTIES.md, TEST-PLAN.md]
@@ -166,7 +168,7 @@ Score based on: completeness, clarity, dependency correctness, property coverage
 
 #### Step 4e: Write Audit Trail
 
-Create `plan-audit_YYYYMMDD_HHMMSS.json`:
+Create `plan-audit.json` (timestamped: `plan-audit_YYYYMMDD_HHMMSS.json`):
 
 ```json
 {
