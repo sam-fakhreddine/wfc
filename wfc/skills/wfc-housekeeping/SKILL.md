@@ -1,34 +1,49 @@
 ---
 name: wfc-housekeeping
 description: >
-  Removes inert or stale content from a codebase: unused imports, dead code with
-  zero static references, merged or abandoned git branches, unreferenced files, and
-  development artifacts (debug prints, breakpoints, temp files, orphaned worktrees).
-  Always dry-runs first, presents categorized findings with an approval gate, and
-  runs the full test suite before and after to detect regressions.
+  Removes unreferenced content from a codebase: unused imports, stale git
+  branches, orphaned files, and debug artifacts. Strictly limited to
+  file-level deletion within source code — does not modify package
+  manifests, lockfiles, or git history.
 
-  Triggers: "clean up unused imports", "remove stale branches", "delete orphaned
-  files", "purge debug artifacts", "pre-release cleanup", "prune dead code",
-  /wfc-housekeeping [branches|dead-code|imports|files|dev-artifacts].
+  Operates in scan-report-approve-execute cycle with mandatory test
+  verification. All deletions require explicit user approval unless --safe
+  flag is used (auto-fixes: unused imports in Python files only).
 
-  Not for: code refactoring or restructuring; dependency upgrades or lockfile changes;
-  writing or improving tests; security remediation or secret removal; documentation
-  authorship; any request where the goal is modified behavior rather than reduced
-  file count.
+  Scope: Python .py files, git branches, worktrees, tracked temp files.
+  Uses static analysis (ruff, grep); cannot detect dynamically accessed
+  code (getattr, globals, plugin loaders).
+
+  Triggers: "remove unused imports", "delete dead code", "prune stale
+  branches", "clean up debug logs", /wfc-housekeeping.
+
+  Not for: Refactoring logic; removing packages from pyproject.toml or
+  package.json; npm prune / cargo prune; rewriting git history; secret
+  detection; fixing tests; feature-flagged code.
 license: MIT
 ---
 
 # WFC:HOUSEKEEPING - Project Hygiene & Cleanup
 
-**Keep the codebase World Fucking Class.** Systematic cleanup with safety guardrails.
+Systematic cleanup with explicit safety guardrails and user approval gates.
 
-## What It Does
+## Scope
 
-1. **Scan** - Analyze the codebase for cleanup opportunities across 5 domains
-2. **Report** - Present categorized findings with severity and safety ratings
-3. **Approve** - User reviews and selects which cleanups to apply
-4. **Execute** - Apply cleanups in parallel (safe categories) with test validation
-5. **Verify** - Run full test suite to confirm no regressions
+**What this skill does:**
+
+- Removes unused import statements from Python source files
+- Deletes merged/stale git branches (local and remote with approval)
+- Removes orphaned files not referenced anywhere in the codebase
+- Cleans debug artifacts: print statements, breakpoints, temp files
+
+**What this skill does NOT do:**
+
+- Modify `pyproject.toml`, `package.json`, `Cargo.toml`, or any package manifest
+- Run package managers (`npm prune`, `pip-autoremove`, `cargo prune`)
+- Rewrite git history or remove files from git history
+- Detect secrets or credentials
+- Fix failing tests
+- Remove code accessed via dynamic patterns (getattr, globals, plugin loaders)
 
 ## Usage
 
@@ -44,7 +59,7 @@ license: MIT
 /wfc-housekeeping dev-artifacts
 
 # With flags
-/wfc-housekeeping --safe          # Only auto-fixable items (no approval needed)
+/wfc-housekeeping --safe          # Only unused imports (ruff --fix), no approval needed
 /wfc-housekeeping --preview       # Scan and report only, don't fix anything
 /wfc-housekeeping --aggressive    # Include borderline items (more approval prompts)
 
@@ -58,31 +73,34 @@ license: MIT
 
 **Scans:**
 
-- Local branches merged into main/develop
+- Local branches merged into default branch
 - Local branches with no remote tracking
-- Remote branches merged into main/develop
+- Remote branches merged into default branch
 - Branches older than 30 days with no recent commits
 
-**Commands to run:**
+**Detection:**
 
 ```bash
-# List merged local branches (excluding main/develop/current)
-git branch --merged main | grep -v -E '^\*|main|develop'
+# Detect default branch
+git remote show origin | grep 'HEAD branch' | cut -d':' -f2 | tr -d ' '
+
+# List merged local branches (excluding default/current)
+git branch --merged $(git remote show origin | grep 'HEAD branch' | cut -d':' -f2 | tr -d ' ') | grep -v -E '^\*|main|master|develop|trunk'
 
 # List merged remote branches
-git branch -r --merged origin/main | grep -v -E 'main|develop|HEAD'
+git branch -r --merged origin/$(git remote show origin | grep 'HEAD branch' | cut -d':' -f2 | tr -d ' ') | grep -v -E 'main|master|develop|trunk|HEAD'
 
 # List local branches with no remote
 git branch -vv | grep ': gone]'
 
-# Show branch age (last commit date)
+# Show branch age
 git for-each-ref --sort=-committerdate --format='%(refname:short) %(committerdate:relative)' refs/heads/
 ```
 
-**Auto-fix:** Delete local merged branches.
-**Approval required:** Delete remote branches, delete unmerged branches.
+**Auto-fix:** None. All branch deletions require approval.
+**Approval required:** Delete any branch (local or remote).
 
-**Safety:** NEVER delete `main`, `develop`, or the current branch.
+**Safety:** NEVER delete the default branch, `develop`, or the current branch.
 
 ### 2. DEAD CODE — Unused Code Detection
 
@@ -94,31 +112,35 @@ git for-each-ref --sort=-committerdate --format='%(refname:short) %(committerdat
 - Empty `except: pass` blocks
 - Unused variables (assigned but never read)
 
-**How to detect:**
-
-For each Python function/class definition found via Grep:
-
-1. Search the entire codebase for references to that name
-2. Exclude the definition file itself and `__init__.py` re-exports
-3. If zero external references → candidate for removal
+**Detection:**
 
 ```bash
-# Find all function definitions
-uv run ruff check --select F841,F811 .  # Unused variables, redefined
+# Find unused variables and redefined names
+uv run ruff check --select F841,F811 .
 
-# Find commented-out code blocks
-# Grep for 3+ consecutive lines starting with #(space)(lowercase/import/def/class/if/for/return)
+# Find function/class definitions for manual reference check
+grep -rn "^def \|^class " --include="*.py" .
+
+# Find commented-out code blocks (3+ consecutive lines)
+grep -Pzo '(\s*# [a-z].*\n){3,}' -r --include="*.py" .
 ```
 
-**Auto-fix:** Remove unused imports (ruff --fix), remove empty `except: pass`.
-**Approval required:** Remove functions/classes, remove commented-out code.
+**Manual verification required:** For each function/class found:
+
+1. Search codebase for references: `grep -rn "function_name" --include="*.py" .`
+2. Exclude definition file and `__init__.py` re-exports
+3. Check for dynamic access patterns in same file: `getattr`, `globals()`, `__dict__`
+4. If ANY dynamic pattern exists → mark as "UNSAFE: dynamic access"
+
+**Auto-fix:** Remove unused imports only (via ruff --fix).
+**Approval required:** Remove functions/classes, commented-out code, any code with dynamic access patterns.
 
 **Safety:**
 
-- NEVER remove code with `# TODO`, `# FIXME`, `# HACK` comments (intentional)
+- NEVER remove code with `# TODO`, `# FIXME`, `# HACK` comments
 - NEVER remove `__all__` exports or `__init__.py` re-exports
-- NEVER remove test fixtures/utilities (check `tests/` and `conftest.py` usage)
-- If ANY usage path exists, prompt user
+- NEVER remove code from files containing `getattr(`, `globals()`, or `__dict__[` without manual review
+- NEVER assume test coverage is complete — warn user of coverage gaps
 
 ### 3. IMPORTS — Import Optimization
 
@@ -127,28 +149,28 @@ uv run ruff check --select F841,F811 .  # Unused variables, redefined
 - Unused imports
 - Duplicate imports
 - Import ordering (stdlib → third-party → local)
-- Star imports (`from x import *`)
 
-**Commands:**
+**Detection:**
 
 ```bash
-# Ruff handles all of this
-uv run ruff check --select F401,F811,I001,F403 .
-uv run ruff check --select F401,F811,I001,F403 --fix --diff .  # Preview fixes
+# Check import issues
+uv run ruff check --select F401,F811,I001 .
+
+# Preview fixes
+uv run ruff check --select F401,F811,I001 --fix --diff .
 ```
 
-**Auto-fix:** All import issues (ruff is authoritative here).
+**Auto-fix:** All import issues (ruff is authoritative).
+**Warning:** Ruff cannot detect imports used for side effects or dynamically accessed symbols. Review changes.
 
 ### 4. FILES — Orphaned & Redundant Files
 
 **Scans:**
 
-- `.pyc` files and `__pycache__` directories not in `.gitignore`
-- Empty `__init__.py` files that serve no purpose
-- Duplicate files (same content, different locations)
-- Files not imported/referenced anywhere
+- `.pyc` files and `__pycache__` directories tracked by git
+- Empty `__init__.py` files
 - Temporary files (`.tmp`, `.bak`, `.swp`, `.orig`)
-- Large files that shouldn't be in version control (>1MB)
+- Large files tracked by git (>1MB)
 
 **Detection:**
 
@@ -160,11 +182,13 @@ git ls-files '*.pyc' '__pycache__'
 find . -name '*.py' -empty -not -path './.git/*'
 
 # Find large files
-find . -size +1M -not -path './.git/*' -not -path './node_modules/*'
+find . -size +1M -not -path './.git/*' -not -path './node_modules/*' -not -path './.venv/*'
 
 # Find temp files
 git ls-files '*.tmp' '*.bak' '*.swp' '*.orig'
 ```
+
+**NOTE:** This skill does NOT detect duplicate files (same content, different locations) — no reliable detection method is available.
 
 **Auto-fix:** Remove `.pyc` files, `__pycache__` dirs, temp files.
 **Approval required:** Remove empty `__init__.py`, orphaned files, large files.
@@ -173,16 +197,12 @@ git ls-files '*.tmp' '*.bak' '*.swp' '*.orig'
 
 **Scans:**
 
-- Orphaned worktree directories (`.worktrees/`)
-- Debug print statements (`print(`, `console.log(`, `debugger`)
-- Hardcoded `localhost`/`127.0.0.1` URLs outside of tests
-- `breakpoint()` calls
-- Files with `TODO` or `FIXME` (report only, don't remove)
+- Orphaned worktree directories
+- Debug print statements (`print(`) in non-test Python files
+- `breakpoint()` calls in non-test Python files
+- Hardcoded `localhost`/`127.0.0.1` URLs in non-test files
 
-**Preserved (NEVER clean):**
-
-- `.development/plans/` — Plan history is valuable project context. Never delete.
-- `.development/summaries/` — Session summaries are kept for reference.
+**Test file definition:** Files matching `tests/**`, `test_*.py`, `*_test.py`, or `conftest.py`.
 
 **Detection:**
 
@@ -190,17 +210,31 @@ git ls-files '*.tmp' '*.bak' '*.swp' '*.orig'
 # Orphaned worktrees
 git worktree list --porcelain | grep 'prunable'
 
-# Debug statements in Python files (excluding tests)
-uv run ruff check --select T201,T203 .  # print statements, pdb
+# Debug statements (Python only)
+uv run ruff check --select T201,T203 .
+
+# Hardcoded localhost in non-test files
+grep -rn "localhost\|127.0.0.1" --include="*.py" . | grep -v -E "tests/|test_|_test\.py|conftest\.py"
 ```
 
 **Auto-fix:** Prune orphaned worktrees.
-**Approval required:** Remove debug statements, TODO/FIXME items (report only).
-**Never touch:** `.development/plans/`, `.development/summaries/`.
+**Approval required:** Remove debug statements, hardcoded URLs.
+
+**Preserved (NEVER clean):**
+
+- `.development/plans/`
+- `.development/summaries/`
 
 ## Keep List — Persistent Memory
 
-Items the user chose to **keep** in previous runs are stored in `.development/housekeeping/keep-list.json`. This file persists across sessions and is consulted every run.
+Items marked to **keep** are stored in `.development/housekeeping/keep-list.json`.
+
+### Setup
+
+```bash
+# Create directory if missing
+mkdir -p .development/housekeeping
+```
 
 ### Keep List Format
 
@@ -208,84 +242,44 @@ Items the user chose to **keep** in previous runs are stored in `.development/ho
 {
   "kept_items": [
     {
-      "item": "entire/checkpoints/v1",
+      "item": "feat/long-running-feature",
       "domain": "branches",
       "reason": "User chose to keep",
       "kept_on": "2026-02-15",
       "runs_kept": 1
-    },
-    {
-      "item": "wfc/scripts/old_helper.py",
-      "domain": "dead-code",
-      "reason": "Still referenced in docs",
-      "kept_on": "2026-02-14",
-      "runs_kept": 3
     }
   ]
 }
 ```
 
-### How It Works
+### Behavior
 
-1. **On scan**: After finding cleanup candidates, read `.development/housekeeping/keep-list.json`
-2. **On report**: Items on the keep list get a special marker in the table: `KEPT (2x)` showing how many times they've been kept. These items are **still shown** — the user can always change their mind and delete them.
-3. **On approval**: When the user says "keep" for an item, add/update it in the keep list with today's date and increment `runs_kept`.
-4. **On delete**: When the user deletes a previously-kept item, remove it from the keep list.
-
-### Keep List in Reports
-
-Previously-kept items appear with context so the user remembers why:
-
-```markdown
-### Branches (4 items)
-| # | Item | Severity | Safety | Action |
-|---|------|----------|--------|--------|
-| 1 | feat/old-feature (merged, local) | low | auto-fix | DELETE |
-| 2 | fix/stale-pr (merged, remote) | low | approval | DELETE |
-| 3 | entire/checkpoints/v1 (local) | info | — | KEPT (3x since 2026-02-15) |
-| 4 | claude/experiment (no remote) | medium | approval | DELETE? |
-```
-
-The `KEPT (3x since 2026-02-15)` marker tells the user: "you've seen this 3 times and chosen to keep it each time, first on Feb 15th." This is informational — the user can still override and delete it.
-
-### Managing the Keep List
-
-```bash
-# View what's on the keep list
-/wfc-housekeeping --show-kept
-
-# Clear the keep list (start fresh)
-/wfc-housekeeping --clear-kept
-
-# Remove a specific item from the keep list
-/wfc-housekeeping --forget "entire/checkpoints/v1"
-```
+1. **On scan**: Read `.development/housekeeping/keep-list.json` (create directory/file if missing)
+2. **On report**: Mark kept items with `KEPT (Nx since DATE)`
+3. **On approval**: Update keep list when user chooses keep/delete
+4. **On write**: Use atomic write (write to temp file, then rename) to prevent race conditions
 
 ## Workflow
 
-### Step 0: LOAD KEEP LIST
-
-Before scanning, read `.development/housekeeping/keep-list.json` if it exists. If the file doesn't exist, start with an empty keep list.
+### Step 0: SETUP
 
 ```bash
-# Check for keep list
+# Ensure keep list directory exists
+mkdir -p .development/housekeeping
+
+# Load keep list
 cat .development/housekeeping/keep-list.json 2>/dev/null || echo '{"kept_items": []}'
 ```
 
 ### Step 1: SCAN
 
-Run all applicable scanners. For each finding, record:
+Run scanners for selected domains. Record:
 
-- **Domain**: branches | dead-code | imports | files | dev-artifacts
-- **Item**: What was found (file path, branch name, function name)
-- **Severity**: critical | high | medium | low | info
-- **Safety**: auto-fix | approval-required
-- **Effort**: Size of change (lines affected)
-- **Keep status**: Check if item is on the keep list
+- Domain, Item, Severity, Safety (auto-fix/approval), Keep status
 
 ### Step 2: REPORT
 
-Present findings as a categorized table. Items on the keep list are marked with their history:
+Present findings as table with kept items marked:
 
 ```markdown
 ## Housekeeping Report
@@ -293,171 +287,43 @@ Present findings as a categorized table. Items on the keep list are marked with 
 ### Branches (4 items)
 | # | Item | Severity | Safety | Action |
 |---|------|----------|--------|--------|
-| 1 | feat/old-feature (merged, local) | low | auto-fix | DELETE |
-| 2 | fix/stale-pr (merged, remote) | low | approval | DELETE |
-| 3 | entire/checkpoints/v1 (local) | info | — | KEPT (2x since 2026-02-15) |
-| 4 | claude/experiment (no remote) | medium | approval | DELETE? |
+| 1 | feat/old-feature (merged, local) | low | approval | DELETE? |
+| 2 | feat/long-running (local) | info | — | KEPT (3x since 2026-02-15) |
 
-### Dead Code (2 items)
-| # | Item | Severity | Safety | Action |
-|---|------|----------|--------|--------|
-| 5 | wfc/old_module.py:deprecated_func() (0 refs) | medium | approval | REMOVE |
-| 6 | 3 commented-out blocks in scripts/ | low | approval | REMOVE |
-
-### Imports (8 items)
-| # | Item | Severity | Safety | Action |
-|---|------|----------|--------|--------|
-| 7 | 8 unused imports across 5 files | low | auto-fix | FIX |
-
-### Files (1 item)
-| # | Item | Severity | Safety | Action |
-|---|------|----------|--------|--------|
-| 8 | 2 .pyc files tracked by git | low | auto-fix | REMOVE |
-
-### Dev Artifacts (2 items)
-| # | Item | Severity | Safety | Action |
-|---|------|----------|--------|--------|
-| 9 | 2 orphaned worktrees | low | auto-fix | PRUNE |
-| 10 | 14 TODOs across codebase | info | — | REPORT |
-
----
-
-**Summary:** 10 items found — 4 auto-fix, 4 approval-required, 1 previously kept, 1 info-only
-
-Proceed with cleanup?
+**Summary:** 4 items — 0 auto-fix, 3 approval-required, 1 previously kept
 ```
 
 ### Step 3: APPROVE
 
-Use **AskUserQuestion** to get user approval:
+Prompt user: "Apply approved cleanups? (yes/skip #N/keep #N/preview)"
 
-- "Apply all auto-fixes + approved items?"
-- User can override individual items (e.g., "skip #4, fix #5, delete #3")
-- `--safe` mode: skip this step, only apply auto-fix items
-- `--preview` mode: stop here, don't apply anything
+If non-interactive environment (no TTY) and no `--safe` flag: **Exit with error** rather than hang.
 
-**After approval:**
+After approval:
 
-- Items the user chose to **keep** → add/update in keep list (increment `runs_kept`, update date)
-- Items the user chose to **delete** that were on the keep list → remove from keep list
-- Write updated keep list to `.development/housekeeping/keep-list.json`
+- Update keep list with user choices
+- Write atomically to prevent race conditions
 
 ### Step 4: EXECUTE
 
-Apply approved cleanups. Parallelize by domain using Task tool subagents:
+Process domains **sequentially** (parallel execution requires Task tool availability):
 
-- **Branches agent**: Deletes approved branches (local first, then remote)
-- **Code agent**: Removes dead code, fixes imports (runs `uv run ruff check --fix`)
-- **Files agent**: Removes orphaned files, cleans dev artifacts, prunes worktrees
+1. Apply approved changes for each domain
+2. Run full test suite after all changes applied
+3. If tests fail, report failure and offer rollback
 
-Each agent:
-
-1. Applies its changes
-2. Runs `uv run pytest` on affected test files
-3. Reports what was changed
+**NOTE:** This skill runs the **full test suite**, not affected-only tests. Use `--preview` to scan without executing if the full suite is too slow.
 
 ### Step 5: VERIFY
 
-After all agents complete:
+After execution:
 
 ```bash
-# Run full test suite
-uv run pytest --tb=short -q
-
-# Run linters
-uv run ruff check .
-uv run black --check .
-
-# Verify git status is clean (only expected changes)
-git status
+uv run pytest
 ```
 
-If tests fail → **rollback** the offending change and report which cleanup caused the failure.
+If tests fail:
 
-### Step 6: REPORT
-
-Display final summary:
-
-```markdown
-## Housekeeping Complete
-
-**Cleaned:** 8 items
-**Skipped:** 2 items
-**Info:** 1 item
-
-### Changes Applied
-- Deleted 3 local merged branches
-- Deleted 1 remote merged branch
-- Fixed 8 unused imports (ruff --fix)
-- Removed 2 .pyc files from tracking
-- Pruned 2 orphaned worktrees
-
-### Skipped
-- entire/checkpoints/v1 — user chose to keep
-- claude/experiment — user chose to keep
-
-### Info (no action taken)
-- 14 TODOs across codebase (run /wfc-housekeeping --type todo for details)
-
-### Verification
-- Tests: 424 passed, 9 failed (pre-existing)
-- Lint: clean
-- Format: clean
-
-No regressions introduced.
-```
-
-## Git Safety
-
-**CRITICAL:** Same rules as all WFC skills.
-
-- NEVER force-push
-- NEVER delete `main` or `develop`
-- NEVER delete the current branch
-- NEVER delete remote branches without explicit user approval
-- NEVER commit cleanup changes without test verification
-- All branch deletions are logged for audit
-
-## Integration with WFC
-
-### Complements
-
-- `/wfc-retro` — Retro can recommend running housekeeping
-- `/wfc-build` / `/wfc-implement` — Run housekeeping before starting new features
-- `/wfc-pr-comments` — Reviewers may request cleanup
-
-### Produces
-
-- Clean codebase (fewer files, cleaner imports, no dead branches)
-- Housekeeping report (optional: save to `.development/summaries/`)
-
-### Consumes
-
-- Git history (branch analysis)
-- Ruff/black (import and lint analysis)
-- Test suite (verification)
-
-## Configuration
-
-```json
-{
-  "housekeeping": {
-    "branch_age_threshold_days": 30,
-    "preserve_dev_plans": true,
-    "preserve_dev_summaries": true,
-    "max_file_size_mb": 1,
-    "auto_fix_imports": true,
-    "auto_prune_worktrees": true,
-    "protected_branches": ["main", "develop"],
-    "excluded_paths": [".git", "node_modules", ".venv"],
-    "report_todos": true
-  }
-}
-```
-
-## Philosophy
-
-**ELEGANT**: Simple scan → report → approve → execute flow
-**MULTI-TIER**: Scanners (logic) separated from reporting (presentation)
-**PARALLEL**: Domain agents run concurrently during execution
-**SAFE**: User approval gate, test verification, rollback on failure
+1. Report: "Tests failed after cleanup. Rolling back."
+2. Discard all uncommitted changes: `git restore .`
+3. Re-present approval prompt excluding the item(s) that caused failure

@@ -2,43 +2,45 @@
 name: wfc-ba
 description: >
   Business analysis and structured requirements gathering for software features. Use
-  when clarifying WHAT to build before planning HOW — new features, mid-development
-  re-scoping, or legacy features lacking requirements. Triggers on: "business
-  analysis", "gather requirements for [feature]", "MoSCoW prioritization", "define
-  acceptance criteria", "competitive analysis", "gap analysis", or /wfc-ba.
+  when clarifying WHAT business capabilities to build before planning HOW to implement
+  them. Focuses on: new feature requirements, business capability gap analysis,
+  MoSCoW prioritization of user-stated needs, and acceptance criteria definition.
 
-  Produces a BA document with MoSCoW requirements (user-stated only), integration
-  seams, acceptance criteria, and risk register — formatted for handoff to wfc-plan.
-  Does NOT perform sprint planning, architecture design, or code generation.
+  Triggers on: "business requirements", "functional requirements", "MoSCoW
+  prioritization", "acceptance criteria", "business gap analysis", "capability
+  assessment", "requirements gathering", or /wfc-ba.
 
-  NOT FOR: technical code analysis; bug fixes with clear repro steps; backlog
-  grooming or sprint planning; post-mortems or retrospectives; refactoring with no
-  behavior change; single-file changes with obvious scope.
+  Produces a BA document with MoSCoW requirements (user-stated only), high-level
+  integration touchpoints, acceptance criteria, and risk register — formatted as
+  structured markdown for handoff to planning skills.
+
+  NOT FOR: technical code analysis, API schema diffs, bug fixes with repro steps,
+  backlog grooming, effort estimation, post-mortems, refactoring with no behavior
+  change, single-file changes, API specification writing, or story pointing.
 license: MIT
 ---
 
 # WFC:BA - Business Analysis & Requirements Gathering
 
-**"Measure twice, plan once"** - Structured requirements before structured plans.
+**"Measure twice, plan once"** - Structured business requirements before structured plans.
 
 ## What It Does
 
-1. **Domain Discovery** - Understands the system, stakeholders, and current state
-2. **Requirements Elicitation** - Structured interview with adaptive depth
-3. **Gap Analysis** - Compares current state vs desired state
-4. **Competitive/Prior Art Research** - Analyzes existing solutions (repos, docs, APIs)
-5. **BA Document Generation** - Produces planner-ready output for `/wfc-plan`
+1. **Domain Discovery** - Understands the business context, stakeholders, and current capabilities
+2. **Requirements Elicitation** - Structured interview with defined depth levels
+3. **Gap Analysis** - Compares current business capabilities vs desired business capabilities
+4. **BA Document Generation** - Produces structured markdown output for consumption by planning skills
 
 ## Why This Exists
 
-Without BA, the planning workflow receives vague requirements and makes assumptions. Those assumptions compound through implementation. A 10-minute BA interview saves hours of rework.
+Without BA, planning receives vague requirements and makes assumptions. Those assumptions compound through implementation. A 10-minute BA interview saves hours of rework.
 
 ```
 WITHOUT BA:
-  Vague idea → /wfc-plan (guesses) → /wfc-implement (wrong thing) → Rework
+  Vague idea → Planning (guesses) → Implementation (wrong thing) → Rework
 
 WITH BA:
-  Vague idea → /wfc-ba (clarifies) → /wfc-validate (validates) → /wfc-plan (precise) → /wfc-implement (right thing)
+  Vague idea → BA (clarifies) → Planning (precise) → Implementation (right thing)
 ```
 
 ## Usage
@@ -50,8 +52,8 @@ WITH BA:
 # With topic
 /wfc-ba "rate limiting for API endpoints"
 
-# With reference material (repo URL, doc, or file)
-/wfc-ba "improve review system" --ref https://github.com/competitor/repo
+# With reference material (HTTP/HTTPS URL only)
+/wfc-ba "improve review system" --ref https://example.com/docs
 
 # Quick mode (fewer questions, smaller output)
 /wfc-ba "add dark mode" --quick
@@ -59,6 +61,13 @@ WITH BA:
 # From existing notes/requirements
 /wfc-ba --from-file requirements-draft.md
 ```
+
+## Argument Parsing Rules
+
+1. **Parse flags strictly**: Tokens starting with `--` are control flags, not topic content.
+2. **Topic detection**: The first quoted string or unquoted text (before any flags) is the feature topic. If flags appear inside quotes, they are part of the topic.
+3. **Flag precedence**: `--from-file` takes precedence over topic string. If both provided, file content defines requirements; topic string used only as fallback title if file lacks one.
+4. **URL restriction**: `--ref` only accepts HTTP/HTTPS URLs. Local file paths, file:// URLs, and other schemes are rejected with an error message.
 
 ## The BA Interview
 
@@ -76,7 +85,10 @@ Q: What's the current state? (what exists today)
 Q: What's the desired outcome? (what "done" looks like)
 ```
 
-**Adaptive behavior**: If the user describes a greenfield project, skip current-state questions. If they reference an existing module, read that module's code before continuing.
+**Adaptive behavior**:
+
+- If the user states this is a new project with no existing codebase, skip current-state questions.
+- If they reference an existing module by name, attempt to read that module's files before continuing. If files don't exist or are unreadable, ask user to verify paths.
 
 ### Phase 2: Requirements Elicitation
 
@@ -97,7 +109,14 @@ Q: What's the performance expectation? (bounds)
 Q: Are there security implications? (threat surface)
 ```
 
-**Adaptive behavior**: For security-sensitive features, automatically deepen security questions. For performance-sensitive features, probe for latency/throughput bounds. For UI features, ask about accessibility and responsiveness.
+**Adaptive behavior**:
+
+- If the user explicitly mentions security, compliance, or authentication, ask additional security questions.
+- If the user explicitly mentions latency, throughput, or scale, probe for numeric bounds.
+- If the user mentions UI, ask about accessibility requirements.
+- Do not invent sensitivity classifications. Only deepen based on explicit user statements.
+
+**Conflict resolution**: If a requirement appears in both MUST and WON'T lists, halt and ask: "You listed [requirement] as both MUST and WON'T. Which is correct?" Do not proceed until resolved.
 
 ### Phase 3: Technical Constraints & Integration
 
@@ -111,7 +130,10 @@ Q: Are there hard technical constraints? (language, framework, dependencies)
 Q: What must NOT break? (regression boundaries)
 ```
 
-**Adaptive behavior**: If the user names specific files, read them to understand interfaces. If they mention APIs, check for existing schemas or contracts.
+**Adaptive behavior**:
+
+- If the user names specific files, attempt to read them. If files don't exist, ask for clarification.
+- If they mention APIs, ask for existing schemas or contracts rather than assuming.
 
 ### Phase 4: Risk & Prior Art
 
@@ -124,13 +146,17 @@ Q: Are there open-source solutions we should study? (prior art)
 Q: What dependencies does this introduce? (new libraries, services, APIs)
 ```
 
-**Adaptive behavior**: If the user references a competitor or open-source project, use web search and code exploration to analyze it. Feed findings back into requirements.
+**Adaptive behavior**:
+
+- If the user references a competitor or external product by name, attempt web search for public documentation. If search fails or returns no results, inform user and continue with interview-only analysis. Do not fabricate competitive data.
 
 ## Outputs
 
-### 1. BA Document (BA-{feature-slug}.md)
+### 1. BA Document (ba/BA-{feature-slug}.md)
 
-The primary output. Structured for direct consumption by `/wfc-plan`.
+The primary output. Structured markdown for consumption by planning skills.
+
+**Filename format**: `BA-{slug}.md` where slug is lowercase, hyphen-separated, max 50 characters, ASCII letters/numbers/hyphens only.
 
 ```markdown
 # Business Analysis: {Feature Name}
@@ -139,7 +165,7 @@ The primary output. Structured for direct consumption by `/wfc-plan`.
 [2-3 sentences: what, why, expected impact]
 
 ## 2. Current State
-[What exists today, with file/module references]
+[What exists today, with file/module references if provided]
 
 ## 3. Requirements
 
@@ -156,35 +182,35 @@ The primary output. Structured for direct consumption by `/wfc-plan`.
 ### WON'T (Explicit Exclusion)
 - [Exclusion] — Reason: [why excluded]
 
-## 4. Integration Seams
+## 4. Integration Touchpoints
 - **Input from**: [source] → this feature
 - **Output to**: this feature → [consumer]
-- **Files touched**: [existing files that change]
-- **New files**: [files to create]
+- **Files touched**: [existing files that change, if specified]
+- **New files**: [files to create, if specified]
 
 ## 5. Non-Functional Requirements
 | Requirement | Target | Measurement |
 |---|---|---|
-| Performance | [bound] | [how to measure] |
-| Compatibility | [constraint] | [what must not break] |
-| Dependencies | [new deps] | [optional vs required] |
+| Performance | [bound if specified] | [how to measure] |
+| Compatibility | [constraint if specified] | [what must not break] |
+| Dependencies | [new deps if specified] | [optional vs required] |
 
 ## 6. Risks
 | Risk | Likelihood | Impact | Mitigation |
 |---|---|---|---|
-| [risk] | H/M/L | H/M/L | [mitigation] |
+| [risk if identified] | H/M/L | H/M/L | [mitigation if provided] |
 
 ## 7. Prior Art
-[Analysis of existing solutions, competitors, or related work]
+[Analysis of existing solutions if provided by user]
 
 ## 8. Out of Scope
 [Explicit list of what this feature does NOT cover]
 
 ## 9. Glossary
-[Domain terms defined for the planner]
+[Domain terms defined based on user input]
 ```
 
-### 2. Interview Transcript (interview-transcript.json)
+### 2. Interview Transcript (ba/interview-transcript.json)
 
 Machine-readable record of all Q&A for traceability.
 
@@ -209,258 +235,62 @@ Machine-readable record of all Q&A for traceability.
 }
 ```
 
-### 3. Competitive Analysis (optional, when --ref used)
+### 3. Reference Analysis (optional, when --ref used with valid URL)
 
-If the user provides a reference repo/URL, produce a structured comparison:
+If the user provides a valid HTTP/HTTPS reference URL, produce a structured comparison. If the URL is inaccessible or returns no useful content, omit this section and note in the BA document that reference analysis was unavailable.
 
 ```markdown
-## Competitive Analysis: {Reference Name}
+## Reference Analysis: {Reference Name}
 
-### Strengths (adopt)
-- [Feature/pattern worth adopting]
+### Relevant Patterns
+- [Feature/pattern worth considering]
 
-### Weaknesses (avoid)
-- [Anti-pattern or limitation to avoid]
+### Limitations Observed
+- [Limitation or gap in reference solution]
 
-### Gaps (WFC advantage)
-- [What WFC already does better]
-
-### Inspiration (adapt)
-- [Ideas to adapt, not copy directly]
-```
-
-## Architecture
-
-```
-User: /wfc-ba "add rate limiting"
-    ↓
-┌──────────────────────────────────────┐
-│  INTERVIEWER                         │
-│  Phase 1: Context & Stakeholders     │
-│  Phase 2: Requirements (MoSCoW)     │
-│  Phase 3: Technical Constraints      │
-│  Phase 4: Risk & Prior Art           │
-│                                      │
-│  Adaptive: reads code, searches web  │
-│  as needed between questions         │
-└──────────────┬───────────────────────┘
-               │
-┌──────────────▼───────────────────────┐
-│  ANALYZER                            │
-│  - Gap analysis (current vs desired) │
-│  - Integration seam mapping          │
-│  - Risk assessment                   │
-│  - Prior art research (if --ref)     │
-└──────────────┬───────────────────────┘
-               │
-┌──────────────▼───────────────────────┐
-│  GENERATOR                           │
-│  - BA document (markdown)            │
-│  - Interview transcript (JSON)       │
-│  - Competitive analysis (if --ref)   │
-└──────────────────────────────────────┘
-```
-
-### Multi-Tier Design
-
-```
-┌─────────────────────────────┐
-│  PRESENTATION               │  User interaction, question display
-│  (interview UX)             │  Output formatting, progress indicators
-└──────────────┬──────────────┘
-               │
-┌──────────────▼──────────────┐
-│  LOGIC                      │  Interview orchestration, adaptive depth
-│  - Interviewer              │  Gap analysis, requirement structuring
-│  - Analyzer                 │  Risk assessment, seam mapping
-│  - Generator                │  Document generation, JSON serialization
-└──────────────┬──────────────┘
-               │
-┌──────────────▼──────────────┐
-│  DATA                       │  BA documents (markdown)
-│  (filesystem)               │  Transcripts (JSON), analysis artifacts
-└─────────────────────────────┘
-```
-
-## Integration with WFC
-
-### Upstream (feeds into)
-
-- **wfc-validate** — BA document is validated for quality (next step in pipeline)
-- **wfc-plan** — After validation, BA feeds into structured planning
-- **wfc-build** — Quick mode BA can feed directly into build for small features
-
-### Downstream (consumes from)
-
-- **Codebase** — Reads existing code to understand current state
-- **Web** — Searches for prior art and competitive analysis
-- **User** — Interactive interview
-
-### Workflow Position
-
-```
-/wfc-ba (requirements) → /wfc-validate (validate) → /wfc-plan (planning) → /wfc-implement (building)
-    ↑                                                                                ↓
-    └──────────────────── feedback loop (requirements change) ←──────────────────────┘
+### Applicability Notes
+- [How this relates to current requirements]
 ```
 
 ## What to Do
 
-1. **If `$ARGUMENTS` contains `--quick`**, use abbreviated interview (Phase 1 + Phase 2 only, 3-5 questions total)
-2. **If `$ARGUMENTS` contains `--ref <url>`**, perform competitive analysis on the referenced resource
-3. **If `$ARGUMENTS` contains `--from-file <path>`**, read the file and use it as initial requirements (skip Phase 1-2, go to Phase 3-4)
-4. **If `$ARGUMENTS` contains a description**, use it as the feature topic and adapt interview accordingly
-5. **If no arguments**, start with open-ended Phase 1 questions
+### Before Starting
+
+1. **Verify output directory**: Ensure `ba/` directory exists or can be created. If creation fails, warn user: "Cannot create ba/ directory. Proceeding with output to current directory." Continue with fallback location.
+
+### Argument Handling
+
+1. **If `$ARGUMENTS` contains `--quick`**: Use abbreviated interview (Phase 1 + Phase 2 only, maximum 5 questions total including follow-ups. Prioritize MUST requirements over SHOULD/COULD.)
+2. **If `$ARGUMENTS` contains `--ref <url>`**: Validate URL scheme is HTTP/HTTPS. If valid, attempt to fetch reference content. If invalid scheme or fetch fails, warn user and proceed without reference analysis.
+3. **If `$ARGUMENTS` contains `--from-file <path>`**: Read the file. If file doesn't exist, error and exit. If readable, extract requirements from file content and proceed to Phase 3-4 interview (skip Phase 1-2 questioning for content already in file).
+4. **If `$ARGUMENTS` contains a topic description** (quoted or unquoted text before any flags): Use it as the feature topic. Skip the first Phase 1 question ("What system does this affect?") since topic is provided.
+5. **If no arguments**: Start with open-ended Phase 1 questions.
 
 ### Interview Execution
 
-- Ask questions ONE AT A TIME (not batched)
-- Wait for user response before asking the next question
-- Adapt follow-up questions based on answers
-- Read referenced code files between questions when the user mentions specific files
-- Use web search when the user references external tools, libraries, or competitors
-- Keep track of all Q&A for the transcript
+- Ask questions ONE AT A TIME. Do not batch multiple questions in a single turn.
+- Wait for user response before asking the next question.
+- Track all Q&A for the transcript.
+- If user refuses to answer or provides "I don't know", record the gap and continue. Do not fabricate answers.
+- If user provides incomplete answer, ask one follow-up for clarification. If still incomplete, proceed with available information.
 
 ### Document Generation
 
 After the interview is complete:
 
-1. Synthesize all answers into the BA document structure
-2. Map requirements to MoSCoW categories
-3. Identify integration seams from technical constraint answers
-4. Assess risks from Phase 4 answers
-5. Generate acceptance criteria for every MUST requirement
-6. Write BA document to `ba/BA-{feature-slug}.md`
-7. Write interview transcript to `ba/interview-transcript.json`
-8. If `--ref` was used, write competitive analysis to `ba/competitive-analysis.md`
-9. **Run `/wfc-validate`** on the generated BA document to validate quality before handing off to planning
-10. Apply any Must-Do revisions from validate feedback to the BA document
+1. Synthesize all answers into the BA document structure.
+2. Map requirements to MoSCoW categories based on user classification.
+3. Identify integration touchpoints from Phase 3 answers. If none specified, leave section minimal.
+4. Record risks from Phase 4 answers. If none identified, note "No risks identified by user" rather than inventing risks.
+5. Generate acceptance criteria for every MUST requirement. If user didn't provide measurable criteria, mark as "[Acceptance criteria needed - user did not specify]".
+6. Write BA document to `ba/BA-{feature-slug}.md` (or fallback location if directory unavailable).
+7. Write interview transcript to `ba/interview-transcript.json`.
+8. If `--ref` was used and reference content was successfully retrieved, include reference analysis in the BA document.
 
 ### Output Location
 
 ```
 ba/
 ├── BA-{feature-slug}.md           # Primary BA document
-├── interview-transcript.json       # Machine-readable Q&A record
-└── competitive-analysis.md         # Optional (when --ref used)
+└── interview-transcript.json      # Machine-readable Q&A transcript
 ```
-
-## BA Document Quality Checklist
-
-A good BA document passes these checks:
-
-- [ ] Every MUST requirement has a measurable acceptance criterion
-- [ ] Integration seams list specific files (not vague module names)
-- [ ] Non-functional requirements have numeric targets
-- [ ] Risks have mitigations (not just identification)
-- [ ] Out of Scope section exists (prevents scope creep)
-- [ ] Glossary defines domain-specific terms
-- [ ] Executive summary is 2-3 sentences (not a paragraph)
-- [ ] WON'T section has reasons (not just a list)
-
-## The Planner Litmus Test
-
-The BA document is ready when a planner can answer: **"Can I generate TASKS.md with TDD test plans without asking a single clarifying question?"**
-
-If the planner would ask "but what about X?" — X is missing from the BA.
-
-## When to Use
-
-### Use /wfc-ba when
-
-- Starting a new feature and requirements are unclear
-- Multiple stakeholders have different expectations
-- The feature touches multiple systems or modules
-- There's a competitor or reference implementation to analyze
-- Previous implementation attempts failed (need to understand why)
-- The feature has security, performance, or compliance implications
-
-### Skip BA when
-
-- Bug fix with clear reproduction steps
-- Single-file change with obvious scope
-- Refactoring with no behavior change
-- Documentation updates
-
-### Quick Mode vs Full Mode
-
-| Aspect | Quick (--quick) | Full (default) |
-|---|---|---|
-| Questions | 3-5 | 10-20 |
-| Phases | 1-2 only | All 4 |
-| Output | Minimal BA doc | Complete BA doc |
-| Competitive analysis | No | Yes (if --ref) |
-| Best for | Small features | Medium-large features |
-| Time | 5 minutes | 15-30 minutes |
-
-## Configuration
-
-```json
-{
-  "ba": {
-    "output_dir": "./ba",
-    "interview_mode": "adaptive",
-    "default_mode": "full",
-    "auto_read_code": true,
-    "auto_web_search": true,
-    "generate_transcript": true
-  }
-}
-```
-
-## Example Session
-
-```
-User: /wfc-ba "add finding validation to review pipeline"
-
-[PHASE 1: CONTEXT]
-Q: What system does this affect?
-A: The review pipeline in wfc/scripts/skills/review/
-
-Q: What's the current state?
-A: Reviews produce findings but some are false positives
-
-Q: What triggered this?
-A: Analyzed Kodus AI - they have a 4-layer validation pipeline
-
-[PHASE 2: REQUIREMENTS]
-Q: What MUST the validation do?
-A: Verify findings reference real code, cross-check with different model
-
-Q: How would you verify structural checks work?
-A: Finding that references line 50 but file only has 30 lines → caught
-
-Q: Performance bound?
-A: < 5 seconds per review for files under 500 lines
-
-Q: What WON'T this include?
-A: No ML-based filtering, no external API calls beyond Anthropic
-
-[PHASE 3: TECHNICAL]
-Q: What existing files does this touch?
-A: orchestrator.py (add step), consensus_score.py (weight by validation)
-   → [reads orchestrator.py to understand current pipeline]
-
-Q: What's the input/output contract?
-A: Input: DeduplicatedFinding list. Output: ValidatedFinding list.
-
-[PHASE 4: RISK]
-Q: Biggest risk?
-A: Validation itself could be wrong (meta-false-positives)
-
-Q: Prior art?
-A: Kodus AI's validation pipeline (already analyzed)
-
-[GENERATION]
-✅ BA document: ba/BA-finding-validation.md
-✅ Transcript: ba/interview-transcript.json
-
-Next: Run `/wfc-validate` to validate, then `/wfc-plan` to generate tasks
-```
-
-## Philosophy
-
-**ELEGANT**: Simple questions, structured output, no ceremony
-**ADAPTIVE**: Questions change based on answers (not a fixed script)
-**PLANNER-READY**: Output format designed for `/wfc-plan` consumption
-**EVIDENCE-BASED**: Reads code and searches web during interview, not after

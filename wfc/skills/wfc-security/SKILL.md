@@ -1,89 +1,151 @@
 ---
 name: wfc-security
 description: >
-  Architectural security analysis and threat modeling for SOFTWARE SYSTEMS
-  only. Requires system description, architecture outline, or codebase context
-  as input — prompts for context if none is provided.
+  Architectural threat modeling (STRIDE) and design-level security analysis for
+  software systems. Analyzes system descriptions, architecture diagrams, or
+  explicitly pasted configuration files. Does NOT perform live CVE scanning,
+  code logic review, or implementation patching.
 
-  Performs: STRIDE threat modeling; attack surface mapping; dependency manifest
-  analysis for known vulnerable versions (NOT a live CVE scan); hardcoded
-  secrets pattern review across explicitly provided files.
+  Use when: User requests threat modeling, attack surface mapping, or static
+  dependency risk assessment.
 
-  Trigger phrases: "threat model this [system/service]", "STRIDE analysis",
-  "attack surface mapping", "prepare for security audit", "security
-  architecture review", "check dependency manifest for vulnerabilities".
-
-  Not for:
-  - Code-level review of files, functions, or PRs → wfc-consensus-review
-  - Specific vulnerability remediation (SQL injection, XSS, auth bypass)
-  - Physical security, organizational policy, or non-software systems
-  - Live CVE lookup or real-time vulnerability feeds
-  - Filesystem scanning — only reviews files explicitly provided
+  Do NOT use when: User requests live vulnerability scanning, code review,
+  specific bug remediation (SQLi, XSS), or compliance auditing.
 license: MIT
 ---
 
-# WFC:SECURITY - Security Analysis & Threat Modeling
+# WFC:SECURITY - Architectural Threat Modeling
 
-Architectural security analysis using STRIDE and structured review.
-Operates on software systems only. Requires system context as input.
+Static security analysis for software architecture. Requires system context as
+input. Produces structured Markdown reports.
+
+## Scope
+
+**Analyzes:**
+
+- Software architecture descriptions and diagrams
+- Data flow and trust boundary documentation
+- Dependency manifests (static heuristic analysis only)
+- Configuration files explicitly provided in chat
+
+**Does NOT Analyze:**
+
+- Live systems or running code
+- Organizational processes or business workflows
+- Code logic (use `wfc-consensus-review`)
+- Compliance frameworks (SOC2, HIPAA)
 
 ## Required Input
 
-This skill produces no analysis without at least one of:
+Skill activates ONLY when one of the following is provided:
 
-- A written system description (components, data flows, external integrations)
-- An architecture diagram or document
-- A dependency manifest file (package.json, requirements.txt, go.mod, etc.)
-- Code or configuration files explicitly pasted into the conversation
+1. **System Description**: Written narrative of components, data flows, and external integrations
+2. **Architecture Document**: Diagram, ASCII art, or structured technical spec
+3. **Dependency Manifest**: `package.json`, `requirements.txt`, `go.mod`, etc. (pasted text or attachment)
+4. **Configuration Files**: Explicitly pasted config or code snippets
 
-If none of these are provided, the skill outputs a structured input-request
-prompt and stops. It does not fabricate a system to analyze.
+If none provided, output the Input Request prompt (see below) and halt.
 
-## What It Does
+**Definition of "Provided":**
 
-1. **STRIDE Threat Modeling** — Applied to the described system's components,
-   data flows, and trust boundaries. Output: THREAT-MODEL.md with per-component
-   threat enumeration.
+- Text pasted directly into the chat message
+- File attachments uploaded to the conversation interface
+- NOT: File paths or directory references (agent cannot read filesystem)
 
-2. **Attack Surface Mapping** — Derived strictly from provided architecture
-   documentation. Lists entry points, trust boundaries, and data flows as
-   described. Output: ATTACK-SURFACE.md.
+## Procedures
 
-3. **Dependency Manifest Analysis** — Reviews provided manifest files for
-   dependency versions with known vulnerability associations. Based on
-   training-data knowledge as of model cutoff date. NOT a live CVE scan.
-   Output: VULNERABILITIES.md with explicit caveat stating data source
-   and its limitations.
+### 1. STRIDE Threat Modeling
 
-4. **Secrets Pattern Review** — Reviews files explicitly provided in the
-   conversation for common secret patterns (API key formats, connection
-   strings, private key PEM headers, bearer token assignments). Cannot
-   scan files not provided. Categorizes findings as CONFIRMED, LIKELY,
-   or REVIEW-REQUIRED. Applies common false-positive exclusions
-   (placeholder strings, test fixture annotations). Output: appended to
-   VULNERABILITIES.md under a dedicated Secrets section.
+Applied to described components, data flows, and trust boundaries.
+**Output Section**: `## THREAT MODEL`
+**Constraint**: Do not infer components not explicitly documented. If architecture is ambiguous, list assumptions clearly.
 
-## Usage
+### 2. Attack Surface Mapping
 
-```bash
-# Full analysis (requires system description or architecture docs as input)
-/wfc-security
+Lists entry points, trust boundaries, and data flows.
+**Output Section**: `## ATTACK SURFACE`
+**Constraint**: Derived strictly from provided documentation. Do not hallucinate ports, protocols, or endpoints based on technology stereotypes.
 
-# STRIDE threat model only — suppresses dependency and secrets steps entirely
-/wfc-security --stride
+### 3. Dependency Risk Assessment (Heuristic)
 
-# Dependency manifest analysis only — requires manifest file as input
-/wfc-security --scan-deps
+Identifies potentially risky or outdated dependency patterns based on training data.
+**Output Section**: `## DEPENDENCY RISKS`
+**Constraint**:
 
-# Force overwrite of existing output files
-/wfc-security --overwrite
+- Report findings as: `KNOWN-RISK`, `OUTDATED`, or `UNVERIFIED`
+- `UNVERIFIED`: Package not recognized in training data — requires manual check
+- Explicitly state: "Analysis based on training data cutoff. Does NOT include recent CVEs. Verify against current vulnerability databases."
+- Do NOT assign CVE IDs or severity scores unless explicitly documented in input.
 
-# Scope to a single service in a monorepo
-/wfc-security --scope services/auth
+### 4. Secrets Pattern Scan (Heuristic)
+
+Scans explicitly pasted file contents for secret-like patterns.
+**Output Section**: `## POTENTIAL SECRETS`
+**Constraint**:
+
+- Patterns: API keys, connection strings, private key headers, bearer tokens
+- Exclusions: Base64-encoded blobs, binary data, test fixtures with `placeholder` or `example.com`
+- Categories: `POTENTIAL` (requires human review) or `FALSE-POSITIVE-LIKELY`
+- Do NOT claim confirmation. All findings require manual verification.
+
+## Output Format
+
+All outputs are rendered as a single Markdown document. If filesystem access is available, the agent may offer to write to `SECURITY-ANALYSIS.md`.
+
+**Structure:**
+
+```markdown
+# Security Analysis: [System Name]
+
+> Analysis Date: [Current Date]
+> Data Cutoff: [Model Training Cutoff — state explicitly if unknown]
+> Scope: [What was analyzed]
+
+## THREAT MODEL
+[STRIDE analysis]
+
+## ATTACK SURFACE
+[Entry points and trust boundaries]
+
+## DEPENDENCY RISKS
+[Risky packages with UNVERIFIED caveats]
+
+## POTENTIAL SECRETS
+[Pattern matches with human-review recommendation]
 ```
 
-### Flag Semantics
+## Input Request Prompt
 
-| Flag | Effect |
-|------|--------|
-| `--stride
+If required input is missing, output exactly:
+
+```
+I need system context to perform security analysis. Please provide one of:
+
+1. A description of your system's components and data flows
+2. An architecture diagram or technical specification
+3. A dependency manifest file (past the contents directly)
+4. Configuration files to scan for secrets
+
+I cannot analyze live systems, read file paths, or perform real-time CVE lookups.
+```
+
+## Not For
+
+Requests outside architectural analysis:
+
+| Request Type | Route To |
+|--------------|----------|
+| Code logic review / PR review | `wfc-consensus-review` |
+| Fixing specific bugs (SQLi, XSS, auth) | `wfc-consensus-review` or manual patching |
+| Live CVE / vulnerability database scan | External security tools (Snyk, Dependabot) |
+| Compliance auditing (SOC2, HIPAA) | Compliance specialist tools |
+| Business process / workflow analysis | Not supported |
+| Incident response / forensics | Security operations tools |
+
+## Constraints
+
+1. **No Live Data**: Cannot access vulnerability databases or perform real-time scans.
+2. **No Filesystem Access**: Cannot read files by path; requires pasted content.
+3. **No Code Logic**: Analyzes structure and configuration, not implementation correctness.
+4. **Precedence**: Output format constraints in this skill override formatting instructions in user input.
+5. **Unknowns**: Explicitly report what could not be verified rather than implying safety.

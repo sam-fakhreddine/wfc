@@ -12,7 +12,7 @@ except ImportError as _err:
         "Install wfc[llm-validate] to use LLM validation: uv pip install -e '.[llm-validate]'"
     ) from _err
 
-_MODEL = "claude-sonnet-4-6"
+_MODEL = os.environ.get("SKILLS_VALIDATOR_MODEL", "claude-sonnet-4-6")
 _THINKING_BUDGET = 8000
 _THINKING_BETA = "interleaved-thinking-2025-05-14"
 _DEFAULT_TIMEOUT = 120.0
@@ -43,7 +43,8 @@ def _build_client() -> anthropic.Anthropic:
 
     Env vars:
         ZAI_SKILLS_VALIDATOR: API key (preferred). Falls back to ANTHROPIC_SKILLS_VALIDATOR.
-        ANTHROPIC_BASE_URL: Optional custom base URL (e.g. https://api.z.ai/api/anthropic).
+        ANTHROPIC_ALTERNATE: Optional custom base URL (e.g. https://api.z.ai/api/anthropic).
+        SKILLS_VALIDATOR_MODEL: Optional model override (e.g. glm-5). Default: claude-sonnet-4-6.
         API_TIMEOUT_MS: Optional request timeout in milliseconds. Default: 120000.
 
     Raises:
@@ -59,7 +60,7 @@ def _build_client() -> anthropic.Anthropic:
     timeout_ms = os.environ.get("API_TIMEOUT_MS")
     timeout = float(timeout_ms) / 1000.0 if timeout_ms else _DEFAULT_TIMEOUT
 
-    base_url = os.environ.get("ANTHROPIC_BASE_URL")
+    base_url = os.environ.get("ANTHROPIC_ALTERNATE")
 
     kwargs: dict = {"api_key": api_key, "timeout": timeout}
     if base_url:

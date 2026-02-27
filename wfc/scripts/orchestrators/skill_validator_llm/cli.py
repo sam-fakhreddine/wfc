@@ -15,6 +15,7 @@ import re
 import sys
 import time
 from concurrent.futures import ThreadPoolExecutor, as_completed
+from datetime import datetime
 from pathlib import Path
 from typing import Callable, TypeVar
 
@@ -360,6 +361,14 @@ def main(argv: list[str] | None = None) -> int:
     total_output = 0
     run_id = make_run_id()
 
+    n_skills = len(skill_dirs)
+    completed_count = 0
+
+    def _log(msg: str) -> None:
+        """Thread-safe timestamped print."""
+        ts = datetime.now().strftime("%H:%M:%S")
+        print(f"[{ts}] {msg}", flush=True)
+
     def _run_one(sd: Path) -> tuple[str, list[Path], float | None, dict[str, int]]:
         reset_accumulated_usage()
         written: list[Path] = []
@@ -372,9 +381,14 @@ def main(argv: list[str] | None = None) -> int:
             "refinement": run_refinement,
         }
 
-        for stage in stages_to_run:
+        _log(f"START  {sd.name}  ({len(stages_to_run)} stage(s): {', '.join(stages_to_run)})")
+
+        for i, stage in enumerate(stages_to_run, 1):
+            _log(f"  {sd.name}  stage {i}/{len(stages_to_run)}: {stage} …")
             runner = _stage_runners_local[stage]
+            t0 = time.monotonic()
             report = retry_with_backoff(lambda r=runner: r(sd, offline=args.offline))
+            elapsed = time.monotonic() - t0
             stage_results[stage] = report
             path = write_stage_report(
                 skill_name=sd.name,
@@ -385,6 +399,9 @@ def main(argv: list[str] | None = None) -> int:
                 run_id=run_id,
             )
             written.append(path)
+            _log(
+                f"  {sd.name}  stage {i}/{len(stages_to_run)}: {stage} done ({elapsed:.1f}s) → {path.name}"
+            )
 
         health_score = None
         if "refinement" in stage_results:
@@ -392,10 +409,13 @@ def main(argv: list[str] | None = None) -> int:
         usage = get_accumulated_usage()
         return sd.name, written, health_score, usage
 
+    _log(f"Queuing {n_skills} skill(s) across {_MAX_WORKERS} workers  [run_id={run_id}]")
+
     with ThreadPoolExecutor(max_workers=_MAX_WORKERS) as executor:
         future_to_skill = {executor.submit(_run_one, sd): sd for sd in skill_dirs}
         for future in as_completed(future_to_skill):
             sd = future_to_skill[future]
+            completed_count += 1
             try:
                 skill_name, written, health_score, usage = future.result()
                 reports.extend(written)
@@ -403,15 +423,16 @@ def main(argv: list[str] | None = None) -> int:
                 out_tok = usage.get("output_tokens", 0)
                 total_input += in_tok
                 total_output += out_tok
+                score_str = f"  score={health_score:.1f}" if health_score is not None else ""
                 if health_score is not None:
                     summary_entries.append({"skill": skill_name, "score": health_score})
-                print(
-                    f"OK  {skill_name}: {len(written)} stage(s) written"
-                    f"  [in={in_tok:,} out={out_tok:,}]"
+                _log(
+                    f"OK  [{completed_count}/{n_skills}] {skill_name}"
+                    f"  [in={in_tok:,} out={out_tok:,}]{score_str}"
                 )
             except Exception as exc:  # noqa: BLE001
                 errors.append((sd.name, exc))
-                print(f"ERR {sd.name}: {exc}", file=sys.stderr)
+                _log(f"ERR [{completed_count}/{n_skills}] {sd.name}: {exc}")
 
     if errors:
         print(f"\n{len(errors)} skill(s) failed:", file=sys.stderr)

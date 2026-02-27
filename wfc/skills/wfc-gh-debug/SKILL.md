@@ -1,26 +1,43 @@
 ---
 name: wfc-gh-debug
 description: >
-  Debugs failing GitHub Actions CI workflow runs on a PR or branch via the gh CLI.
-  Fetches run logs, classifies root causes (lint, format, test, type, import,
-  permission, secret, infra/runner), reports findings with log evidence, and applies
-  fixes only when the user explicitly requests it.
+  Diagnoses failing GitHub-native Actions workflow runs by analyzing logs via
+  the `gh` CLI. Classifies root causes (lint, format, test, type, import,
+  permission, secret, infra/runner) and proposes fixes. Applies fixes only
+  after explicit user approval.
 
-  Triggers: "GitHub Actions failing", "Actions check failing", "workflow run failed",
-  "CI is red on GitHub", "debug GitHub Actions", "fix my Actions run",
-  "why did my GitHub Actions fail", /wfc-gh-debug.
+  Capabilities: fetches and analyzes logs from GitHub-hosted Actions runners;
+  classifies failures into actionable categories; auto-generates fix commands
+  for uv-managed Python and npm/TS projects; verifies fixes locally before
+  pushing.
 
-  Not for: GitLab CI, CircleCI, Jenkins, Bitbucket Pipelines, or any CI system not
-  accessible via gh CLI; PR policy gates (reviewer approvals, CODEOWNERS, branch
-  protection); external status checks not backed by GitHub Actions (Vercel, Codecov);
-  Dependabot/Renovate PRs with upstream breakage; runtime errors in deployed
-  environments after a successful CI run.
+  Limitations: requires `uv` for Python verification (no pip/poetry fallback);
+  cannot access third-party check logs (Vercel, Codecov) or external CI;
+  cannot fix infrastructure failures; requires `gh` CLI authentication.
+
+  Triggers: "GitHub Actions failed", "workflow run failed", "debug GitHub
+  Actions logs", "why did my Actions run fail", /wfc-gh-debug.
+
+  Not for: third-party status checks; external CI (Jenkins, GitLab, CircleCI);
+  fork PRs with missing secrets; PR policy gates; flaky tests; green runs.
 license: MIT
 ---
 
 # WFC:GH-DEBUG — GitHub Actions Failure Debugger
 
-**Fetch logs → Classify failure → Fix.** Systematic CI debugging without manual log spelunking.
+**Fetch logs → Classify failure → Propose fix.** Systematic CI debugging for GitHub-native Actions.
+
+## Prerequisites
+
+Before execution, verify:
+
+1. **Authentication**: `gh auth status` returns success
+2. **Repository context**: Current directory is a git repository with GitHub remote
+3. **Toolchain**: Project uses `uv` (Python) or `npm` (JS/TS) for verification steps
+
+If prerequisites fail, report the issue and stop.
+
+---
 
 ## Usage
 
@@ -46,20 +63,25 @@ license: MIT
 
 Determine what to debug:
 
-1. If a run ID or job ID is provided, use it directly.
-2. If a PR number is given, fetch its checks:
+1. **Authentication check**: Run `gh auth status`. If this fails, report "GitHub CLI not authenticated" and stop.
+2. **Target resolution** (in order of priority):
+   - If `run {id}` provided → use run ID directly
+   - If `job {id}` provided → use job ID directly
+   - If PR number provided → fetch checks for that PR
+   - If no argument → check if current branch has an open PR
+
+3. **Fetch checks**:
 
    ```bash
    gh pr checks {number} --repo {owner}/{repo}
    ```
 
-3. If no argument, auto-detect from current branch:
+4. **Handle empty results**:
+   - If command fails with permission error → Report "No access to repository" and stop
+   - If no PR exists for current branch → Report "No open PR found for current branch" and stop
+   - If all checks passing → Report "All checks passing ✅" and stop
 
-   ```bash
-   gh pr checks --repo {owner}/{repo}
-   ```
-
-Display all failing checks in a table:
+5. **Display failing checks**:
 
 ```
 | # | Job Name | Duration | Status | URL |
@@ -68,21 +90,27 @@ Display all failing checks in a table:
 | 2 | Run Tests | 20s | FAIL | ... |
 ```
 
-If no failing checks found, report "All checks passing ✅" and stop.
+**Important**: This skill only processes GitHub Actions workflow failures. If all failures are from third-party checks (Vercel, Codecov, external CI), report "Failures detected are from third-party checks not accessible via GitHub Actions logs" and stop.
 
 ### Step 2: FETCH LOGS
 
 For each failing job, fetch logs via gh CLI:
 
 ```bash
-gh run view {run_id} --repo {owner}/{repo} --job {job_id} --log 2>&1
+gh run view {run_id} --repo {owner}/{repo} --log 2>&1
 ```
+
+**Error handling**:
+
+- If command returns empty output or 500 error → Classify as **INFRA** and report "Logs unavailable (runner infrastructure failure)"
+- If command returns 403/404 → Report "No access to workflow logs" and stop
 
 **Extraction strategy:** Don't dump the entire log. Extract:
 
 1. Lines matching `error|Error|FAILED|failed|Exit code [^0]|##\[error\]`
 2. The last 50 lines (often contains the summary)
 3. Any lines with file paths + line numbers (e.g., `file.py:42:`)
+4. **Path mapping**: Convert CI absolute paths (e.g., `/home/runner/work/repo/file.py`) to local paths (`./file.py`)
 
 Fetch all failing jobs in parallel using multiple tool calls.
 
@@ -90,18 +118,20 @@ Fetch all failing jobs in parallel using multiple tool calls.
 
 Classify each failure into a category:
 
-| Category | Signals | Common Fix |
-|----------|---------|------------|
-| **FORMAT** | `would reformat`, `black`, `prettier` | Run formatter, commit |
-| **LINT** | `ruff`, `eslint`, `flake8`, `golangci` | Run linter with --fix |
-| **TYPE** | `mypy`, `pyright`, `tsc`, `type error` | Fix type annotations |
-| **TEST** | `FAILED`, `AssertionError`, `pytest` | Fix failing test or code |
-| **IMPORT** | `ModuleNotFoundError`, `ImportError`, `cannot find module` | Install dep or fix import |
-| **PERMISSION** | `permission denied`, `not executable`, `chmod` | Fix file permissions |
-| **SECRET** | `secret`, `token`, `auth`, `401`, `403` | Check secrets configuration |
-| **INFRA** | `docker`, `connection refused`, `timeout`, `OOMKilled` | Infrastructure issue, skip/retry |
-| **SYNTAX** | `SyntaxError`, `parse error`, `unexpected token` | Fix syntax |
-| **SKILL** | `skills-ref`, `validate`, `Agent Skills` | Fix skill frontmatter/format |
+| Category | Signals | Common Fix | Approval Required? |
+|----------|---------|------------|-------------------|
+| **FORMAT** | `would reformat`, `black`, `prettier` | Run formatter, commit | Yes (show diff) |
+| **LINT** | `ruff`, `eslint`, `flake8`, `golangci` | Run linter with --fix | Yes (show diff) |
+| **SYNTAX** | `SyntaxError`, `parse error`, `unexpected token` | Fix syntax manually | Yes (code change) |
+| **TYPE** | `mypy`, `pyright`, `tsc`, `type error` | Fix type annotations | Yes (code change) |
+| **TEST** | `FAILED`, `AssertionError`, `pytest` | Fix failing test or code | Yes (code change) |
+| **IMPORT** | `ModuleNotFoundError`, `ImportError`, `cannot find module` | Install dep or fix import | Yes (code/config change) |
+| **PERMISSION** | `permission denied`, `not executable`, `chmod` | Fix file permissions | Yes (config change) |
+| **SECRET** | `secret`, `token`, `auth`, `401`, `403` | Check secrets configuration | Yes (manual config) |
+| **INFRA** | `docker`, `connection refused`, `timeout`, `OOMKilled`, `logs unavailable` | Infrastructure issue | N/A (cannot fix) |
+| **SKILL** | `skills-ref`, `validate`, `Agent Skills` | Fix skill frontmatter | Yes (show fix) |
+
+**Flaky test detection**: If failure occurs in only 1 matrix shard and shows timeout/connection/intermittent signals, flag as **Potential Flaky Test** and recommend re-run via `gh run rerun {run_id}` before attempting code changes.
 
 ### Step 4: REPORT FINDINGS
 
@@ -118,8 +148,8 @@ Present a structured diagnosis:
   would reformat /home/runner/work/wfc/wfc/wfc/scripts/github/pr_threads.py
   1 file would be reformatted, 156 files would be left unchanged.
 
-**Fix:** `uv run black wfc/scripts/github/pr_threads.py`
-**Effort:** Trivial (auto-fixable)
+**Proposed fix:** `uv run black wfc/scripts/github/pr_threads.py`
+**Approval required:** Yes (will show diff before committing)
 
 ---
 
@@ -127,29 +157,34 @@ Present a structured diagnosis:
 
 **Root cause:** Same black formatting issue in test step.
 
-**Fix:** Same as Job 1 — fixing once resolves both.
-**Effort:** Trivial
+**Proposed fix:** Same as Job 1 — fixing once resolves both.
+**Approval required:** Yes
 
 ---
 
 ## Summary
 - 2 failures, 1 unique root cause
-- All auto-fixable
+- All auto-fixable with approval
 - Estimated fix time: < 1 minute
 ```
 
 Group duplicate root causes — if 3 jobs all fail for the same reason, say so clearly.
 
-### Step 5: FIX
+**Fork PR detection**: If logs show `fatal: could not read Username` for submodules, classify as **PERMISSION (Fork Context)** and report: "Fork PR lacks access to private submodules/secrets. Requires workflow approval or secrets inheritance configuration."
 
-Ask the user if they want fixes applied:
+### Step 5: PROPOSE FIX
 
-- **Auto-fixable** (FORMAT, LINT): Apply immediately, no approval needed
-- **Code fixes** (TEST, TYPE, SYNTAX, IMPORT): Show the fix, ask for approval
-- **Config fixes** (SECRET, PERMISSION, SKILL): Explain the fix, require explicit approval
-- **Infra issues** (INFRA): Cannot auto-fix — explain and suggest manual action
+**CRITICAL**: This skill does NOT apply fixes automatically. Always show the proposed fix and wait for explicit user approval.
 
-**For FORMAT fixes:**
+**For all fixable categories**:
+
+1. Show the exact commands to run
+2. Show expected impact (files modified, tests affected)
+3. Ask: "Apply this fix? (yes/no)"
+
+**Fix commands by category**:
+
+**FORMAT**:
 
 ```bash
 # Python
@@ -163,14 +198,22 @@ npx prettier --write {file}
 gofmt -w {file}
 ```
 
-**For SKILL fixes:**
+**LINT**:
+
+```bash
+uv run ruff check --fix {file}
+# or
+npx eslint --fix {file}
+```
+
+**SKILL**:
 Read the failing skill file, check against Agent Skills spec:
 
 - Valid frontmatter fields only: `name`, `description`, `license`
 - Name uses hyphens only, no colons
 - Run `wfc validate` after fixing
 
-**For PERMISSION fixes:**
+**PERMISSION**:
 
 ```bash
 chmod +x {script}
@@ -178,17 +221,42 @@ git add {script}
 git update-index --chmod=+x {script}
 ```
 
-**For TEST fixes:**
-Read the failing test + source file, understand the failure, apply targeted fix.
+**TEST**:
 
-**For IMPORT fixes:**
-Check if the module exists in `pyproject.toml` / `package.json`. If missing, suggest adding it. If import path is wrong, fix it.
+- Read the failing test file completely (not just error snippets)
+- Read the source file being tested
+- Propose targeted fix with explanation of why test failed
 
-### Step 6: VERIFY & PUSH
+**IMPORT**:
 
-After applying fixes:
+- Check if module exists in `pyproject.toml` / `package.json`
+- If missing external dependency → propose adding to dependencies
+- If local import path wrong → propose path correction
+- **Distinguish**: Local modules (e.g., `from lib.utils`) vs external packages (e.g., `import requests`)
 
-1. Run the equivalent check locally:
+**INFRA** (cannot fix):
+Report infrastructure issue and suggest manual action:
+
+- Runner timeout/OOM → "Increase runner resources or optimize build"
+- Docker/connection issues → "Check network configuration or retry"
+- Offer to re-run: `gh run rerun {run_id}`
+
+### Step 6: VERIFY & PUSH (After User Approval)
+
+After user approves fix:
+
+1. **Apply the fix** using the proposed commands
+2. **Verify file modification**:
+
+   ```bash
+   git diff --quiet {file}
+   ```
+
+   If no changes detected, report "Fix command did not modify file" and stop.
+
+3. **Run local verification** (toolchain-dependent):
+
+   **For `uv` projects**:
 
    ```bash
    # FORMAT
@@ -202,7 +270,17 @@ After applying fixes:
    wfc validate
    ```
 
-2. If local check passes:
+   **For npm projects**:
+
+   ```bash
+   npx prettier --check .
+   npx eslint .
+   npm test
+   ```
+
+   **For other toolchains**: Report "Local verification not configured for this toolchain. Proceed with commit?"
+
+4. **If verification passes**:
 
    ```bash
    git add {fixed_files}
@@ -212,7 +290,7 @@ After applying fixes:
    git push
    ```
 
-3. Optionally watch CI re-run:
+5. **Optionally watch CI re-run**:
 
    ```bash
    gh pr checks {pr_number} --watch --repo {owner}/{repo}
@@ -263,6 +341,8 @@ Look for:
 - API signature changes (added/removed parameter)
 - Mock targets that no longer exist
 
+**Context requirement**: Read full test file and source file before proposing fix.
+
 ### Agent Skills compliance
 
 ```bash
@@ -277,36 +357,3 @@ Common issues:
 
 - Invalid frontmatter fields (`user-invocable`, `argument-hint`, `disable-model-invocation`)
 - Colons in skill names (`wfc:foo` → `wfc-foo`)
-- Missing required fields
-
-### Missing dependencies in CI
-
-Check `pyproject.toml` `[project.dependencies]` — if a new import was added but not declared, CI will fail with `ModuleNotFoundError` while local works (because local has the dev install).
-
----
-
-## Integration with WFC
-
-### Triggered by
-
-- Failing PR checks noticed during `/wfc-pr-comments`
-- User reports CI is red
-- After `/wfc-build` or `/wfc-implement` pushes a branch
-
-### Typical Flow
-
-```
-wfc-build → Push PR → CI fails → /wfc-gh-debug → Fix → CI green → Merge
-```
-
-### Complements
-
-- `/wfc-pr-comments` — fixes review comments; `/wfc-gh-debug` fixes CI
-- `/wfc-review` — catches issues before CI; `/wfc-gh-debug` fixes what slips through
-
-## Philosophy
-
-**ELEGANT:** One command diagnoses + fixes CI without log spelunking
-**PARALLEL:** Fetch all failing job logs simultaneously
-**PROGRESSIVE:** Auto-fix trivial issues, ask for approval on code changes
-**TOKEN-AWARE:** Extract relevant log lines only, not full 10MB logs

@@ -1,30 +1,38 @@
 ---
 name: wfc-lfg
-description: >-
-  Executes the full WFC pipeline unattended: plan → deepen → implement → review
-  → resolve → test → push PR. No human checkpoints. Terminal output is a PR on
-  success; halts with a structured report on failure. Requires git repo with
-  configured remote and authenticated gh CLI. Trigger: /wfc-lfg; "ship it end
-  to end"; "full wfc auto"; "full pipeline auto"; "lfg" at message START
-  followed by 5+ word feature description ("lfg add rate limiting to the API").
+description: |-
+  Executes the full WFC pipeline autonomously: plan → deepen → implement → review
+  → resolve → test → push PR. Zero human interaction during execution. Terminal
+  output is a PR on success; halts with a structured report on failure.
+
+  Requirements:
+  - Git repository with configured remote and clean working directory.
+  - Authenticated `gh` CLI.
+  - Target branch (default: develop) must exist on remote.
+
+  Trigger: /wfc-lfg; "full wfc auto"; "ship it end to end" (requires active code
+  context); regex pattern "^lfg (implement|build|add|create|refactor|fix) .{20,}$"
+
   Not for: single-stage requests (route to that skill), deployment/infra tasks,
   auth/encryption/compliance/PII features (need human review), requests with
-  approval gates, or vague feature descriptions under five words.
+  approval gates, vague descriptions (e.g., "fix some issues"), repositories with
+  uncommitted changes, requests contradicting guardrails (e.g., "push to main").
+
 license: MIT
 ---
 
-# WFC:LFG - Full-Send Pipeline
+# WFC:LFG - Autonomous Pipeline
 
-**"One command. Zero hand-offs. PR on the other side."**
+**"One command. Structured output. PR on success, report on halt."**
 
 ## What It Does
 
-Sequences every WFC phase into a single unattended run. Output of each step feeds the next — you get a PR at the end.
+Sequences every WFC phase into a single autonomous run. Output of each step feeds the next. No human interaction during execution.
 
 ```
 /wfc-lfg "add rate limiting to API"
     ↓
-1. wfc-plan (quick interview → TASKS.md)
+1. wfc-plan (generate TASKS.md, PROPERTIES.md, TEST-PLAN.md)
     ↓
 2. wfc-deepen (parallel research enrichment)
     ↓
@@ -32,13 +40,36 @@ Sequences every WFC phase into a single unattended run. Output of each step feed
     ↓
 4. wfc-review (5-agent consensus review)
     ↓
-5. Resolve findings (fix review issues automatically)
+5. Resolve findings (auto-fix clear issues, halt on ambiguous)
     ↓
 6. Test suite (run full test suite)
     ↓
 7. Push + PR (branch pushed, PR created)
     ↓
-DONE
+DONE or HALT (with structured report)
+```
+
+## Pre-Flight Checks
+
+Before starting the pipeline, verify:
+
+```
+1. Working directory clean (git status --porcelain returns empty)
+   → If dirty: HALT with "Commit or stash changes before running wfc-lfg"
+
+2. HEAD is not detached
+   → If detached: HALT with "Checkout a branch before running wfc-lfg"
+
+3. Target branch exists on remote (default: develop)
+   → Run: git fetch origin develop
+   → If missing: HALT with "Target branch 'develop' not found on remote"
+
+4. Test command detection
+   → Check: pytest.ini → "uv run pytest"
+   → Check: pyproject.toml with pytest → "uv run pytest"
+   → Check: package.json → "npm test"
+   → Check: Makefile with "test" target → "make test"
+   → If undetected: HALT with "No test runner found. Specify manually or add test infrastructure."
 ```
 
 ## Usage
@@ -54,7 +85,7 @@ DONE
 # Skip deepen for simple features
 /wfc-lfg --skip-deepen "add health check endpoint"
 
-# Dry run (show what would happen)
+# Dry run (show plan without executing)
 /wfc-lfg --dry-run "add caching layer"
 ```
 
@@ -64,12 +95,56 @@ DONE
 
 ```
 Invoke /wfc-plan with feature description
-  - Quick adaptive interview (3-5 questions)
+  - NO interview (use --non-interactive flag)
   - Generate TASKS.md, PROPERTIES.md, TEST-PLAN.md
-  - Skip validation for speed (--skip-validation)
+  - Validate description clarity
+  - Fetch target branch: git fetch origin [pr_target]
 ```
 
-**Why skip validation in LFG:** The review step (Step 4) catches quality issues. Validation in planning would double the feedback loop.
+**Output Schemas:**
+
+```markdown
+# TASKS.md
+- [ ] Task description [P1|P2|P3]
+  - Subtask: description
+  - Files: path/to/file.py
+
+# PROPERTIES.md
+---
+performance:
+  - metric_name: threshold
+security:
+  - constraint: value
+monitoring:
+  - alert_name: condition
+---
+
+# TEST-PLAN.md
+## Task: [task description]
+- Given: [precondition]
+- When: [action]
+- Then: [expected result]
+```
+
+**Clarity Validation:**
+If feature description lacks actionable specificity (e.g., "update the thing"), HALT immediately with:
+
+```
+WFC:LFG Clarity Check Failed
+
+Description: "update the thing"
+Reason: Description lacks actionable specificity.
+Required: Specific component, action, and scope.
+
+Example: "add rate limiting to the /api/v1 endpoints with 100 req/min threshold"
+```
+
+**Safety Validation:**
+Before generating tasks, scan description for guardrail violations:
+
+- "push to main" → HALT: "Guardrail violation: Cannot push to main/master"
+- "print env vars" → HALT: "Security policy violation: Credential exposure risk"
+- "disable auth" → HALT: "Exclusion match: Auth features require human review"
 
 ### Step 2: Deepen
 
@@ -79,16 +154,23 @@ Invoke /wfc-deepen on generated plan
   - Enrich plan with findings
 ```
 
-**Skip with:** `--skip-deepen` for simple, well-understood features.
+**Skip with:** `--skip-deepen` or `--complexity S` (auto-skipped for S).
 
 ### Step 3: Implement
 
 ```
 Invoke /wfc-implement with enriched plan
-  - Parse TASKS.md for task DAG
+  - Parse TASKS.md for task DAG (checkboxes with [P1/P2/P3])
   - Spawn parallel agents in worktrees
   - Each agent: TDD → Quality → Submit
   - Merge sequentially with rollback
+```
+
+**Worktree Management:**
+
+```
+Create: git worktree add .git/worktrees/wfc-{id} -b claude/{feature-slug}
+Cleanup: git worktree remove .git/worktrees/wfc-{id} (on success or failure)
 ```
 
 ### Step 4: Review
@@ -100,26 +182,36 @@ Invoke /wfc-review on implementation
   - Finding deduplication
 ```
 
+**Consensus Score Formula:**
+
+```
+CS = max(severity_scores) where severity_scores = [security, correctness, performance, maintainability, reliability]
+Scale: 0.0 (no issues) to 10.0 (critical failure)
+```
+
 ### Step 5: Resolve
 
 ```
-If CS indicates issues (Moderate or higher):
+If CS >= 7.0 (Moderate or higher):
   - Parse review findings
-  - For each finding with clear remediation:
-    - Apply fix automatically
-    - Run affected tests
-  - For ambiguous findings:
-    - Log as deferred (human review needed)
-  - Re-run review if significant changes made
+  - For each finding with code snippet remediation:
+    - Apply fix
+    - Run FULL test suite (affected test detection not implemented)
+  - For findings without code snippets:
+    - HALT: "Ambiguous finding requires human review: [finding]"
+  - If fixes applied:
+    - Increment resolve_iteration counter
+    - If resolve_iteration > 2: HALT: "Max resolve iterations exceeded"
+    - Re-run review (Step 4)
 ```
 
 ### Step 6: Test
 
 ```
-Run full test suite
-  - uv run pytest (or detected test command)
-  - Integration tests if available
-  - Quality checks (lint, format)
+Run test suite using detected command from Pre-Flight Check
+  - Full suite required (no partial runs)
+  - Quality checks: lint, format
+  - If failure: HALT with test output
 ```
 
 ### Step 7: Ship
@@ -127,27 +219,33 @@ Run full test suite
 ```
 Push branch and create PR
   - Push to claude/* branch
-  - Create GitHub PR targeting develop
-  - Include review summary in PR body
-  - Include post-deploy validation plan
+  - Create GitHub PR targeting [pr_target] (default: develop)
+  - PR body includes:
+    - Feature summary
+    - Review summary (CS score, findings resolved/deferred)
+    - Test results summary
+    - Post-deploy validation (derived from PROPERTIES.md monitoring section)
 ```
 
 ## Guardrails
 
-Even in autonomous mode, WFC maintains safety:
-
-### Hard Stops (pipeline halts)
+### Hard Stops (pipeline halts with report)
 
 - Review CS >= 9.0 (Critical findings)
 - Security findings with severity >= 8.5
 - Test suite failure after resolve step
 - Merge conflicts that can't be auto-resolved
+- Max resolve iterations (2) exceeded
+- Ambiguous findings (no code snippet remediation)
+- Pre-flight check failures
+- Clarity validation failures
+- Safety validation failures (guardrail violations in description)
 
 ### Soft Warnings (pipeline continues with note)
 
-- Review CS 7.0-9.0 (Important findings deferred)
+- Review CS 7.0-9.0 (Important findings, auto-resolve attempted)
 - Skipped reviewers (irrelevant file types)
-- Deferred ambiguous findings
+- Deferred low-priority tasks from TASKS.md
 
 ### Never Does
 
@@ -156,10 +254,12 @@ Even in autonomous mode, WFC maintains safety:
 - Skip TDD workflow
 - Ignore security findings
 - Merge without tests passing
+- Proceed with ambiguous findings
+- Execute in dirty repository state
 
 ## Output
 
-When pipeline completes:
+### Success Output
 
 ```
 WFC:LFG Pipeline Complete
@@ -185,14 +285,44 @@ Post-Deploy Validation:
   - Window: 24 hours after deploy
 ```
 
+### Halt Output
+
+```
+WFC:LFG Pipeline Halted
+
+Feature: Add rate limiting to API
+Duration: ~4 minutes
+Halt Reason: Review CS >= 9.0 (Critical finding)
+
+Steps Completed:
+  1. Plan:      TASKS.md (3 tasks, 2 properties)
+  2. Deepen:    +2 patterns, +1 known pitfall
+  3. Implement: 3/3 tasks complete (TDD)
+  4. Review:    CS=9.2 (CRITICAL) - HALTED
+
+Critical Findings:
+  - [Security] Severity 9.2: Rate limiter bypass vulnerability in header parsing
+    - File: src/middleware/rate_limit.py:47
+    - Remediation: N/A (requires architectural decision)
+
+Resolution Required:
+  Manual review needed for security finding.
+  Run: /wfc-review --full for complete report.
+
+Branch preserved: claude/rate-limiting-api
+Worktree cleaned up.
+```
+
 ## When to Use
 
 ### Use LFG when
 
-- Feature scope is clear from description
-- You trust the pipeline for this type of work
-- Want to parallelize and speed up delivery
+- Feature scope is clear and actionable from description
+- Repository is in clean state
+- Target branch exists on remote
+- Test infrastructure is configured
 - Working on well-understood codebase patterns
+- No auth/encryption/compliance concerns
 
 ### Don't use when
 
@@ -200,6 +330,9 @@ Post-Deploy Validation:
 - Need human decisions at each step (use manual workflow)
 - Critical security feature (use /wfc-plan + manual review)
 - First-time in a new codebase (use step-by-step)
+- Repository has uncommitted changes
+- Description is vague or non-actionable
+- Request contradicts guardrails
 
 ## Configuration
 
@@ -209,17 +342,19 @@ Post-Deploy Validation:
     "skip_deepen_for_complexity": ["S"],
     "auto_resolve_threshold": 7.0,
     "hard_stop_threshold": 9.0,
+    "max_resolve_iterations": 2,
     "require_test_pass": true,
     "create_pr": true,
-    "pr_target": "develop"
+    "pr_target": "develop",
+    "worktree_path": ".git/worktrees/wfc-{id}"
   }
 }
 ```
 
 ## Philosophy
 
-**UNATTENDED**: Zero hand-offs between phases
+**AUTONOMOUS**: Zero human interaction during execution
 **GUARDED**: Hard-stops on critical findings, main stays untouched
-**SATURATING**: Concurrent where safe, serial where ordering matters
-**AUDITABLE**: Every phase writes its own receipt
-**OPT-IN**: You decide when to hand over the keys
+**AUDITABLE**: Every phase writes receipts; halt reports preserve state
+**SAFE**: Pre-flight checks prevent execution in invalid states
+**TRANSPARENT**: Halt conditions are explicit and actionable

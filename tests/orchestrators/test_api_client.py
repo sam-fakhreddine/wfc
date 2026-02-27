@@ -37,30 +37,33 @@ def _make_response(*blocks, input_tokens: int = 100, output_tokens: int = 50):
 
 class TestMissingEnvVar:
     def test_missing_env_var_raises_environment_error(self):
-        """EnvironmentError is raised when ANTHROPIC_SKILLS_VALIDATOR is not set."""
-        from wfc.scripts.orchestrators.skill_validator_llm import api_client
-
-        with mock.patch.dict("os.environ", {}, clear=True):
-            env = {
-                k: v
-                for k, v in __import__("os").environ.items()
-                if k != "ANTHROPIC_SKILLS_VALIDATOR"
-            }
-            with mock.patch.dict("os.environ", env, clear=True):
-                with pytest.raises(
-                    EnvironmentError, match="ANTHROPIC_SKILLS_VALIDATOR env var not set"
-                ):
-                    api_client.call_api("hello")
-
-    def test_error_message_contains_export_hint(self):
-        """EnvironmentError message mentions exporting the API key."""
+        """EnvironmentError is raised when neither key env var is set."""
         from wfc.scripts.orchestrators.skill_validator_llm import api_client
 
         import os
 
-        env = {k: v for k, v in os.environ.items() if k != "ANTHROPIC_SKILLS_VALIDATOR"}
+        env = {
+            k: v
+            for k, v in os.environ.items()
+            if k not in {"ANTHROPIC_SKILLS_VALIDATOR", "ZAI_SKILLS_VALIDATOR"}
+        }
         with mock.patch.dict("os.environ", env, clear=True):
-            with pytest.raises(EnvironmentError, match="Export your Anthropic API key"):
+            with pytest.raises(EnvironmentError, match="No API key found"):
+                api_client.call_api("hello")
+
+    def test_error_message_contains_export_hint(self):
+        """EnvironmentError message mentions the expected env var names."""
+        from wfc.scripts.orchestrators.skill_validator_llm import api_client
+
+        import os
+
+        env = {
+            k: v
+            for k, v in os.environ.items()
+            if k not in {"ANTHROPIC_SKILLS_VALIDATOR", "ZAI_SKILLS_VALIDATOR"}
+        }
+        with mock.patch.dict("os.environ", env, clear=True):
+            with pytest.raises(EnvironmentError, match="ZAI_SKILLS_VALIDATOR"):
                 api_client.call_api("hello")
 
 

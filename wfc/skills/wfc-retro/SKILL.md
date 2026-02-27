@@ -1,23 +1,58 @@
 ---
 name: wfc-retro
 description: >-
-  Reads WFC JSONL telemetry for a completed period and produces a structured
-  retrospective report with metrics and improvement recommendations.
+  Analyzes completed WFC (Workflow Controller) JSONL telemetry files to
+  calculate aggregated performance metrics (e.g., throughput, completion rates)
+  for a specific past period. Generates a standardized retrospective report
+  focusing on quantitative observation.
 
-  TRIGGERS: "/wfc-retro", "run a WFC retrospective", "summarize agent task
-  performance for last sprint", "analyze WFC telemetry from the past N days",
-  "show me the Say:Do ratio for last sprint".
+  TRIGGERS: "/wfc-retro", "generate WFC retrospective", "calculate WFC
+  completion metrics for completed sprint", "aggregate WFC statistics for past
+  month", "report on Say:Do ratio for last week".
 
-  REQUIRES: user references WFC/agent workflows AND targets a completed past
-  period AND wfc-*.WNN.jsonl files exist for that period.
+  REQUIRES: user references WFC/agent workflows AND specifies a completed past
+  period (end date < current date) AND wfc-*.W[0-9][0-9].jsonl files exist for
+  that period.
 
-  NOT FOR: real-time monitoring, debugging a single failing task, requests
-  without WFC telemetry context, product feature analysis, future planning,
-  sprint planning, raw log views, or when no JSONL files exist for the period.
+  NOT FOR: real-time monitoring, debugging a single failing task, root cause
+  analysis for specific errors, sprint planning (future), requests for the
+  current active sprint, raw log views, analyzing data without existing JSONL
+  files, analyzing time ranges exceeding 30 days, or calculating custom KPIs
+  outside the standard schema.
 license: MIT
 ---
 
 # WFC:RETRO — Workflow Controller Retrospective Analysis
 
 Reads WFC (Workflow Controller) JSONL telemetry, aggregates metrics for a
-completed period, and produces a structured improvement
+completed period, and produces a structured report.
+
+## Execution Logic
+
+1. **Scope Validation**:
+    * Verify `current_date > requested_end_date`. If false, refuse execution
+        (Skill is for completed periods only).
+    * Verify file size/period length < 30 days to prevent context overflow.
+
+2. **File Resolution**:
+    * Scan for files matching pattern `wfc-*.W[0-9][0-9].jsonl`.
+    * Deduplicate records by `transaction_id` if overlapping files are found.
+
+3. **Data Ingestion & Cleaning**:
+    * Read JSONL lines. Skip malformed lines (logging count of skipped lines).
+    * Abort if valid record count is 0 (Report: "Insufficient Data").
+
+4. **Metric Calculation**:
+    * **Say:Do Ratio**: $\frac{\text{Tasks Completed}}{\text{Tasks Started}}$
+        (Note: 'Say' is defined as Intent Logged; 'Do' defined as Success Exit
+        Code).
+    * **Success Rate**: $\frac{\text{Exit Code 0}}{\text{Total Tasks}}$.
+
+5. **Output Generation**:
+    * Do NOT generate improvement recommendations (hallucination risk).
+    * Generate report with the following strict schema:
+        * **Header**: Period Analyzed, Source Files Used.
+        * **Data Integrity**: Total Lines, Valid Lines, Skipped Errors.
+        * **Metrics**: Say:Do Ratio, Success Rate, Total Throughput.
+        * **Observations**: Bullet points of factual trends (e.g., "High
+            failure rate observed on Tuesdays").

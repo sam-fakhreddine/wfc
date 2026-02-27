@@ -1,20 +1,22 @@
 ---
 name: wfc-implement
 description: >-
-  Executes a multi-task implementation plan using parallel TDD agents in isolated
-  git worktrees. REQUIRES: TASKS.md on disk (2+ tasks), a valid non-bare git
-  repo, and explicit intent to EXECUTE an existing plan. Reads TASKS.md, assigns
-  tasks to parallel sub-agents, enforces TDD, routes through wfc-consensus-review
-  (CURRENTLY MOCK), opens GitHub PRs. Trigger: /wfc-implement or "run the plan",
-  "implement TASKS.md", "execute the plan in parallel". Not for: no TASKS.md on
-  disk (use wfc-plan first), single-task runs, creating/reviewing plans, inline
-  task lists, security-sensitive work, or combined plan-then-implement requests.
+  Orchestrates PARALLEL execution of an existing TASKS.md implementation plan
+  using isolated git worktrees. STRICT REQUIREMENTS: (1) TASKS.md file exists
+  with 2+ parseable tasks, (2) valid non-bare git repo with clean working
+  directory, (3) user intent is purely EXECUTION of existing plan. FLOW:
+  Validates TASKS.md -> Creates worktrees -> Spawns one agent per task ->
+  Requests TDD workflow -> Runs mocked review -> Creates GitHub PRs targeting
+  develop branch. TRIGGERS: /wfc-implement, "run the plan", "execute TASKS.md",
+  "implement the tasks in TASKS.md". NOT FOR: missing TASKS.md (use wfc-plan),
+  single-task runs, inline task lists, plan-then-implement requests, cyclic
+  dependencies, dirty repos, main-branch targets, security-sensitive work.
 license: MIT
 ---
 
-# wfc-implement - Multi-Agent Parallel Implementation Engine
+# wfc-implement - Multi-Agent Parallel Implementation Orchestrator
 
-⚠️ **EXECUTION CONTEXT: ORCHESTRATION MODE**
+## EXECUTION CONTEXT: ORCHESTRATION MODE
 
 You are running in **orchestration mode** with restricted tool access.
 
@@ -22,300 +24,304 @@ You are running in **orchestration mode** with restricted tool access.
 
 - ✅ Read, Grep, Glob (read TASKS.md, inspect code)
 - ✅ Task (REQUIRED for spawning implementation agents)
-- ✅ Bash (git worktree operations, coordination)
+- ✅ Bash (git worktree operations: add, list, remove, prune)
 
-**NOT available in this context:**
+**NOT available:**
 
-- ❌ Write (use Task → spawn agent per task in worktree)
-- ❌ Edit (use Task → spawn agent per task in worktree)
-- ❌ NotebookEdit (use Task → spawn agent per task in worktree)
+- ❌ Write, Edit, NotebookEdit (delegated to spawned agents)
 
-**Your role:** Read TASKS.md, spawn parallel Task agents (one per task), coordinate their work, route through review, merge results.
+**Your role:** Validate inputs, create worktrees, spawn Task agents, coordinate completion, create PRs.
 
 ---
 
-## Quick Start: Spawn Implementation Agents
+## Preconditions (MUST validate before execution)
 
-For each task in TASKS.md:
+1. **TASKS.md exists** - If missing, STOP and suggest: "No TASKS.md found. Run /wfc-plan first."
+2. **2+ parseable tasks** - Parse TASKS.md. If < 2 tasks, STOP with error: "TASKS.md requires 2+ tasks. For single tasks, use direct implementation."
+3. **No cyclic dependencies** - Build dependency graph from TASKS.md. If cycle detected (A→B→A), STOP with error: "Cyclic dependency detected. Fix TASKS.md."
+4. **Clean working directory** - Run `git status --porcelain`. If output non-empty, STOP: "Uncommitted changes detected. Commit or stash before running."
+5. **Non-bare git repo** - Verify `.git` exists and is not bare.
+
+---
+
+## Execution Flow
+
+### Phase 1: Setup
+
+```bash
+# Create worktree directory
+mkdir -p .worktrees
+
+# For each task, create isolated worktree
+# Pattern: .worktrees/TASK-XXX/ branched from develop
+git worktree add .worktrees/TASK-001 -b claude/TASK-001 develop
+```
+
+**Worktree naming convention**: `.worktrees/<task-id>/`
+**Branch naming convention**: `claude/<task-id>` branched from `develop`
+
+### Phase 2: Spawn Agents
+
+For each task in dependency order (respecting topological sort):
 
 ```xml
 <Task
   subagent_type="general-purpose"
   description="Implement TASK-001"
   prompt="
-Task: [from TASKS.md]
+Task ID: TASK-001
+Task Description: [from TASKS.md]
+Worktree Path: .worktrees/TASK-001/
+Branch: claude/TASK-001
 
-Worktree: [isolated git worktree path]
+Context Files (read these first):
+- TASKS.md (your task definition)
+- PROPERTIES.md (if exists at project root - contains system properties to preserve)
+- TEST-PLAN.md (if exists at project root - contains test guidance)
 
-Requirements:
-- [from TASKS.md]
-
-Properties to verify:
-- [from PROPERTIES.md if exists]
-
-Follow TDD:
-1. Write tests FIRST
-2. Implement to pass tests
-3. Refactor
-4. Quality checks
+TDD Workflow (REQUESTED but not enforceable):
+1. Read existing code and context files
+2. Write tests FIRST (detect test framework from project: pytest, jest, go test, etc.)
+3. Implement minimum code to pass tests
+4. Run tests - must PASS
+5. Run quality checks if tooling detected (lint, format) - skip if not configured
 
 Deliverables:
-- Implementation in worktree
-- Passing tests
-- Quality gates passing
+1. Implementation committed to worktree branch
+2. Tests passing
+3. Agent report (JSON format - see below)
+
+Agent Report Format (write to .worktrees/TASK-001/agent-report.json):
+{
+  \"task_id\": \"TASK-001\",
+  \"status\": \"success\" | \"failed\",
+  \"files_changed\": [\"path/to/file1\", ...],
+  \"tests_added\": 3,
+  \"tests_passed\": 3,
+  \"quality_checks\": \"passed\" | \"skipped\" | \"failed\",
+  \"summary\": \"Brief description of changes made\",
+  \"properties_addressed\": [\"PROP-001\", ...]
+}
+
+On failure, set status to \"failed\" and include \"error\" field with details.
 "
 />
 ```
 
----
+### Phase 3: Collect Results
 
-**Core skill #3** - Reads TASKS.md, orchestrates N agents in isolated worktrees, enforces TDD, routes through review, auto-merges, handles rollbacks.
+Wait for all spawned agents to complete. Track completion status per task.
 
-## Status
+**Synchronization**: All agents must complete before proceeding to merge phase.
 
-🚧 **IN DEVELOPMENT**
+### Phase 4: Mocked Review
 
-- ✅ Shared infrastructure (config, telemetry, schemas, utils)
-- ✅ Mock dependencies (wfc-plan, wfc-consensus-review)
-- ✅ Orchestrator logic (task queue, dependency management)
-- 🚧 Agent implementation (TDD workflow)
-- 🚧 Merge engine (rebase, integration tests, rollback)
-- 🚧 Dashboard (WebSocket, Mermaid visualization)
-- 📋 CLI interface
-- 📋 Full integration testing
-
-## Architecture
-
-### MULTI-TIER Design
+**Current behavior**: Review is mocked. Auto-approve all completed tasks.
 
 ```
-┌─────────────────────────────┐
-│  PRESENTATION TIER          │  CLI, Dashboard (future: Web UI, API)
-└──────────────┬──────────────┘
-               │
-┌──────────────▼──────────────┐
-│  LOGIC TIER                 │  Orchestrator, Agents, Merge Engine
-│  - orchestrator.py          │  (Pure logic, no UI)
-│  - agent.py                 │
-│  - merge_engine.py          │
-└──────────────┬──────────────┘
-               │
-┌──────────────▼──────────────┐
-│  DATA TIER                  │  Uses shared infrastructure
-│  - WFCTelemetry             │  (Swappable storage)
-│  - Git (worktrees)          │
-└──────────────┬──────────────┘
-               │
-┌──────────────▼──────────────┐
-│  CONFIG TIER                │  WFCConfig
-│  - wfc.config.json          │  (Global/project)
-└─────────────────────────────┘
+For each completed task:
+  - Log: "TASK-XXX: Mock review PASSED"
+  - No actual review invocation
 ```
 
-### PARALLEL Execution
+**Future**: When wfc-consensus-review is implemented, this phase will invoke it.
 
-```
-Orchestrator
-    ├── Agent 1 (worktree-1, TASK-001, sonnet)
-    ├── Agent 2 (worktree-2, TASK-002, opus)
-    ├── Agent 3 (worktree-3, TASK-005, sonnet)
-    └── Agent N (worktree-N, TASK-XXX, haiku)
-         ↓ (all work concurrently)
-    Review (sequential per agent)
-         ↓
-    Merge (sequential, one at a time)
-         ↓
-    Integration Tests
-         ↓ (pass/fail)
-    Main Branch (or Rollback)
-```
+### Phase 5: Create Pull Requests
 
-## Triggers
+For each successful task:
 
 ```bash
-# Default: use TASKS.md in /plan
-/wfc-implement
-
-# Custom tasks file
-/wfc-implement --tasks path/to/TASKS.md
-
-# Override agent count
-/wfc-implement --agents 5
-
-# Override strategy
-/wfc-implement --strategy smart
-
-# Dry run (show plan, don't execute)
-/wfc-implement --dry-run
+cd .worktrees/TASK-001
+git push -u origin claude/TASK-001
+gh pr create --base develop --title "TASK-001: [task summary]" --body-file .worktrees/TASK-001/pr-body.md --draft
 ```
 
+**PR body template** (agent generates this):
+
+```markdown
+## Summary
+[agent-report.json summary]
+
+## Changes
+- [list of files changed]
+
+## Tests
+- Added: X tests
+- All passing: Yes
+
+## Properties Addressed
+- [list from agent-report.json]
+
+---
+
+## Post-Deploy Validation Template
+
+> NOTE: Adapt these queries to your monitoring platform (Prometheus, Datadog, etc.)
+
+| Property | Type | Suggested Metric | Threshold |
+|----------|------|------------------|-----------|
+| [from PROPERTIES.md] | [type] | [metric name] | [threshold] |
+
+**Validation Window**: 24-72 hours depending on change scope
+
+**Rollback Criteria**: Any SAFETY property violation
+```
+
+### Phase 6: Cleanup
+
+On success:
+
+```bash
+git worktree remove .worktrees/TASK-001
+```
+
+On failure (orchestrator crash, partial completion):
+
+```bash
+# Manual recovery command
+/wfc-implement --cleanup
+# Removes all .worktrees/* directories
+```
+
+---
+
 ## Configuration
+
+Default `wfc.config.json`:
 
 ```json
 {
   "orchestration": {
-    "agent_strategy": "smart",
-    "max_agents": 5
+    "max_parallel_agents": 5,
+    "agent_timeout_seconds": 600
   },
   "worktree": {
     "directory": ".worktrees",
-    "cleanup_on_success": true
+    "cleanup_on_success": true,
+    "cleanup_on_failure": false
+  },
+  "git": {
+    "branch_prefix": "claude",
+    "target_branch": "develop",
+    "pr_draft_by_default": true
   },
   "tdd": {
-    "enforce_test_first": true,
-    "require_all_properties_tested": true
+    "request_test_first": true,
+    "require_tests_pass": true
   },
-  "merge": {
-    "auto_merge": true,
-    "require_rebase": true
-  },
-  "integration_tests": {
-    "command": "pytest",
-    "timeout_seconds": 300,
-    "run_after_every_merge": true
+  "review": {
+    "mode": "mocked",
+    "mock_result": "approve"
   },
   "rollback": {
-    "strategy": "re_queue",
-    "max_rollback_retries": 2
-  },
-  "dashboard": {
-    "enabled": true,
-    "websocket_port": 9876
+    "strategy": "report_only",
+    "description": "Failed tasks are reported; no automatic retry. User decides next action."
   }
 }
 ```
 
-## TDD Workflow (Per Agent)
+---
 
-```
-1. UNDERSTAND
-   - Read task definition
-   - Read properties
-   - Read test plan
-   - Read existing code
+## Task File Formats
 
-2. TEST FIRST (RED)
-   - Write tests BEFORE implementation
-   - Tests cover acceptance criteria
-   - Tests cover properties
-   - Run tests → they FAIL
-
-3. IMPLEMENT (GREEN)
-   - Write minimum code to pass tests
-   - Follow ELEGANT principles
-   - Run tests → they PASS
-
-4. REFACTOR
-   - Clean up without changing behavior
-   - Maintain SOLID & DRY
-   - Run tests → still PASS
-
-5. SUBMIT
-   - Commit to worktree branch
-   - Produce agent report
-   - Route to wfc-consensus-review
-```
-
-## Dependencies
-
-- **Consumes**: TASKS.md, PROPERTIES.md, TEST-PLAN.md (from wfc-plan)
-- **Integrates**: wfc-consensus-review (for code review)
-- **Produces**: PR to develop branch, telemetry records, agent reports
-
-## Post-Deploy Validation Plan
-
-After all tasks are implemented and merged, the orchestrator generates a post-deploy validation plan included in the PR body.
-
-### Generation Process
-
-1. Collect all PROPERTIES.md entries for implemented tasks
-2. Map each property to observable metrics:
-   - SAFETY properties → error rate monitors, auth failure alerts
-   - PERFORMANCE properties → latency P95/P99 thresholds, throughput baselines
-   - LIVENESS properties → health check endpoints, heartbeat monitors
-   - INVARIANT properties → data consistency checks, constraint validations
-3. Generate validation plan section for PR body
-
-### Validation Plan Format
+### TASKS.md Expected Structure
 
 ```markdown
-## Post-Deploy Monitoring & Validation
+# Implementation Plan
 
-### Properties Validated
-| Property | Type | Observable | Threshold |
-|----------|------|-----------|-----------|
-| PROP-001 | SAFETY | auth_failure_rate | < 0.1% |
-| PROP-002 | PERFORMANCE | api_latency_p99 | < 200ms |
+## TASK-001: Task Title
+**Description**: What to implement
+**Dependencies**: (none) | TASK-XXX, TASK-YYY
+**Acceptance Criteria**:
+- Criterion 1
+- Criterion 2
 
-### Monitoring Queries
-- `auth_failures{service="api"} / auth_total > 0.001`
-- `histogram_quantile(0.99, api_latency) > 0.2`
-
-### Validation Window
-- Standard changes: 24 hours
-- Data/auth changes: 72 hours
-- Infrastructure changes: 1 week
-
-### Rollback Criteria
-- Any SAFETY property violation triggers immediate rollback
-- PERFORMANCE degradation >20% from baseline triggers investigation
+## TASK-002: Another Task
+...
 ```
 
-## Philosophy
+### PROPERTIES.md Expected Structure (optional)
 
-**ELEGANT**: Simple agent logic, clear orchestration, no over-engineering
-**MULTI-TIER**: Presentation/Logic/Data/Config cleanly separated
-**PARALLEL**: Maximum concurrency where safe (agents, tasks, reviews)
+```markdown
+# System Properties
 
-## Git Workflow Policy (PR-First)
-
-WFC creates feature branches, pushes them, and opens GitHub PRs for team review.
-
-```
-WFC workflow:
-  Implement -> Quality -> Review -> Push Branch -> Create GitHub PR to develop
-                                                        |
-                                                  [WFC STOPS HERE]
-                                                        |
-                                      Auto-merge for claude/* branches
-                                      Manual review for feat/* branches
+## PROP-001: Property Name
+**Type**: SAFETY | PERFORMANCE | LIVENESS | INVARIANT
+**Description**: What this property guarantees
+**Observable As**: How to measure (e.g., "error rate < 0.1%")
 ```
 
-Agent branches (claude/*) auto-merge to develop when CI passes. Human branches require manual review. Release candidates are cut from develop to main on a schedule.
+---
 
-**What WFC does:**
+## Error Handling
 
-- Creates feature branches
-- Pushes branches to remote
-- Creates GitHub PRs targeting develop (draft by default)
+| Condition | Action |
+|-----------|--------|
+| TASKS.md missing | STOP, suggest wfc-plan |
+| < 2 tasks | STOP, error message |
+| Cyclic dependencies | STOP, list cycle |
+| Dirty working directory | STOP, suggest commit/stash |
+| Agent timeout | Mark task failed, continue others |
+| Test failure | Mark task failed, do not create PR |
+| Push failure | Log error, continue others |
+| PR creation failure | Log error, provide manual commands |
 
-**What WFC never does:**
+**Failed tasks**: Reported in final summary. No automatic retry. User must address and re-run.
 
-- Push directly to main/master
-- Force push
-- Merge PRs to main (you decide when to cut releases)
+---
 
-**Legacy mode:** Set `"merge.strategy": "direct"` in wfc.config.json for local-only merge.
+## Final Output
 
-See [GIT_SAFETY_POLICY.md](../../../docs/security/GIT_SAFETY_POLICY.md) for complete policy.
+After all phases complete, output:
 
-## Current Implementation Status
+```markdown
+## wfc-implement Complete
 
-### ✅ Done
+**Tasks processed**: X
+**Successful**: Y
+**Failed**: Z
 
-- Orchestrator (task queue, dependency management)
-- Shared infrastructure (config, telemetry, schemas, utils)
-- Mock dependencies (wfc-plan, wfc-consensus-review)
+| Task | Status | PR |
+|------|--------|-----|
+| TASK-001 | ✅ Success | #123 |
+| TASK-002 | ❌ Failed | - |
 
-### 🚧 In Progress
+### Failed Tasks
+- TASK-002: [error reason]
 
-- Agent TDD workflow
-- Merge engine with rollback
-- Dashboard
+### Next Steps
+1. Review created PRs
+2. Address failed tasks manually or re-plan
+3. Merge PRs after CI passes
 
-### 📋 TODO
+### Cleanup
+Run `/wfc-implement --cleanup` to remove worktrees
+```
 
-- CLI interface
-- Full integration tests
-- Performance optimization
-- Real wfc-plan and wfc-consensus-review integration
+---
+
+## Limitations
+
+1. **TDD not enforced**: Cannot verify test-first ordering, only test existence and passage
+2. **Review is mocked**: No actual code review occurs
+3. **No auto-merge**: WFC creates PRs only; merging is external
+4. **No parallel merge**: PRs created sequentially after all agents complete
+5. **Single repo only**: Cannot span multiple repositories
+6. **No resume**: Interrupted runs must be cleaned up and restarted
+
+---
+
+## Git Safety Policy
+
+**WFC NEVER:**
+
+- Pushes to main/master
+- Force pushes
+- Auto-merges PRs
+- Modifies protected branches
+
+**WFC ONLY:**
+
+- Creates feature branches from develop
+- Pushes to origin
+- Creates draft PRs

@@ -1,16 +1,20 @@
 ---
 name: wfc-init
 description: >-
-  Performs FIRST-TIME initialization of WFC on a project without an existing
-  .wfc/ directory or wfc.config.json. Detects languages (Python, JS/TS, Go,
-  Rust, Java, Ruby, C#) and generates .wfc/config.json wiring quality tools
-  (black/ruff, prettier/eslint, gofmt/golangci-lint, rustfmt/clippy, rubocop,
-  google-java-format, dotnet-format), Makefile targets, and optionally a
-  .pre-commit-config.yaml. Trigger: /wfc-init, "initialize WFC", "onboard this
-  project to WFC", "add WFC quality tools". Prerequisite: directory must exist
-  and must NOT already have .wfc/ or wfc.config.json. Not for: projects already
-  initialized (use wfc-configure), running existing quality checks, formatter
-  setup without WFC context, Docker/CI/CD config, or WFC toolchain install.
+  Performs FIRST-TIME initialization of the WFC (Workflow Control) framework
+  for projects without an existing .wfc/ directory. This skill identifies
+  programming languages by file extension and generates a .wfc/config.json
+  with fixed tool mappings (black/ruff for Python, prettier/eslint for
+  JS/TS, gofmt/golangci-lint for Go, rustfmt/clippy for Rust,
+  google-java-format/checkstyle for Java, rubocop for Ruby, dotnet-format for
+  C#), plus Makefile targets for running quality checks.
+
+  TRIGGER INTENT: Use ONLY for greenfield WFC setup when no .wfc/ directory
+  exists. Key phrases: "/wfc-init", "initialize WFC", "set up WFC for this
+  project".
+
+  DO NOT USE if .wfc/ already exists (use wfc-configure), or if the user
+  wants standalone formatter/linter setup without WFC framework integration.
 license: MIT
 ---
 
@@ -20,384 +24,193 @@ license: MIT
 
 ## What It Does
 
-1. **Detects languages** in project (Python, JS, TS, Go, Rust, Java, Ruby, C#)
-2. **Recommends tools** (formatters, linters, test frameworks)
-3. **Generates config files** (.wfc/config.json, pyproject.toml, etc.)
-4. **Provides install commands** for all tools
-5. **Sets up pre-commit hooks** (optional)
-6. **Creates quality check workflow**
-7. **Configures Entire.io** (OPTIONAL - agent session capture for debugging)
+1. **Identifies languages** by scanning for file extensions (.py, .js, .ts, .go, .rs, .java, .rb, .cs)
+2. **Assigns standard tools** per language (see Language Support table below)
+3. **Generates .wfc/config.json** at project root
+4. **Creates Makefile targets** for quality-check, format, and lint (appends if Makefile exists)
+5. **Optionally creates .pre-commit-config.yaml** (requires --pre-commit flag)
+
+## Prerequisites
+
+- Current directory or specified path must exist
+- Must NOT contain .wfc/ directory (if exists, use wfc-configure)
+- Must NOT contain wfc.config.json at root (legacy config; delete before init)
 
 ## Usage
 
 ```bash
-# Initialize in current directory
-/wfc-init
-
-# Initialize specific directory
-/wfc-init /path/to/project
-
-# Skip interactive prompts
-/wfc-init --yes
-
-# Only detect, don't configure
-/wfc-init --detect-only
+/wfc-init                          # Initialize in current directory
+/wfc-init /path/to/project         # Initialize in specified directory
+/wfc-init --pre-commit             # Include pre-commit hook configuration
+/wfc-init --detect-only            # Show detected languages, no file changes
+/wfc-init --language python        # Initialize only for specified language
 ```
+
+### Flag Definitions
+
+| Flag | Behavior |
+|------|----------|
+| `--pre-commit` | Creates .pre-commit-config.yaml with hooks for detected languages |
+| `--detect-only` | Prints detected languages to stdout, exits without writing files |
+| `--language <name>` | Initializes only for the specified language; skips all others |
+| `--dry-run` | Shows all files that would be created/modified; does not write |
+
+**Note**: This skill does NOT run interactive prompts. All decisions use documented defaults.
 
 ## Language Support
 
-| Language | Formatter | Linter | Tests |
-|----------|-----------|--------|-------|
-| **Python** | black | ruff | pytest |
-| **JavaScript** | prettier | eslint | jest |
-| **TypeScript** | prettier | eslint + TS | jest |
-| **Go** | gofmt | golangci-lint | go test |
-| **Rust** | rustfmt | clippy | cargo test |
-| **Java** | google-java-format | checkstyle | junit |
-| **Ruby** | rubocop | rubocop | rspec |
-| **C#** | dotnet format | dotnet analyze | dotnet test |
+| Language | File Patterns | Formatter | Linter | Test Framework |
+|----------|---------------|-----------|--------|----------------|
+| Python | `**/*.py` | black | ruff | pytest |
+| JavaScript | `**/*.js`, `**/*.mjs` | prettier | eslint | jest |
+| TypeScript | `**/*.ts`, `**/*.tsx` | prettier | eslint + TS rules | jest |
+| Go | `**/*.go` | gofmt | golangci-lint | go test |
+| Rust | `**/*.rs` | rustfmt | clippy | cargo test |
+| Java | `**/*.java` | google-java-format | checkstyle | junit |
+| Ruby | `**/*.rb` | rubocop (format mode) | rubocop | rspec |
+| C# | `**/*.cs` | dotnet format | dotnet analyze | dotnet test |
 
-## Example Output
+**Detection exclusions**: The scanner skips these directories: `node_modules/`, `venv/`, `.venv/`, `__pycache__/`, `target/`, `build/`, `dist/`, `.git/`, `vendor/`
 
-```
-🔍 Detecting project languages...
+## Output Files
 
-Found languages:
-  ✅ Python (42 files)
-     - Formatter: black
-     - Linter: ruff
-     - Tests: pytest
-
-  ✅ JavaScript (18 files)
-     - Formatter: prettier
-     - Linter: eslint
-     - Tests: jest
-
-📋 Recommended setup:
-
-  1. Install tools:
-     uv pip install black ruff pytest
-     npm install --save-dev prettier eslint jest
-
-  2. Create config files:
-     ✅ pyproject.toml (Python)
-     ✅ .prettierrc.json (JavaScript)
-     ✅ .eslintrc.json (JavaScript)
-
-  3. Add to Makefile:
-     ✅ make quality-check
-     ✅ make format
-     ✅ make lint
-
-  4. Setup pre-commit hooks:
-     ✅ .pre-commit-config.yaml
-
-  5. Entire.io session capture: ENABLED BY DEFAULT ✅
-     📹 Agent sessions automatically captured locally
-     🔒 Privacy-first: Local-only, sensitive data redacted
-     💡 Helps debug failed agents and learn from mistakes
-
-     Checking for entire CLI...
-     ✅ entire CLI found (v1.2.0)
-     ✅ Ready to capture sessions
-
-     Disable? (y/n): n
-     ✅ Keeping enabled (recommended)
-
-     Installation guide: https://entire.io/install
-     Learn more: https://entire.io/docs
-
-Proceed with setup? (y/n): y
-
-✅ WFC initialized successfully!
-
-Next steps:
-  1. Run: make quality-check
-  2. Commit: .wfc/config.json, pyproject.toml, .prettierrc.json
-  3. Share with team: Everyone gets same quality tools
-```
-
-## Generated Files
-
-### .wfc/config.json (or wfc.config.json at project root)
+### .wfc/config.json (created at project root)
 
 ```json
 {
+  "version": 1,
   "languages": [
     {
       "name": "python",
       "formatter": "black",
       "linter": "ruff",
-      "test_framework": "pytest"
-    },
-    {
-      "name": "javascript",
-      "formatter": "prettier",
-      "linter": "eslint",
-      "test_framework": "jest"
+      "test_framework": "pytest",
+      "include_patterns": ["**/*.py"],
+      "exclude_patterns": ["venv/**", ".venv/**", "build/**"]
     }
   ],
   "quality_gate": {
     "enabled": true,
-    "run_before_review": true,
     "fail_on_error": true
-  },
-  "entire_io": {
-    "enabled": true,
-    "local_only": true,
-    "create_checkpoints": true,
-    "checkpoint_phases": [
-      "UNDERSTAND",
-      "TEST_FIRST",
-      "IMPLEMENT",
-      "REFACTOR",
-      "QUALITY_CHECK",
-      "SUBMIT"
-    ],
-    "privacy": {
-      "redact_secrets": true,
-      "max_file_size": 100000,
-      "exclude_patterns": [
-        "*.env",
-        "*.key",
-        "*.pem",
-        "*secret*",
-        "*credential*",
-        ".claude/*"
-      ],
-      "capture_env": false
-    }
   }
 }
 ```
 
-### Makefile (added targets)
+**Note**: The agent must populate `include_patterns` and `exclude_patterns` based on detected project structure.
+
+### Makefile (appended if exists, created if not)
+
+Generated targets use find commands to locate source files dynamically:
 
 ```makefile
-# Quality checks for all languages
-quality-check:
- @echo "🔍 Running quality checks..."
- # Python
- @black --check wfc/
- @ruff check wfc/
- @pytest
- # JavaScript
- @prettier --check src/
- @eslint src/
- @jest
- @echo "✅ All checks passed"
+# WFC Quality Targets (generated by wfc-init)
+.PHONY: quality-check format lint
+
+quality-check: format lint
+ @echo "All quality checks passed"
 
 format:
- @echo "🎨 Formatting code..."
- @black wfc/
- @prettier --write src/
- @echo "✅ Code formatted"
+ @echo "Formatting code..."
+ @if command -v black >/dev/null 2>&1; then \
+  find . -name "*.py" -not -path "./venv/*" -not -path "./.venv/*" -exec black {} +; \
+ fi
+ @if command -v prettier >/dev/null 2>&1; then \
+  find . \( -name "*.js" -o -name "*.ts" \) -not -path "./node_modules/*" -exec prettier --write {} +; \
+ fi
+ @echo "Code formatted"
 
 lint:
- @echo "🔍 Linting..."
- @ruff check --fix wfc/
- @eslint --fix src/
- @echo "✅ Linting complete"
+ @echo "Linting..."
+ @if command -v ruff >/dev/null 2>&1; then ruff check .; fi
+ @if command -v eslint >/dev/null 2>&1; then eslint . --ext .js,.ts; fi
+ @echo "Linting complete"
 ```
 
-### .pre-commit-config.yaml (optional)
+### .pre-commit-config.yaml (only with --pre-commit flag)
 
 ```yaml
+# WFC Pre-commit Hooks (generated by wfc-init)
 repos:
-  # Python
   - repo: https://github.com/psf/black
-    rev: 23.12.1
+    rev: 24.1.1
     hooks:
       - id: black
+        language_version: python3
 
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.1.9
+    rev: v0.2.0
     hooks:
       - id: ruff
         args: ['--fix']
 
-  # JavaScript/TypeScript
   - repo: https://github.com/pre-commit/mirrors-prettier
-    rev: v3.1.0
+    rev: v4.0.0-alpha.8
     hooks:
       - id: prettier
-
-  - repo: https://github.com/pre-commit/mirrors-eslint
-    rev: v8.56.0
-    hooks:
-      - id: eslint
-        args: ['--fix']
+        types_or: [javascript, jsx, ts, tsx]
 ```
 
-## Multi-Language Projects
+**Note**: The agent should check for the latest stable versions of these hooks at generation time, not use the versions shown above as fixed values.
 
-WFC automatically handles polyglot projects:
+## Detection Algorithm
 
-```
-myproject/
-├── backend/          # Python
-│   ├── api/
-│   └── tests/
-├── frontend/         # TypeScript + React
-│   ├── src/
-│   └── tests/
-└── services/         # Go microservices
-    ├── auth/
-    └── users/
+The language detection logic:
 
-wfc-init detects:
-  ✅ Python (backend)
-  ✅ TypeScript (frontend)
-  ✅ Go (services)
+1. Scan directory recursively (max depth: 10)
+2. Skip directories in exclusion list
+3. Count files matching each language's file patterns
+4. A language is "detected" if it has >=1 matching file
+5. With --language flag, skip detection and use specified language only
 
-Configures tools for all three!
-```
+## Error Conditions
 
-## Integration with wfc-implement
+| Condition | Behavior |
+|-----------|----------|
+| .wfc/ directory exists | Abort with error: "WFC already initialized. Use wfc-configure to modify." |
+| No languages detected | Abort with error: "No supported languages found. Supported: Python, JS/TS, Go, Rust, Java, Ruby, C#" |
+| Specified --language not supported | Abort with error: "Unsupported language '{name}'. Supported: python, javascript, typescript, go, rust, java, ruby, csharp" |
+| Target directory does not exist | Abort with error: "Directory '{path}' does not exist" |
+| Makefile cannot be appended | Create Makefile.new and warn user to merge manually |
 
-After initialization, wfc-implement automatically uses configured tools:
+## Not For
 
-```python
-# wfc-implement agent workflow
-def quality_check(files):
-    config = load_wfc_config()  # Reads .wfc/config.json
+This skill must NOT be used for:
 
-    for lang in config.languages:
-        # Use language-specific tools
-        if lang.name == "python":
-            run_black(files)
-            run_ruff(files)
-        elif lang.name == "javascript":
-            run_prettier(files)
-            run_eslint(files)
-        # etc.
-```
+- **Projects with existing .wfc/ directory** — use `wfc-configure` instead
+- **Stand-alone formatter/linter installation** — use language-specific setup (npm install prettier, pip install black)
+- **Running format or lint operations** — use `wfc-check` or run tools directly
+- **CI/CD pipeline configuration** — use `wfc-ci` skill
+- **System-level WFC toolchain installation** — use system package managers
+- **Modifying existing Makefiles for non-WFC purposes** — edit Makefile directly
+- **Projects with partial/corrupted WFC installations** — delete .wfc/ manually, then run wfc-init
+- **Updating or migrating existing WFC configurations** — use `wfc-configure` or `wfc-migrate`
 
-## Entire.io Setup (ENABLED BY DEFAULT)
-
-When initializing a project, wfc-init confirms Entire.io is ready to capture sessions.
-
-### What is Entire.io?
-
-**Agent session capture** for debugging and cross-session learning:
-
-- 📹 Records agent reasoning at each TDD phase
-- 🐛 Rewind failed agents to exact failure point
-- 📚 Learn from past mistakes across sessions
-- 🔒 **Local-only by default** - privacy-first design
-
-### Setup Flow (Entire CLI Installed)
+## Example Output
 
 ```
-🔍 Checking for Entire.io...
+/wfc-init --pre-commit
 
-Found: entire CLI v1.2.0 ✅
+Scanning for supported languages...
 
-Entire.io session capture: ENABLED BY DEFAULT
+Detected languages:
+  Python (42 .py files)
+  JavaScript (18 .js files)
 
-Benefits:
-  🐛 Debug failed agents 10x faster
-  📚 Cross-session learning from failures
-  🔍 Understand agent decision-making
-  📊 Retrospective analysis input
+Generating WFC configuration...
 
-Privacy guarantees:
-  🔒 Local-only by default (never auto-pushed)
-  🔒 Sensitive data automatically redacted
-  🔒 User controls what gets shared
+Files created:
+  .wfc/config.json
+  Makefile (appended 3 targets)
+  .pre-commit-config.yaml
 
-Disable session capture? (y/n): n
-
-✅ Keeping enabled (recommended)
-✅ Privacy settings configured in wfc.config.json
-
-Learn more: https://entire.io/docs
+Next steps:
+  1. Install tools: pip install black ruff && npm install -g prettier
+  2. Run: make quality-check
+  3. Commit generated files to version control
 ```
-
-### If Entire CLI Not Installed
-
-```
-🔍 Checking for Entire.io...
-
-Not found. Sessions will not be captured (entire CLI required).
-
-Install entire CLI to enable session capture:
-  macOS:    brew install entireio/tap/entire
-  npm:      npm install -g @entireio/cli
-  pip:      pip install entireio-cli
-
-Learn more: https://entire.io/install
-
-Continue without session capture? (y/n): y
-
-✅ Continuing (install entire CLI later to enable sessions)
-```
-
-## Options
-
-### --detect-only
-
-Just show detected languages, don't configure:
-
-```bash
-/wfc-init --detect-only
-
-Languages detected:
-  - Python (42 files)
-  - JavaScript (18 files)
-  - Go (7 files)
-```
-
-### --language
-
-Initialize for specific language only:
-
-```bash
-/wfc-init --language python
-
-Only configuring Python tools:
-  - black
-  - ruff
-  - pytest
-```
-
-### --no-pre-commit
-
-Skip pre-commit hook setup:
-
-```bash
-/wfc-init --no-pre-commit
-```
-
-### --template
-
-Use template for config files:
-
-```bash
-/wfc-init --template strict  # Strict linting rules
-/wfc-init --template relaxed  # Relaxed rules
-/wfc-init --template custom   # Custom template
-```
-
-## Philosophy
-
-**ELEGANT**: Detect once, configure automatically
-**MULTI-TIER**: Language detection → Config generation → Tool setup
-**UNIVERSAL**: Support all major languages, not just Python
-
-## Best Practices
-
-1. **Run on project start**: `cd myproject && /wfc-init`
-2. **Commit config**: Share .wfc/config.json with team
-3. **Use in CI**: Config drives CI quality checks
-4. **Keep updated**: Re-run when adding new languages
 
 ## See Also
 
-- `docs/quality/QUALITY_GATE.md` - Quality gate documentation
-- WFC uses `wfc/scripts/language_detector.py` for language detection logic
-- WFC uses `wfc/scripts/quality_checker.py` for multi-language quality checking
-
----
-
-**This is World Fucking Class.** 🚀
+- `wfc-configure` — Modify existing WFC configuration
+- `wfc-check` — Run quality checks using configured tools
+- `wfc-implement` — Implementation workflow that uses configured tools
