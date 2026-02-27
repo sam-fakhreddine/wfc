@@ -1,55 +1,117 @@
 ---
 name: wfc-safeguard
-description: >
-  Installs a write-time security pattern detector by modifying
-  .claude/settings.json (DESTRUCTIVE — confirm intent before invoking).
-  Registers a PreToolUse hook intercepting Write, Edit, and Bash calls,
-  checking content against regex patterns for dangerous constructs.
+description: >-
+  Installs a PreToolUse hook into `.claude/settings.json` that intercepts
+  Write/Edit/Bash tool calls and blocks or warns on dangerous code patterns
+  BEFORE the tool executes. Uses regex-based detection only.
 
-  INVOKE when user explicitly wants to: install security hooks in
-  .claude/settings.json; block dangerous code patterns at write time;
-  register a PreToolUse hook for security linting; run /wfc-safeguard.
+  TRIGGERS: "install the wfc-safeguard hook", "set up code guardrails",
+  "block dangerous functions automatically", /wfc-safeguard.
 
-  PATTERN COVERAGE (JS/TS, Python, SQL, GitHub Actions YAML only):
-  Blocks: eval(), new Function(), os.system(), subprocess shell=True,
-  rm -rf on system/home paths, ${{ github.event.* }} in Actions run steps.
-  Warns: .innerHTML, dangerouslySetInnerHTML, pickle.load(),
-  child_process.exec, hardcoded secrets, raw SQL concatenation.
+  BLOCKS (prevents tool call): eval(), new Function(), os.system(),
+  subprocess shell=True, rm -rf on system/home paths, github.event.*
+  expressions in Actions run steps.
 
-  Not for: auditing existing code (use wfc-security); security explanations;
-  one-off file checks; GitHub Actions CI/CD setup; Go, Rust, Java, C/C++,
-  Ruby, or PHP projects; removing or verifying existing hooks.
+  WARNS (allows tool call): innerHTML, dangerouslySetInnerHTML,
+  pickle.load(), child_process.exec.
 
+  SCOPE: JS/TS, Python, Bash, GitHub Actions YAML only.
+
+  LIMITATIONS: Cannot distinguish code from comments or strings — will block
+  legitimate documentation containing blocked patterns. Regex-based only;
+  does not catch obfuscated or indirect patterns.
+
+  PREREQUISITES: Python 3.8+ available as `python3` command. Target file
+  `.claude/settings.json` must be writable standard JSON (no comments).
 license: MIT
 ---
 
 # WFC:SAFEGUARD - Write-Time Security Pattern Detection
 
-Detects common dangerous code patterns as they are written, before the tool call completes.
-This is lint-level detection via regex — it does not catch obfuscated, indirect, or runtime-evaluated patterns.
+Intercepts dangerous code patterns before tool calls complete. This is a
+lint-level regex detector — it does NOT perform AST analysis and will produce
+false positives on comments, strings, and documentation containing blocked
+patterns.
 
-## Prerequisites
+## Installation
 
-- Python 3.8+ available in PATH
-- Write access to `.claude/settings.json` in the project root
-- WFC hook scripts present at `wfc/scripts/hooks/` (see Key Files below)
+This skill appends a PreToolUse hook entry to `.claude/settings.json`:
 
-**This skill modifies `.claude/settings.json`.** If the file already exists, the hook entry is merged idempotently — existing configuration is preserved. Running `/wfc-safeguard` twice does not install the hook twice.
+```json
+{
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Write|Edit|Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 wfc/scripts/hooks/safeguard.py"
+          }
+        ]
+      }
+    ]
+  }
+}
+```
+
+**Merge behavior**: If `settings.json` exists, the hook is appended to any
+existing PreToolUse hooks. Deduplication is NOT performed — running this skill
+multiple times will add duplicate entries.
+
+**File requirements**: `.claude/settings.json` must be standard JSON.
+JSONC (with comments) is NOT supported and will cause corruption or parse
+failures.
+
+## Prerequisites Verification
+
+Before installation, verify:
+
+1. `python3` command exists in PATH
+2. `wfc/scripts/hooks/safeguard.py` exists and is executable
+3. `.claude/settings.json` is writable (or creatable)
+
+If any prerequisite fails, abort installation and report the specific failure.
 
 ## What It Detects
 
-**Blocked (tool call prevented — exit code 2)**:
+### Blocked Patterns (exit code 2 — tool call prevented)
 
-- `eval()` calls — Python and JavaScript (matches any use of `eval(`; does not distinguish argument type)
-- `new Function()` — JavaScript dynamic code execution
-- `os.system()` — Python command execution
-- `subprocess` with `shell=True` — Python
-- `rm -rf /`, `rm -rf /*`, `rm -rf ~/` — Bash destructive deletion on system/home paths
-- `${{ github.event.* }}` in `run:` steps — GitHub Actions expression injection (YAML only, scoped to run steps)
+| Pattern | Languages | Notes |
+|---------|-----------|-------|
+| `eval(` | JS/TS, Python | Matches any use including in comments/strings |
+| `new Function(` | JS/TS | Dynamic code execution |
+| `os.system(` | Python | Command execution |
+| `subprocess` with `shell=True` | Python | Shell injection vector |
+| `rm -rf /`, `rm -rf /*`, `rm -rf ~/` | Bash | System destruction |
+| `${{ github.event.* }}` in `run:` blocks | YAML | Actions expression injection |
 
-**Warned (tool call proceeds — message to stderr)**:
+### Warned Patterns (message to stderr — tool call proceeds)
 
-- `.innerHTML` / `dangerouslySetInnerHTML` — JavaScript/TypeScript XSS risk
-- `pickle.load()` — Python deserialization risk
-- `child_process.exec` — JavaScript command injection risk
-- Hardcoded string-literal secrets (`API_KEY = "..."
+| Pattern | Languages | Risk |
+|---------|-----------|------|
+| `.innerHTML` | JS/TS | XSS |
+| `dangerouslySetInnerHTML` | React | XSS |
+| `pickle.load(` | Python | Deserialization |
+| `child_process.exec(` | Node.js | Command injection |
+
+Note: Hardcoded secret detection is NOT included in this version due to high
+false-positive rates. Use `wfc-security` for secret scanning.
+
+## Known Limitations
+
+1. **Context blindness**: Will block `# TODO: remove eval()` as if it were code
+2. **No AST parsing**: Cannot detect indirect/obfuscated patterns
+3. **No deduplication**: Re-running adds duplicate hooks
+4. **No uninstall**: Removing hooks requires manual `settings.json` edit
+5. **JSON only**: Cannot handle JSONC configuration files
+
+## Troubleshooting
+
+| Problem | Solution |
+|---------|----------|
+| Hook fails silently | Verify `python3` in PATH; check script exists |
+| False positives on docs | Expected behavior — disable hook to write docs |
+| Duplicate hooks | Manually edit `settings.json` to remove extras |
+| Can't modify settings | Check file permissions; ensure not read-only |
+| JSON parse errors | Remove comments from `settings.json` |

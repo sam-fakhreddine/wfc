@@ -1,48 +1,39 @@
 ---
 name: wfc-newskill
 description: >
-  Meta-skill for scaffolding a new, reusable WFC skill conforming to the
-  agentskills.io specification. Conducts a structured requirements interview,
-  produces a {skill-name}-prompt.md using the WFC skill template, and
-  optionally chains into wfc-plan → wfc-implement for full build-out.
+  Factory skill for scaffolding a new WFC (Workflow Control Framework) skill
+  definition file (.md). This skill conducts a requirements interview and
+  outputs a structured prompt file suitable for the WFC pipeline.
 
-  INVOKE when the user's unambiguous intent is to CREATE A NEW, NAMED,
-  REUSABLE WFC SKILL that does not yet exist. Required signals: the user
-  must explicitly describe a new capability to be packaged as a WFC skill
-  file. Canonical phrases: "create a new WFC skill", "build a WFC skill for
-  [capability]", "I want to add a WFC skill that [does X]", "extend WFC with
-  a new skill", "/wfc-newskill".
+  INVOKE STRICTLY when:
+  1. User explicitly requests to CREATE, BUILD, or SCAFFOLD a new skill/tool.
+  2. The requested capability DOES NOT currently exist (agent must check registry).
+  3. The output target is a reusable WFC skill file, not application code.
 
-  DO NOT INVOKE for any request where the output is not a new
-  agentskills.io-spec skill file, or where the named skill already exists
-  in the registry. See "Not for" section below.
+  DO NOT INVOKE for executing tasks, modifying existing skills, or writing
+  non-skill scripts.
+
 license: MIT
 ---
 
 # WFC:NEWSKILL - Meta-Skill Builder
 
+Scaffolds new WFC skills. Produces a spec-compliant prompt file and,
+optionally, chains into `wfc-plan` → `wfc-implement` for full build-out.
+
 ## Not for
 
-- Implementing features, modules, or integrations in an existing codebase
-  — use wfc-implement. Indicator: output is application code, not a skill
-  file.
-- One-off scripts, cron jobs, or standalone automations whose output is not
-  a SKILL.md artifact.
-- Workflow design, process planning, or project decomposition — use
-  wfc-plan. Indicator: user's desired output is a plan or TASKS.md.
-- Modifying, refactoring, or debugging an existing WFC skill — use
-  wfc-implement. Indicator: target skill already exists by name.
-- Invoking or running an existing WFC skill. Indicator: user names a
-  specific existing skill rather than describing a new capability.
-- Re-scaffolding a skill whose name already exists in the WFC registry
-  without explicit --force flag.
-- Modifying WFC core infrastructure, routing logic, or registry mechanisms
-  — these are not addressable as skill files.
-- Any request where "skill" is used in everyday language to mean ability or
-  feature, not a WFC skill file artifact.
-
-Scaffolds new WFC skills. Produces a spec-compliant prompt file and,
-optionally, builds and places the implementation.
+- **Modifying existing skills**. If the skill name exists in the registry, halt.
+  Indicator: Request uses verbs "update," "fix," "change," or "add to" regarding
+  a specific named skill. Use `wfc-implement` instead.
+- **Executing capabilities**. If the user wants a task performed (e.g., "review
+  this code"), do not scaffold; invoke the appropriate existing skill.
+- **Standalone scripts or application code**. Indicator: Request asks for .py,
+  .sh, .js files or "scripts" without mentioning WFC or skill registration.
+- **General project planning**. Indicator: Request asks for TASKS.md, roadmaps,
+  or decomposition without defining a specific agent capability.
+- **Processing unknown flags**. If the user provides flags not defined below,
+  ignore them. Do not pass extra flags to downstream skills.
 
 ## Usage
 
@@ -54,40 +45,54 @@ optionally, builds and places the implementation.
 /wfc-newskill --build
 ```
 
-**Removed flags**: `--from-chat` is not implemented. Do not attempt to
-infer requirements from conversation history.
+**Removed flags**: `--from-chat` is not implemented. Do not infer requirements
+from conversation history.
 
 ## Pre-flight Checks
 
-Before beginning the interview, verify:
+Before beginning, verify:
 
-1. Proposed skill name does not match any existing entry in the WFC skill
-   registry. If it does, halt and report the conflict. Do not proceed without
-   `--force`.
-2. If `--build` is specified, verify that `wfc-plan` and `wfc-implement` are
-   available as registered commands. If either is missing, downgrade to
-   interview-only mode and notify the user before proceeding.
+1. **Name Collision**: Check the WFC skill registry for the proposed name.
+   - If the exact name exists: Halt and report conflict.
+   - If registry is inaccessible: Warn user "Registry check failed. Proceed with
+     caution to avoid overwriting existing skills."
+2. **Dependencies**: If `--build` is specified, verify `wfc-plan` and
+   `wfc-implement` are available. If missing, downgrade to interview-only mode
+   and notify user: "Dependency [missing-skill] not found. Proceeding in
+   interview-only mode."
 
 ## Interview Process
 
 Ask the following questions in order. Questions marked **[required]** must
-receive a substantive answer before generation proceeds. If the user provides
-a non-answer ("I don't know", blank, or equivalent) to a required question,
-re-prompt once with a clarifying example. If still unresolved, halt and
-explain that generation cannot proceed without this information.
+receive a substantive answer.
 
-Do not reorder, skip, or add questions beyond those listed. Do not describe
-this process as "adaptive."
+**Strict Flow Control**:
 
-1. **[required] Purpose**: What should this skill do? Describe the
-   capability in one or two sentences.
+- Do not reorder or skip questions.
+- If the user answers multiple questions at once, acknowledge and proceed.
+- **Re-prompt Limit**: If a required question receives a non-answer, re-prompt
+  once with an example. If still unresolved, HALT with error: "Cannot generate
+  skill: Requirement [Question Name] unclear."
+
+1. **[required] Purpose**: What specific capability will this skill provide?
+   (Describe the action and outcome in 1-2 sentences.)
 2. **[required] Trigger / Name**: What slash command name should invoke it?
-   (Format: `wfc-{name}`, alphanumeric and hyphens only, max 32 characters.)
-   Normalize the name to lowercase with hyphens; show the normalized name to
-   the user and confirm before continuing.
-3. **[required] Input**: What does the skill receive? (Files, flags,
-   arguments, stdin, none.)
-4. **[required] Output**: What does the skill produce? (Files written,
-   stdout, side effects, none.)
-5. **[optional] Agent structure**: Single-agent or multi-agent? If
-   multi-agent, how many agents and what are their roles?
+   - **Validation**: Normalize to `wfc-{name}`. Force lowercase.
+   - **Sanitization**: Allow ONLY `[a-z0-9-]`. Max 32 chars.
+   - **Action**: If the user provides "My Skill", propose `wfc-my-skill`.
+   - **Rejection**: If the name contains invalid chars or is empty, reject and
+     ask for a new name immediately.
+3. **[required] Input**: What inputs does the skill accept?
+   (Files, flags, arguments, or stdin.)
+4. **[required] Output**: What artifacts does the skill produce?
+   (Files written, stdout output, or side effects.)
+5. **[optional] Agent structure**: Single-agent or multi-agent? (If multi-agent,
+   define roles.)
+
+## Output Generation
+
+Upon completion of the interview:
+
+1. Create a file named `{normalized-name}-prompt.md`.
+2. **Chaining**: If `--build` was specified, execute the chain:
+   `/wfc-plan {normalized-name}-prompt.md` → `/wfc-implement`.

@@ -15,11 +15,12 @@ import re
 import sys
 import time
 from concurrent.futures import ThreadPoolExecutor, as_completed
+from datetime import datetime
 from pathlib import Path
 from typing import Callable, TypeVar
 
 from .api_client import get_accumulated_usage, reset_accumulated_usage
-from .report_writer import get_branch, write_stage_report, write_summary_report
+from .report_writer import get_branch, make_run_id, write_stage_report, write_summary_report
 from .skill_reader import parse_frontmatter, resolve_repo_name
 from .stages import run_discovery, run_edge_case, run_logic, run_refinement
 
@@ -29,6 +30,19 @@ _ALL_STAGES: list[str] = ["discovery", "logic", "edge_case", "refinement"]
 _INPUT_RATE_PER_TOKEN = 0.000003
 _OUTPUT_RATE_PER_TOKEN = 0.000015
 _EST_OUTPUT_MULTIPLIER = 0.5
+
+_STAGE_OVERHEAD_INPUT: dict[str, int] = {
+    "discovery": 8_500,
+    "logic": 500,
+    "edge_case": 500,
+    "refinement": 3_500,
+}
+_STAGE_OVERHEAD_OUTPUT: dict[str, int] = {
+    "discovery": 8_000,
+    "logic": 1_500,
+    "edge_case": 1_500,
+    "refinement": 2_000,
+}
 _MAX_WORKERS = 5
 
 T = TypeVar("T")
@@ -96,6 +110,21 @@ def _estimate_cost(tokens: int) -> float:
     """Estimate USD cost from input token count (includes estimated output)."""
     output_tokens = int(tokens * _EST_OUTPUT_MULTIPLIER)
     return tokens * _INPUT_RATE_PER_TOKEN + output_tokens * _OUTPUT_RATE_PER_TOKEN
+
+
+def _estimate_cost_per_skill(skill_tokens: int, stages: list[str]) -> float:
+    """Better cost estimate that accounts for per-stage overhead.
+
+    Includes thinking budget tokens (discovery), prompt template sizes,
+    prior-report inputs (refinement), and expected output volumes.
+    Calibrated against observed ~$7 for 31 skills / 4 stages.
+    """
+    total = 0.0
+    for stage in stages:
+        in_tok = skill_tokens + _STAGE_OVERHEAD_INPUT.get(stage, 0)
+        out_tok = int(skill_tokens * _EST_OUTPUT_MULTIPLIER) + _STAGE_OVERHEAD_OUTPUT.get(stage, 0)
+        total += in_tok * _INPUT_RATE_PER_TOKEN + out_tok * _OUTPUT_RATE_PER_TOKEN
+    return total
 
 
 def _find_skill_dirs(skills_root: Path) -> list[Path]:
@@ -252,6 +281,7 @@ def main(argv: list[str] | None = None) -> int:
 
         reset_accumulated_usage()
         written_single: list[Path] = []
+        single_run_id = make_run_id()
 
         def _flush_single(stage: str, report_content: str) -> None:
             path = write_stage_report(
@@ -260,6 +290,7 @@ def main(argv: list[str] | None = None) -> int:
                 report_content=report_content,
                 repo=repo,
                 branch=branch,
+                run_id=single_run_id,
             )
             written_single.append(path)
             print(f"Report written: {path}")
@@ -299,25 +330,25 @@ def main(argv: list[str] | None = None) -> int:
         return 1
 
     total_tokens = 0
+    total_cost = 0.0
     for sd in skill_dirs:
         try:
             fm = parse_frontmatter(sd / "SKILL.md")
-            total_tokens += _estimate_tokens(fm.get("name", "") + fm.get("description", ""))
+            skill_tokens = _estimate_tokens(fm.get("name", "") + fm.get("description", ""))
+            total_tokens += skill_tokens
+            total_cost += _estimate_cost_per_skill(skill_tokens, stages_to_run)
         except Exception:  # noqa: BLE001
             pass
 
-    total_cost = _estimate_cost(total_tokens) * len(stages_to_run)
-
     if args.dry_run:
         print(f"[DRY-RUN] Skills found: {len(skill_dirs)}")
-        print(f"[DRY-RUN] Estimated total tokens: {total_tokens}")
-        print(f"[DRY-RUN] Estimated total cost:   ${total_cost:.6f}")
         print(f"[DRY-RUN] Stages: {stages_to_run}")
+        print(f"[DRY-RUN] Estimated cost: ${total_cost:.2f}  (±2× — extended thinking variance)")
         print("[DRY-RUN] No API calls will be made.")
         return 0
 
     if not args.yes:
-        print(f"Estimated cost for {len(skill_dirs)} skills: ${total_cost:.6f}")
+        print(f"Estimated cost for {len(skill_dirs)} skills: ~${total_cost:.2f} (±2× variance)")
         answer = input("Proceed? [y/N] ").strip().lower()
         if answer not in {"y", "yes"}:
             print("Aborted.")
@@ -328,6 +359,15 @@ def main(argv: list[str] | None = None) -> int:
     summary_entries: list[dict] = []
     total_input = 0
     total_output = 0
+    run_id = make_run_id()
+
+    n_skills = len(skill_dirs)
+    completed_count = 0
+
+    def _log(msg: str) -> None:
+        """Thread-safe timestamped print."""
+        ts = datetime.now().strftime("%H:%M:%S")
+        print(f"[{ts}] {msg}", flush=True)
 
     def _run_one(sd: Path) -> tuple[str, list[Path], float | None, dict[str, int]]:
         reset_accumulated_usage()
@@ -341,9 +381,14 @@ def main(argv: list[str] | None = None) -> int:
             "refinement": run_refinement,
         }
 
-        for stage in stages_to_run:
+        _log(f"START  {sd.name}  ({len(stages_to_run)} stage(s): {', '.join(stages_to_run)})")
+
+        for i, stage in enumerate(stages_to_run, 1):
+            _log(f"  {sd.name}  stage {i}/{len(stages_to_run)}: {stage} …")
             runner = _stage_runners_local[stage]
+            t0 = time.monotonic()
             report = retry_with_backoff(lambda r=runner: r(sd, offline=args.offline))
+            elapsed = time.monotonic() - t0
             stage_results[stage] = report
             path = write_stage_report(
                 skill_name=sd.name,
@@ -351,8 +396,12 @@ def main(argv: list[str] | None = None) -> int:
                 report_content=report,
                 repo=repo,
                 branch=branch,
+                run_id=run_id,
             )
             written.append(path)
+            _log(
+                f"  {sd.name}  stage {i}/{len(stages_to_run)}: {stage} done ({elapsed:.1f}s) → {path.name}"
+            )
 
         health_score = None
         if "refinement" in stage_results:
@@ -360,10 +409,13 @@ def main(argv: list[str] | None = None) -> int:
         usage = get_accumulated_usage()
         return sd.name, written, health_score, usage
 
+    _log(f"Queuing {n_skills} skill(s) across {_MAX_WORKERS} workers  [run_id={run_id}]")
+
     with ThreadPoolExecutor(max_workers=_MAX_WORKERS) as executor:
         future_to_skill = {executor.submit(_run_one, sd): sd for sd in skill_dirs}
         for future in as_completed(future_to_skill):
             sd = future_to_skill[future]
+            completed_count += 1
             try:
                 skill_name, written, health_score, usage = future.result()
                 reports.extend(written)
@@ -371,15 +423,16 @@ def main(argv: list[str] | None = None) -> int:
                 out_tok = usage.get("output_tokens", 0)
                 total_input += in_tok
                 total_output += out_tok
+                score_str = f"  score={health_score:.1f}" if health_score is not None else ""
                 if health_score is not None:
                     summary_entries.append({"skill": skill_name, "score": health_score})
-                print(
-                    f"OK  {skill_name}: {len(written)} stage(s) written"
-                    f"  [in={in_tok:,} out={out_tok:,}]"
+                _log(
+                    f"OK  [{completed_count}/{n_skills}] {skill_name}"
+                    f"  [in={in_tok:,} out={out_tok:,}]{score_str}"
                 )
             except Exception as exc:  # noqa: BLE001
                 errors.append((sd.name, exc))
-                print(f"ERR {sd.name}: {exc}", file=sys.stderr)
+                _log(f"ERR [{completed_count}/{n_skills}] {sd.name}: {exc}")
 
     if errors:
         print(f"\n{len(errors)} skill(s) failed:", file=sys.stderr)

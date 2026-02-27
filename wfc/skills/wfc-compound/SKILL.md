@@ -1,6 +1,19 @@
 ---
 name: wfc-compound
-description: Knowledge codification skill that documents solved problems into searchable docs/solutions/ categories. Runs parallel subagents (context analyzer, solution extractor, related docs finder, prevention strategist, category classifier) then assembles a single searchable solution document. Triggers on "that worked", "it's fixed", "problem solved", "document this solution", or explicit /wfc-compound. Ideal after solving non-trivial bugs, performance issues, or integration problems. Not for trivial fixes or documentation-only changes.
+description: >
+  Creates a structured solution document in docs/solutions/{category}/ to capture
+  a fix that required diagnosis. Use ONLY when ALL of the following are true:
+  
+  1. A problem was investigated and resolved in the current session
+  2. The resolution required diagnosis (identifying root cause, not just applying a fix)
+  3. The user explicitly requests documentation with action-oriented language
+  4. A verifiable code change or git diff exists for the fix
+  
+  Explicit invocation: /wfc-compound [optional description]
+  
+  Trigger phrases (standalone direct speech only, not inside code blocks, logs, or quoted text):
+  "document this solution", "record this fix", "save this solution", 
+  "write up the solution", "log this resolution", "compound this"
 license: MIT
 ---
 
@@ -10,13 +23,12 @@ license: MIT
 
 ## What It Does
 
-Distills solved problems into structured, indexed knowledge that feeds back into planning and review.
+Distills diagnosed problems into structured, indexed markdown files that can be searched by other skills.
 
-1. **Recognize** - Detects a resolved issue (auto-trigger or explicit invocation)
-2. **Decompose** - Parallel subagents pull apart context, root cause, fix, prevention, and category
-3. **Synthesize** - Orchestrator consolidates into one searchable markdown file
-4. **Catalog** - Filed under `docs/solutions/{category}/` with YAML frontmatter
-5. **Wire In** - wfc-plan and wfc-review query the catalog during their workflows
+1. **Validate** - Confirm invocation matches the trigger criteria (action-oriented request + current session fix + diagnosis required)
+2. **Analyze** - Extract problem type, root cause, solution, and prevention strategies
+3. **Classify** - Determine category and filename
+4. **Write** - Create ONE file at `docs/solutions/{category}/{filename}.md`
 
 ## Usage
 
@@ -31,148 +43,142 @@ Distills solved problems into structured, indexed knowledge that feeds back into
 /wfc-compound "resolved Redis connection pool exhaustion under load"
 ```
 
-## Auto-Trigger Phrases
+## Trigger Phrases (Action-Oriented Only)
 
 wfc-compound activates when you say:
 
-- "that worked"
-- "it's fixed"
-- "problem solved"
-- "figured it out"
-- "root cause was..."
-- "the fix was..."
+- "document this solution"
+- "record this fix"
+- "save this solution"
+- "write up the solution"
+- "log this resolution"
+- "compound this"
 
-## Two-Phase Execution
+**Declarative statements do NOT trigger this skill:** "that worked", "it's fixed", "problem solved", "figured it out" — these describe state, not intent to document.
 
-### Phase 1: Parallel Research (subagents return TEXT only)
+## Execution Flow
 
-5 subagents run in parallel via Task tool. **None write files** — they return text to the orchestrator.
+### Step 1: Validation (Required)
 
-| Subagent | Role | Output |
-|----------|------|--------|
-| **Context Analyzer** | Extract problem type, component, symptoms | YAML frontmatter skeleton |
-| **Solution Extractor** | Identify root cause, extract working solution with code | Solution section with code blocks |
-| **Related Docs Finder** | Search `docs/solutions/` for related docs, cross-refs | Related documents list |
-| **Prevention Strategist** | Develop prevention strategies, test cases, best practices | Prevention section |
-| **Category Classifier** | Determine category, suggest filename | Category + filename |
+Before proceeding, confirm ALL of:
 
-### Phase 2: Assembly (orchestrator writes ONE file)
+- [ ] User request contains action-oriented language (see trigger phrases)
+- [ ] A fix was applied in the current session (not historical reference)
+- [ ] The fix required diagnosis (not a trivial change)
+- [ ] A git diff or code change is accessible
 
-1. Collect all Phase 1 text results
-2. Assemble complete markdown document
-3. Create directory: `mkdir -p docs/solutions/{category}/`
-4. Write SINGLE file: `docs/solutions/{category}/{filename}.md`
+If any check fails: **Do not proceed.** Politely inform the user: "I can create a solution document, but I need you to confirm you want this fix recorded. Say 'document this solution' or run `/wfc-compound`."
 
-### Phase 3: Optional Enhancement (conditional, parallel)
+### Step 2: Analysis (Sequential)
 
-Based on problem type, spawn specialized reviewers:
+Perform these analysis passes in order:
 
-- `performance_issue` → Performance reviewer
-- `security_issue` → Security reviewer
-- `database_issue` → Data integrity check
-- Code-heavy issues → Correctness + Maintainability reviewers
+| Pass | Role | Output |
+|------|------|--------|
+| **Context** | Extract problem type, component, symptoms | YAML frontmatter fields |
+| **Solution** | Identify root cause, extract working solution with code | Solution section with before/after code blocks |
+| **Related** | Search `docs/solutions/` for related docs using filename pattern match | Related documents list with relative paths |
+| **Prevention** | Develop prevention strategies relevant to project stack | Prevention section (validate syntax against project dependencies) |
+| **Category** | Determine category using priority-ordered keyword matching | Category + kebab-case filename |
+
+### Step 3: Classification
+
+Assign ONE category using the first matching keyword in this priority order:
+
+| Priority | Category | Keywords |
+|----------|----------|----------|
+| 1 | `security-issues` | auth, injection, CORS, token, vulnerability, CVE |
+| 2 | `database-issues` | migration, query, connection, deadlock, SQL, postgres, mysql |
+| 3 | `performance-issues` | slow, N+1, memory, latency, timeout, optimization |
+| 4 | `runtime-errors` | exception, crash, 500, panic, segfault |
+| 5 | `test-failures` | test, assert, fixture, mock, spec |
+| 6 | `build-errors` | compile, build, bundle, webpack, transpile |
+| 7 | `integration-issues` | API, webhook, third-party, sync, oauth |
+| 8 | `logic-errors` | wrong result, edge case, off-by-one, incorrect |
+| 9 | `ui-bugs` | render, layout, CSS, responsive, frontend |
+| 10 | `configuration` | env, config, deploy, infrastructure, settings |
+
+Filename format: `{kebab-case-descriptive-name}.md` (max 60 chars, lowercase, no special chars)
+
+### Step 4: Write File
+
+1. Create directory if needed: `docs/solutions/{category}/`
+2. Check for existing file with same name (case-insensitive)
+3. If exists: append timestamp suffix `-{YYYYMMDD-HHMMSS}.md`
+4. Write complete markdown document with YAML frontmatter
 
 ## Output Format
 
 ```markdown
 ---
-title: Redis Connection Pool Exhaustion Under Load
-module: api-gateway
-component: redis-client
-tags: [redis, connection-pool, performance, timeout]
-category: performance-issues
-date: 2026-02-18
-severity: high
+title: [Descriptive Title]
+component: [affected component or module]
+tags: [comma-separated relevant tags]
+category: [category from classification]
+date: [current date YYYY-MM-DD]
+severity: [low|medium|high]
 status: resolved
-root_cause: Connection pool size was static (10) while concurrent requests scaled to 500+
+root_cause: [one-line root cause description]
 ---
 
-# Redis Connection Pool Exhaustion Under Load
+# [Descriptive Title]
 
 ## Problem
 
-**Symptoms:** API responses timing out after 30s under moderate load (>100 req/s)
-**Environment:** Production, API gateway service
-**First noticed:** 2026-02-17
+**Symptoms:** [observable symptoms]
+**Environment:** [where this occurred]
 
 ## Root Cause
 
-The Redis connection pool was configured with a static size of 10 connections.
-Under load, 500+ concurrent requests competed for 10 connections, causing
-queue backpressure and eventual timeouts.
+[Explanation of why this happened]
 
 ## Solution
 
-```python
-# Before: static pool
-redis_pool = redis.ConnectionPool(max_connections=10)
+```[language]
+# Before
+[problematic code]
 
-# After: dynamic pool scaled to worker count
-import os
-workers = int(os.getenv("WEB_CONCURRENCY", 4))
-redis_pool = redis.ConnectionPool(
-    max_connections=workers * 20,
-    timeout=5,
-    retry_on_timeout=True,
-)
+# After
+[fixed code]
 ```
 
 ## Prevention
 
-- **Test case:** Load test with 10x expected concurrent connections
-- **Monitoring:** Alert on redis connection pool utilization > 80%
-- **Best practice:** Size connection pools relative to worker/thread count, not static
-- **Property:** PERFORMANCE - Redis pool utilization MUST stay below 80% at P99 load
+- **Test case:** [specific test that would catch this]
+- **Monitoring:** [alert or metric to watch]
+- **Best practice:** [guideline to prevent recurrence]
 
 ## Related
 
-- [Database Connection Limits](../database-issues/connection-limits.md)
-- [API Timeout Configuration](../runtime-errors/api-timeout-config.md)
+- [Related Document Title](../path/to/related.md)
 
 ```
 
-## Categories (Auto-Detected)
+## Categories (Priority-Ordered)
 
-| Category | Directory | Trigger Signals |
-|----------|-----------|-----------------|
-| Build Errors | `build-errors/` | compile, build, bundle, webpack |
+| Category | Directory | Keywords |
+|----------|-----------|----------|
+| Security Issues | `security-issues/` | auth, injection, CORS, token, vulnerability, CVE |
+| Database Issues | `database-issues/` | migration, query, connection, deadlock, SQL |
+| Performance Issues | `performance-issues/` | slow, N+1, memory, latency, timeout |
+| Runtime Errors | `runtime-errors/` | exception, crash, 500, panic |
 | Test Failures | `test-failures/` | test, assert, fixture, mock |
-| Runtime Errors | `runtime-errors/` | exception, crash, timeout, 500 |
-| Performance Issues | `performance-issues/` | slow, N+1, memory, latency |
-| Database Issues | `database-issues/` | migration, query, connection, deadlock |
-| Security Issues | `security-issues/` | auth, injection, CORS, token |
-| UI Bugs | `ui-bugs/` | render, layout, CSS, responsive |
+| Build Errors | `build-errors/` | compile, build, bundle, webpack |
 | Integration Issues | `integration-issues/` | API, webhook, third-party, sync |
 | Logic Errors | `logic-errors/` | wrong result, edge case, off-by-one |
+| UI Bugs | `ui-bugs/` | render, layout, CSS, responsive |
 | Configuration | `configuration/` | env, config, deploy, infrastructure |
 
 ## Integration with WFC
 
 ### Consumed By
-- **wfc-plan** - Searches `docs/solutions/` during planning to avoid repeating work
-- **wfc-review** - Checks for related past issues during code review
-- **wfc-build** - Quick knowledge lookup before implementation
+- **wfc-plan** - MAY read files from `docs/solutions/` to inform planning
+- **wfc-review** - MAY read files from `docs/solutions/` during code review
 
 ### Consumes
 - Git diff (recent changes that fixed the issue)
 - Conversation context (problem description, debugging steps)
-- Existing `docs/solutions/` entries (for cross-referencing)
-
-### Knowledge Lifecycle
-
-```
-
-Problem Solved → /wfc-compound → docs/solutions/{category}/{file}.md
-                                        ↓
-                    Indexed by YAML frontmatter (title, tags, module, component)
-                                        ↓
-                    Searchable by wfc-plan, wfc-review, wfc-build
-                                        ↓
-                    Drift detection (staleness >180 days, contradictions)
-                                        ↓
-                    Promotion to global knowledge (~/.wfc/knowledge/global/)
-
-```
+- Existing `docs/solutions/` entries (for cross-referencing via filename pattern match)
 
 ## Configuration
 
@@ -180,10 +186,8 @@ Problem Solved → /wfc-compound → docs/solutions/{category}/{file}.md
 {
   "compound": {
     "solutions_dir": "docs/solutions",
-    "auto_trigger": true,
     "require_code_examples": true,
-    "require_prevention": true,
-    "enhancement_threshold": "high"
+    "require_prevention": true
   }
 }
 ```
@@ -191,15 +195,17 @@ Problem Solved → /wfc-compound → docs/solutions/{category}/{file}.md
 ## Rules
 
 1. **One file per compound** - Never create multiple files per invocation
-2. **Orchestrator writes, subagents return text** - Clear write ownership
+2. **Sequential analysis** - Perform analysis passes in order; parallel execution is optional
 3. **Non-trivial problems only** - Skip typos, formatting, simple config changes
-4. **Code examples required** - Before/after showing the actual fix
-5. **Prevention required** - Every solution must include how to prevent recurrence
-6. **Never overwrite** - If file exists, append or create new with timestamp suffix
+4. **Code examples required** - Include before/after showing the actual fix
+5. **Prevention suggested** - Include prevention strategies; validate against project stack
+6. **Never overwrite** - If file exists (case-insensitive check), append timestamp suffix
+7. **Lowercase filenames** - Normalize all filenames to lowercase kebab-case
 
 ## Philosophy
 
 **COMPOUND**: Every fix sharpens the next one
-**INDEXED**: YAML frontmatter powers machine and human lookup
-**PRESCRIPTIVE**: Every entry carries code, prevention, and monitoring
+**INDEXED**: YAML frontmatter powers lookup
+**PRESCRIPTIVE**: Every entry carries code and prevention
 **LEAN**: One file per problem, zero fluff
+```

@@ -119,15 +119,15 @@ def run(skill_path: Path, offline: bool = False) -> str:
 
     warnings: list[str] = []
 
-    trigger_clarity, tc_found = _parse_sub_score(r"Trigger Clarity:\s*(\d+)/10", response)
+    trigger_clarity, tc_found = _parse_sub_score(r"Trigger Clarity\*{0,2}:\s*(\d+)/10", response)
     if not tc_found:
         warnings.append("# Warning: sub-score Trigger Clarity not found, defaulting to 5\n")
 
-    scope_accuracy, sa_found = _parse_sub_score(r"Scope Accuracy:\s*(\d+)/10", response)
+    scope_accuracy, sa_found = _parse_sub_score(r"Scope Accuracy\*{0,2}:\s*(\d+)/10", response)
     if not sa_found:
         warnings.append("# Warning: sub-score Scope Accuracy not found, defaulting to 5\n")
 
-    step_clarity, sc_found = _parse_sub_score(r"Step Clarity:\s*(\d+)/10", response)
+    step_clarity, sc_found = _parse_sub_score(r"Step Clarity\*{0,2}:\s*(\d+)/10", response)
     if not sc_found:
         warnings.append("# Warning: sub-score Step Clarity not found, defaulting to 5\n")
 

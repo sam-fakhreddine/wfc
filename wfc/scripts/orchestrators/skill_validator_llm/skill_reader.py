@@ -116,12 +116,11 @@ def resolve_repo_name() -> str:
             name = Path(result.stdout.strip()).name
         except (subprocess.CalledProcessError, FileNotFoundError):
             name = "wfc"
-
-        print(
-            f"WFC_CORPUS_REPO not set; using repo name '{name}' from git. "
-            "Set WFC_CORPUS_REPO to override.",
-            file=sys.stderr,
-        )
+            print(
+                "WFC_CORPUS_REPO not set and git lookup failed; defaulting to 'wfc'. "
+                "Set WFC_CORPUS_REPO to override.",
+                file=sys.stderr,
+            )
 
     if ".." in name or "/" in name or name.startswith("-"):
         raise ValueError(

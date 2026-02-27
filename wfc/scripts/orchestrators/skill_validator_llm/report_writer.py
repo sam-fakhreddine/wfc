@@ -27,6 +27,11 @@ def get_branch() -> str:
         return "unknown"
 
 
+def make_run_id() -> str:
+    """Generate a new run ID (YYYYMMDD_HHMMSS) for grouping stage reports."""
+    return datetime.now().strftime("%Y%m%d_%H%M%S")
+
+
 def write_report(
     skill_name: str,
     report_content: str,
@@ -36,7 +41,7 @@ def write_report(
     """Write an LLM validation report to the ~/.wfc project layout.
 
     Output path:
-        ~/.wfc/projects/{repo}/branches/{branch}/docs/skill-validation/{timestamp}/
+        ~/.wfc/projects/{repo}/branches/{branch}/docs/skill-validation/{skill_name}/{run_id}/
 
     The timestamp is formatted as YYYYMMDD_HHMMSS.
     The directory is created with mode 0o700 (owner-only).
@@ -51,7 +56,7 @@ def write_report(
     Returns:
         Path to the written report file.
     """
-    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    run_id = make_run_id()
     report_dir = (
         Path.home()
         / ".wfc"
@@ -61,7 +66,8 @@ def write_report(
         / branch
         / "docs"
         / "skill-validation"
-        / timestamp
+        / skill_name
+        / run_id
     )
     report_dir.mkdir(mode=0o700, parents=True, exist_ok=True)
 
@@ -84,21 +90,25 @@ def write_stage_report(
     report_content: str,
     repo: str,
     branch: str,
+    run_id: str | None = None,
 ) -> Path:
     """Write a per-stage LLM validation report to the ~/.wfc project layout.
 
     Output path:
-        ~/.wfc/projects/{repo}/branches/{branch}/docs/skill-validation/{timestamp}/
+        ~/.wfc/projects/{repo}/branches/{branch}/docs/skill-validation/{skill_name}/{run_id}/{stage}.md
 
-    The report file is named {skill_name}-{stage}.md.
+    All stages from the same skill run share the same run_id directory, making
+    it easy to see all stages for a given run together.
 
     Args:
         skill_name: The skill identifier. Must match r'^[a-zA-Z0-9_-]+$'.
-        stage: Validation stage. Must be one of: discovery, logic, edge_case.
+        stage: Validation stage. Must be one of: discovery, logic, edge_case, refinement.
         report_content: The full text content of the report.
         repo: Repository name (e.g. "wfc"). Must match r'^[a-zA-Z0-9_-]+$'.
         branch: Branch name (e.g. "claude/wfc-skill-validator-llm-phase2").
             Must match r'^[a-zA-Z0-9_./-]+$' and must not contain "..".
+        run_id: Run identifier (YYYYMMDD_HHMMSS). Generated fresh if not provided.
+            Pass the same run_id for all stages of one skill validation run.
 
     Returns:
         Path to the written report file.
@@ -117,7 +127,7 @@ def write_stage_report(
             f"Invalid branch {branch!r}: must match r'^[a-zA-Z0-9_./-]+$' and must not contain '..'."
         )
 
-    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    effective_run_id = run_id if run_id is not None else make_run_id()
     report_dir = (
         Path.home()
         / ".wfc"
@@ -127,11 +137,12 @@ def write_stage_report(
         / branch
         / "docs"
         / "skill-validation"
-        / timestamp
+        / skill_name
+        / effective_run_id
     )
     report_dir.mkdir(mode=0o700, parents=True, exist_ok=True)
 
-    report_file = report_dir / f"{skill_name}-{stage}.md"
+    report_file = report_dir / f"{stage}.md"
     report_file.write_text(report_content, encoding="utf-8")
     report_file.chmod(0o600)
 
@@ -146,10 +157,9 @@ def find_latest_stage_report(
 ) -> Path:
     """Return the most-recently written stage report for a given skill.
 
-    Scans all timestamped subdirectories under:
-        ~/.wfc/projects/{repo}/branches/{branch}/docs/skill-validation/
-    and returns the path with the highest mtime for the file named
-    ``{skill_name}-{stage}.md``.
+    Scans all run subdirectories under:
+        ~/.wfc/projects/{repo}/branches/{branch}/docs/skill-validation/{skill_name}/
+    and returns the path with the highest mtime for the file named ``{stage}.md``.
 
     Args:
         skill_name: The skill identifier. Must match r'^[a-zA-Z0-9_-]+$'.
@@ -175,19 +185,26 @@ def find_latest_stage_report(
             f"Invalid branch {branch!r}: must match r'^[a-zA-Z0-9_./-]+$' and must not contain '..'."
         )
 
-    base = (
-        Path.home() / ".wfc" / "projects" / repo / "branches" / branch / "docs" / "skill-validation"
+    skill_base = (
+        Path.home()
+        / ".wfc"
+        / "projects"
+        / repo
+        / "branches"
+        / branch
+        / "docs"
+        / "skill-validation"
+        / skill_name
     )
 
-    target_filename = f"{skill_name}-{stage}.md"
     best: Path | None = None
     best_mtime: float = -1.0
 
-    if base.is_dir():
-        for subdir in base.iterdir():
-            if not subdir.is_dir():
+    if skill_base.is_dir():
+        for run_dir in skill_base.iterdir():
+            if not run_dir.is_dir():
                 continue
-            candidate = subdir / target_filename
+            candidate = run_dir / f"{stage}.md"
             if candidate.is_file():
                 mtime = candidate.stat().st_mtime
                 if mtime > best_mtime:
@@ -196,7 +213,8 @@ def find_latest_stage_report(
 
     if best is None:
         raise FileNotFoundError(
-            f"No {stage} report found for {skill_name} in ~/.wfc/.../docs/skill-validation/"
+            f"No {stage} report found for {skill_name} in "
+            f"~/.wfc/.../docs/skill-validation/{skill_name}/"
         )
     return best
 

@@ -1,190 +1,211 @@
 ---
 name: wfc-agentic
-description: "Generate GitHub Agentic Workflows (gh-aw) from natural language. Converts WFC task descriptions into gh-aw Markdown workflow files with proper frontmatter (triggers, permissions, safe-outputs, tools, engine selection) ready for compilation with gh aw compile. Supports all gh-aw engines (Copilot, Claude Code, Codex), trigger types (schedule, issues, PRs, slash commands, workflow_run), safe-output types (create-issue, create-pull-request, add-comment, push-to-pull-request-branch), and tool configurations (github MCP, web-fetch, bash, cache-memory). Use when creating CI/CD automation, issue triage bots, PR review workflows, documentation updaters, or any event-driven agentic task. Triggers on 'create agentic workflow', 'add gh-aw workflow', 'automate with GitHub Actions agent', or explicit /wfc-agentic. Not for traditional GitHub Actions YAML authoring or non-agentic workflows."
+description: >
+  Generates Markdown-based `.gh-aw.md` workflow files for the `gh-aw` CLI extension,
+  specifically for AI-driven automation compiled via `gh aw compile`.
+  
+  Invoke when: User explicitly requests "gh-aw", ".gh-aw.md" files, "safe-outputs",
+  or mentions `gh aw compile`. Also triggers on: "create an agentic workflow for
+  GitHub" when context implies AI agent execution (Copilot, Claude) rather than
+  standard CI/CD.
+  
+  Format: Markdown files with YAML frontmatter defining triggers, permissions, tools,
+  and safe-outputs. The agent prompt (natural language instructions) is written in
+  the Markdown body. Output is consumed by `gh aw compile` to generate a lock file.
 license: MIT
 ---
 
 # WFC:AGENTIC - GitHub Agentic Workflow Generator
 
-Generate production-ready [GitHub Agentic Workflows](https://github.com/github/gh-aw) from natural language descriptions.
+Generate production-ready `.gh-aw.md` workflow files from natural language descriptions.
 
 ## What It Does
 
-1. **Adaptive Interview** - Asks what to automate, triggers, engine preference, output types
-2. **Workflow Generation** - Creates `.md` workflow file with proper gh-aw frontmatter
-3. **Safe-Output Design** - Configures sandboxed write operations (issues, PRs, comments)
-4. **Prompt Engineering** - Writes the natural language instructions for the AI agent
-5. **Validation Guidance** - Instructions for compiling and testing with `gh aw compile`
+1. **Targeted Clarification** — Asks 0-3 questions to resolve missing requirements (trigger type, engine, output type). Proceeds with defaults if unclear after 3 questions.
+2. **Workflow Generation** — Creates a `.gh-aw.md` file with valid YAML frontmatter and agent instructions.
+3. **Safe-Output Design** — Configures sandboxed write operations (issues, PRs, comments) with explicit per-run limits.
+4. **Validation Guidance** — Provides `gh aw compile` and `gh aw run` commands for testing.
 
-## Usage
+## File Naming Convention
 
-```bash
-# Interactive mode - guided workflow creation
-/wfc-agentic
+- **Generated file**: `.github/workflows/<name>.gh-aw.md` (e.g., `issue-triage.gh-aw.md`)
+- **Compile command**: `gh aw compile <name>` (uses the stem, not the extension)
+- **Test command**: `gh aw run <name> --dry-run`
 
-# With description
-/wfc-agentic "triage new issues with labels and analysis comments"
+## Workflow: How This Skill Operates
 
-# With specific intent
-/wfc-agentic "fix failing CI checks on PRs when someone comments /fix"
+User Request
+    │
+    ▼
+Parse Intent
+    │  - Extract: trigger, engine, outputs, tools
+    │  - Identify missing requirements
+    │
+    ▼
+Clarification Loop (max 3 questions)
+    │  - Only ask what's truly unspecified
+    │  - Skip if initial request is complete
+    │  - Proceed with defaults if still ambiguous
+    │
+    ▼
+Generate {name}.gh-aw.md
+    │  - Valid YAML frontmatter (see reference below)
+    │  - Natural language agent prompt
+    │  - Comments noting any assumptions
+    │
+    ▼
+Output Compile & Test Instructions
+
 ```
 
-## Quick Reference: gh-aw Workflow Format
+**Default Assumptions** (used when unspecified):
+- Engine: `copilot`
+- Permissions: `read-all`
+- Network: `defaults`
+- Timeout: `15` minutes
+- Tools: `github: { toolsets: [issues] }`
 
-A gh-aw workflow is a Markdown file in `.github/workflows/` with YAML frontmatter:
+## Quick Reference: gh-aw Frontmatter Schema
 
-```markdown
+```yaml
 ---
 description: |
-  What this workflow does (required for compiled workflows)
+  Brief description of what this workflow does.
 
 on:
-  # Event triggers (same concepts as GitHub Actions)
+  # Exactly one trigger type is required.
+  # Use standard GitHub Actions YAML syntax:
+
   issues:
     types: [opened, reopened]
+  pull_request:
+    types: [opened, synchronize]
   schedule:
-    - cron: "0 9 * * 1"
-  workflow_dispatch:
+    - cron: "0 9 * * 1"    # Every Monday 9am UTC (5-field cron only)
+  workflow_dispatch: {}
   slash_command:
-    name: fix
+    name: fix              # Triggers on /fix in comments
   workflow_run:
     workflows: ["CI"]
     types: [completed]
 
-# Optional: reaction emoji shown when triggered
+# Optional: reaction emoji when triggered (e.g., eyes, rocket, +1)
 reaction: eyes
 
-# Permissions (always start minimal)
+# Permissions: always start minimal
 permissions: read-all
 
-# Engine selection
-engine: claude          # or: copilot (default), codex
+# Engine: copilot (default), claude, or openai
+engine: copilot
 
-# Network access
-network: defaults       # or: specific allowed domains
+# Network access: defaults (standard GitHub endpoints)
+network: defaults
 
 # Tools available to the agent
 tools:
   github:
-    toolsets: [all]     # or: [repos, issues, pull_requests]
-    lockdown: false     # allow reading 3rd-party data in public repos
-  web-fetch:            # enable URL fetching
-  bash: true            # or: ["npm *", "python *"] for restricted
-  edit:                 # enable file editing
-  cache-memory: true    # persistent memory across runs
+    toolsets: [issues]     # Options: [issues], [pull_requests], [repos], [all]
+    lockdown: false        # Set true to block 3rd-party repo access
+  web-fetch: {}            # Enable URL fetching
+  bash: true               # WARNING: may conflict with read-all permissions
+  edit: {}                 # Enable file editing
+  cache-memory: true       # Persist memory across runs
 
-# Safe outputs - sandboxed write operations
+# Safe outputs (per-run limits enforced)
 safe-outputs:
   create-issue:
-    title-prefix: "${{ github.workflow }}"
+    title-prefix: "[Auto]"
     labels: [automation]
-    max: 3
+    max: 3                 # Max 3 issues created per run
   create-pull-request:
     draft: true
     labels: [automation]
-  add-comment:
     max: 1
-  add-labels:
+  add-comment:
     max: 5
-  push-to-pull-request-branch:
+  add-labels:
+    max: 10
+  push-to-pull-request-branch: {}
+  noop:
+    max: 1
 
-# Timeout
 timeout-minutes: 15
 ---
 
 # Workflow Title
 
-Natural language instructions for the AI agent go here.
-Uses ${{ github.event.* }} template variables for context.
+Natural language instructions for the AI agent.
+Use ${{ github.event.* }} variables for context.
 ```
 
-## gh-aw Architecture
+## Trigger Syntax Reference
 
-```
-Markdown Workflow (.md)
-        │
-        ▼
-  gh aw compile        ← Generates lock file
-        │
-        ▼
-Lock File (.lock.yml)  ← Standard GitHub Actions YAML
-        │
-        ▼
-GitHub Actions Runner
-        │
-        ├── Activation Job     ← Permission checks
-        ├── Agent Job          ← AI agent runs here (sandboxed)
-        │   ├── MCP Gateway    ← Tool access (GitHub, safe-outputs)
-        │   ├── AWF Firewall   ← Network isolation
-        │   └── Safe Outputs   ← Structured write operations
-        ├── Detection Job      ← Threat detection on outputs
-        ├── Safe Outputs Job   ← Executes approved writes
-        ├── Cache Memory Job   ← Persists agent memory
-        └── Conclusion Job     ← Status reporting
-```
+| Trigger Type | Valid YAML Syntax |
+|--------------|-------------------|
+| Issue events | `issues: { types: [opened, reopened] }` |
+| PR events | `pull_request: { types: [opened, synchronize] }` |
+| Scheduled | `schedule: [{ cron: "0 9 * * 1" }]` — 5-field UTC cron only |
+| Manual | `workflow_dispatch: {}` |
+| Slash command | `slash_command: { name: fix }` — triggers on `/fix` |
+| Workflow run | `workflow_run: { workflows: ["CI"], types: [completed] }` |
+| Push | `push: { branches: [main] }` |
 
-### Key Security Properties
+**Common Errors**:
 
-- **Agent is read-only** - Cannot directly write to repo
-- **Safe outputs are sanitized** - All writes go through validation
-- **Threat detection** - Second AI reviews agent outputs before execution
-- **Network isolation** - Firewall restricts external access
-- **SHA-pinned dependencies** - Supply chain protection
-
-## Trigger Types
-
-| Trigger | YAML | Use Case |
-|---------|------|----------|
-| Issue events | `issues: [opened, reopened]` | Triage, labeling |
-| PR events | `pull_request: [opened, synchronize]` | Code review, CI fix |
-| Scheduled | `schedule: daily` or `cron: "0 9 * * 1"` | Reports, maintenance |
-| Manual | `workflow_dispatch:` | On-demand tasks |
-| Slash command | `slash_command: { name: fix }` | `/fix` in comments |
-| Workflow run | `workflow_run: { workflows: [CI] }` | CI failure analysis |
-| Push | `push: { branches: [main] }` | Post-merge tasks |
-
-## Engine Selection
-
-| Engine | Key | Best For |
-|--------|-----|----------|
-| `copilot` | `COPILOT_GITHUB_TOKEN` | Default, GitHub-native |
-| `claude` | `ANTHROPIC_API_KEY` or `CLAUDE_CODE_OAUTH_TOKEN` | Complex reasoning, code changes |
-| `codex` | `OPENAI_API_KEY` | OpenAI integration |
-
-## Safe Output Types
-
-| Output | Purpose | Key Options |
-|--------|---------|-------------|
-| `create-issue` | Open new issues | `title-prefix`, `labels`, `max` |
-| `create-pull-request` | Open PRs with code changes | `draft`, `labels`, `max` |
-| `add-comment` | Comment on issues/PRs | `max` |
-| `add-labels` | Apply labels | `max` |
-| `push-to-pull-request-branch` | Push to existing PR | - |
-| `noop` | Log "no action needed" | `max: 1` |
-
-## Tool Configuration
-
-| Tool | Purpose | Config |
-|------|---------|--------|
-| `github` | GitHub API via MCP | `toolsets`, `lockdown` |
-| `web-fetch` | Fetch URLs | enabled/disabled |
-| `bash` | Shell commands | `true` or allow-list |
-| `edit` | File editing | enabled/disabled |
-| `cache-memory` | Persistent storage | `true`/`false` |
+- ❌ `schedule: daily` — Invalid, use cron syntax
+- ❌ `schedule: weekly` — Invalid, use cron syntax
+- ❌ `workflow_run: { workflows: CI }` — Invalid, must be array `["CI"]`
 
 ## Template Variables
 
-Available in the workflow body via `${{ }}` syntax:
+| Variable | Description | Example Use |
+|----------|-------------|-------------|
+| `${{ github.repository }}` | Owner/repo | `owner/repo` |
+| `${{ github.actor }}` | Triggering user | `monalisa` |
+| `${{ github.event.issue.number }}` | Issue number | `42` |
+| `${{ github.event.pull_request.number }}` | PR number | `7` |
+| `${{ github.event.comment.body }}` | Comment text | Full comment text |
+| `${{ github.event.workflow_run.id }}` | Failed run ID | `1234567890` |
+| `${{ github.event.workflow_run.conclusion }}` | Run result | `failure`, `success` |
+| `${{ github.workflow }}` | Workflow name | `CI Doctor` |
+| `${{ needs.activation.outputs.text }}` | Slash command args after command | `/fix the tests` → `the tests` |
 
-- `${{ github.repository }}` - Owner/repo
-- `${{ github.actor }}` - Triggering user
-- `${{ github.event.issue.number }}` - Issue number
-- `${{ github.event.pull_request.number }}` - PR number
-- `${{ github.event.comment.body }}` - Comment text
-- `${{ github.event.workflow_run.id }}` - Failed run ID
-- `${{ github.event.workflow_run.conclusion }}` - Run result
-- `${{ github.workflow }}` - Workflow name
-- `${{ needs.activation.outputs.text }}` - Slash command args
+**Slash Command Example**:
+
+```markdown
+---
+on:
+  slash_command:
+    name: fix
+---
+
+# Fix Issues
+
+Fix the following: ${{ needs.activation.outputs.text }}
+```
+
+## Engine Configuration
+
+| Engine | Key | Secret Required | Notes |
+|--------|-----|-----------------|-------|
+| `copilot` | COPILOT_GITHUB_TOKEN | GitHub-native default | |
+| `claude` | ANTHROPIC_API_KEY | Complex reasoning, code changes | |
+| `openai` | OPENAI_API_KEY | OpenAI GPT models | |
+
+**Note**: `codex` is deprecated. Use `openai` for OpenAI integration.
+
+## Safe Output Types
+
+| Output | Purpose | Required Fields |
+|--------|---------|-----------------|
+| `create-issue` | Open new issues | `max` (required), `title-prefix`, `labels` |
+| `create-pull-request` | Open PRs | `max` (required), `draft`, `labels` |
+| `add-comment` | Comment on issues/PRs | `max` (required) |
+| `add-labels` | Apply labels | `max` (required) |
+| `push-to-pull-request-branch` | Push to existing PR | `{}` |
+| `noop` | Log "no action needed" | `max: 1` |
+
+**`max` is enforced per single workflow run invocation.**
 
 ## Example Workflows
 
@@ -192,23 +213,21 @@ Available in the workflow body via `${{ }}` syntax:
 
 ```markdown
 ---
+description: Triage new issues with labels and analysis
 on:
   issues:
     types: [opened, reopened]
-  reaction: eyes
-
+reaction: eyes
 permissions: read-all
 network: defaults
-
 safe-outputs:
   add-labels:
     max: 5
   add-comment:
-
+    max: 1
 tools:
   github:
     toolsets: [issues]
-
 timeout-minutes: 10
 ---
 
@@ -226,26 +245,21 @@ Analyze issue #${{ github.event.issue.number }} in ${{ github.repository }}.
 
 ```markdown
 ---
+description: Investigate CI failures and create reports
 on:
   workflow_run:
     workflows: ["CI"]
     types: [completed]
-
-if: ${{ github.event.workflow_run.conclusion == 'failure' }}
-
 permissions: read-all
 network: defaults
-
 safe-outputs:
   create-issue:
-    title-prefix: "${{ github.workflow }}"
+    title-prefix: "[CI-Failure]"
     labels: [automation, ci]
-  add-comment:
-
+    max: 1
 tools:
   cache-memory: true
-  web-fetch:
-
+  web-fetch: {}
 timeout-minutes: 10
 ---
 
@@ -264,123 +278,26 @@ Investigate failed workflow run ${{ github.event.workflow_run.id }}.
 
 ```markdown
 ---
+description: Fix issues in PRs via slash command
 on:
   slash_command:
     name: pr-fix
-  reaction: eyes
-
+reaction: eyes
 permissions: read-all
 network: defaults
 engine: claude
-
 safe-outputs:
-  push-to-pull-request-branch:
+  push-to-pull-request-branch: {}
   add-comment:
-
+    max: 1
 tools:
   bash: true
-  web-fetch:
-
+  web-fetch: {}
 timeout-minutes: 20
 ---
 
 # PR Fix
 
-Fix failing checks on PR #${{ github.event.issue.number }}.
+Fix issues in PR #${{ github.event.issue.number }}.
 
-1. Read the PR and its comments
-2. Analyze failing CI check logs
-3. Identify root cause and implement fix
-4. Run tests and formatters
-5. Push fix to the PR branch
-6. Comment with summary of changes
-```
-
-### Weekly Report (Scheduled)
-
-```markdown
----
-on:
-  schedule: weekly
-
-permissions: read-all
-network: defaults
-
-safe-outputs:
-  create-issue:
-    title-prefix: "${{ github.workflow }}"
-    labels: [report]
-    max: 1
-
-tools:
-  github:
-    toolsets: [all]
-
-timeout-minutes: 15
----
-
-# Weekly Repository Report
-
-Generate a weekly status report for ${{ github.repository }}.
-
-1. List PRs merged this week
-2. List new issues opened and closed
-3. Summarize contributor activity
-4. Highlight any CI failures or security alerts
-5. Create an issue with the formatted report
-```
-
-## Workflow: How This Skill Operates
-
-```
-User Request
-    │
-    ▼
-Adaptive Interview (3-5 questions)
-    │  - What to automate?
-    │  - What triggers it?
-    │  - What should it output?
-    │  - Which AI engine?
-    │  - Any special tools needed?
-    │
-    ▼
-Generate Workflow (.md file)
-    │  - Frontmatter (triggers, permissions, tools, safe-outputs)
-    │  - Natural language prompt (agent instructions)
-    │
-    ▼
-Place in .github/workflows/
-    │
-    ▼
-Compile Instructions
-    │  - gh aw compile <workflow-name>
-    │  - Review generated .lock.yml
-    │  - Test with: gh aw run <workflow-name>
-    │
-    ▼
-User Reviews & Commits
-```
-
-## Prerequisites
-
-- **gh CLI** v2.0.0+ installed
-- **gh-aw extension**: `gh extension install github/gh-aw`
-- **Engine secret** configured in repo settings:
-  - Copilot: `COPILOT_GITHUB_TOKEN`
-  - Claude: `ANTHROPIC_API_KEY` or `CLAUDE_CODE_OAUTH_TOKEN`
-  - Codex: `OPENAI_API_KEY`
-
-## Best Practices
-
-1. **Start with `permissions: read-all`** - Only the safe-outputs job gets write access
-2. **Use `network: defaults`** - Unless your workflow needs specific external domains
-3. **Set reasonable timeouts** - 10-15 min for analysis, 20-30 min for code changes
-4. **Prefer `create-issue` over `add-comment`** for long reports - Issues are searchable
-5. **Use `cache-memory: true`** for workflows that benefit from cross-run learning
-6. **Add `reaction: eyes`** for event-triggered workflows - Gives users immediate feedback
-7. **Use `draft: true`** for auto-created PRs - Let humans review before merge
-8. **Keep prompts specific** - Tell the agent exactly what to analyze and what format to output
-
----
-
-**This is World Fucking Class.** Built on [GitHub Agentic Workflows](https://github.com/github/gh-aw).
+User request: ${{ needs.activation

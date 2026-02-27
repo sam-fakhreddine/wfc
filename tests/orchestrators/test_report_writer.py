@@ -170,7 +170,8 @@ def test_write_report_branch_with_slash(tmp_path: Path) -> None:
 def test_write_stage_report_creates_correct_filename(tmp_path: Path, monkeypatch) -> None:
     monkeypatch.setattr(Path, "home", classmethod(lambda cls: tmp_path))
     path = write_stage_report("wfc-test", "logic", "content", "wfc", "main")
-    assert path.name == "wfc-test-logic.md"
+    assert path.name == "logic.md"
+    assert path.parent.parent.name == "wfc-test"
 
 
 def test_write_stage_report_file_permissions(tmp_path: Path, monkeypatch) -> None:
@@ -222,28 +223,37 @@ def test_write_stage_report_accepts_refinement(tmp_path: Path, monkeypatch) -> N
     monkeypatch.setattr(Path, "home", classmethod(lambda cls: tmp_path))
     path = write_stage_report("wfc-review", "refinement", "refinement content", "wfc", "main")
     assert path.exists()
-    assert path.name == "wfc-review-refinement.md"
+    assert path.name == "refinement.md"
+    assert path.parent.parent.name == "wfc-review"
 
 
 def test_find_latest_stage_report_returns_most_recent(tmp_path: Path, monkeypatch) -> None:
-    """Returns the file with the highest mtime among all timestamped subdirs."""
+    """Returns the file with the highest mtime among all run subdirs for the skill."""
     import os
 
     monkeypatch.setattr(Path, "home", classmethod(lambda cls: tmp_path))
-    base = (
-        tmp_path / ".wfc" / "projects" / "wfc" / "branches" / "main" / "docs" / "skill-validation"
+    skill_base = (
+        tmp_path
+        / ".wfc"
+        / "projects"
+        / "wfc"
+        / "branches"
+        / "main"
+        / "docs"
+        / "skill-validation"
+        / "wfc-review"
     )
-    base.mkdir(parents=True)
+    skill_base.mkdir(parents=True)
 
-    older_dir = base / "20240101_120000"
+    older_dir = skill_base / "20240101_120000"
     older_dir.mkdir()
-    older_file = older_dir / "wfc-review-discovery.md"
+    older_file = older_dir / "discovery.md"
     older_file.write_text("older report", encoding="utf-8")
     os.utime(older_file, (1_000_000, 1_000_000))
 
-    newer_dir = base / "20240102_130000"
+    newer_dir = skill_base / "20240102_130000"
     newer_dir.mkdir()
-    newer_file = newer_dir / "wfc-review-discovery.md"
+    newer_file = newer_dir / "discovery.md"
     newer_file.write_text("newer report", encoding="utf-8")
     os.utime(newer_file, (2_000_000, 2_000_000))
 
@@ -255,10 +265,18 @@ def test_find_latest_stage_report_returns_most_recent(tmp_path: Path, monkeypatc
 def test_find_latest_stage_report_raises_when_absent(tmp_path: Path, monkeypatch) -> None:
     """Raises FileNotFoundError when no matching report file exists."""
     monkeypatch.setattr(Path, "home", classmethod(lambda cls: tmp_path))
-    base = (
-        tmp_path / ".wfc" / "projects" / "wfc" / "branches" / "main" / "docs" / "skill-validation"
+    skill_base = (
+        tmp_path
+        / ".wfc"
+        / "projects"
+        / "wfc"
+        / "branches"
+        / "main"
+        / "docs"
+        / "skill-validation"
+        / "wfc-review"
     )
-    base.mkdir(parents=True)
+    skill_base.mkdir(parents=True)
 
     with pytest.raises(FileNotFoundError, match="discovery"):
         find_latest_stage_report("wfc-review", "discovery", "wfc", "main")

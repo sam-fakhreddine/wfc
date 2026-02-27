@@ -1,209 +1,62 @@
 ---
 name: wfc-plan
-description: >
-  Generates a structured implementation plan for features or refactors spanning
-  multiple files, modules, or teams. Produces: TASKS.md (ordered tasks with
-  dependency graph), PROPERTIES.md (formal requirements typed as SAFETY,
-  LIVENESS, INVARIANT, or PERFORMANCE), and TEST-PLAN.md (acceptance and
-  integration test strategy). Conducts a clarifying interview first.
+description: >-
+  Generates a structured implementation plan for software features spanning
+  multiple files, modules, or services. Produces TASKS.md (ordered tasks with
+  dependency graph), PROPERTIES.md (non-functional requirements typed
+  SAFETY/LIVENESS/INVARIANT/PERFORMANCE), and TEST-PLAN.md (acceptance and
+  integration test strategy). Conducts a clarifying interview before generating.
 
-  TRIGGER when user: invokes /wfc-plan; asks to "break down", "plan out", or
-  "create a structured plan for" a multi-component feature; mentions needing
-  TASKS.md, PROPERTIES.md, or TEST-PLAN.md; or starts a feature touching
-  more than one module with explicit dependency ordering.
+  TRIGGER: /wfc-plan; user requests TASKS.md, PROPERTIES.md, or TEST-PLAN.md by
+  name; requests implementation plan for work affecting 2+ files in different
+  directories or multiple services; user wants dependency ordering and test
+  strategy for a feature.
 
-  Not for: single-file edits, patches, or bug fixes; refactoring with no
-  cross-cutting dependencies; architectural Q&A with no file output; effort
-  estimation or backlog grooming; exploratory conversations; revising an
-  existing plan on disk.
+  NOT FOR: Single-file edits or bug fixes; debugging/diagnosing defects; high-level
+  architecture discussions with no file output; sprint planning or backlog grooming;
+  directory restructuring; documentation generation; quick single-function patches.
 license: MIT
 ---
 
 # WFC:PLAN - Adaptive Planning with Formal Properties
 
-⚠️ **EXECUTION CONTEXT: ORCHESTRATION MODE**
-
-You are running in **orchestration mode** with restricted tool access.
+## Execution Context
 
 **Available tools:**
 
-- ✅ Read, Grep, Glob (file inspection only)
-- ✅ Task (for spawning analysis/planning subagents)
-- ✅ AskUserQuestion (conducting adaptive interview)
-- ✅ Write (ONLY for plan outputs: TASKS.md, PROPERTIES.md, TEST-PLAN.md)
+- Read, Grep, Glob (file inspection)
+- Task (spawn analysis subagents)
+- AskUserQuestion (conduct interview)
+- Write (create plan outputs only)
 
-**NOT available for implementation:**
+**NOT available:**
 
-- ❌ Write for code files (use Task → implementation subagent after planning)
-- ❌ Edit for code files (use Task → implementation subagent after planning)
-- ❌ NotebookEdit (use Task → implementation subagent after planning)
+- Write/Edit for code files (hand off to implementation skills after planning)
 
-**Your role:** Conduct interview, generate plan documents, then hand off to wfc-implement or wfc-build for execution.
+## Workflow
 
----
-
-## Quick Start: Spawn Analysis Subagent (if needed)
-
-For complex planning that needs research:
-
-```xml
-<Task
-  subagent_type="general-purpose"
-  description="Analyze [component/system]"
-  prompt="
-Analyze the codebase to understand: [what to analyze]
-
-Focus areas:
-- [area 1]
-- [area 2]
-
-Provide:
-- Current architecture summary
-- Key patterns and conventions
-- Constraints and dependencies
-- Recommendations for planning
-"
-/>
-```
-
----
-
-Converts requirements into structured implementation plans through adaptive interviewing.
-
-## What It Does
-
-1. **Adaptive Interview** - Asks intelligent questions that adapt based on answers
-2. **Task Generation** - Breaks down requirements into structured TASKS.md with dependencies
-3. **Property Extraction** - Identifies formal properties (SAFETY, LIVENESS, INVARIANT, PERFORMANCE)
-4. **Test Planning** - Creates comprehensive TEST-PLAN.md linked to requirements and properties
-
-## Usage
-
-```bash
-# Default (creates timestamped plan with history)
-/wfc-plan
-# → Generates: plans/plan_oauth2_authentication_20260211_143022/
-#              plans/HISTORY.md
-#              plans/HISTORY.json
-
-# Custom output directory (disables history)
-/wfc-plan path/to/output
-
-# With options (future)
-/wfc-plan --interactive  # Step through interview
-/wfc-plan --from-file requirements.md  # Import requirements
-
-# Skip validation (not recommended)
-/wfc-plan --skip-validation
-```
-
-## Plan History
-
-**Each plan gets a unique timestamped directory.**
-
-### Directory Structure
+### 1. Parse Arguments
 
 ```
-plans/
-├── HISTORY.md                                    # Human-readable history
-├── HISTORY.json                                  # Machine-readable index
-├── plan_oauth2_authentication_20260211_143022/  # Timestamped plan
-│   ├── TASKS.md
-│   ├── PROPERTIES.md
-│   ├── TEST-PLAN.md
-│   ├── interview-results.json
-│   ├── revision-log.md
-│   └── plan-audit_20260211_143022.json
-├── plan_caching_layer_20260211_150135/
-│   ├── TASKS.md
-│   ├── PROPERTIES.md
-│   ├── TEST-PLAN.md
-│   ├── interview-results.json
-│   ├── revision-log.md
-│   └── plan-audit_20260211_150135.json
-└── plan_user_dashboard_20260212_091523/
-    ├── TASKS.md
-    ├── PROPERTIES.md
-    ├── TEST-PLAN.md
-    ├── interview-results.json
-    ├── revision-log.md
-    └── plan-audit_20260212_091523.json
+$ARGUMENTS parsing rules:
+1. Split on whitespace
+2. Extract flags: --skip-validation, --interactive
+3. Remaining text = output directory path
+4. Reject paths containing ".." or absolute paths outside workspace
+5. If no path provided, use default: plans/plan_<feature>_<timestamp>/
 ```
 
-### History File
+### 2. Conduct Adaptive Interview
 
-**plans/HISTORY.md** contains a searchable record:
+Ask questions sequentially, adapting based on answers:
 
-```markdown
-# Plan History
-
-**Total Plans:** 3
-
----
-
-## plan_user_dashboard_20260212_091523
-- **Created:** 2026-02-12T09:15:23
-- **Goal:** Build user analytics dashboard
-- **Context:** Product team needs visibility into user behavior
-- **Directory:** `plans/plan_user_dashboard_20260212_091523`
-- **Tasks:** 7
-- **Properties:** 4
-- **Tests:** 15
-- **Validated:** yes (score: 8.7)
-
-## plan_caching_layer_20260211_150135
-- **Created:** 2026-02-11T15:01:35
-- **Goal:** Implement caching layer for API
-- **Context:** Reduce database load and improve response times
-- **Directory:** `plans/plan_caching_layer_20260211_150135`
-- **Tasks:** 3
-- **Properties:** 2
-- **Tests:** 8
-- **Validated:** skipped
-```
-
-### Benefits
-
-- **Version control** - Never lose old plans
-- **Searchable** - Find plans by goal or date
-- **Traceable** - See evolution of project planning
-- **Reference** - Compare approaches across time
-
-## Architecture Design Phase
-
-After the interview, WFC generates 2-3 architecture approaches:
-
-### Option 1: Minimal Changes
-
-- Smallest diff, maximum code reuse
-- Lowest risk, fastest to implement
-- Best for simple features or hotfixes
-
-### Option 2: Clean Architecture
-
-- Proper abstractions, maintainability-first
-- Best long-term design
-- Higher initial effort
-
-### Option 3: Pragmatic Balance
-
-- Speed + quality tradeoff
-- Addresses key concerns without over-engineering
-- Best for most features
-
-The approaches are saved to `ARCHITECTURE-OPTIONS.md` for reference.
-
-## Interview Process
-
-The adaptive interview gathers:
-
-### Core Understanding
+**Core Questions:**
 
 - What are you building? (goal)
 - Why are you building it? (context)
 - Who will use it? (users)
 
-### Requirements
+**Requirement Questions:**
 
 - Core features (must-have)
 - Nice-to-have features
@@ -211,239 +64,48 @@ The adaptive interview gathers:
 - Performance requirements
 - Security requirements
 
-### Technical Details
-
-- Technology stack
-- Existing codebase or new project
-- Testing approach
-- Coverage targets
-
-### Formal Properties
+**Formal Property Questions:**
 
 - Safety properties (what must never happen)
 - Liveness properties (what must eventually happen)
 - Invariants (what must always be true)
 - Performance properties (time/resource bounds)
 
-## Outputs
+**Interview Termination:** If core questions (goal/context) receive empty or "I don't know" responses 3 times, ask user to choose: "Generate generic plan" or "Abort."
 
-### 1. TASKS.md
+### 3. Generate Plan Files
 
-Structured implementation tasks with:
+Create three files using the Write tool:
+
+**TASKS.md** - Structured tasks with:
 
 - Unique IDs (TASK-001, TASK-002, ...)
 - Complexity ratings (S, M, L, XL)
 - Dependency graph (DAG)
-- Properties to satisfy
+- Related properties
 - Files likely affected
-- Acceptance criteria
+- Acceptance criteria with checkboxes
 
-Example:
-
-```markdown
-## TASK-001: Setup project structure
-- **Complexity**: S
-- **Dependencies**: []
-- **Properties**: []
-- **Files**: README.md, pyproject.toml
-- **Description**: Create initial project structure
-- **Acceptance Criteria**:
-  - [ ] Project structure follows best practices
-  - [ ] Dependencies documented
-```
-
-### 2. PROPERTIES.md
-
-Formal properties with:
+**PROPERTIES.md** - Formal properties with:
 
 - Type (SAFETY, LIVENESS, INVARIANT, PERFORMANCE)
 - Formal statement
 - Rationale
-- Priority
+- Priority (critical/high/medium/low)
 - Suggested observables
 
-Example:
-
-```markdown
-## PROP-001: SAFETY
-- **Statement**: Unauthenticated user must never access protected endpoints
-- **Rationale**: Security: prevent unauthorized data access
-- **Priority**: critical
-- **Observables**: auth_failures, unauthorized_access_attempts
-```
-
-### 3. TEST-PLAN.md
-
-Test strategy and cases:
+**TEST-PLAN.md** - Test strategy with:
 
 - Testing approach (unit, integration, e2e)
 - Coverage targets
-- Specific test cases linked to tasks and properties
-- Test steps and expected outcomes
+- Test cases linked to tasks and properties
+- Steps and expected outcomes
 
-Example:
+### 4. Run Validation Pipeline (unless --skip-validation)
 
-```markdown
-### TEST-001: Verify SAFETY property
-- **Type**: integration
-- **Related Task**: TASK-003
-- **Related Property**: PROP-001
-- **Description**: Test that unauthenticated users cannot access protected endpoints
-- **Steps**:
-  1. Attempt access without authentication
-  2. Verify 401 response
-- **Expected**: Access denied
-```
+**Prerequisite Check:** Before running validation, verify that subagent skills are available by checking for skill definitions or attempting a probe Task. If unavailable, skip to Step 5 with `validated: false, skipped: false, error: "validation_skills_unavailable"`.
 
-## Architecture
-
-### MULTI-TIER Design
-
-```
-┌─────────────────────────────┐
-│  PRESENTATION (cli.py)      │  User interaction, output formatting
-└──────────────┬──────────────┘
-               │
-┌──────────────▼──────────────┐
-│  LOGIC (orchestrator.py)    │  Interview → Generate → Save
-│  - interview.py             │
-│  - tasks_generator.py       │
-│  - properties_generator.py  │
-│  - test_plan_generator.py   │
-└──────────────┬──────────────┘
-               │
-┌──────────────▼──────────────┐
-│  DATA (filesystem)          │  Save markdown and JSON
-└─────────────────────────────┘
-```
-
-## Living Plan Documents
-
-Plans are living documents that track progress during implementation, not static artifacts.
-
-### YAML Frontmatter
-
-Every TASKS.md includes frontmatter for machine-readable status tracking:
-
-```yaml
----
-title: OAuth2 Authentication
-status: active          # active | in_progress | completed | abandoned
-created: 2026-02-18T14:30:00Z
-updated: 2026-02-18T16:45:00Z
-tasks_total: 5
-tasks_completed: 0
-complexity: M
----
-```
-
-### Checkbox Progress
-
-Each acceptance criterion uses markdown checkboxes. wfc-implement updates these as tasks complete:
-
-```markdown
-## TASK-001: Setup project structure
-- **Status**: completed
-- **Acceptance Criteria**:
-  - [x] Project structure follows best practices
-  - [x] Dependencies documented
-
-## TASK-002: Implement JWT auth
-- **Status**: in_progress
-- **Acceptance Criteria**:
-  - [x] Token generation works
-  - [ ] Token refresh implemented
-  - [ ] Rate limiting on auth endpoints
-```
-
-### Status Lifecycle
-
-```
-active → in_progress → completed
-                    ↘ abandoned (with reason)
-```
-
-- **active**: Plan created, not yet started
-- **in_progress**: wfc-implement is executing tasks
-- **completed**: All tasks done, tests passing, PR merged
-- **abandoned**: Scope changed, plan no longer relevant (reason recorded)
-
-### Divergence Tracking
-
-When implementation diverges from the plan, wfc-implement records it:
-
-```markdown
-## Divergence Log
-
-### TASK-003: Redis caching layer
-- **Planned**: Use Redis Cluster with 3 nodes
-- **Actual**: Switched to single Redis instance (sufficient for current scale)
-- **Reason**: Over-engineered for <1000 req/s
-- **Impact**: TASK-004 dependency removed (cluster config no longer needed)
-```
-
-### Knowledge Integration
-
-Plans automatically search `docs/solutions/` (via wfc-compound) during generation:
-
-```markdown
-## TASK-005: Connection pool configuration
-- **Known pitfall**: docs/solutions/performance-issues/redis-pool-exhaustion.md
-  - Size pools relative to worker count, not static
-  - Monitor utilization > 80%
-```
-
-## Integration with WFC
-
-### Produces (consumed by wfc-implement, wfc-deepen, wfc-lfg)
-
-- `plan/TASKS.md` → Task orchestration (living document)
-- `plan/PROPERTIES.md` → TDD test requirements
-- `plan/TEST-PLAN.md` → Test strategy
-
-### Consumes
-
-- `docs/solutions/` → Past solutions for pitfall warnings (via wfc-compound)
-- `wfc-architecture` → Architecture analysis
-- `wfc-security` → Threat model properties
-
-## Configuration
-
-```json
-{
-  "plan": {
-    "output_dir": "./plan",
-    "interview_mode": "adaptive",
-    "task_complexity_model": "auto",
-    "generate_diagram": true
-  }
-}
-```
-
-## What to Do
-
-1. **If `$ARGUMENTS` contains `--skip-validation`**, set `skip_validation = true` and remove the flag from arguments
-2. **If `$ARGUMENTS` is provided** (after flag removal), use it as output directory
-3. **If no arguments**, use `./plan` as default output directory
-4. **Run adaptive interview** using `AdaptiveInterviewer`
-5. **Generate all files** using orchestrator (TASKS.md, PROPERTIES.md, TEST-PLAN.md)
-6. **Run Plan Validation Pipeline** (unless `--skip-validation` was set)
-7. **Display results** showing file paths and summary
-8. **Record telemetry** for all operations
-
-## Plan Validation Pipeline
-
-After generating the draft plan (TASKS.md, PROPERTIES.md, TEST-PLAN.md), run a mandatory validation pipeline to ensure plan quality. This pipeline can only be bypassed with the `--skip-validation` flag.
-
-### Pipeline Overview
-
-```
-Draft Plan → SHA-256 Hash → Validate Gate → Revise → Review Gate (loop until 8.5+) → Final Plan
-```
-
-### Step 1: Record Original Hash
-
-Compute a SHA-256 hash of the draft plan content (concatenation of TASKS.md + PROPERTIES.md + TEST-PLAN.md in that order). This is the `original_hash` used for the audit trail.
+#### Step 4a: Record Original Hash
 
 ```python
 import hashlib
@@ -451,184 +113,182 @@ content = tasks_md + properties_md + test_plan_md
 original_hash = hashlib.sha256(content.encode()).hexdigest()
 ```
 
-### Step 2: Validate Gate
+#### Step 4b: Validate Gate
 
-Invoke `/wfc-validate` on the generated draft plan. All plan content **must** be delimited with XML tags per PROP-009 prompt injection defense:
+Spawn validation subagent using Task tool:
 
-```
-/wfc-validate
+```xml
+<Task
+  subagent_type="general-purpose"
+  description="Validate plan quality"
+  prompt="
+Review the following plan content delimited by XML tags:
+
 <plan-content>
-[Full content of TASKS.md, PROPERTIES.md, TEST-PLAN.md concatenated]
+[Full content of TASKS.md, PROPERTIES.md, TEST-PLAN.md]
 </plan-content>
+
+Provide scored recommendations categorized as:
+- Must-Do (blocking issues)
+- Should-Do (quality improvements)
+- Informational (suggestions)
+"
+/>
 ```
 
-This produces a `VALIDATE.md` output with scored recommendations categorized as Must-Do, Should-Do, or informational.
+#### Step 4c: Apply Revisions
 
-### Step 3: Revision Mechanism
+- Apply all Must-Do recommendations
+- Apply Should-Do recommendations if estimated < 5 minutes effort
+- Document deferred items in revision-log.md
 
-After validation produces its analysis, read the VALIDATE.md output and apply revisions:
+#### Step 4d: Review Gate
 
-1. **Must-Do** recommendations: Apply every Must-Do change to the draft TASKS.md and/or PROPERTIES.md. These are non-negotiable improvements identified by the analysis.
-2. **Should-Do** recommendations: Apply if low-effort (can be done in under 5 minutes). Otherwise, note as deferred with a reason.
-3. **Deferred** items: Record in revision log for future consideration.
+Spawn review subagent:
 
-Write a `revision-log.md` in the plan directory documenting what changed and why:
+```xml
+<Task
+  subagent_type="general-purpose"
+  description="Review plan quality"
+  prompt="
+Review the revised plan and provide a weighted consensus score (0-10):
 
-```markdown
-# Revision Log
-
-## Original Plan Hash
-`<original_hash>` (SHA-256)
-
-## Validate Score
-<score>/10
-
-## Revisions Applied
-
-### Must-Do
-
-1. **<change title>** - <description of change>
-   - Source: Validate recommendation #N
-   - File changed: TASKS.md | PROPERTIES.md | TEST-PLAN.md
-
-### Should-Do
-
-1. **<change title>** - <description>
-   - Source: Validate recommendation #N
-   - Status: Applied (low effort) | Deferred (high effort)
-
-### Deferred
-
-1. **<item>** - <reason for deferral>
-   - Source: Validate recommendation #N
-   - Reason: <explanation>
-
-## Review Gate Results
-
-| Round | Score | Action |
-|-------|-------|--------|
-| 1     | X.X   | Applied N findings |
-| 2     | X.X   | Passed threshold |
-
-## Final Plan Hash
-`<final_hash>` (SHA-256)
-```
-
-### Step 4: Review Gate
-
-Invoke `/wfc-review` on the revised plan using architecture and quality personas. Plan content **must** be delimited with XML tags per PROP-009 prompt injection defense:
-
-```
-/wfc-review
 <plan-content>
 [Full content of revised TASKS.md, PROPERTIES.md, TEST-PLAN.md]
 </plan-content>
+
+Score based on: completeness, clarity, dependency correctness, property coverage.
+"
+/>
 ```
 
-**Review Loop**: If the weighted consensus score is below 8.5/10, apply the review findings to the plan and re-invoke `/wfc-review`. Repeat until the score reaches 8.5 or higher. This threshold is the standard -- it is not optional.
+**Loop Logic:** Maximum 3 iterations. If score < 8.5 after 3 attempts, accept highest score and set `validated: partial`.
 
-### Step 5: Audit Trail
+#### Step 4e: Write Audit Trail
 
-After the review gate passes (or validation is skipped), write a `plan-audit.json` file (timestamped) in the plan directory. The filename includes a timestamp for immutability (e.g., `plan-audit_20260215_103000.json`).
-
-**Required schema for plan-audit_YYYYMMDD_HHMMSS.json:**
+Create `plan-audit_YYYYMMDD_HHMMSS.json`:
 
 ```json
 {
   "hash_algorithm": "sha256",
-  "original_hash": "<64-char hex SHA-256 of draft plan>",
+  "original_hash": "<64-char hex>",
   "validate_score": 7.8,
   "revision_count": 2,
   "review_score": 8.7,
-  "final_hash": "<64-char hex SHA-256 of final plan>",
+  "final_hash": "<64-char hex>",
   "timestamp": "2026-02-15T10:30:00Z",
   "validated": true,
-  "skipped": false
+  "skipped": false,
+  "error": null
 }
 ```
 
-Field definitions:
+### 5. Update History
 
-- `hash_algorithm`: Always `"sha256"`
-- `original_hash`: SHA-256 hash of the draft plan before any revisions
-- `validate_score`: Numeric score from the validation analysis
-- `revision_count`: Total number of revision rounds applied (validation revisions + review loop rounds)
-- `review_score`: Final weighted consensus score from wfc-review (numeric, e.g. 8.7)
-- `final_hash`: SHA-256 hash of the plan after all revisions are complete
-- `timestamp`: ISO 8601 timestamp of when validation completed
-- `validated`: `true` if the final review_score >= 8.5, `false` otherwise
-- `skipped`: `true` if `--skip-validation` was used, `false` otherwise
+If using default output directory (plans/), update or create:
 
-### Step 6: History Update
+- `plans/HISTORY.md` - Human-readable record
+- `plans/HISTORY.json` - Machine-readable index
 
-Update HISTORY.md to record whether the plan was validated or skipped. Add a `- **Validated:** yes (score: X.X)` or `- **Validated:** skipped` entry to the plan's history record.
+Add entry with: timestamp, goal, task count, property count, validation status.
 
-### Skip Validation Flag
+### 6. Output Summary
 
-If `--skip-validation` is passed as an argument:
+Display to user:
 
-1. Skip Steps 2-4 entirely (no Validate Gate, no Review Gate, no revision)
-2. Still compute SHA-256 hashes (original_hash = final_hash since no changes were made)
-3. Write `plan-audit_YYYYMMDD_HHMMSS.json` with `"skipped": true` and `"validated": false`
-4. Do not generate `revision-log.md` (no revisions occurred)
-5. Record `- **Validated:** skipped` in HISTORY.md
+```
+Created: plans/plan_<feature>_<timestamp>/
+  - TASKS.md (N tasks)
+  - PROPERTIES.md (N properties)
+  - TEST-PLAN.md (N test cases)
+  - plan-audit_YYYYMMDD_HHMMSS.json
+  - revision-log.md (if applicable)
 
-### Validation Pipeline Summary
+Validation: passed (score: 8.7) | partial (score: 7.2) | skipped | failed
 
-| Step | Action | Output |
-|------|--------|--------|
-| 1 | SHA-256 hash of draft plan | `original_hash` |
-| 2 | `/wfc-validate` with `<plan-content>` XML tags (PROP-009) | VALIDATE.md |
-| 3 | Apply Must-Do + low-effort Should-Do revisions | revision-log.md, updated plan files |
-| 4 | `/wfc-review` with `<plan-content>` XML tags (PROP-009), loop until >= 8.5 | Review consensus |
-| 5 | Write plan-audit_YYYYMMDD_HHMMSS.json with all fields | plan-audit_YYYYMMDD_HHMMSS.json |
-| 6 | Update HISTORY.md with validation status | HISTORY.md entry |
+Next step: Review TASKS.md, then run implementation skill.
+```
+
+## Output Directory Structure
+
+```
+plans/
+├── HISTORY.md
+├── HISTORY.json
+└── plan_<feature>_<timestamp>/
+    ├── TASKS.md
+    ├── PROPERTIES.md
+    ├── TEST-PLAN.md
+    ├── interview-results.json
+    ├── plan-audit_YYYYMMDD_HHMMSS.json
+    └── revision-log.md (if validation ran)
+```
+
+## Knowledge Integration
+
+Before generating TASKS.md, search for known solutions:
+
+```
+If docs/solutions/ directory exists:
+  Use Grep to search for relevant patterns
+  Include "Known pitfall" warnings in task descriptions
+```
+
+## Living Plan Documents
+
+TASKS.md includes YAML frontmatter for status tracking:
+
+```yaml
+---
+title: Feature Name
+status: active | in_progress | completed | abandoned
+created: 2026-02-18T14:30:00Z
+updated: 2026-02-18T16:45:00Z
+tasks_total: 5
+tasks_completed: 0
+---
+```
+
+Status lifecycle:
+
+- active → in_progress → completed
+                    ↘ abandoned (with reason)
+
+## Error Handling
+
+| Condition | Action |
+|-----------|--------|
+| Validation skills unavailable | Set `validated: false, error: "validation_skills_unavailable"` |
+| Interview receives empty core answers 3x | Prompt: "Generate generic plan" or "Abort" |
+| Path contains ".." or is absolute | Reject with error message, use default path |
+| Review score < 8.5 after 3 iterations | Accept highest score, set `validated: partial` |
+| docs/solutions/ not found | Proceed without known pitfall warnings |
 
 ## Example Flow
 
 ```
-User runs: /wfc-plan
+User: /wfc-plan
 
-[ADAPTIVE INTERVIEW]
-Q: What are you trying to build?
+[INTERVIEW]
+Q: What are you building?
 A: REST API for user management
-
-Q: What are the core features?
+Q: Core features?
 A: User CRUD, authentication, role-based access
-
 Q: Security requirements?
 A: JWT tokens, role-based authorization
 
 [GENERATION]
 Created TASKS.md (5 tasks)
-Created PROPERTIES.md (3 properties: 1 SAFETY, 2 INVARIANT)
+Created PROPERTIES.md (3 properties)
 Created TEST-PLAN.md (12 test cases)
 
-[PLAN VALIDATION PIPELINE]
-SHA-256 hash recorded: a1b2c3...
-Validate Gate: 7.8/10
-  - Applied 2 Must-Do revisions
-  - Applied 1 Should-Do revision (low effort)
-  - Deferred 1 suggestion
-Review Gate round 1: 8.1/10 - applying 2 findings
-Review Gate round 2: 8.7/10 - PASSED
-Wrote revision-log.md
-Wrote plan-audit_YYYYMMDD_HHMMSS.json
+[VALIDATION]
+Hash: a1b2c3...
+Validate: 7.8/10 - applied 2 Must-Do revisions
+Review round 1: 8.1/10
+Review round 2: 8.7/10 - PASSED
 
 [OUTPUT]
-plans/plan_rest_api_20260215_103000/
-  - TASKS.md
-  - PROPERTIES.md
-  - TEST-PLAN.md
-  - interview-results.json
-  - revision-log.md
-  - plan-audit_20260215_103000.json
-
-Next: Run `/wfc-implement plans/plan_rest_api_20260215_103000/TASKS.md`
+plans/plan_user_management_20260215_103000/
+Next: Review TASKS.md, then run implementation skill
 ```
-
-## Philosophy
-
-**ELEGANT**: Simple interview questions, clear task breakdown
-**MULTI-TIER**: Clean separation of presentation, logic, and data
-**PARALLEL**: Can generate all three files concurrently (future optimization)

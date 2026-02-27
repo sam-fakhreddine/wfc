@@ -1,45 +1,45 @@
 ---
 name: wfc-prompt-fixer
-description: >
-  Diagnoses and rewrites existing Claude prompts (system prompts, user-turn
-  templates, or WFC Agent Skill descriptions) producing poor or broken results.
+description: >-
+  Analyzes and rewrites existing Claude-specific prompts (system prompts,
+  user-turn templates, or WFC Agent Skills) to fix structural issues and
+  antipatterns. Pipeline: Analyzer grades A-F against 14 dimensions and
+  17 antipatterns → Fixer rewrites C-F prompts (preserving intent, output
+  format, and constraints) → Reporter validates and summarizes. A/B prompts
+  skip Fixer and receive diagnostic report only.
 
-  Pipeline: Analyzer grades A-F against 15 scored dimensions and 17 named
-  antipatterns → Fixer rewrites C-F prompts preserving task statement, output
-  format, and constraints → Reporter validates and summarizes. A/B prompts
-  skip the Fixer. Batch mode (--batch) processes in groups of 4.
+  Modes: Single file, --batch (up to 4 parallel, auto-scales for token budget),
+  --auto-pr (requires gh CLI + write access), --wfc (explicit WFC mode).
 
-  WFC mode: auto-enabled when filename is SKILL.md or PROMPT.md, path matches
-  wfc/skills/ or wfc/references/reviewers/, AND frontmatter has a wfc field.
-
-  Not for: writing new prompts from scratch; prompts for non-Claude models
-  (GPT-4, Gemini, Llama); code review of code that generates prompts;
-  explaining a prompt without fixing it; comparing prompts.
+  Trigger: /wfc-prompt-fixer, "fix this prompt", "rewrite this prompt",
+  "debug prompt errors", "grade this prompt", "analyze prompt quality",
+  "optimize for Claude 4" (applies only to Claude prompts).
 license: MIT
 ---
 
 # wfc-prompt-fixer
 
-Fix Claude prompts using evidence-based diagnostics and structured rewrites.
+Analyzes and rewrites Claude prompts using evidence-based diagnostics and structured rewrites.
 
 ## What It Does
 
-Analyzes Claude prompts against a rubric of known failure modes and produces fixed versions that:
+Analyzes Claude prompts against a rubric of known failure modes and produces:
 
-- Preserve original intent
-- Resolve antipatterns (decorative roles, vague specs, contradictory instructions, etc.)
-- Optimize for Claude 4.x literal instruction following
-- Maintain token efficiency
+- **Grade A-F** with dimension scores (0-3 scale)
+- **Fixed version** (for C-F prompts) that preserves original intent
+- **Changelog** of specific changes made
+- **Unresolved items** requiring human input
 
 ## When to Use
 
 Use `/wfc-prompt-fixer` when:
 
-- A prompt produces inconsistent or unexpected results
-- You want to optimize prompt structure before production
-- Migrating prompts from Claude 3.x to Claude 4.x
-- Batch-fixing all WFC skill prompts for consistency
-- New prompt needs validation before deployment
+- You have an existing Claude prompt producing errors or inconsistent results
+- You want a quality grade and diagnostic report for a prompt
+- You need to optimize prompt structure for Claude 4.x
+- You want to batch-fix multiple WFC skill prompts
+
+**Do not use for:** New prompts from scratch, cross-model conversion, general text editing, or prompt theory explanations without any diagnostic/fix request.
 
 ## Workflow
 
@@ -49,7 +49,7 @@ Use `/wfc-prompt-fixer` when:
 /wfc-prompt-fixer path/to/prompt.md
 ```
 
-**Batch mode (4 parallel):**
+**Batch mode (auto-scales for token budget):**
 
 ```bash
 /wfc-prompt-fixer --batch wfc/skills/*/SKILL.md
@@ -61,131 +61,146 @@ Use `/wfc-prompt-fixer` when:
 /wfc-prompt-fixer --wfc wfc/skills/wfc-build/SKILL.md
 ```
 
+**Fix and create PR:**
+
+```bash
+/wfc-prompt-fixer --auto-pr wfc/skills/wfc-security/SKILL.md
+```
+
 ## Architecture
 
 **3-Agent Pipeline:**
 
-1. **Analyzer** (Router + Diagnostician combined)
-   - Classifies prompt type, complexity, deployment context
-   - Scores against rubric (17 antipatterns, 4 categories, 14 dimensions)
-   - Assigns grade A-F
-   - Auto-detects WFC structure (YAML frontmatter, SKILL.md filename)
+### 1. Analyzer
 
-2. **Fixer** (Rewriter + Validator combined with retry loop)
-   - Rewrites prompt to fix diagnosed issues
-   - Self-validates adversarially (intent preservation, regressions, scope creep)
-   - Retries on validation failure (max 2 attempts)
+Reads prompt from `workspace/input/prompt.md`. Performs:
 
-3. **Reporter**
-   - Generates human-readable summary
-   - Includes: grade before/after, critical changes, unresolved items, fixed prompt
-   - Writes to `.development/prompt-fixer/<run-id>/report.md`
+- File type detection (WFC vs generic prompt)
+- Husk check: if semantic content < 10% of file, exit with code `E001: SCAFFOLD_DETECTED`
+- Scores against rubric (14 dimensions, 17 antipatterns)
+- Assigns grade A-F
 
-**Short-circuit:** Grade A prompts skip Fixer, go straight to Reporter with "no changes needed"
+**Grading (thresholds are floors, 1.99 = C):**
 
-**Batch mode:** Processes up to 4 prompts in parallel (each runs full 3-agent pipeline)
+- **A**: avg ≥ 2.5, zero Critical/Major issues → skip Fixer
+- **B**: avg ≥ 2.0, zero Critical issues → skip Fixer
+- **C**: avg ≥ 1.5, 1-2 Major issues → route to Fixer
+- **D**: avg < 1.5 OR any Critical issue → route to Fixer
+- **F**: Unparseable or fundamentally broken → route to Fixer
 
-### Agent Spawning Pattern (Task Tool)
+Writes: `workspace/01-analyzer/analysis.json`
 
-The orchestrator uses the "prompt generator" pattern for agent spawning:
+### 2. Fixer
 
-1. **Orchestrator prepares agent prompts** from templates in `agents/` directory
-2. **Claude spawns agents via Task tool** with prepared prompts
-3. **Agents write results to workspace** (analysis.json, fixed_prompt.md, report.md)
-4. **Orchestrator reads and validates results** before continuing
+Reads `analysis.json`. Performs:
 
-When the orchestrator prints `[INSTRUCTION: Use Task tool...]`, you should:
+- Rewrites prompt to fix diagnosed issues
+- **Constraint:** Preserve task statement intent (semantic, not literal), output format, and explicit constraints
+- Self-validates: confirms grade improved to B+ and no intent regression
+- Max 2 retry attempts on validation failure
+
+Writes: `workspace/02-fixer/fixed_prompt.md`, `changelog.md`, `unresolved.md`
+
+### 3. Reporter
+
+Reads all workspace outputs. Generates:
+
+- Before/after grade comparison
+- Critical changes summary
+- Unresolved items list
+- Fixed prompt content
+
+If `--auto-pr`: Attempts branch creation via `gh` CLI. Captures exit code. Reports success OR specific failure with error log.
+
+Writes: `workspace/03-reporter/report.md`
+
+**Batch Mode:** Orchestrator performs pre-flight check: `if sum(prompt_sizes) > 120k`, reduce batch size from 4→2→1. Fails with `E002: BATCH_TOKEN_OVERFLOW` if single prompt > 50k.
+
+### Agent Spawning
+
+Orchestrator constructs sub-agent prompts using the specifications in this document. No external template files required.
 
 ```python
-# Use Task tool to spawn the agent
+# Orchestrator spawns agents via Task tool
 Task(
     subagent_type="general-purpose",
-    prompt=<agent_prompt>,
-    description="Spawn <agent_name> agent for prompt analysis"
+    prompt=<constructed_from_this_skill_definition>,
+    description="Spawn <analyzer|fixer|reporter> agent"
 )
 ```
-
-The agent will:
-
-- Read inputs from `workspace/input/` and `workspace/../references/`
-- Write outputs to `workspace/<phase>/` directory
-- Follow instructions from the prepared agent prompt template
 
 ## Diagnostic Rubric
 
 **4 Categories, 14 Dimensions** (scored 0-3 each):
 
-1. **STRUCTURE** (high weight)
-   - XML segmentation
-   - Instruction hierarchy
-   - Information ordering
+### 1. STRUCTURE (weight: 2.0x)
 
-2. **SPECIFICITY** (high weight)
-   - Task definition
-   - Output format
-   - Constraint completeness
-   - Success criteria
+- XML segmentation (0 = prose wall, 3 = clear XML sections)
+- Instruction hierarchy (0 = flat, 3 = clear priority ordering)
+- Information ordering (0 = random, 3 = logical flow)
 
-3. **BEHAVIORAL CONTROL** (medium weight)
-   - Role utility
-   - Tone calibration
-   - Guardrails
-   - Verification loops
+### 2. SPECIFICITY (weight: 1.5x)
 
-4. **CLAUDE 4.X OPTIMIZATION** (high weight)
-   - Thinking guidance
-   - Tool integration
-   - Literal compliance
-   - Anti-sycophancy
+- Task definition (0 = vague, 3 = explicit actionable statement)
+- Output format (0 = unspecified, 3 = precise schema)
+- Constraint completeness (0 = missing, 3 = explicit do/don't list)
+- Success criteria (0 = undefined, 3 = measurable conditions)
 
-**Grading Thresholds:**
+### 3. BEHAVIORAL CONTROL (weight: 1.0x)
 
-- **A**: No critical/major issues, avg ≥ 2.5 (skip rewrite)
-- **B**: No critical, avg ≥ 2.0
-- **C**: 1-2 major issues, avg ≥ 1.5
-- **D**: Critical issues, avg < 1.5
-- **F**: Fundamentally broken
+- Role utility (0 = decorative, 3 = functional role with context)
+- Tone calibration (0 = undefined, 3 = explicit tone guide)
+- Guardrails (0 = none, 3 = explicit boundaries)
+- Verification loops (0 = none, 3 = self-check required)
+
+### 4. CLAUDE 4.X OPTIMIZATION (weight: 1.5x)
+
+- Thinking guidance (0 = none, 3 = explicit thinking instructions)
+- Tool integration (0 = confused, 3 = clear tool usage patterns)
+- Literal compliance (0 = ambiguous, 3 = explicit literal interpretation)
+- Anti-sycophancy (0 = invites flattery, 3 = explicit neutrality)
+
+**Weighted average:** `sum(score × weight) / sum(weights)`
 
 ## 17 Antipatterns
 
-**General (14):**
+### Critical (blocks deployment, auto-fails grade)
 
-- AP-01: Decorative role ("helpful assistant")
-- AP-02: Vague output spec ("give me a good summary")
-- AP-03: Contradictory instructions ("be concise" + "be thorough")
-- AP-04: Missing uncertainty handling
-- AP-05: Prose wall (instructions buried in paragraphs)
-- AP-06: Hallucination prayer ("do not hallucinate")
-- AP-07: Stateful assumption ("remember what I said")
-- AP-08: Implicit inference reliance (underspecified, expects model to guess)
-- AP-09: Example pollution (bad patterns in examples)
-- AP-10: Sycophancy invitation (no anti-flattery constraint)
-- AP-11: Missing negative constraints (no "do NOT" instructions)
-- AP-12: Unreferenced context (unused context block)
-- AP-13: Token bloat (redundant instructions)
-- AP-14: Missing verification step (no self-check before output)
+- **AP-03**: Contradictory instructions ("be concise" + "be thorough")
+- **AP-04**: Missing uncertainty handling (no "if unsure, say so")
+- **AP-17**: Invalid Agent Skills frontmatter (missing required fields)
 
-**WFC-Specific (3):**
+### Major (degrades quality, routes to Fixer)
 
-- AP-15: Full file content sent (violates token management)
-- AP-16: Missing TEAMCHARTER values alignment
-- AP-17: Invalid Agent Skills frontmatter
+- **AP-01**: Decorative role ("helpful assistant" without functional context)
+- **AP-02**: Vague output spec ("give me a good summary")
+- **AP-05**: Prose wall (instructions buried in paragraphs, no structure)
+- **AP-06**: Hallucination prayer ("do not hallucinate" without specific constraints)
+- **AP-07**: Stateful assumption ("remember what I said" without explicit context passing)
+- **AP-08**: Implicit inference reliance (underspecified, expects model to guess)
+- **AP-09**: Example pollution (examples demonstrate bad patterns)
+- **AP-10**: Sycophancy invitation (no anti-flattery/neutral tone constraint)
+- **AP-11**: Missing negative constraints (only positive instructions)
+- **AP-12**: Unreferenced context (provided but never used in instructions)
+- **AP-13**: Token bloat (redundant instructions, could be compressed)
+- **AP-14**: Missing verification step (no self-check before output)
+
+### WFC-Specific (only checked in WFC mode)
+
+- **AP-15**: Full file content sent (violates token management, should reference files)
+- **AP-16**: Schema misalignment (output format doesn't match WFC conventions)
 
 ## WFC Detection
 
-Auto-enabled when:
+Auto-enabled when ALL conditions met:
 
-- File named `SKILL.md` or `PROMPT.md`
-- YAML frontmatter with `name:` field
-- Path matches `wfc/skills/*/` or `wfc/references/reviewers/*/`
+1. Filename matches `SKILL.md` or `PROMPT.md`
+2. Path matches `wfc/skills/*/` or `wfc/references/reviewers/*/`
+3. YAML frontmatter present with BOTH `name:` AND `license:` fields
 
-Adds WFC-specific checks:
+If frontmatter exists but lacks required fields, falls back to standard mode with warning: `WFC_MODE_INCONCLUSIVE: Missing required frontmatter fields.`
 
-- Agent Skills spec compliance (frontmatter format)
-- Token management patterns (file reference architecture)
-- TEAMCHARTER alignment (values mentioned in prompts)
-
-Disable with `--no-wfc` flag if false positive.
+Disable with `--no-wfc` flag.
 
 ## Outputs
 
@@ -196,52 +211,46 @@ Disable with `--no-wfc` flag if false positive.
 ├── input/
 │   └── prompt.md
 ├── 01-analyzer/
-│   └── analysis.json          # {grade, scores, issues, wfc_mode}
+│   └── analysis.json          # {grade, scores, issues, wfc_mode, husk_detected}
 ├── 02-fixer/
 │   ├── fixed_prompt.md        # Rewritten prompt
 │   ├── changelog.md           # Numbered list of changes
 │   └── unresolved.md          # Items needing human input
 ├── 03-reporter/
 │   └── report.md              # Final deliverable
-└── metadata.json              # {timestamp, mode, retries}
+└── metadata.json              # {timestamp, mode, retries, token_usage}
 ```
 
-**Branch (if --auto-pr):**
+**Run ID format:** `{input_filename}-{YYMMDDHHMM}` (e.g., `wfc-build-2410271430`)
+
+**Branch format (if --auto-pr succeeds):**
 
 ```
 Single: claude/fix-prompt-{skill-name}
-Batch:  claude/fix-prompts-batch-{timestamp}
-```
-
-## Integration
-
-**With wfc-doctor:**
-
-```bash
-/wfc-doctor  # Runs wfc-prompt-fixer --batch --wfc on all skills
-```
-
-**With wfc-newskill:**
-
-```bash
-/wfc-newskill  # Validates generated prompt via wfc-prompt-fixer
-```
-
-**With make validate:**
-
-```bash
-make validate  # Can include prompt quality checks (future)
+Batch:  claude/fix-prompts-batch-{YYMMDDHHMM}
 ```
 
 ## Token Budget
 
-Per-prompt:
+**Per-prompt limits:**
 
-- Analyzer: ~5k + prompt size
-- Fixer: ~3k + prompt size
-- Reporter: ~2.5k
+- Analyzer: ~5k overhead + prompt size
+- Fixer: ~3k overhead + prompt size
+- Reporter: ~2.5k overhead
 
-Batch (4 parallel): ~40k + 4×prompt_size (well within 200k window)
+**Batch limits:**
+
+- Pre-flight check: rejects if `sum(prompt_sizes) > 120k`
+- Auto-scales: 4 → 2 → 1 parallel based on total size
+- Single prompt limit: 50k tokens (hard reject)
+
+## Error Codes
+
+- `E001: SCAFFOLD_DETECTED` — Input contains < 10% actionable content
+- `E002: BATCH_TOKEN_OVERFLOW` — Batch exceeds 120k combined or single prompt > 50k
+- `E003: CIRCULAR_DEPENDENCY` — Input path resolves to wfc-prompt-fixer's own SKILL.md
+- `E004: GIT_PUSH_FAILED` — `--auto-pr` failed (includes gh error message in report)
+- `E005: VALIDATION_EXHAUSTED` — Fixer failed 2 retry attempts without passing validation
 
 ## Examples
 
@@ -267,4 +276,10 @@ Batch (4 parallel): ~40k + 4×prompt_size (well within 200k window)
 
 ```bash
 /wfc-prompt-fixer --no-wfc ~/Downloads/customer-support-prompt.md
+```
+
+**Grade only (no rewrite):**
+
+```bash
+/wfc-prompt-fixer --grade-only path/to/prompt.md
 ```

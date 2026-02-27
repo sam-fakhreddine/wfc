@@ -1,311 +1,222 @@
 ---
 name: wfc-review
-description: >
-  Multi-expert consensus code review for executable source code. Runs five
-  specialist reviewers (Security, Correctness, Performance, Maintainability,
-  Reliability) in parallel. Produces a Consensus Score (CS) with
-  deduplicated, prioritized findings.
+description: >-
+  Orchestrates parallel code review across five analytical dimensions (Security,
+  Correctness, Performance, Maintainability, Reliability) for application source
+  code. Produces a heuristic Consensus Score and a prioritized, deduplicated
+  finding report suitable for merge/deploy decisions.
 
-  ROUTE HERE when ALL of: (1) user has provided executable source code in a
-  supported language (.py, .js, .ts, .go, .java, .rb, .php, .rs, .c, .cpp,
-  .sql) as a paste, file path, or PR diff; (2) user requests review, quality
-  assessment, or merge/deploy readiness evaluation; (3) request is not
-  style-only or explanation-only.
+  TRIGGERS: "review this code", "analyze this PR for quality", "check for bugs",
+  "is this safe to merge", "is this safe to deploy", "/wfc-review".
 
-  TRIGGERS: "review this code", "analyze this PR", "is this implementation
-  correct", "check for bugs or vulnerabilities", "safe to merge", /wfc-review.
+  REQUIRES: Application source code in supported languages (.py, .js, .ts, .go,
+  .java, .rb, .php, .rs, .c, .cpp, .sql).
 
-  Not for: non-code artifacts (design docs, prose specs, config-only YAML);
-  CVE lookups, dependency audits, Dockerfile scanning; linting or style-only;
-  code explanation; debugging a runtime error; IaC-only reviews.
+  NOT FOR: runtime error debugging, Infrastructure-as-Code (Terraform,
+  Kubernetes, Dockerfiles, CloudFormation), dependency/CVE auditing,
+  style-only linting, code walkthroughs, or config files without executable
+  logic (YAML, JSON, TOML, ci.yml, tsconfig.json).
 license: MIT
 ---
 
-# WFC:CONSENSUS-REVIEW - Five-Agent Consensus Code Review
+# WFC:CONSENSUS-REVIEW - Multi-Agent Code Review
 
-⚠️ **EXECUTION CONTEXT: ORCHESTRATION MODE**
+## Role & Constraints
 
-You are running in **orchestration mode** with restricted tool access.
+You are a **Review Orchestrator**. You coordinate analysis but do not modify code.
 
-**Available tools:**
+**Available Tools**:
 
-- ✅ Read, Grep, Glob (inspect code to review)
-- ✅ Task (REQUIRED for spawning 5 reviewer subagents)
-- ✅ Write (ONLY for review reports/findings output)
+- `Read`, `Grep`, `Glob` — Inspect code to review.
+- `Task` — Spawn reviewer subagents (REQUIRED).
+- `Write` — Output the final review report.
 
-**NOT available for code changes:**
+**Prohibited Actions**:
 
-- ❌ Edit code files (reviewers analyze, they don't fix)
-- ❌ Implement fixes directly (create findings for others to fix)
-
-**Your role:** Coordinate 5 specialist reviewers (Security, Correctness, Performance, Maintainability, Reliability), aggregate findings, calculate Consensus Score.
+- Editing, refactoring, or fixing code.
+- Direct execution of the code being reviewed.
 
 ---
 
-## Quick Start: Spawn Reviewer Subagents
+## Execution Workflow
 
-Spawn all 5 reviewers in parallel:
+### 1. Input Resolution
 
-```xml
-<Task
-  subagent_type="general-purpose"
-  description="Security review"
-  prompt="[Security reviewer prompt from wfc/references/reviewers/security/PROMPT.md]"
-/>
+Determine the review target from the user request:
 
-<Task
-  subagent_type="general-purpose"
-  description="Correctness review"
-  prompt="[Correctness reviewer prompt]"
-/>
+| Input Type | Resolution |
+|------------|------------|
+| File path(s) | Read specified files directly. |
+| Directory | Glob for supported extensions within the directory. |
+| `TASK-ID` | Locate task file at `./wfc/tasks/TASK-ID.md` and extract linked files. |
 
-[... spawn all 5 reviewers ...]
-```
+If input is a git diff (identified by `+++`/`---` markers), extract changed file paths and line ranges for Tier determination.
 
-Then aggregate findings and calculate Consensus Score.
+### 2. Load Configuration
 
----
+Check for project configuration at `./wfc-review.local.md`. If present, parse YAML frontmatter for:
 
-Five fixed reviewers analyze code and a Consensus Score determines the decision.
+- `review_agents`: List of enabled reviewers (default: all 5).
+- `additional_agents`: Specialist agents to activate (see Signal Detection).
+- `tier_overrides`: Force specific tier (e.g., `always_deep: true`).
 
-## What It Does
+If file is absent, use defaults.
 
-1. **Security Reviewer** - Injection, auth/authz, OWASP Top 10
-2. **Correctness Reviewer** - Logic bugs, edge cases, type safety
-3. **Performance Reviewer** - Algorithmic efficiency, N+1 queries, memory
-4. **Maintainability Reviewer** - Readability, naming, SOLID/DRY, complexity
-5. **Reliability Reviewer** - Error handling, fault tolerance, graceful degradation
-6. **Consensus Score (CS)** - Weighted formula with Minority Protection Rule
+### 3. Determine Review Tier
 
-## Usage
+| Tier | Condition | Reviewers |
+|------|-----------|-----------|
+| Lightweight | <50 lines changed AND no risk signals | Correctness, Maintainability |
+| Standard | 50-500 lines OR default behavior | All 5 base reviewers |
+| Deep | >500 lines OR risk signals detected | All 5 base + Specialist agents |
 
-```bash
-# Review specific task
-/wfc-consensus-review TASK-001
+**Note**: Risk signals (see below) always force a minimum of Standard tier.
 
-# Review files directly
-/wfc-consensus-review path/to/code
+### 4. Spawn Reviewers (Parallel)
 
-# With properties
-/wfc-consensus-review TASK-001 --properties PROP-001,PROP-002
-```
+For each active reviewer, spawn a `Task` subagent with the following prompt structure. **You must construct the full prompt**; external prompt files are not available.
 
-## Two-Phase Workflow
-
-### Phase 1: Prepare Review
+**Prompt Template for Reviewer N**:
 
 ```
-orchestrator.prepare_review(request) -> 5 task specs
+You are a [Reviewer Name] Reviewer. Analyze the following code changes.
+
+**Files to Review**:
+[List file paths and relevant code snippets]
+
+**Your Focus Areas**:
+[Security: injection, auth, OWASP | Correctness: logic, edge cases, types | etc.]
+
+**Output Format**:
+Return a JSON list of findings. Each finding must include:
+- "file": relative path
+- "line": integer line number
+- "category": one of [security, correctness, performance, maintainability, reliability]
+- "severity": 1-10 (1=trivial, 10=critical/exploit)
+- "confidence": 1-10 (1=speculative, 10=certain)
+- "description": concise explanation
+- "remediation": suggested fix
+
+If no issues found, return: []
 ```
 
-Builds prompts for each reviewer with file list, diff, properties, and knowledge context. Irrelevant reviewers (based on file extensions) are marked for skipping.
+### 5. Aggregate & Deduplicate
 
-### Phase 2: Finalize Review
+1. Collect all JSON findings from subagents.
+2. **Deduplicate**: Group findings with same `file` + `category` and line numbers within ±3 lines.
+   - Merged finding takes the highest `severity`.
+   - Increment `k` (agreement count) for each duplicate.
+3. **Calculate Scores**:
+   - For each finding: `R_i = (severity * confidence) / 10`
+   - `R_bar` = mean of all R_i values
+   - `R_max` = maximum R_i
+   - `k` = sum of reviewer agreements across findings
+   - `n` = number of reviewers spawned (2, 5, or more)
 
-```
-orchestrator.finalize_review(request, responses, output_dir) -> ReviewResult
-```
+### 6. Consensus Score Calculation
 
-1. Parse subagent responses into findings
-2. Deduplicate findings across reviewers (SHA-256 fingerprinting with +/-3 line tolerance)
-3. Calculate Consensus Score
-4. Generate markdown report
-
-## Consensus Score (CS) Formula
+**Base Formula**:
 
 ```
 CS = (0.5 * R_bar) + (0.3 * R_bar * (k/n)) + (0.2 * R_max)
 ```
 
-Where:
-
-- **R_i** = (severity * confidence) / 10 for each deduplicated finding
-- **R_bar** = mean of all R_i values
-- **k** = total reviewer agreements (sum of per-finding reviewer counts)
-- **n** = 5 (total reviewers)
-- **R_max** = max(R_i) across all findings
-
-## Decision Tiers
-
-| Tier | CS Range | Action |
-|------|----------|--------|
-| Informational | CS < 4.0 | Log only, review passes |
-| Moderate | 4.0 <= CS < 7.0 | Inline comment, review passes |
-| Important | 7.0 <= CS < 9.0 | Block merge, review fails |
-| Critical | CS >= 9.0 | Block + escalate, review fails |
-
-## Minority Protection Rule (MPR)
-
-Prevents a single critical finding from being diluted by many clean reviews:
+**Minorority Protection Adjustment**:
+If ANY finding has `severity >= 9` AND `confidence >= 8`:
 
 ```
-IF R_max >= 8.5 AND k >= 1 AND finding is from security/reliability:
-    CS_final = max(CS, 0.7 * R_max + 2.0)
+CS = max(CS, 8.5)  # Floor at Critical threshold
 ```
 
-## Finding Deduplication
+### 7. Determine Decision
 
-Findings from different reviewers pointing to the same issue are merged:
+| Score Range | Decision | Action |
+|-------------|----------|--------|
+| CS < 4.0 | PASSED | Informational only |
+| 4.0 <= CS < 7.0 | PASSED | Review findings before merge |
+| 7.0 <= CS < 8.5 | BLOCKED | Fixes required |
+| CS >= 8.5 | BLOCKED | Critical issue — escalate |
 
-- **Fingerprint**: SHA-256 of `file:normalized_line:category` (line tolerance +/-3)
-- **Merge**: highest severity wins, all descriptions and remediations preserved
-- **k tracking**: number of reviewers who flagged the same issue (increases CS)
+### 8. Generate Report
 
-## Output
+Write the final report to:
 
-### Review Report (REVIEW-TASK-XXX.md)
+- Default: `./wfc/reviews/REVIEW-{input-identifier}.md`
+- Or path specified in request.
+
+**Report Structure**:
 
 ```markdown
-# Review Report: TASK-001
+# Review Report: [Target]
 
-**Status**: PASSED
-**Consensus Score**: CS=3.50 (informational)
-**Reviewers**: 5
-**Findings**: 2
-
----
-
-## Reviewer Summaries
-
-### PASS: Security Reviewer
-**Score**: 10.0/10
-**Summary**: No security issues found.
-**Findings**: 0
-
-### PASS: Correctness Reviewer
-**Score**: 8.5/10
-**Summary**: Minor edge case.
-**Findings**: 1
-
-...
+**Status**: [PASSED | BLOCKED]
+**Consensus Score**: CS=[X.XX] ([tier])
+**Reviewers Spawned**: [N]
+**Total Findings**: [N]
 
 ---
 
 ## Findings
 
-### [MODERATE] src/auth.py:45
-**Category**: validation
-**Severity**: 5.0
-**Confidence**: 7.0
-**Reviewers**: correctness, reliability (k=2)
-**R_i**: 3.50
+### [SEVERITY_LABEL] file/path:line
+**Category**: [category]
+**R_i**: [X.XX] | **Reviewers**: [names] (k=[N])
 
-**Description**: Missing input validation on user_id
+**Description**: [text]
 
-**Remediation**:
-- Add type check and bounds validation
+**Remediation**: [text]
 
 ---
 
 ## Summary
-
-CS=3.50 (informational): 2 finding(s), review passed.
+[2-3 sentence summary of the review outcome]
 ```
 
-## Integration with WFC
-
-### Called By
-
-- `wfc-implement` - After agent completes TDD workflow
-
-### Consumes
-
-- Task files (from git worktree)
-- PROPERTIES.md (formal properties to verify)
-- Git diff content
-
-### Produces
-
-- Review report (REVIEW-{task_id}.md)
-- Consensus Score decision (pass/fail with tier)
-- Deduplicated findings with reviewer agreement counts
-
-## Conditional Reviewer Activation
-
-Reviewers are activated based on change characteristics, not just file extensions. This saves tokens on small changes and adds depth on risky ones.
-
-### Tier 1: Lightweight Review (S complexity, <50 lines changed)
-
-Only 2 reviewers run:
-
-- **Correctness** (always)
-- **Maintainability** (always)
-
-**Triggers:** Single-file changes, typo fixes, small refactors, config changes.
-
-### Tier 2: Standard Review (M complexity, 50-500 lines changed)
-
-All 5 base reviewers run with relevance gating.
-
-### Tier 3: Deep Review (L/XL complexity, >500 lines or risk signals)
-
-All 5 base reviewers + conditional specialist agents:
-
-| Signal Detected | Additional Agent | What It Checks |
-|----------------|-----------------|----------------|
-| Database migration files | **Schema Drift Detector** | Unrelated schema changes, migration safety |
-| Database migration files | **Data Migration Expert** | ID mappings, swapped values, rollback safety |
-| Auth/security changes | **Auth Deep Dive** | Token handling, session management, RBAC gaps |
-| API endpoint changes | **API Contract Checker** | Breaking changes, versioning, backwards compat |
-| Infrastructure/deploy | **Deploy Verification** | Go/No-Go checklist, rollback plan |
-
-### Relevance Gate (File Extensions)
-
-Each reviewer has domain-specific file extensions. Only relevant reviewers execute:
-
-| Reviewer | Relevant Extensions |
-|----------|-------------------|
-| Security | .py, .js, .ts, .go, .java, .rb, .php, .rs |
-| Correctness | .py, .js, .ts, .go, .java, .rb, .rs, .c, .cpp |
-| Performance | .py, .js, .ts, .go, .java, .rs, .sql |
-| Maintainability | * (always relevant) |
-| Reliability | .py, .js, .ts, .go, .java, .rs |
-
-### Signal Detection Rules
-
-```
-IF files include **/migrations/** OR **/migrate/** OR schema changes:
-    → Activate Schema Drift Detector + Data Migration Expert
-
-IF files include **/auth/** OR **/security/** OR JWT/token/session patterns:
-    → Activate Auth Deep Dive
-
-IF files include **/api/** OR **/routes/** OR **/endpoints/**:
-    → Activate API Contract Checker
-
-IF files include Dockerfile, docker-compose, k8s, terraform, CI configs:
-    → Activate Deploy Verification
-```
-
-### Knowledge Search (Always-On)
-
-Regardless of tier, the review always searches `docs/solutions/` for related past issues via wfc-compound's knowledge base. This surfaces known pitfalls before they become findings.
-
-### Per-Project Configuration
-
-Projects can customize which reviewers run via `wfc-review.local.md`:
-
-```yaml
----
-review_agents:
-  - security
-  - correctness
-  - performance
-  - maintainability
-  - reliability
-additional_agents:
-  - schema-drift-detector
-tier_overrides:
-  always_deep: true  # Force Tier 3 for all reviews
 ---
 
-# Optional: Review Context
-Focus on Rails conventions and N+1 query detection.
-```
+## Signal Detection (Risk Signals)
+
+Scan file paths and content for these patterns. If detected, force **Standard** or **Deep** tier and activate specialist agents:
+
+| Pattern | Specialist Agent | Focus |
+|---------|-----------------|-------|
+| `**/migrations/**`, `schema.*` | Schema Drift | Migration safety, reversible changes |
+| `**/auth/**`, `**/security/**`, JWT/token strings | Auth Deep Dive | Session handling, RBAC, token storage |
+| `**/api/**`, `**/routes/**` | API Contract | Breaking changes, versioning |
+| `Dockerfile`, `docker-compose`, `.gitlab-ci.yml`, `.github/workflows/` | Deploy Check | Build/deploy safety |
+
+**Spawn specialists** using the same Task prompt template, adjusting focus areas.
+
+---
+
+## Rubric for Severity & Confidence
+
+To ensure consistent scoring, use these guidelines:
+
+**Severity**:
+
+- 1-3: Minor (style, naming, minor readability)
+- 4-6: Moderate (maintainability issue, minor logic flaw)
+- 7-8: High (potential bug, performance degradation, weak security practice)
+- 9-10: Critical (exploitable vulnerability, data loss, crash)
+
+**Confidence**:
+
+- 1-3: Speculative (may be false positive)
+- 4-6: Likely (pattern matches known issues)
+- 7-8: Probable (clear evidence, context confirms)
+- 9-10: Certain (definitive proof, no ambiguity)
+
+---
+
+## Integration Notes
+
+- **Called By**: `wfc-implement` post-TDD workflow.
+- **Consumes**: Source files, optional git diff, optional `PROPERTIES.md` (boolean verification criteria).
+- **Produces**: Markdown report in `./wfc/reviews/`.
 
 ## Philosophy
 
-**ELEGANT**: Simple two-phase workflow, deterministic reviewer set
-**MULTI-TIER**: Engine (logic) separated from CLI (presentation)
-**PARALLEL**: 5 reviewers can run concurrently via Task tool
-**TOKEN-AWARE**: Relevance gate skips irrelevant reviewers
+**PARALLEL**: Reviewers run concurrently.
+**HEURISTIC**: Scores guide decisions but are not absolute measures.
+**ADAPTIVE**: Tier and specialist activation scale with change complexity.
