@@ -15,6 +15,7 @@ except ImportError as _err:
 _MODEL = "claude-sonnet-4-6"
 _THINKING_BUDGET = 8000
 _THINKING_BETA = "interleaved-thinking-2025-05-14"
+_DEFAULT_TIMEOUT = 120.0
 
 _usage_local = threading.local()
 
@@ -37,6 +38,36 @@ def reset_accumulated_usage() -> None:
     _usage_local.output_tokens = 0
 
 
+def _build_client() -> anthropic.Anthropic:
+    """Build Anthropic client from environment variables.
+
+    Env vars:
+        ZAI_SKILLS_VALIDATOR: API key (preferred). Falls back to ANTHROPIC_SKILLS_VALIDATOR.
+        ANTHROPIC_BASE_URL: Optional custom base URL (e.g. https://api.z.ai/api/anthropic).
+        API_TIMEOUT_MS: Optional request timeout in milliseconds. Default: 120000.
+
+    Raises:
+        EnvironmentError: If no API key env var is set.
+    """
+    api_key = os.environ.get("ZAI_SKILLS_VALIDATOR") or os.environ.get("ANTHROPIC_SKILLS_VALIDATOR")
+    if not api_key:
+        raise EnvironmentError(
+            "No API key found. Set ZAI_SKILLS_VALIDATOR (or ANTHROPIC_SKILLS_VALIDATOR) "
+            "to run LLM validation."
+        )
+
+    timeout_ms = os.environ.get("API_TIMEOUT_MS")
+    timeout = float(timeout_ms) / 1000.0 if timeout_ms else _DEFAULT_TIMEOUT
+
+    base_url = os.environ.get("ANTHROPIC_BASE_URL")
+
+    kwargs: dict = {"api_key": api_key, "timeout": timeout}
+    if base_url:
+        kwargs["base_url"] = base_url
+
+    return anthropic.Anthropic(**kwargs)
+
+
 def call_api(prompt: str, system_prompt: str = "", use_thinking: bool = False) -> str:
     """Call the Anthropic API and return the text response.
 
@@ -55,17 +86,10 @@ def call_api(prompt: str, system_prompt: str = "", use_thinking: bool = False) -
         Text content of the model response.
 
     Raises:
-        EnvironmentError: If ANTHROPIC_SKILLS_VALIDATOR env var is not set.
+        EnvironmentError: If no API key env var is set.
         ImportError: If anthropic package is not installed (raised at import time).
     """
-    api_key = os.environ.get("ANTHROPIC_SKILLS_VALIDATOR")
-    if not api_key:
-        raise EnvironmentError(
-            "ANTHROPIC_SKILLS_VALIDATOR env var not set. "
-            "Export your Anthropic API key to run LLM validation."
-        )
-
-    client = anthropic.Anthropic(api_key=api_key, timeout=120.0)
+    client = _build_client()
 
     messages: list[dict] = [{"role": "user", "content": prompt}]
 

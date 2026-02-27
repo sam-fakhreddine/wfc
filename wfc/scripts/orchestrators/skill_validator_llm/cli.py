@@ -19,7 +19,7 @@ from pathlib import Path
 from typing import Callable, TypeVar
 
 from .api_client import get_accumulated_usage, reset_accumulated_usage
-from .report_writer import get_branch, write_stage_report, write_summary_report
+from .report_writer import get_branch, make_run_id, write_stage_report, write_summary_report
 from .skill_reader import parse_frontmatter, resolve_repo_name
 from .stages import run_discovery, run_edge_case, run_logic, run_refinement
 
@@ -280,6 +280,7 @@ def main(argv: list[str] | None = None) -> int:
 
         reset_accumulated_usage()
         written_single: list[Path] = []
+        single_run_id = make_run_id()
 
         def _flush_single(stage: str, report_content: str) -> None:
             path = write_stage_report(
@@ -288,6 +289,7 @@ def main(argv: list[str] | None = None) -> int:
                 report_content=report_content,
                 repo=repo,
                 branch=branch,
+                run_id=single_run_id,
             )
             written_single.append(path)
             print(f"Report written: {path}")
@@ -356,6 +358,7 @@ def main(argv: list[str] | None = None) -> int:
     summary_entries: list[dict] = []
     total_input = 0
     total_output = 0
+    run_id = make_run_id()
 
     def _run_one(sd: Path) -> tuple[str, list[Path], float | None, dict[str, int]]:
         reset_accumulated_usage()
@@ -379,6 +382,7 @@ def main(argv: list[str] | None = None) -> int:
                 report_content=report,
                 repo=repo,
                 branch=branch,
+                run_id=run_id,
             )
             written.append(path)
 
