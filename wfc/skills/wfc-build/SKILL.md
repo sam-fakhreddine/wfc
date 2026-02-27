@@ -49,6 +49,14 @@ You are running in **orchestration mode** with restricted tool access.
 
 ---
 
+## Usage
+
+```
+/wfc-build "[feature description]"
+```
+
+Orchestrator coordinates the end-to-end workflow: interview → context discovery → subagent delegation → quality gates → PR creation.
+
 ## Workflow Overview
 
 1. **Preflight Check** - Validate request matches skill scope
@@ -236,7 +244,7 @@ Deliverables (output as structured report):
 ### Files Created: [list]
 ### Files Modified: [list]
 ### Tests Written: [list]
-### Tests Status: [pass/fail count]
+### Tests Status: PASS / FAIL [count]
 ### Quality Checks: [formatter/linter status]
 ### Summary: [2-3 sentence implementation summary]
 "
