@@ -133,11 +133,14 @@ Based on Phase 1 inventory:
    - Files with higher complexity or non-standard patterns
    - NOT standard boilerplate or generated code
 
-3. **Read selected files** to understand actual patterns
+3. **Read selected files** to understand actual patterns.
+   Do not cap at 10 files if the gap area is large. Read until you have
+   sufficient coverage to write accurate rules — thoroughness matters more than speed here.
+   If you stop early and miss a pattern, the rules you generate will be wrong.
 
 ### Step 2.4: Search for Specific Patterns
 
-Only search for patterns relevant to identified gaps:
+Search exhaustively within identified gaps (return ALL matches, not just the first):
 
 - API response structures (if API layer exists and is undocumented)
 - Error handling formats (if error patterns not documented)
