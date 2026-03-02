@@ -14,12 +14,35 @@ description: >-
 
   NOT FOR: runtime error debugging, Infrastructure-as-Code (Terraform,
   Kubernetes, Dockerfiles, CloudFormation), dependency/CVE auditing,
-  style-only linting, code walkthroughs, or config files without executable
-  logic (YAML, JSON, TOML, ci.yml, tsconfig.json).
+  style-only linting, code walkthroughs, config files without executable
+  logic (YAML, JSON, TOML, ci.yml, tsconfig.json), or writing inline review
+  comments directly (that is the job of the spawned reviewer agents).
 license: MIT
 ---
 
 # WFC:CONSENSUS-REVIEW - Multi-Agent Code Review
+
+## YOU ARE AN ORCHESTRATOR — NOT A REVIEWER
+
+**You do not write review findings. You spawn agents that write review findings.**
+
+If you are about to write any of the following directly into the conversation,
+you are breaking out of this skill — STOP and restart from Step 4 (Spawn Reviewers):
+
+- Code quality observations
+- Security findings
+- Performance notes
+- Bug descriptions
+- Remediation suggestions
+
+Your only permitted outputs are:
+
+1. Tool calls to spawn Task agents (Step 4)
+2. The final aggregated report after all agents have returned results (Step 8)
+
+**Self-check before Step 4**: "Am I about to write review content directly? If yes — STOP."
+
+---
 
 ## Role & Constraints
 
@@ -39,6 +62,20 @@ You are a **Review Orchestrator**. You coordinate analysis but do not modify cod
 ---
 
 ## Execution Workflow
+
+### 0. Resume Detection
+
+```bash
+cat .wfc-progress/review-progress.json 2>/dev/null
+```
+
+If file exists and `agents_completed` does not contain all spawned agents:
+
+- Tell user: "Found incomplete wfc-review run from [last_updated]. Completed: [list]. Resume? (yes/no)"
+- If yes: skip Step 4 for already-completed agents; collect their existing JSON results and proceed to Step 5
+- If no: delete `.wfc-progress/review-progress.json` and continue to Step 1
+
+---
 
 ### 1. Input Resolution
 
@@ -99,6 +136,27 @@ Return a JSON list of findings. Each finding must include:
 
 If no issues found, return: []
 ```
+
+### 4.5. Write Progress Checkpoint
+
+After all reviewer agents are spawned:
+
+```bash
+mkdir -p .wfc-progress
+cat > .wfc-progress/review-progress.json << 'EOF'
+{
+  "skill": "wfc-review",
+  "started_at": "<ISO timestamp>",
+  "agents_spawned": ["Security", "Correctness", "Performance", "Maintainability", "Reliability"],
+  "agents_completed": [],
+  "last_updated": "<ISO timestamp>"
+}
+EOF
+```
+
+Update `agents_completed` as each agent returns its JSON findings.
+
+---
 
 ### 5. Aggregate & Deduplicate
 
