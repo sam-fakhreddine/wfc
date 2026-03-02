@@ -80,6 +80,10 @@ Four analysis dimensions are evaluated (sequentially or concurrently based on pl
 | **Conventions** | Config files, README, inline documentation for stated standards | Convention notes for properties |
 | **Dependencies** | Package manifests and lockfiles for version constraints | Compatibility notes, deprecation warnings |
 
+**Scan depth requirement**: For every dimension, scan ALL matching files — do not stop after the
+first N results. If a directory looks relevant, descend into it. Use `very_thorough` depth.
+Partial scans that miss files will produce incomplete annotations and cause re-work in wfc-implement.
+
 **Important**: This skill does NOT access external package registries, CVE databases, or live documentation. All analysis is based on local files and general software engineering principles. For security-critical dependency verification, run external tools separately.
 
 ## Annotation Format
