@@ -15,6 +15,9 @@ description: >-
   NOT FOR: Single-file edits or bug fixes; debugging/diagnosing defects; high-level
   architecture discussions with no file output; sprint planning or backlog grooming;
   directory restructuring; documentation generation; quick single-function patches.
+
+  Pipeline order: wfc-plan FIRST, then wfc-implement. Running wfc-implement before
+  wfc-plan will fail — there is no TASKS.md to execute.
 license: MIT
 ---
 
@@ -85,6 +88,39 @@ Create three files using the Write tool:
 - Related properties
 - Files likely affected
 - Acceptance criteria with checkboxes
+
+**Task Template:**
+
+```markdown
+## TASK-001: [Task Name]
+- **Complexity**: S
+- **Dependencies**: []
+- **Canary**: true
+- **Files**: [files to modify]
+- **Acceptance Criteria**:
+  - [ ] Criterion 1
+```
+
+> **Canary task**: The first independent task (no dependencies) MUST be marked `canary: true`.
+> wfc-implement will run this task alone first and verify it succeeds before launching remaining tasks in parallel.
+> Only one task per plan should be marked `canary: true`.
+
+## Task Granularity Standard
+
+Every task MUST follow the ultra-granular standard:
+
+- **One file per task.** If a change touches 2 files, split it into 2 tasks.
+- **One operation per task.** If a task has 2 find/replace operations on the same file, split it.
+- **Exact find text.** Every task must include the literal string to locate in the file.
+  No vague instructions like "find the section about X". Copy the exact text from the file.
+- **Exact replacement text.** Every task must include the complete replacement block.
+  The agent should be able to execute the task with zero interpretation.
+- **Mechanical acceptance criteria.** Every acceptance criterion must be verifiable with
+  a single `grep` command. No subjective criteria ("looks good", "makes sense").
+
+This standard exists because parallel agents work the same codebase simultaneously.
+Vague tasks cause agents to interpret differently, produce conflicts, and require re-work.
+Ultra-granular tasks with exact text are safe to parallelise and easy to validate.
 
 **PROPERTIES.md** - Formal properties with:
 
