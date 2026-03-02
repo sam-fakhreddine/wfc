@@ -56,3 +56,14 @@ completed period, and produces a structured report.
         * **Metrics**: Say:Do Ratio, Success Rate, Total Throughput.
         * **Observations**: Bullet points of factual trends (e.g., "High
             failure rate observed on Tuesdays").
+
+### Skill Attribution Priority
+
+When attributing session friction to specific skills, use this priority order:
+
+1. `skill_invocations[].skill` field in session-meta (if present) — most accurate
+2. `/wfc-[\w-]+` regex match on `first_prompt` — available for ~21% of sessions
+3. `tool_counts.Skill > 0` with no match — record as "unattributed skill session"
+
+Never discard unattributed sessions. Count them separately as they represent real friction
+that cannot yet be tied to a specific skill.
