@@ -1,0 +1,27 @@
+{
+  "cli_version": "0.4.5",
+  "checkpoint_id": "92d4b86b41df",
+  "strategy": "manual-commit",
+  "branch": "claude/compound-subagent-cwd-fix",
+  "checkpoints_count": 1,
+  "files_touched": [
+    "install-universal.sh",
+    "wfc/scripts/hooks/register_hooks.py"
+  ],
+  "sessions": [
+    {
+      "metadata": "/92/d4b86b41df/0/metadata.json",
+      "transcript": "/92/d4b86b41df/0/full.jsonl",
+      "context": "/92/d4b86b41df/0/context.md",
+      "content_hash": "/92/d4b86b41df/0/content_hash.txt",
+      "prompt": "/92/d4b86b41df/0/prompt.txt"
+    }
+  ],
+  "token_usage": {
+    "input_tokens": 71,
+    "cache_creation_tokens": 177735,
+    "cache_read_tokens": 4601123,
+    "output_tokens": 7469,
+    "api_call_count": 56
+  }
+}
