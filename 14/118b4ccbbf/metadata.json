@@ -1,0 +1,26 @@
+{
+  "cli_version": "0.4.5",
+  "checkpoint_id": "14118b4ccbbf",
+  "strategy": "manual-commit",
+  "branch": "develop",
+  "checkpoints_count": 0,
+  "files_touched": [
+    "worktree-isolation-test.txt"
+  ],
+  "sessions": [
+    {
+      "metadata": "/14/118b4ccbbf/0/metadata.json",
+      "transcript": "/14/118b4ccbbf/0/full.jsonl",
+      "context": "/14/118b4ccbbf/0/context.md",
+      "content_hash": "/14/118b4ccbbf/0/content_hash.txt",
+      "prompt": "/14/118b4ccbbf/0/prompt.txt"
+    }
+  ],
+  "token_usage": {
+    "input_tokens": 71,
+    "cache_creation_tokens": 177735,
+    "cache_read_tokens": 4601123,
+    "output_tokens": 7469,
+    "api_call_count": 56
+  }
+}
