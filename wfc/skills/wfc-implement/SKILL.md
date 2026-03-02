@@ -8,13 +8,53 @@ description: >-
   Validates TASKS.md -> Creates worktrees -> Spawns one agent per task ->
   Requests TDD workflow -> Runs mocked review -> Creates GitHub PRs targeting
   develop branch. TRIGGERS: /wfc-implement, "run the plan", "execute TASKS.md",
-  "implement the tasks in TASKS.md". NOT FOR: missing TASKS.md (use wfc-plan),
+  "implement the tasks in TASKS.md". PREREQUISITE: Run /wfc-plan first. This skill requires TASKS.md to exist.
+  NOT FOR: missing TASKS.md (use wfc-plan),
   single-task runs, inline task lists, plan-then-implement requests, cyclic
   dependencies, dirty repos, main-branch targets, security-sensitive work.
 license: MIT
 ---
 
 # wfc-implement - Multi-Agent Parallel Implementation Orchestrator
+
+## HARD STOP — Read This Before Anything Else
+
+**Step 1: Locate TASKS.md.**
+
+Check in this order:
+
+1. The path passed as argument (if any)
+2. `./TASKS.md`
+3. `./plans/*/TASKS.md` (first match)
+
+If TASKS.md is not found at any location:
+
+```
+ABORT: No TASKS.md found.
+This skill requires an existing plan.
+Next step: run /wfc-plan "<your feature description>" to generate one.
+Do not attempt manual implementation. Do not continue.
+```
+
+Stop here. Do not read the rest of this skill.
+
+---
+
+## Resume Detection
+
+Before doing anything else, check:
+
+```bash
+cat .wfc-progress/implement-progress.json 2>/dev/null
+```
+
+If the file exists and `tasks_pending` is non-empty:
+
+- Tell the user: "Found incomplete wfc-implement run from [last_updated]. tasks_pending: [list]. Resume? (yes/no)"
+- If yes: skip Phase 1 setup for completed tasks, proceed from first task in `tasks_pending`
+- If no: delete `.wfc-progress/implement-progress.json` and start fresh
+
+---
 
 ## EXECUTION CONTEXT: ORCHESTRATION MODE
 
@@ -36,7 +76,7 @@ You are running in **orchestration mode** with restricted tool access.
 
 ## Preconditions (MUST validate before execution)
 
-1. **TASKS.md exists** - If missing, STOP and suggest: "No TASKS.md found. Run /wfc-plan first."
+1. **TASKS.md exists** - See HARD STOP block above. If missing, ABORT. Do not proceed.
 2. **2+ parseable tasks** - Parse TASKS.md. If < 2 tasks, STOP with error: "TASKS.md requires 2+ tasks. For single tasks, use direct implementation."
 3. **No cyclic dependencies** - Build dependency graph from TASKS.md. If cycle detected (A→B→A), STOP with error: "Cyclic dependency detected. Fix TASKS.md."
 4. **Clean working directory** - Run `git status --porcelain`. If output non-empty, STOP: "Uncommitted changes detected. Commit or stash before running."
@@ -61,6 +101,21 @@ git worktree add .worktrees/TASK-001 -b claude/TASK-001 develop
 **Branch naming convention**: `claude/<task-id>` branched from `develop`
 
 ### Phase 2: Spawn Agents
+
+#### Step 2.0: Canary Gate
+
+Before spawning all agents, check if any task in TASKS.md has `canary: true`.
+
+If a canary task exists:
+
+1. Spawn ONLY that task's agent first.
+2. Wait for its `agent-report.json` to be written.
+3. Check `agent-report.json` → `"status"` field.
+4. If status is `"failed"`: STOP all remaining agents.
+   Output: "Canary task [TASK-ID] failed. Fix the issue before running the full batch. Error: [error field from report]"
+5. If status is `"success"`: print "[WFC] Canary passed. Launching remaining [N-1] agents in parallel." and continue.
+
+If no canary task exists: proceed directly to spawning all agents in parallel.
 
 For each task in dependency order (respecting topological sort):
 
@@ -107,6 +162,28 @@ On failure, set status to \"failed\" and include \"error\" field with details.
 "
 />
 ```
+
+### Phase 2.5: Write Progress Checkpoint
+
+After all agents are spawned (not before), write:
+
+```bash
+mkdir -p .wfc-progress
+cat > .wfc-progress/implement-progress.json << 'EOF'
+{
+  "skill": "wfc-implement",
+  "started_at": "<ISO timestamp>",
+  "tasks_total": <N>,
+  "tasks_spawned": ["TASK-001", "TASK-002"],
+  "tasks_pending": [],
+  "last_updated": "<ISO timestamp>"
+}
+EOF
+```
+
+Update `tasks_pending` to remove a task ID when its agent-report.json is written.
+
+---
 
 ### Phase 3: Collect Results
 
