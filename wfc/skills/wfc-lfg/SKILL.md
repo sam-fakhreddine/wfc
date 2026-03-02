@@ -54,8 +54,22 @@ DONE or HALT (with structured report)
 Before starting the pipeline, verify:
 
 ```
+0. Feature description present
+   → A feature description is a human-readable string describing what to build.
+   → A file path (starts with `/`, `./`, or `plans/`) is NOT a description.
+   → If only a path was provided and no description string:
+      HALT: "Feature description required.
+      Usage: /wfc-lfg \"describe what to build\" [optional: path/to/plans/dir]
+      Example: /wfc-lfg \"add rate limiting to the API\""
+
 1. Working directory clean (git status --porcelain returns empty)
    → If dirty: HALT with "Commit or stash changes before running wfc-lfg"
+
+1.5. WFC initialized
+   → Run: ls .wfc/ 2>/dev/null
+   → If .wfc/ directory is missing:
+      HALT: "WFC not initialized in this repository.
+      Run /wfc-init first, then re-run this command."
 
 2. HEAD is not detached
    → If detached: HALT with "Checkout a branch before running wfc-lfg"
@@ -70,6 +84,16 @@ Before starting the pipeline, verify:
    → Check: package.json → "npm test"
    → Check: Makefile with "test" target → "make test"
    → If undetected: HALT with "No test runner found. Specify manually or add test infrastructure."
+```
+
+```
+   4.5. No active plan in progress
+      → Run: ls plans/*/TASKS.md 2>/dev/null | head -1
+      → If an existing TASKS.md is found:
+         PAUSE: "Existing TASKS.md found at [path].
+         Running wfc-lfg will generate a new plan and may overwrite it.
+         Proceed? (yes to continue, no to abort)"
+         → Wait for user response before continuing.
 ```
 
 ## Usage
@@ -92,6 +116,14 @@ Before starting the pipeline, verify:
 ## Pipeline Steps
 
 ### Step 1: Plan
+
+**Start of step**: Check for existing phase marker:
+
+```bash
+ls .wfc-progress/lfg-phase1-done.marker 2>/dev/null
+```
+
+If marker exists → skip this step entirely, proceed to Step 2.
 
 ```
 Invoke /wfc-plan with feature description
@@ -146,7 +178,24 @@ Before generating tasks, scan description for guardrail violations:
 - "print env vars" → HALT: "Security policy violation: Credential exposure risk"
 - "disable auth" → HALT: "Exclusion match: Auth features require human review"
 
+**End of Step 1**: Write phase marker:
+
+```bash
+mkdir -p .wfc-progress && touch .wfc-progress/lfg-phase1-done.marker
+echo "[WFC-LFG] Phase 1/4 complete: Plan generated. Progress saved."
+```
+
+---
+
 ### Step 2: Deepen
+
+**Start of step**: Check for phase 1 marker:
+
+```bash
+ls .wfc-progress/lfg-phase1-done.marker 2>/dev/null || echo "MISSING"
+```
+
+If missing → HALT: "Phase 1 (Plan) must complete before Deepen. Re-run from Step 1."
 
 ```
 Invoke /wfc-deepen on generated plan
@@ -157,6 +206,14 @@ Invoke /wfc-deepen on generated plan
 **Skip with:** `--skip-deepen` or `--complexity S` (auto-skipped for S).
 
 ### Step 3: Implement
+
+**Start of step**: Check for phase 2 marker:
+
+```bash
+ls .wfc-progress/lfg-phase2-done.marker 2>/dev/null || echo "MISSING"
+```
+
+If missing → HALT: "Phase 2 (Deepen) must complete before Implement. Re-run from Step 2."
 
 ```
 Invoke /wfc-implement with enriched plan
@@ -173,7 +230,24 @@ Create: git worktree add .git/worktrees/wfc-{id} -b claude/{feature-slug}
 Cleanup: git worktree remove .git/worktrees/wfc-{id} (on success or failure)
 ```
 
+**End of Step 3**: Write phase marker:
+
+```bash
+touch .wfc-progress/lfg-phase3-done.marker
+echo "[WFC-LFG] Phase 3/4 complete: Implementation done. Progress saved."
+```
+
+---
+
 ### Step 4: Review
+
+**Start of step**: Check for phase 3 marker:
+
+```bash
+ls .wfc-progress/lfg-phase3-done.marker 2>/dev/null || echo "MISSING"
+```
+
+If missing → HALT: "Phase 3 (Implement) must complete before Review. Re-run from Step 3."
 
 ```
 Invoke /wfc-review on implementation
@@ -226,6 +300,15 @@ Push branch and create PR
     - Test results summary
     - Post-deploy validation (derived from PROPERTIES.md monitoring section)
 ```
+
+**Cleanup**: Remove phase markers from the completed run:
+
+```bash
+rm -f .wfc-progress/lfg-phase*.marker
+echo "[WFC-LFG] Pipeline complete. Phase markers cleared."
+```
+
+---
 
 ## Guardrails
 
