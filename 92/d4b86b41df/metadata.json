@@ -6,7 +6,8 @@
   "checkpoints_count": 1,
   "files_touched": [
     "install-universal.sh",
-    "wfc/scripts/hooks/register_hooks.py"
+    "wfc/scripts/hooks/register_hooks.py",
+    "wfc/scripts/hooks/skill_tracker.py"
   ],
   "sessions": [
     {
@@ -22,13 +23,20 @@
       "context": "/92/d4b86b41df/1/context.md",
       "content_hash": "/92/d4b86b41df/1/content_hash.txt",
       "prompt": "/92/d4b86b41df/1/prompt.txt"
+    },
+    {
+      "metadata": "/92/d4b86b41df/2/metadata.json",
+      "transcript": "/92/d4b86b41df/2/full.jsonl",
+      "context": "/92/d4b86b41df/2/context.md",
+      "content_hash": "/92/d4b86b41df/2/content_hash.txt",
+      "prompt": "/92/d4b86b41df/2/prompt.txt"
     }
   ],
   "token_usage": {
-    "input_tokens": 14867,
-    "cache_creation_tokens": 1003686,
-    "cache_read_tokens": 25052356,
-    "output_tokens": 19530,
-    "api_call_count": 245
+    "input_tokens": 15148,
+    "cache_creation_tokens": 1658838,
+    "cache_read_tokens": 48675502,
+    "output_tokens": 41714,
+    "api_call_count": 466
   }
 }
