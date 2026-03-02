@@ -1,0 +1,26 @@
+{
+  "cli_version": "0.4.5",
+  "checkpoint_id": "2ed1d860cac1",
+  "strategy": "manual-commit",
+  "branch": "develop",
+  "checkpoints_count": 1,
+  "files_touched": [
+    "docs/solutions/configuration/claude-code-subagent-cannot-edit-outside-session-cwd.md"
+  ],
+  "sessions": [
+    {
+      "metadata": "/2e/d1d860cac1/0/metadata.json",
+      "transcript": "/2e/d1d860cac1/0/full.jsonl",
+      "context": "/2e/d1d860cac1/0/context.md",
+      "content_hash": "/2e/d1d860cac1/0/content_hash.txt",
+      "prompt": "/2e/d1d860cac1/0/prompt.txt"
+    }
+  ],
+  "token_usage": {
+    "input_tokens": 71,
+    "cache_creation_tokens": 177735,
+    "cache_read_tokens": 4601123,
+    "output_tokens": 7469,
+    "api_call_count": 56
+  }
+}
