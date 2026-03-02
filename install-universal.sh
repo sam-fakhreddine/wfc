@@ -833,7 +833,7 @@ if [ "${INSTALL_TO[claude]}" = true ] || [ "${PLATFORMS[claude]}" = true ]; then
     if [ -d "$HOOKS_SRC" ]; then
         mkdir -p "$HOOKS_DEST" "$HOOKS_DEST/_checkers"
 
-        for hook_file in file_checker.py tdd_enforcer.py context_monitor.py _util.py register_hooks.py; do
+        for hook_file in file_checker.py tdd_enforcer.py context_monitor.py skill_tracker.py _util.py register_hooks.py; do
             [ -f "$HOOKS_SRC/$hook_file" ] && cp "$HOOKS_SRC/$hook_file" "$HOOKS_DEST/$hook_file"
         done
         for checker_file in __init__.py python.py typescript.py go.py; do

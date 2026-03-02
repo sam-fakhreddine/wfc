@@ -27,6 +27,10 @@ WFC_HOOKS = {
                     "type": "command",
                     "command": "uv run python ~/.wfc/scripts/security/semantic_firewall.py",
                 },
+                {
+                    "type": "command",
+                    "command": "python3 ~/.claude/hooks/aws_mcp_detect.py",
+                },
             ],
         },
     ],
@@ -41,6 +45,15 @@ WFC_HOOKS = {
                 {
                     "type": "command",
                     "command": "uv run python ~/.wfc/scripts/hooks/tdd_enforcer.py",
+                },
+            ],
+        },
+        {
+            "matcher": "Skill",
+            "hooks": [
+                {
+                    "type": "command",
+                    "command": "uv run python ~/.wfc/scripts/hooks/skill_tracker.py",
                 },
             ],
         },
