@@ -44,6 +44,9 @@ make validate         # Agent Skills compliance check
 make act-fast         # local CI gate (~2 min)
 make pr               # create PR (runs act-fast first)
 uv run pytest tests/test_file.py -v  # single test file
+bash scripts/install_test.sh         # run installer tests (20 tests)
+./install.sh --agent claude          # targeted install (skip menu)
+./install.sh --agent all --nsfw      # install all platforms non-interactively
 ```
 
 ## Architecture
@@ -57,7 +60,19 @@ wfc/                         # Repo — source code only
 ├── gitwork/                 # git operations via worktree-manager.sh
 └── skills/                  # Agent Skills packages
 
-~/.claude/skills/wfc-*/      # 33 installed skills
+examples/                    # Per-platform config templates
+├── claude-code/CLAUDE.md    # Claude Code orchestrator instructions
+├── kiro/KIRO.md             # Kiro orchestrator instructions
+├── cursor/.cursorrules      # Cursor rules
+├── vscode/                  # VS Code Copilot instructions
+├── opencode/                # OpenCode agent config
+├── codex/                   # Codex instructions
+├── antigravity/             # Antigravity rules
+└── goose/                   # Goose config
+
+scripts/install_test.sh      # Installer test suite (20 tests)
+
+~/.claude/skills/wfc-*/      # 31 installed skills
 
 ~/.wfc/projects/{repo}/branches/{branch}/   # Dev artifacts (Documentation is Infrastructure)
 ├── plans/                   # Timestamped plan directories
@@ -91,4 +106,7 @@ CS formula: `(0.5 × R̄) + (0.3 × R̄ × k/n) + (0.2 × R_max)`. MPR: if R_max
 - `wfc/references/TOKEN_MANAGEMENT.md` — token optimization strategy
 - `PLANNING.md` — architectural decisions and absolute rules
 - `docs/README.md` — full documentation index
+- `examples/` — per-platform config templates (Claude Code, Kiro, Cursor, VS Code, OpenCode, Codex, Antigravity, Goose)
+- `scripts/install_test.sh` — installer test suite (20 tests, run with `bash scripts/install_test.sh`)
+- `docs/issues/skill-architecture-epic.md` — planned epic for `_shared/` convention system (Priority 2)
 - `.devcontainer/` — devcontainer setup (firewall, tools, workspace layout)
