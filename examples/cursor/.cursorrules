@@ -1,0 +1,19 @@
+# Cursor — WFC Integration
+
+## WFC Skills
+
+WFC skills are installed at `~/.cursor/skills/wfc-*/`. Invoke via slash commands.
+
+### Usage
+
+- `/wfc-review` — Run 5-agent consensus code review
+- `/wfc-build "feature"` — Quick feature with TDD
+- `/wfc-plan` — Create structured task breakdown
+- `/wfc-implement` — Execute tasks with parallel agents
+- `/wfc-security` — STRIDE threat modeling
+
+### Quality Threshold
+
+- Consensus Score ≥7.0 to merge
+- Zero critical Security or Reliability findings
+- Run `/wfc-review` before every PR

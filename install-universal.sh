@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-set -e
+set -euo pipefail
 
 # Require bash 4+ for associative arrays (declare -A)
 if [ "${BASH_VERSINFO[0]}" -lt 4 ]; then
@@ -16,9 +16,10 @@ fi
 # Detects and installs to: Claude Code, Kiro, OpenCode, Cursor, VS Code, Codex, Antigravity
 #
 # Usage:
-#   ./install-universal.sh              - Interactive (local clone)
-#   ./install-universal.sh --ci         - Non-interactive CI mode
-#   ./install-universal.sh --help       - Show help
+#   ./install-universal.sh                    - Interactive (local clone)
+#   ./install-universal.sh --ci               - Non-interactive CI mode
+#   ./install-universal.sh --agent claude     - Install for specific platform
+#   ./install-universal.sh --help             - Show help
 #
 # Remote install:
 #   curl -fsSL https://raw.githubusercontent.com/sam-fakhreddine/wfc/main/install-universal.sh | bash
@@ -29,76 +30,16 @@ fi
 #   - Remote install via curl pipe (clones repo to /tmp)
 #   - Branding modes: SFW (Workflow Champion) or NSFW (World Fucking Class)
 #   - PostToolUse quality hooks (auto-lint, TDD, context monitor)
-#   - Reinstall options: refresh, change branding, or full reset
 #   - Progressive disclosure (92% token reduction)
 #   - Symlink support for multi-platform sync
 
-VERSION="0.7.0"
+VERSION="0.8.0"
 REPO="sam-fakhreddine/wfc"
 REPO_URL="https://github.com/${REPO}.git"
 
-# Non-interactive mode flag
-CI_MODE=false
-if [ "$1" = "--ci" ] || [ "$1" = "--non-interactive" ]; then
-    CI_MODE=true
-fi
-
-# Show help
-if [ "$1" = "--help" ] || [ "$1" = "-h" ]; then
-    cat << 'EOF'
-WFC Universal Installer v0.6.0
-==============================
-
-USAGE:
-    ./install.sh                 Interactive installation
-    ./install.sh --help          Show this help
-    ./install.sh --ci            Non-interactive CI mode
-
-FEATURES:
-    - Auto-detects Agent Skills platforms
-    - Branding modes: SFW or NSFW
-    - Reinstall options for existing installations
-    - Multi-platform symlink support
-    - Progressive disclosure (92% token reduction)
-
-CI MODE:
-    --ci flag enables non-interactive installation with these defaults:
-    - Existing install: Refresh (keep settings)
-    - Branding: NSFW (World Fucking Class)
-    - Platform: All detected platforms (uses symlink strategy)
-
-SUPPORTED PLATFORMS:
-    - Claude Code     (~/.claude/skills)
-    - Kiro (AWS)      (~/.kiro/skills)
-    - OpenCode        (~/.opencode/skills)
-    - Cursor          (~/.cursor/skills)
-    - VS Code         (~/.vscode/skills)
-    - OpenAI Codex    (~/.codex/skills)
-    - Antigravity     (~/.antigravity/skills)
-    - Goose           (~/.config/goose/skills)
-
-REINSTALL OPTIONS:
-    When existing installation detected:
-    1. Refresh         - Update files, keep settings
-    2. Change branding - Switch SFW/NSFW mode
-    3. Full reinstall  - Reset all settings (with backup)
-    4. Cancel          - Exit without changes
-
-BRANDING MODES:
-    SFW  (Safe For Work) - "Workflow Champion"
-         Professional language, corporate-friendly
-
-    NSFW (Default)       - "World Fucking Class"
-         Original branding, no bullshit
-
-DOCUMENTATION:
-    Installation:  docs/workflow/UNIVERSAL_INSTALL.md
-    Quick Start:   QUICKSTART.md
-
-EOF
-    exit 0
-fi
-
+# ============================================================================
+# Color support
+# ============================================================================
 BOLD="\033[1m"
 GREEN="\033[0;32m"
 BLUE="\033[0;34m"
@@ -109,33 +50,188 @@ MAGENTA="\033[0;35m"
 RESET="\033[0m"
 
 # ============================================================================
+# Helpers
+# ============================================================================
+print_ok()    { echo -e "  ${GREEN}✓${RESET} $1"; }
+print_warn()  { echo -e "  ${YELLOW}!${RESET} $1"; }
+print_error() { echo -e "  ${RED}✗${RESET} $1"; }
+
+print_header() {
+    echo ""
+    echo -e "${CYAN}${BOLD}╔══════════════════════════════════════════╗${RESET}"
+    echo -e "${CYAN}${BOLD}║        WFC Universal Installer           ║${RESET}"
+    echo -e "${CYAN}${BOLD}║     Agent Skills Standard Compatible     ║${RESET}"
+    echo -e "${CYAN}${BOLD}╚══════════════════════════════════════════╝${RESET}"
+    echo -e "  ${BOLD}Version:${RESET}  ${VERSION}"
+    echo ""
+}
+
+get_platform_path() {
+    case "$1" in
+        claude)       echo "$HOME/.claude/skills" ;;
+        kiro)         echo "$HOME/.kiro/skills" ;;
+        opencode)
+            if [ -d "$HOME/.config/opencode" ]; then
+                echo "$HOME/.config/opencode/skills"
+            else
+                echo "$HOME/.opencode/skills"
+            fi ;;
+        cursor)
+            if [ -d "$HOME/Library/Application Support/Cursor" ]; then
+                echo "$HOME/Library/Application Support/Cursor/skills"
+            else
+                echo "$HOME/.cursor/skills"
+            fi ;;
+        vscode)
+            if [ -d "$HOME/Library/Application Support/Code" ]; then
+                echo "$HOME/Library/Application Support/Code/User/skills"
+            else
+                echo "$HOME/.vscode/skills"
+            fi ;;
+        codex)
+            if [ -d "$HOME/.openai/codex" ]; then
+                echo "$HOME/.openai/codex/skills"
+            else
+                echo "$HOME/.codex/skills"
+            fi ;;
+        antigravity)
+            if [ -d "$HOME/.config/antigravity" ]; then
+                echo "$HOME/.config/antigravity/skills"
+            else
+                echo "$HOME/.antigravity/skills"
+            fi ;;
+        goose)        echo "$HOME/.config/goose/skills" ;;
+    esac
+}
+
+get_platform_name() {
+    case "$1" in
+        claude)       echo "Claude Code" ;;
+        kiro)         echo "Kiro (AWS)" ;;
+        opencode)     echo "OpenCode" ;;
+        cursor)       echo "Cursor" ;;
+        vscode)       echo "VS Code" ;;
+        codex)        echo "OpenAI Codex" ;;
+        antigravity)  echo "Google Antigravity" ;;
+        goose)        echo "Goose" ;;
+    esac
+}
+
+show_help() {
+    cat << 'EOF'
+WFC Universal Installer
+=======================
+
+USAGE:
+    ./install.sh                        Interactive installation
+    ./install.sh --help                 Show this help
+    ./install.sh --ci                   Non-interactive CI mode
+    ./install.sh --agent <name>         Install for a specific platform
+
+AGENTS:
+    claude, kiro, opencode, cursor, vscode, codex, antigravity, goose, all
+
+EXAMPLES:
+    ./install.sh --agent claude         Install for Claude Code only
+    ./install.sh --agent all            Install for all detected platforms
+    ./install.sh --agent claude --sfw   Install with SFW branding
+
+FLAGS:
+    --ci            Non-interactive (defaults: all platforms, NSFW branding)
+    --agent NAME    Target a specific platform (non-interactive)
+    --sfw           Use SFW branding ("Workflow Champion")
+    --nsfw          Use NSFW branding ("World Fucking Class", default)
+    -h, --help      Show this help
+
+SUPPORTED PLATFORMS:
+    Claude Code     ~/.claude/skills
+    Kiro (AWS)      ~/.kiro/skills
+    OpenCode        ~/.config/opencode/skills
+    Cursor          ~/.cursor/skills
+    VS Code         ~/.vscode/skills
+    OpenAI Codex    ~/.codex/skills
+    Antigravity     ~/.antigravity/skills
+    Goose           ~/.config/goose/skills
+
+EOF
+    exit 0
+}
+
+# ============================================================================
+# Parse arguments
+# ============================================================================
+CI_MODE=false
+AGENT_FLAG=""
+BRANDING_FLAG=""
+
+while [[ $# -gt 0 ]]; do
+    case "$1" in
+        --ci|--non-interactive)  CI_MODE=true; shift ;;
+        --agent)                 AGENT_FLAG="$2"; shift 2 ;;
+        --sfw)                   BRANDING_FLAG="sfw"; shift ;;
+        --nsfw)                  BRANDING_FLAG="nsfw"; shift ;;
+        -h|--help)               show_help ;;
+        *)  echo "Unknown option: $1"; show_help ;;
+    esac
+done
+
+# ============================================================================
 # REMOTE INSTALL: If running via curl pipe, clone repo first
 # ============================================================================
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" 2>/dev/null )" 2>/dev/null && pwd 2>/dev/null )" || SCRIPT_DIR=""
-# shellcheck disable=SC2034
 REMOTE_INSTALL=false
 
 if [ -z "$SCRIPT_DIR" ] || [ ! -d "$SCRIPT_DIR/wfc/skills" ]; then
-    # Running via curl pipe or from outside repo - clone to /tmp
-    # shellcheck disable=SC2034
     REMOTE_INSTALL=true
     CLONE_DIR="/tmp/wfc-install-$$"
 
-    echo -e "${BOLD}📡 Remote install - fetching WFC...${RESET}"
+    echo -e "${BOLD}Remote install - fetching WFC...${RESET}"
 
     if ! command -v git >/dev/null 2>&1; then
-        echo -e "${RED}✗${RESET} git is required. Install git first."
+        print_error "git is required. Install git first."
         exit 1
     fi
 
     git clone --depth 1 "$REPO_URL" "$CLONE_DIR" 2>/dev/null
     SCRIPT_DIR="$CLONE_DIR"
-    echo -e "${GREEN}✓${RESET} WFC fetched"
+    print_ok "WFC fetched"
     echo ""
 
-    # Cleanup on exit
     trap 'rm -rf $CLONE_DIR' EXIT
 fi
+
+# ============================================================================
+# SOURCE VALIDATION: Verify repo is complete before attempting install
+# ============================================================================
+validate_source() {
+    local skills_src="$SCRIPT_DIR/wfc/skills"
+    local missing=0
+
+    if [ ! -d "$skills_src" ]; then
+        print_error "Skills directory not found: $skills_src"
+        echo -e "\n${RED}${BOLD}Source validation failed.${RESET} Is this a complete clone?"
+        echo -e "  Try: ${CYAN}git clone https://github.com/sam-fakhreddine/wfc.git${RESET}\n"
+        exit 1
+    fi
+
+    for skill_dir in "$skills_src"/wfc-*/; do
+        [ -d "$skill_dir" ] || continue
+        if [ ! -f "$skill_dir/SKILL.md" ]; then
+            print_error "Missing: $(basename "$skill_dir")/SKILL.md"
+            missing=$((missing + 1))
+        fi
+    done
+
+    if [ "$missing" -gt 0 ]; then
+        echo -e "\n${RED}${BOLD}Source validation failed.${RESET} $missing skill(s) missing SKILL.md."
+        echo -e "  Try: ${CYAN}git pull origin develop${RESET}\n"
+        exit 1
+    fi
+
+    local skill_count
+    skill_count=$(find "$skills_src" -maxdepth 1 -type d -name "wfc-*" | wc -l | tr -d ' ')
+    print_ok "Source validated ($skill_count skills found)"
+}
 
 # ============================================================================
 # DEPENDENCY CHECK
@@ -151,129 +247,76 @@ check_dependencies() {
     fi
 
     if [ ${#missing[@]} -gt 0 ]; then
-        echo -e "${YELLOW}⚠${RESET}  Optional dependencies not found: ${missing[*]}"
+        print_warn "Optional dependencies not found: ${missing[*]}"
 
         if [[ " ${missing[*]} " =~ " uv " ]]; then
             echo -e "   Install uv: ${CYAN}curl -LsSf https://astral.sh/uv/install.sh | sh${RESET}"
         fi
         echo ""
     fi
-
-    # Check for quality tools (informational)
-    local quality_tools=()
-    command -v ruff >/dev/null 2>&1 && quality_tools+=("ruff")
-    command -v black >/dev/null 2>&1 && quality_tools+=("black")
-    command -v prettier >/dev/null 2>&1 && quality_tools+=("prettier")
-    command -v eslint >/dev/null 2>&1 && quality_tools+=("eslint")
-    command -v gofmt >/dev/null 2>&1 && quality_tools+=("gofmt")
-
-    if [ ${#quality_tools[@]} -gt 0 ]; then
-        echo -e "${GREEN}✓${RESET} Quality tools detected: ${quality_tools[*]}"
-    fi
 }
 
-echo -e "${BOLD}🏆 WFC Universal Installer v${VERSION}${RESET}"
-echo -e "   ${CYAN}Agent Skills Standard Compatible${RESET}"
-echo ""
-
+print_header
+validate_source
 check_dependencies
 
 # Check for existing installation
 EXISTING_INSTALL=false
 EXISTING_BRANDING=""
 EXISTING_MODE=""
+KEEP_SETTINGS=false
 
 if [ -d "$HOME/.wfc" ]; then
     EXISTING_INSTALL=true
     if [ -f "$HOME/.wfc/.wfc_branding" ]; then
-        EXISTING_MODE=$(grep "^mode=" "$HOME/.wfc/.wfc_branding" | cut -d'=' -f2)
-        EXISTING_BRANDING=$(grep "^name=" "$HOME/.wfc/.wfc_branding" | cut -d'=' -f2)
+        EXISTING_MODE=$(grep "^mode=" "$HOME/.wfc/.wfc_branding" 2>/dev/null | cut -d'=' -f2) || true
+        EXISTING_BRANDING=$(grep "^name=" "$HOME/.wfc/.wfc_branding" 2>/dev/null | cut -d'=' -f2) || true
     fi
 fi
 
-# Reinstall options if existing installation detected
+# Reinstall handling
 if [ "$EXISTING_INSTALL" = true ]; then
-    if [ "$CI_MODE" = true ]; then
-        # CI mode: always refresh application, always preserve settings
-        echo -e "${GREEN}✓${RESET}  CI mode: Refreshing application files (settings preserved)"
+    if [ "$CI_MODE" = true ] || [ -n "$AGENT_FLAG" ]; then
+        # Non-interactive: always update, preserve settings
+        print_ok "Existing install detected — updating files (settings preserved)"
         KEEP_SETTINGS=true
         if [ -n "$EXISTING_MODE" ]; then
             WFC_MODE="$EXISTING_MODE"
-            if [ "$WFC_MODE" = "sfw" ]; then
-                WFC_NAME="Workflow Champion"
-                WFC_TAGLINE="Professional Multi-Agent Framework"
-            else
-                WFC_NAME="World Fucking Class"
-                WFC_TAGLINE="Multi-Agent Framework That Doesn't Fuck Around"
-            fi
         fi
     else
-        # Interactive mode
-        echo -e "${YELLOW}⚠${RESET}  Existing WFC installation detected"
+        echo -e "${YELLOW}!${RESET}  Existing WFC installation detected"
         if [ -n "$EXISTING_BRANDING" ]; then
             echo -e "   Current: ${CYAN}$EXISTING_BRANDING${RESET} (${EXISTING_MODE})"
         fi
         echo ""
-        echo -e "${BOLD}What would you like to do?${RESET}"
+        echo -e "  1) ${GREEN}Update${RESET}     Update skills & hooks, keep branding and rules"
+        echo -e "  2) ${RED}Reinstall${RESET}  Clean install with backup (choose branding again)"
+        echo -e "  3) ${BLUE}Cancel${RESET}"
         echo ""
-        echo -e "1) ${GREEN}Refresh installation${RESET} (keep current settings)"
-        echo -e "   └─ Update files, preserve branding and config"
-        echo ""
-        echo -e "2) ${YELLOW}Change branding mode${RESET}"
-        echo -e "   └─ Switch between SFW/NSFW, keep everything else"
-        echo ""
-        echo -e "3) ${RED}Full reinstall${RESET} (reset all settings)"
-        echo -e "   └─ Clean install, reconfigure everything"
-        echo ""
-        echo -e "4) ${BLUE}Cancel${RESET}"
-        echo -e "   └─ Exit without changes"
-        echo ""
-        read -p "Choose (1-4): " REINSTALL_CHOICE
+        read -rp "Choose [1-3]: " REINSTALL_CHOICE
 
-        case $REINSTALL_CHOICE in
+        case ${REINSTALL_CHOICE:-1} in
             1)
-                # Refresh - keep existing settings
-                echo -e "${GREEN}✓${RESET} Refreshing installation..."
+                print_ok "Updating installation..."
                 KEEP_SETTINGS=true
                 if [ -n "$EXISTING_MODE" ]; then
                     WFC_MODE="$EXISTING_MODE"
-                    if [ "$WFC_MODE" = "sfw" ]; then
-                        WFC_NAME="Workflow Champion"
-                        WFC_TAGLINE="Professional Multi-Agent Framework"
-                    else
-                        WFC_NAME="World Fucking Class"
-                        WFC_TAGLINE="Multi-Agent Framework That Doesn't Fuck Around"
-                    fi
                 fi
                 ;;
             2)
-                # Change branding
-                echo -e "${GREEN}✓${RESET} Changing branding mode..."
-                KEEP_SETTINGS=true
-                CHANGE_BRANDING=true
-                ;;
-            3)
-                # Full reinstall
-                echo -e "${YELLOW}⚠${RESET}  Full reinstall - backing up current config..."
                 BACKUP_DIR="$HOME/.wfc_backup_$(date +%Y%m%d_%H%M%S)"
                 mkdir -p "$BACKUP_DIR"
-                if [ -f "$HOME/.wfc/.wfc_branding" ]; then
-                    cp "$HOME/.wfc/.wfc_branding" "$BACKUP_DIR/"
-                fi
-                # Backup user rules if they exist
-                if [ -d "$HOME/.wfc/rules" ]; then
-                    cp -r "$HOME/.wfc/rules" "$BACKUP_DIR/rules"
-                    echo -e "   Backed up user rules"
-                fi
-                echo -e "${GREEN}✓${RESET} Backup saved to: ${CYAN}$BACKUP_DIR${RESET}"
+                [ -f "$HOME/.wfc/.wfc_branding" ] && cp "$HOME/.wfc/.wfc_branding" "$BACKUP_DIR/"
+                [ -d "$HOME/.wfc/rules" ] && cp -r "$HOME/.wfc/rules" "$BACKUP_DIR/rules"
+                print_ok "Backup saved to: ${CYAN}$BACKUP_DIR${RESET}"
                 KEEP_SETTINGS=false
                 ;;
-            4)
+            3)
                 echo -e "${BLUE}Cancelled${RESET}"
                 exit 0
                 ;;
             *)
-                echo -e "${RED}✗${RESET} Invalid choice"
+                print_error "Invalid choice"
                 exit 1
                 ;;
         esac
@@ -281,326 +324,201 @@ if [ "$EXISTING_INSTALL" = true ]; then
     fi
 fi
 
-# Branding mode selection (skip if keeping settings and not changing)
-# shellcheck disable=SC2034  # WFC_ACRONYM reserved for external use by sourcing scripts
-if [ "${KEEP_SETTINGS:-false}" = false ] || [ "${CHANGE_BRANDING:-false}" = true ]; then
-    if [ "$CI_MODE" = true ]; then
-        # CI mode: default to NSFW
-        WFC_NAME="World Fucking Class"
-        WFC_ACRONYM="WFC"
-        WFC_TAGLINE="Multi-Agent Framework That Doesn't Fuck Around"
-        WFC_MODE="nsfw"
-        echo -e "${GREEN}✓${RESET} CI mode: Using ${MAGENTA}World Fucking Class${RESET} (NSFW)"
+# Resolve branding from existing settings or flags
+set_branding() {
+    local mode="${1:-nsfw}"
+    WFC_MODE="$mode"
+    if [ "$mode" = "sfw" ]; then
+        WFC_NAME="Workflow Champion"
+        WFC_TAGLINE="Professional Multi-Agent Framework"
     else
-        echo -e "${BOLD}🎨 Choose branding mode:${RESET}"
-        echo ""
-        echo -e "1) ${BOLD}SFW${RESET} (Safe For Work)  → ${GREEN}Workflow Champion${RESET}"
-        echo -e "   └─ Professional language, corporate-friendly"
-        echo ""
-        echo -e "2) ${BOLD}NSFW${RESET} (Default)        → ${MAGENTA}World Fucking Class${RESET}"
-        echo -e "   └─ Original branding, no bullshit"
-        echo ""
-        read -p "Choose mode (1-2) [default: 2]: " BRANDING_CHOICE
-
-        case $BRANDING_CHOICE in
-            1)
-                WFC_NAME="Workflow Champion"
-                WFC_ACRONYM="WFC"
-                WFC_TAGLINE="Professional Multi-Agent Framework"
-                WFC_MODE="sfw"
-                echo -e "${GREEN}✓${RESET} Selected: ${GREEN}Workflow Champion${RESET} (SFW)"
-                ;;
-            2|"")
-                WFC_NAME="World Fucking Class"
-                WFC_ACRONYM="WFC"
-                WFC_TAGLINE="Multi-Agent Framework That Doesn't Fuck Around"
-                WFC_MODE="nsfw"
-                echo -e "${GREEN}✓${RESET} Selected: ${MAGENTA}World Fucking Class${RESET} (NSFW)"
-                ;;
-            *)
-                echo -e "${RED}✗${RESET} Invalid choice, defaulting to NSFW"
-                WFC_NAME="World Fucking Class"
-                WFC_ACRONYM="WFC"
-                WFC_TAGLINE="Multi-Agent Framework That Doesn't Fuck Around"
-                WFC_MODE="nsfw"
-                ;;
-        esac
+        WFC_NAME="World Fucking Class"
+        WFC_TAGLINE="Multi-Agent Framework That Doesn't Fuck Around"
     fi
+}
+
+# Branding mode selection (skip if keeping settings with known mode)
+if [ "$KEEP_SETTINGS" = true ] && [ -n "${WFC_MODE:-}" ]; then
+    set_branding "$WFC_MODE"
+elif [ -n "$BRANDING_FLAG" ]; then
+    set_branding "$BRANDING_FLAG"
+elif [ "$CI_MODE" = true ] || [ -n "$AGENT_FLAG" ]; then
+    set_branding "nsfw"
+    print_ok "Using ${MAGENTA}World Fucking Class${RESET} (NSFW)"
+else
+    echo -e "${BOLD}Choose branding mode:${RESET}"
+    echo ""
+    echo -e "  1) ${BOLD}SFW${RESET}   ${GREEN}Workflow Champion${RESET}       Professional, corporate-friendly"
+    echo -e "  2) ${BOLD}NSFW${RESET}  ${MAGENTA}World Fucking Class${RESET}   Original branding (default)"
+    echo ""
+    read -rp "Choose [1-2, default: 2]: " BRANDING_CHOICE
+
+    case ${BRANDING_CHOICE:-2} in
+        1)  set_branding "sfw";  print_ok "Selected: ${GREEN}Workflow Champion${RESET} (SFW)" ;;
+        *)  set_branding "nsfw"; print_ok "Selected: ${MAGENTA}World Fucking Class${RESET} (NSFW)" ;;
+    esac
 fi
 
 echo ""
-echo -e "${BOLD}🏆 Installing ${WFC_NAME}${RESET}"
+echo -e "${BOLD}Installing ${WFC_NAME}${RESET}"
 echo -e "   ${WFC_TAGLINE}"
-echo -e "   ${CYAN}Agent Skills Standard Compatible${RESET}"
 echo ""
 
+# ============================================================================
 # Platform detection
+# ============================================================================
 declare -A PLATFORMS
 declare -A PLATFORM_PATHS
 
-# Detect all Agent Skills compatible platforms
-echo -e "${BOLD}🔍 Detecting installed platforms...${RESET}"
+# Canonical platform order
+PLATFORM_ORDER=(claude kiro opencode cursor vscode codex antigravity goose)
+
+detect_platform() {
+    local key="$1"
+    case "$key" in
+        claude)       [ -d "$HOME/.claude" ] ;;
+        kiro)         [ -d "$HOME/.kiro" ] ;;
+        opencode)     [ -d "$HOME/.config/opencode" ] || [ -d "$HOME/.opencode" ] ;;
+        cursor)       [ -d "$HOME/.cursor" ] || [ -d "$HOME/Library/Application Support/Cursor" ] ;;
+        vscode)       [ -d "$HOME/.vscode" ] || [ -d "$HOME/Library/Application Support/Code" ] ;;
+        codex)        [ -d "$HOME/.codex" ] || [ -d "$HOME/.openai/codex" ] ;;
+        antigravity)  [ -d "$HOME/.antigravity" ] || [ -d "$HOME/.config/antigravity" ] ;;
+        goose)        [ -d "$HOME/.config/goose" ] ;;
+        *)            return 1 ;;
+    esac
+}
+
+echo -e "${BOLD}Detecting platforms...${RESET}"
 echo ""
 
-# Claude Code
-if [ -d "$HOME/.claude" ]; then
-    PLATFORMS[claude]=true
-    PLATFORM_PATHS[claude]="$HOME/.claude/skills"
-    echo -e "${GREEN}✓${RESET} Claude Code"
-    echo -e "  └─ Skills: ${BLUE}~/.claude/skills/${RESET}"
-fi
-
-# Kiro (AWS)
-if [ -d "$HOME/.kiro" ]; then
-    PLATFORMS[kiro]=true
-    PLATFORM_PATHS[kiro]="$HOME/.kiro/skills"
-    echo -e "${GREEN}✓${RESET} Kiro (AWS)"
-    echo -e "  └─ Skills: ${BLUE}~/.kiro/skills/${RESET}"
-fi
-
-# OpenCode
-if [ -d "$HOME/.config/opencode" ] || [ -d "$HOME/.opencode" ]; then
-    PLATFORMS[opencode]=true
-    if [ -d "$HOME/.config/opencode" ]; then
-        PLATFORM_PATHS[opencode]="$HOME/.config/opencode/skills"
-    else
-        PLATFORM_PATHS[opencode]="$HOME/.opencode/skills"
-    fi
-    echo -e "${GREEN}✓${RESET} OpenCode"
-    echo -e "  └─ Skills: ${BLUE}${PLATFORM_PATHS[opencode]}${RESET}"
-fi
-
-# Cursor
-if [ -d "$HOME/.cursor" ] || [ -d "$HOME/Library/Application Support/Cursor" ]; then
-    PLATFORMS[cursor]=true
-    if [ -d "$HOME/.cursor" ]; then
-        PLATFORM_PATHS[cursor]="$HOME/.cursor/skills"
-    else
-        PLATFORM_PATHS[cursor]="$HOME/Library/Application Support/Cursor/skills"
-    fi
-    echo -e "${GREEN}✓${RESET} Cursor"
-    echo -e "  └─ Skills: ${BLUE}${PLATFORM_PATHS[cursor]}${RESET}"
-fi
-
-# VS Code
-if [ -d "$HOME/.vscode" ] || [ -d "$HOME/Library/Application Support/Code" ]; then
-    PLATFORMS[vscode]=true
-    if [ -d "$HOME/.vscode" ]; then
-        PLATFORM_PATHS[vscode]="$HOME/.vscode/skills"
-    else
-        PLATFORM_PATHS[vscode]="$HOME/Library/Application Support/Code/User/skills"
-    fi
-    echo -e "${GREEN}✓${RESET} VS Code"
-    echo -e "  └─ Skills: ${BLUE}${PLATFORM_PATHS[vscode]}${RESET}"
-fi
-
-# OpenAI Codex
-if [ -d "$HOME/.codex" ] || [ -d "$HOME/.openai/codex" ]; then
-    PLATFORMS[codex]=true
-    if [ -d "$HOME/.codex" ]; then
-        PLATFORM_PATHS[codex]="$HOME/.codex/skills"
-    else
-        PLATFORM_PATHS[codex]="$HOME/.openai/codex/skills"
-    fi
-    echo -e "${GREEN}✓${RESET} OpenAI Codex"
-    echo -e "  └─ Skills: ${BLUE}${PLATFORM_PATHS[codex]}${RESET}"
-fi
-
-# Google Antigravity
-if [ -d "$HOME/.antigravity" ] || [ -d "$HOME/.config/antigravity" ]; then
-    PLATFORMS[antigravity]=true
-    if [ -d "$HOME/.antigravity" ]; then
-        PLATFORM_PATHS[antigravity]="$HOME/.antigravity/skills"
-    else
-        PLATFORM_PATHS[antigravity]="$HOME/.config/antigravity/skills"
-    fi
-    echo -e "${GREEN}✓${RESET} Google Antigravity"
-    echo -e "  └─ Skills: ${BLUE}${PLATFORM_PATHS[antigravity]}${RESET}"
-fi
-
-# Goose
-if [ -d "$HOME/.config/goose" ]; then
-    PLATFORMS[goose]=true
-    PLATFORM_PATHS[goose]="$HOME/.config/goose/skills"
-    echo -e "${GREEN}✓${RESET} Goose"
-    echo -e "  └─ Skills: ${BLUE}~/.config/goose/skills/${RESET}"
-fi
-
-# Count detected platforms
 DETECTED_COUNT=0
-for platform in "${!PLATFORMS[@]}"; do
-    DETECTED_COUNT=$((DETECTED_COUNT + 1))
+for platform in "${PLATFORM_ORDER[@]}"; do
+    if detect_platform "$platform"; then
+        PLATFORMS[$platform]=true
+        PLATFORM_PATHS[$platform]="$(get_platform_path "$platform")"
+        DETECTED_COUNT=$((DETECTED_COUNT + 1))
+        print_ok "$(get_platform_name "$platform")  ${BLUE}$(get_platform_path "$platform")${RESET}"
+    fi
 done
 
 echo ""
 
 # Handle no platforms detected
 if [ $DETECTED_COUNT -eq 0 ]; then
-    if [ "$CI_MODE" = true ]; then
-        echo -e "${CYAN}CI mode:${RESET} No platforms detected — auto-creating ~/.claude/skills"
-        mkdir -p "$HOME/.claude/skills"
+    if [ "$CI_MODE" = true ] || [ "$AGENT_FLAG" = "claude" ]; then
+        print_ok "No platforms detected — auto-creating ~/.claude/skills"
+        mkdir -p "$HOME/.claude"
         PLATFORMS[claude]=true
         PLATFORM_PATHS[claude]="$HOME/.claude/skills"
         DETECTED_COUNT=1
+    elif [ -n "$AGENT_FLAG" ]; then
+        # --agent flag for a specific platform — create it
+        print_ok "Creating target for $AGENT_FLAG"
+        PLATFORMS[$AGENT_FLAG]=true
+        PLATFORM_PATHS[$AGENT_FLAG]="$(get_platform_path "$AGENT_FLAG")"
+        DETECTED_COUNT=1
     else
-        echo -e "${YELLOW}⚠${RESET}  No Agent Skills compatible platforms detected"
+        print_warn "No Agent Skills compatible platforms detected"
         echo ""
-        echo -e "${BOLD}Install one of these platforms:${RESET}"
-        echo -e "  • Claude Code:       ${CYAN}https://claude.ai/download${RESET}"
-        echo -e "  • Kiro (AWS):        ${CYAN}https://kiro.dev${RESET}"
-        echo -e "  • OpenCode:          ${CYAN}https://opencode.ai${RESET}"
-        echo -e "  • Cursor:            ${CYAN}https://cursor.com${RESET}"
-        echo -e "  • VS Code:           ${CYAN}https://code.visualstudio.com/${RESET}"
-        echo -e "  • OpenAI Codex:      ${CYAN}https://developers.openai.com/codex${RESET}"
-        echo -e "  • Google Antigravity:${CYAN}https://antigravity.dev${RESET}"
-        echo ""
-        echo -e "Then re-run this installer."
+        echo -e "${BOLD}Install one of these, then re-run:${RESET}"
+        echo -e "  Claude Code       https://claude.ai/download"
+        echo -e "  Kiro              https://kiro.dev"
+        echo -e "  Cursor            https://cursor.com"
+        echo -e "  VS Code           https://code.visualstudio.com"
         exit 1
     fi
 fi
 
-# Show summary
-echo -e "${BOLD}📊 Detection Summary:${RESET}"
-echo -e "   ${GREEN}$DETECTED_COUNT${RESET} platform(s) detected"
+echo -e "  ${GREEN}$DETECTED_COUNT${RESET} platform(s) detected"
 echo ""
 
-# Build installation menu
-echo -e "${BOLD}🎯 Where should WFC be installed?${RESET}"
-echo ""
+# ============================================================================
+# Platform selection (interactive menu with path preview)
+# ============================================================================
+resolve_selection() {
+    # --agent flag: skip menu entirely
+    if [ -n "$AGENT_FLAG" ]; then
+        if [ "$AGENT_FLAG" = "all" ]; then
+            SELECTED_OPTION="all"
+        else
+            # Validate agent name
+            local valid=false
+            for p in "${PLATFORM_ORDER[@]}"; do
+                if [ "$p" = "$AGENT_FLAG" ]; then valid=true; break; fi
+            done
+            if [ "$valid" = false ]; then
+                print_error "Unknown agent: $AGENT_FLAG"
+                echo "  Valid agents: ${PLATFORM_ORDER[*]} all"
+                exit 1
+            fi
+            # Ensure platform entry exists
+            PLATFORMS[$AGENT_FLAG]=true
+            PLATFORM_PATHS[$AGENT_FLAG]="$(get_platform_path "$AGENT_FLAG")"
+            SELECTED_OPTION="$AGENT_FLAG"
+        fi
+        return
+    fi
 
-MENU_OPTIONS=()
-# shellcheck disable=SC2034
-MENU_PLATFORMS=()
-MENU_INDEX=1
+    # CI mode: select all
+    if [ "$CI_MODE" = true ]; then
+        if [ $DETECTED_COUNT -eq 1 ]; then
+            for platform in "${!PLATFORMS[@]}"; do
+                SELECTED_OPTION="$platform"
+            done
+        else
+            SELECTED_OPTION="all"
+        fi
+        print_ok "Installing to: $SELECTED_OPTION"
+        return
+    fi
 
-# Add individual platform options
-for platform in claude kiro opencode cursor vscode codex antigravity goose; do
-    if [ "${PLATFORMS[$platform]}" = true ]; then
-        case $platform in
-            claude) name="Claude Code" ;;
-            kiro) name="Kiro (AWS)" ;;
-            opencode) name="OpenCode" ;;
-            cursor) name="Cursor" ;;
-            vscode) name="VS Code" ;;
-            codex) name="OpenAI Codex" ;;
-            antigravity) name="Google Antigravity" ;;
-            goose) name="Goose" ;;
-        esac
-        echo -e "${MENU_INDEX}) ${name} only"
-        MENU_OPTIONS[$MENU_INDEX]="$platform"
+    # Interactive menu with path preview
+    echo -e "${BOLD}Where should WFC be installed?${RESET}"
+    echo ""
+
+    local -a MENU_OPTIONS=()
+    local MENU_INDEX=1
+
+    for platform in "${PLATFORM_ORDER[@]}"; do
+        if [ "${PLATFORMS[$platform]:-}" = true ]; then
+            local name path_display
+            name="$(get_platform_name "$platform")"
+            path_display="$(get_platform_path "$platform" | sed "s|$HOME|~|")"
+            printf "  ${BOLD}%d)${RESET} %-20s ${BLUE}(%s)${RESET}\n" "$MENU_INDEX" "$name" "$path_display"
+            MENU_OPTIONS[$MENU_INDEX]="$platform"
+            MENU_INDEX=$((MENU_INDEX + 1))
+        fi
+    done
+
+    if [ $DETECTED_COUNT -gt 1 ]; then
+        printf "  ${BOLD}%d)${RESET} %-20s ${GREEN}(recommended — uses symlinks)${RESET}\n" "$MENU_INDEX" "All detected"
+        MENU_OPTIONS[$MENU_INDEX]="all"
         MENU_INDEX=$((MENU_INDEX + 1))
     fi
-done
 
-# Add "All detected" option if more than one
-if [ $DETECTED_COUNT -gt 1 ]; then
-    echo -e "${MENU_INDEX}) ${BOLD}All detected platforms${RESET} (recommended - uses symlinks)"
-    MENU_OPTIONS[$MENU_INDEX]="all"
-    # shellcheck disable=SC2034
-    ALL_OPTION_INDEX=$MENU_INDEX
-    MENU_INDEX=$((MENU_INDEX + 1))
-fi
+    echo ""
+    read -rp "Choose [1-$((MENU_INDEX-1))]: " CHOICE
 
-# Add "Custom selection" option if more than two
-if [ $DETECTED_COUNT -gt 2 ]; then
-    echo -e "${MENU_INDEX}) Custom selection"
-    MENU_OPTIONS[$MENU_INDEX]="custom"
-    MENU_INDEX=$((MENU_INDEX + 1))
-fi
-
-echo ""
-
-# CI mode: select all platforms automatically
-if [ "$CI_MODE" = true ]; then
-    if [ $DETECTED_COUNT -eq 1 ]; then
-        # Single platform: select it directly
-        for platform in "${!PLATFORMS[@]}"; do
-            SELECTED_OPTION="$platform"
-            case $platform in
-                claude) name="Claude Code" ;;
-                kiro) name="Kiro (AWS)" ;;
-                opencode) name="OpenCode" ;;
-                cursor) name="Cursor" ;;
-                vscode) name="VS Code" ;;
-                codex) name="OpenAI Codex" ;;
-                antigravity) name="Google Antigravity" ;;
-                goose) name="Goose" ;;
-            esac
-            echo -e "${CYAN}CI mode:${RESET} Installing to ${name}"
-        done
-    else
-        # Multiple platforms: use "all" strategy
-        echo -e "${CYAN}CI mode:${RESET} Installing to all detected platforms"
-        SELECTED_OPTION="all"
-    fi
-else
-    read -p "Choose (1-$((MENU_INDEX-1))): " CHOICE
-
-    # Validate choice
-    if [ -z "$CHOICE" ] || [ "$CHOICE" -lt 1 ] || [ "$CHOICE" -ge $MENU_INDEX ]; then
-        echo -e "${RED}✗${RESET} Invalid choice"
+    if [ -z "$CHOICE" ] || [ "$CHOICE" -lt 1 ] || [ "$CHOICE" -ge "$MENU_INDEX" ]; then
+        print_error "Invalid choice"
         exit 1
     fi
 
     SELECTED_OPTION="${MENU_OPTIONS[$CHOICE]}"
-fi
+}
+
+resolve_selection
 
 # Process selection
 declare -A INSTALL_TO
 
 if [ "$SELECTED_OPTION" = "all" ]; then
-    # Install to all detected platforms
     for platform in "${!PLATFORMS[@]}"; do
         INSTALL_TO[$platform]=true
     done
     STRATEGY="symlink"
-    echo ""
-    echo -e "${BLUE}Strategy:${RESET} Install to ~/.wfc, symlink to all platforms"
-elif [ "$SELECTED_OPTION" = "custom" ]; then
-    # Custom selection
-    echo ""
-    echo -e "${BOLD}Select platforms (space-separated numbers):${RESET}"
-    INDEX=1
-    declare -A CUSTOM_MAP
-    for platform in claude kiro opencode cursor vscode codex antigravity goose; do
-        if [ "${PLATFORMS[$platform]}" = true ]; then
-            case $platform in
-                claude) name="Claude Code" ;;
-                kiro) name="Kiro (AWS)" ;;
-                opencode) name="OpenCode" ;;
-                cursor) name="Cursor" ;;
-                vscode) name="VS Code" ;;
-                codex) name="OpenAI Codex" ;;
-                antigravity) name="Google Antigravity" ;;
-                goose) name="Goose" ;;
-            esac
-            echo -e "${INDEX}) ${name}"
-            CUSTOM_MAP[$INDEX]=$platform
-            INDEX=$((INDEX + 1))
-        fi
-    done
-    echo ""
-    read -p "Enter numbers: " -a CUSTOM_CHOICES
-
-    for choice in "${CUSTOM_CHOICES[@]}"; do
-        if [ -n "${CUSTOM_MAP[$choice]}" ]; then
-            INSTALL_TO[${CUSTOM_MAP[$choice]}]=true
-        fi
-    done
-
-    # Determine strategy
-    INSTALL_COUNT=0
-    for platform in "${!INSTALL_TO[@]}"; do
-        INSTALL_COUNT=$((INSTALL_COUNT + 1))
-    done
-
-    if [ $INSTALL_COUNT -gt 1 ]; then
-        STRATEGY="symlink"
-    else
-        STRATEGY="direct"
-    fi
+    echo -e "  ${BLUE}Strategy:${RESET} Install to ~/.wfc, symlink to all platforms"
 else
-    # Single platform installation
     INSTALL_TO[$SELECTED_OPTION]=true
     STRATEGY="direct"
 fi
@@ -863,128 +781,73 @@ if [ "${INSTALL_TO[claude]}" = true ] || [ "${PLATFORMS[claude]}" = true ]; then
     fi
 fi
 
-# Success!
-echo -e "${GREEN}${BOLD}✓ Installation complete!${RESET}"
+# ============================================================================
+# Installation Summary
+# ============================================================================
 echo ""
-
-# Show installation summary
-echo -e "${BOLD}📋 Installation Summary${RESET}"
+echo -e "${CYAN}${BOLD}╔══════════════════════════════════════════╗${RESET}"
+echo -e "${CYAN}${BOLD}║          Installation Complete            ║${RESET}"
+echo -e "${CYAN}${BOLD}╚══════════════════════════════════════════╝${RESET}"
 echo ""
 
 if [ "$STRATEGY" = "symlink" ]; then
-    echo -e "${BLUE}Source:${RESET} $WFC_ROOT"
-    echo ""
-    echo -e "${BLUE}Symlinked to:${RESET}"
-    for platform in "${!INSTALL_TO[@]}"; do
-        case $platform in
-            claude) name="Claude Code" ;;
-            kiro) name="Kiro" ;;
-            opencode) name="OpenCode" ;;
-            cursor) name="Cursor" ;;
-            vscode) name="VS Code" ;;
-            codex) name="OpenAI Codex" ;;
-            antigravity) name="Google Antigravity" ;;
-            goose) name="Goose" ;;
-        esac
-        echo -e "  • ${name}: ${PLATFORM_PATHS[$platform]}/wfc-*"
+    echo -e "  ${BOLD}Source:${RESET}     $WFC_ROOT"
+    echo -e "  ${BOLD}Symlinked:${RESET}"
+    for platform in "${PLATFORM_ORDER[@]}"; do
+        [ "${INSTALL_TO[$platform]:-}" = true ] || continue
+        local_path="$(get_platform_path "$platform" | sed "s|$HOME|~|")"
+        printf "    %-20s %s\n" "$(get_platform_name "$platform")" "$local_path"
     done
-    echo ""
-    echo -e "${YELLOW}Note:${RESET} Updates to $WFC_ROOT automatically sync to all platforms"
 else
-    echo -e "${BLUE}Location:${RESET} $WFC_ROOT"
+    echo -e "  ${BOLD}Location:${RESET}   $WFC_ROOT"
 fi
 
 echo ""
-echo -e "${BOLD}🎯 Available Skills${RESET}"
-echo ""
-echo -e "  • ${CYAN}/wfc-review${RESET}       - Multi-agent consensus code review"
-echo -e "  • ${CYAN}/wfc-implement${RESET}    - Parallel TDD implementation"
-echo -e "  • ${CYAN}/wfc-plan${RESET}         - Structured task breakdown"
-echo -e "  • ${CYAN}/wfc-test${RESET}         - Property-based test generation"
-echo -e "  • ${CYAN}/wfc-security${RESET}     - STRIDE threat modeling"
-echo -e "  • ${CYAN}/wfc-architecture${RESET} - C4 diagrams & ADRs"
-echo -e "  • ${CYAN}/wfc-observe${RESET}      - Observability instrumentation"
-echo -e "  • ${CYAN}/wfc-retro${RESET}        - AI-powered retrospectives"
-echo -e "  • ${CYAN}/wfc-safeclaude${RESET}   - Safe command allowlist"
-echo -e "  • ${CYAN}/wfc-safeguard${RESET}    - Real-time security hooks"
-echo -e "  • ${CYAN}/wfc-rules${RESET}        - Custom enforcement rules"
-echo -e "  • ${CYAN}/wfc-playground${RESET}   - Interactive HTML playgrounds"
-echo -e "  • ${CYAN}/wfc-validate${RESET}     - Critical thinking advisor"
-echo -e "  • ${CYAN}/wfc-pr-comments${RESET}  - PR comment triage & fix"
-echo -e "  • ${CYAN}/wfc-newskill${RESET}     - Create new WFC skills"
-echo -e "  • ${CYAN}/wfc-init${RESET}         - Project initialization tool"
-echo -e "  • ${CYAN}/wfc-vibe${RESET}         - Natural brainstorming mode"
-echo -e "  • ${CYAN}/wfc-sync${RESET}         - Sync rules & discover patterns"
-echo -e "  • ${CYAN}/wfc-agentic${RESET}      - GitHub Agentic Workflows (gh-aw)"
-echo -e "  • ${CYAN}/wfc-ba${RESET}           - Business analysis & requirements"
-
-echo ""
-echo -e "${BOLD}🚀 Next Steps${RESET}"
+echo -e "  ${BOLD}Skills:${RESET}     $SKILLS_FOUND installed"
+echo -e "  ${BOLD}Branding:${RESET}   $WFC_NAME ($WFC_MODE)"
 echo ""
 
-for platform in "${!INSTALL_TO[@]}"; do
+# Compact skill list — top 8 most-used
+echo -e "${BOLD}Key Skills${RESET}"
+echo ""
+echo -e "  ${CYAN}/wfc-review${RESET}       5-agent consensus code review"
+echo -e "  ${CYAN}/wfc-build${RESET}        Quick feature with TDD"
+echo -e "  ${CYAN}/wfc-plan${RESET}         Structured task breakdown"
+echo -e "  ${CYAN}/wfc-implement${RESET}    Parallel TDD execution"
+echo -e "  ${CYAN}/wfc-security${RESET}     STRIDE threat modeling"
+echo -e "  ${CYAN}/wfc-test${RESET}         Property-based test generation"
+echo -e "  ${CYAN}/wfc-lfg${RESET}          Full auto: plan → build → review → PR"
+echo -e "  ${CYAN}/wfc-validate${RESET}     Critical thinking advisor"
+echo ""
+
+# Per-platform next steps
+echo -e "${BOLD}Next Steps${RESET}"
+echo ""
+
+for platform in "${PLATFORM_ORDER[@]}"; do
+    [ "${INSTALL_TO[$platform]:-}" = true ] || continue
+    name="$(get_platform_name "$platform")"
+    config_hint=""
     case $platform in
-        claude)
-            echo -e "  ${GREEN}Claude Code:${RESET}"
-            echo -e "    claude"
-            echo -e "    /wfc-review"
-            echo ""
-            ;;
-        kiro)
-            echo -e "  ${GREEN}Kiro:${RESET}"
-            echo -e "    kiro"
-            echo -e "    /wfc-review"
-            echo ""
-            ;;
-        opencode)
-            echo -e "  ${GREEN}OpenCode:${RESET}"
-            echo -e "    opencode"
-            echo -e "    /wfc-review"
-            echo ""
-            ;;
-        cursor)
-            echo -e "  ${GREEN}Cursor:${RESET}"
-            echo -e "    Open Cursor"
-            echo -e "    /wfc-review"
-            echo ""
-            ;;
-        vscode)
-            echo -e "  ${GREEN}VS Code:${RESET}"
-            echo -e "    code ."
-            echo -e "    /wfc-review"
-            echo ""
-            ;;
-        codex)
-            echo -e "  ${GREEN}OpenAI Codex:${RESET}"
-            echo -e "    codex"
-            echo -e "    /wfc-review"
-            echo ""
-            ;;
-        antigravity)
-            echo -e "  ${GREEN}Google Antigravity:${RESET}"
-            echo -e "    antigravity"
-            echo -e "    /wfc-review"
-            echo ""
-            ;;
-        goose)
-            echo -e "  ${GREEN}Goose:${RESET}"
-            echo -e "    goose"
-            echo -e "    /wfc-review"
-            echo ""
-            ;;
+        claude)       config_hint="Restart Claude Code, then type: /wfc-review" ;;
+        kiro)         config_hint="Add orchestrator to ~/.kiro/KIRO.md — see: examples/kiro/" ;;
+        opencode)     config_hint="Add orchestrator to opencode config — see: examples/opencode/" ;;
+        cursor)       config_hint="Add to .cursorrules — see: examples/cursor/" ;;
+        vscode)       config_hint="Add to copilot-instructions.md — see: examples/vscode/" ;;
+        codex)        config_hint="Add to Codex instructions — see: examples/codex/" ;;
+        antigravity)  config_hint="Add to .agent/rules/ — see: examples/antigravity/" ;;
+        goose)        config_hint="Add to Goose config — see: examples/goose/" ;;
     esac
+    echo -e "  ${GREEN}${name}:${RESET} ${config_hint}"
 done
 
-echo -e "${BOLD}📚 Documentation${RESET}"
 echo ""
-echo -e "  • README:    ${CYAN}https://github.com/sam-fakhreddine/wfc${RESET}"
-echo -e "  • Install:   ${CYAN}$SCRIPT_DIR/docs/workflow/UNIVERSAL_INSTALL.md${RESET}"
-echo -e "  • Personas:  ${CYAN}$SCRIPT_DIR/docs/quality/PERSONAS.md${RESET}"
+echo -e "  Docs:     ${CYAN}https://github.com/sam-fakhreddine/wfc${RESET}"
+echo -e "  Examples: ${CYAN}examples/${RESET}  (per-platform config templates)"
+echo ""
 
-echo ""
 if [ "$WFC_MODE" = "sfw" ]; then
-    echo -e "${GREEN}${BOLD}This is Workflow Champion.${RESET} 🏆"
+    echo -e "${GREEN}${BOLD}This is Workflow Champion.${RESET}"
 else
-    echo -e "${GREEN}${BOLD}This is World Fucking Class.${RESET} 🏆"
+    echo -e "${GREEN}${BOLD}This is World Fucking Class.${RESET}"
 fi
-echo -e "${CYAN}Universal. Compatible. Performance-optimized.${RESET}"
