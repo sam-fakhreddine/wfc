@@ -122,12 +122,16 @@ For each task in dependency order (respecting topological sort):
 ```xml
 <Task
   subagent_type="general-purpose"
+  mode="acceptEdits"
   description="Implement TASK-001"
   prompt="
 Task ID: TASK-001
 Task Description: [from TASKS.md]
 Worktree Path: .worktrees/TASK-001/
 Branch: claude/TASK-001
+
+CRITICAL: Edit files only. Do NOT run any git commands (no git add, git commit, git push, etc.).
+The orchestrator handles all git operations after you complete.
 
 Context Files (read these first):
 - TASKS.md (your task definition)
@@ -142,11 +146,11 @@ TDD Workflow (REQUESTED but not enforceable):
 5. Run quality checks if tooling detected (lint, format) - skip if not configured
 
 Deliverables:
-1. Implementation committed to worktree branch
+1. Implementation files edited in worktree (do NOT commit — orchestrator commits)
 2. Tests passing
 3. Agent report (JSON format - see below)
 
-Agent Report Format (write to .worktrees/TASK-001/agent-report.json):
+Agent Report Format (write to .worktrees/TASK-001/agent-report.json using the Write tool — NOT Bash):
 {
   \"task_id\": \"TASK-001\",
   \"status\": \"success\" | \"failed\",
@@ -159,6 +163,7 @@ Agent Report Format (write to .worktrees/TASK-001/agent-report.json):
 }
 
 On failure, set status to \"failed\" and include \"error\" field with details.
+Use the Write tool to write agent-report.json. Do NOT use Bash echo redirection.
 "
 />
 ```
@@ -188,6 +193,22 @@ Update `tasks_pending` to remove a task ID when its agent-report.json is written
 ### Phase 3: Collect Results
 
 Wait for all spawned agents to complete. Track completion status per task.
+
+For each completed agent, immediately after its `agent-report.json` is written, commit the
+changes from the orchestrator (not the agent):
+
+```bash
+# Read files_changed from agent-report.json to know what was edited
+REPORT=".worktrees/TASK-001/agent-report.json"
+SUMMARY=$(jq -r '.summary' "$REPORT")
+
+# Stage and commit from orchestrator — agent never ran git
+git -C .worktrees/TASK-001 add -A
+git -C .worktrees/TASK-001 commit -m "feat(TASK-001): $SUMMARY"
+```
+
+If `git status` in the worktree shows no changes (agent edited nothing), skip the commit and
+mark the task failed.
 
 **Synchronization**: All agents must complete before proceeding to merge phase.
 

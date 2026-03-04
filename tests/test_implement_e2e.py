@@ -396,6 +396,223 @@ class TestTDDWorkflow:
         assert "submit" in phases
 
 
+class TestOrchestratorCommitPattern:
+    """Tests for the orchestrator-owned commit pattern (issue #114).
+
+    Agents edit files only. No git commands. The orchestrator commits after
+    each agent completes, so background agents are never blocked on Bash approval.
+    """
+
+    @pytest.fixture
+    def git_worktree(self):
+        """Create an isolated git repo simulating a worktree."""
+        with tempfile.TemporaryDirectory() as tmpdir:
+            repo = Path(tmpdir)
+            subprocess.run(["git", "init"], cwd=repo, capture_output=True, check=True)
+            subprocess.run(
+                ["git", "config", "user.email", "test@wfc.com"],
+                cwd=repo,
+                capture_output=True,
+                check=True,
+            )
+            subprocess.run(
+                ["git", "config", "user.name", "WFC Test"],
+                cwd=repo,
+                capture_output=True,
+                check=True,
+            )
+            (repo / "README.md").write_text("# Worktree")
+            subprocess.run(["git", "add", "."], cwd=repo, capture_output=True, check=True)
+            subprocess.run(
+                ["git", "commit", "-m", "Initial"],
+                cwd=repo,
+                capture_output=True,
+                check=True,
+            )
+            yield repo
+
+    def test_commit_agent_work_creates_commit(self, git_worktree):
+        """Orchestrator commits file edits that agent left uncommitted."""
+        from wfc_implement.agent import AgentReport
+        from wfc_implement.executor import ExecutionEngine
+        from wfc_implement.orchestrator import WFCOrchestrator
+        from wfc.shared.config.wfc_config import WFCConfig
+        from wfc.shared.schemas import Task, TaskComplexity, TaskStatus
+
+        # Simulate agent editing a file without committing
+        (git_worktree / "hello.py").write_text("print('hello')\n")
+
+        task = Task(
+            id="TASK-001",
+            title="Add hello.py",
+            description="Add a greeting module",
+            complexity=TaskComplexity.S,
+            dependencies=[],
+            acceptance_criteria=["File exists and prints hello"],
+            properties_satisfied=[],
+            files_likely_affected=["hello.py"],
+            status=TaskStatus.IN_PROGRESS,
+        )
+
+        report = AgentReport(
+            agent_id="agent-1",
+            task_id="TASK-001",
+            status="success",
+            worktree_path=str(git_worktree),
+            branch="claude/TASK-001",
+        )
+
+        config = WFCConfig()
+        orchestrator = WFCOrchestrator(project_root=git_worktree, config=config)
+        engine = ExecutionEngine(orchestrator)
+
+        sha = engine._commit_agent_work(report, task)
+
+        assert sha is not None
+        assert len(sha) == 40  # full git SHA
+
+        # Verify the working tree is now clean
+        status = subprocess.run(
+            ["git", "status", "--porcelain"],
+            cwd=git_worktree,
+            capture_output=True,
+            text=True,
+            check=True,
+        )
+        assert status.stdout.strip() == ""
+
+    def test_commit_agent_work_returns_none_when_nothing_to_commit(self, git_worktree):
+        """Orchestrator skips commit when agent made no changes."""
+        from wfc_implement.agent import AgentReport
+        from wfc_implement.executor import ExecutionEngine
+        from wfc_implement.orchestrator import WFCOrchestrator
+        from wfc.shared.config.wfc_config import WFCConfig
+        from wfc.shared.schemas import Task, TaskComplexity, TaskStatus
+
+        task = Task(
+            id="TASK-002",
+            title="Noop task",
+            description="No file changes",
+            complexity=TaskComplexity.S,
+            dependencies=[],
+            acceptance_criteria=["No files changed"],
+            properties_satisfied=[],
+            files_likely_affected=[],
+            status=TaskStatus.IN_PROGRESS,
+        )
+
+        report = AgentReport(
+            agent_id="agent-2",
+            task_id="TASK-002",
+            status="success",
+            worktree_path=str(git_worktree),
+            branch="claude/TASK-002",
+        )
+
+        config = WFCConfig()
+        orchestrator = WFCOrchestrator(project_root=git_worktree, config=config)
+        engine = ExecutionEngine(orchestrator)
+
+        sha = engine._commit_agent_work(report, task)
+
+        assert sha is None  # nothing to commit
+
+    def test_commit_agent_work_returns_none_for_nonexistent_worktree(self):
+        """Orchestrator skips commit when worktree path does not exist."""
+        from wfc_implement.agent import AgentReport
+        from wfc_implement.executor import ExecutionEngine
+        from wfc_implement.orchestrator import WFCOrchestrator
+        from wfc.shared.config.wfc_config import WFCConfig
+        from wfc.shared.schemas import Task, TaskComplexity, TaskStatus
+
+        task = Task(
+            id="TASK-003",
+            title="Missing worktree",
+            description="Worktree was cleaned up",
+            complexity=TaskComplexity.S,
+            dependencies=[],
+            acceptance_criteria=["Handles missing worktree gracefully"],
+            properties_satisfied=[],
+            files_likely_affected=[],
+            status=TaskStatus.IN_PROGRESS,
+        )
+
+        report = AgentReport(
+            agent_id="agent-3",
+            task_id="TASK-003",
+            status="success",
+            worktree_path="/nonexistent/path/TASK-003",
+            branch="claude/TASK-003",
+        )
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            config = WFCConfig()
+            orchestrator = WFCOrchestrator(project_root=Path(tmpdir), config=config)
+            engine = ExecutionEngine(orchestrator)
+
+            sha = engine._commit_agent_work(report, task)
+
+        assert sha is None
+
+    def test_agent_prompt_excludes_git_commands(self):
+        """Agent prompt must instruct agents not to run git commands."""
+        from wfc_implement.executor import ExecutionEngine
+        from wfc_implement.orchestrator import WFCOrchestrator
+        from wfc.shared.config.wfc_config import WFCConfig
+        from wfc.shared.schemas import Task, TaskComplexity, TaskStatus
+
+        task = Task(
+            id="TASK-004",
+            title="Sample task",
+            description="Implement feature X",
+            complexity=TaskComplexity.M,
+            dependencies=[],
+            acceptance_criteria=["Feature works"],
+            properties_satisfied=[],
+            files_likely_affected=[],
+            status=TaskStatus.QUEUED,
+        )
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            config = WFCConfig()
+            orchestrator = WFCOrchestrator(project_root=Path(tmpdir), config=config)
+            engine = ExecutionEngine(orchestrator)
+
+            prompt = engine._build_agent_prompt(task, "agent-4")
+
+        assert "Do NOT run any git commands" in prompt
+        assert "Edit files only" in prompt
+
+    def test_agent_prompt_instructs_write_tool_for_report(self):
+        """Agent prompt must instruct agents to use Write tool for agent-report.json."""
+        from wfc_implement.executor import ExecutionEngine
+        from wfc_implement.orchestrator import WFCOrchestrator
+        from wfc.shared.config.wfc_config import WFCConfig
+        from wfc.shared.schemas import Task, TaskComplexity, TaskStatus
+
+        task = Task(
+            id="TASK-005",
+            title="Report task",
+            description="Write a report",
+            complexity=TaskComplexity.S,
+            dependencies=[],
+            acceptance_criteria=["Report is written"],
+            properties_satisfied=[],
+            files_likely_affected=[],
+            status=TaskStatus.QUEUED,
+        )
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            config = WFCConfig()
+            orchestrator = WFCOrchestrator(project_root=Path(tmpdir), config=config)
+            engine = ExecutionEngine(orchestrator)
+
+            prompt = engine._build_agent_prompt(task, "agent-5")
+
+        assert "Write tool" in prompt
+        assert "Bash" in prompt  # must explicitly warn against Bash
+
+
 def test_coverage_check():
     """Meta-test to verify we're testing the right components."""
     # This test verifies we have coverage of all critical areas
