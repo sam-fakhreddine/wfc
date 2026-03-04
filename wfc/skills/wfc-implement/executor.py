@@ -10,6 +10,8 @@ The orchestrator and executor NEVER do implementation work.
 They ONLY coordinate. All actual work is done by subagents via Task tool.
 """
 
+import logging
+import subprocess
 import time
 from pathlib import Path
 from typing import Dict, Optional
@@ -20,6 +22,11 @@ from wfc.shared.schemas import Task, TaskStatus
 from .agent import AgentReport
 from .merge_engine import MergeEngine
 from .orchestrator import WFCOrchestrator
+
+logger = logging.getLogger(__name__)
+
+# Conventional git subject-line length limit (git log --oneline wraps beyond this)
+_GIT_SUBJECT_LINE_LIMIT = 72
 
 
 class ExecutionEngine:
@@ -88,6 +95,10 @@ class ExecutionEngine:
 
         CRITICAL: This method delegates to a subagent subprocess.
         It does NOT execute agent code in-process.
+
+        Agents run with mode="acceptEdits" so Edit/Write calls are auto-approved
+        without user interaction (background-safe). Agents NEVER run git commands —
+        the orchestrator commits after each agent completes.
         """
         self.agent_counter += 1
         agent_id = f"agent-{self.agent_counter}"
@@ -137,6 +148,10 @@ class ExecutionEngine:
             f"Task ID: {task.id}",
             f"Task Complexity: {task.complexity.value}",
             f"Task Description: {task.description}",
+            "",
+            "CRITICAL: Edit files only. Do NOT run any git commands (no git add, git commit, git push, etc.).",
+            "The orchestrator handles all git operations after you complete.",
+            "Write agent-report.json using the Write tool — NOT Bash echo redirection.",
         ]
 
         thinking_section = thinking_config.to_prompt_section()
@@ -210,10 +225,27 @@ class ExecutionEngine:
         )
 
     def _process_report(self, report: AgentReport, task: Task) -> None:
-        """Process agent report."""
+        """Process agent report.
+
+        Orchestrator-owned commit pattern: agents only edit files; we commit here
+        so git operations never block a background agent waiting for Bash approval.
+        """
         if report.status == "failed":
             self.orchestrator.mark_task_failed(task.id)
             return
+
+        # Commit agent's edits from the orchestrator — agents never run git
+        commit_sha = self._commit_agent_work(report, task)
+        if commit_sha:
+            # Update the report's commit list with the orchestrator-created commit
+            report.commits = [
+                {
+                    "sha": commit_sha,
+                    "message": f"feat({task.id}): {report.to_dict().get('summary', task.id)}",
+                    "files_changed": report.to_dict().get("files_changed", []),
+                    "type": "orchestrator",
+                }
+            ]
 
         review_passed, review_report = self._review(report)
 
@@ -257,6 +289,70 @@ class ExecutionEngine:
                 self.orchestrator.mark_task_complete(task.id, report.to_dict())
             else:
                 self.orchestrator.mark_task_failed(task.id)
+
+    def _commit_agent_work(self, report: AgentReport, task: Task) -> Optional[str]:
+        """
+        Commit agent's file edits from the orchestrator.
+
+        Agents only edit files — they never run git commands.  This method
+        runs git add -A && git commit in the worktree so that background agents
+        are never blocked waiting for Bash tool approval.
+
+        Returns:
+            Commit SHA on success, None if there was nothing to commit or on error.
+        """
+        worktree = Path(report.worktree_path)
+        if not worktree.exists():
+            return None
+
+        try:
+            status = subprocess.run(
+                ["git", "status", "--porcelain"],
+                cwd=worktree,
+                capture_output=True,
+                text=True,
+                check=True,
+                timeout=30,
+            )
+            if not status.stdout.strip():
+                return None  # nothing to commit
+
+            subprocess.run(
+                ["git", "add", "-A"],
+                cwd=worktree,
+                capture_output=True,
+                check=True,
+                timeout=30,
+            )
+
+            summary = report.to_dict().get("summary", task.description[:_GIT_SUBJECT_LINE_LIMIT])
+            commit_message = f"feat({task.id}): {summary}"
+            subprocess.run(
+                ["git", "commit", "-m", commit_message],
+                cwd=worktree,
+                capture_output=True,
+                check=True,
+                timeout=30,
+            )
+
+            sha_result = subprocess.run(
+                ["git", "rev-parse", "HEAD"],
+                cwd=worktree,
+                capture_output=True,
+                text=True,
+                check=True,
+                timeout=10,
+            )
+            return sha_result.stdout.strip()
+
+        except subprocess.CalledProcessError as e:
+            logger.warning(
+                "Orchestrator commit failed for %s in worktree %s: %s",
+                task.id,
+                worktree,
+                e.stderr,
+            )
+            return None
 
     def _review(self, report: AgentReport) -> tuple[bool, Optional[Dict]]:
         """
