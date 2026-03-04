@@ -16,17 +16,17 @@ import time
 from pathlib import Path
 from typing import Dict, Optional
 
-logger = logging.getLogger(__name__)
-
-# Conventional git subject-line length limit (git log --oneline wraps beyond this)
-_GIT_SUBJECT_LINE_LIMIT = 72
-
 from wfc.shared.extended_thinking import ExtendedThinkingDecider
 from wfc.shared.schemas import Task, TaskStatus
 
 from .agent import AgentReport
 from .merge_engine import MergeEngine
 from .orchestrator import WFCOrchestrator
+
+logger = logging.getLogger(__name__)
+
+# Conventional git subject-line length limit (git log --oneline wraps beyond this)
+_GIT_SUBJECT_LINE_LIMIT = 72
 
 
 class ExecutionEngine:
