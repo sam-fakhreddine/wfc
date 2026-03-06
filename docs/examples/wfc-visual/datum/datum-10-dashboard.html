@@ -1,0 +1,1043 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DATUM Platform KPIs</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600;700&family=Fira+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
+<style>
+  :root {
+    --primary: #1E40AF;
+    --secondary: #3B82F6;
+    --cta: #F59E0B;
+    --bg: #F8FAFC;
+    --text: #1E3A8A;
+    --border: #DBEAFE;
+    --surface: #FFFFFF;
+    --surface-alt: #EFF6FF;
+    --grid-color: rgba(30, 64, 175, 0.06);
+    --grid-color-strong: rgba(30, 64, 175, 0.1);
+    --shadow: 0 1px 3px rgba(30, 58, 138, 0.08), 0 4px 12px rgba(30, 58, 138, 0.04);
+    --shadow-lg: 0 4px 12px rgba(30, 58, 138, 0.1), 0 12px 32px rgba(30, 58, 138, 0.06);
+    --muted: #64748B;
+    --success: #059669;
+    --success-bg: #D1FAE5;
+    --danger: #DC2626;
+    --danger-bg: #FEE2E2;
+    --warning: #D97706;
+    --warning-bg: #FEF3C7;
+    --purple: #7C3AED;
+    --chart-grid: rgba(30, 64, 175, 0.08);
+    --chart-text: #64748B;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --primary: #3B82F6;
+      --secondary: #60A5FA;
+      --cta: #FBBF24;
+      --bg: #0B1120;
+      --text: #DBEAFE;
+      --border: #1E3A5F;
+      --surface: #111827;
+      --surface-alt: #1A2332;
+      --grid-color: rgba(59, 130, 246, 0.06);
+      --grid-color-strong: rgba(59, 130, 246, 0.12);
+      --shadow: 0 1px 3px rgba(0, 0, 0, 0.3), 0 4px 12px rgba(0, 0, 0, 0.2);
+      --shadow-lg: 0 4px 12px rgba(0, 0, 0, 0.4), 0 12px 32px rgba(0, 0, 0, 0.3);
+      --muted: #94A3B8;
+      --success: #34D399;
+      --success-bg: #064E3B;
+      --danger: #F87171;
+      --danger-bg: #7F1D1D;
+      --warning: #FBBF24;
+      --warning-bg: #78350F;
+      --purple: #A78BFA;
+      --chart-grid: rgba(59, 130, 246, 0.1);
+      --chart-text: #94A3B8;
+    }
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Fira Sans', sans-serif;
+    background-color: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    overflow-x: hidden;
+    background-image:
+      linear-gradient(var(--grid-color) 1px, transparent 1px),
+      linear-gradient(90deg, var(--grid-color) 1px, transparent 1px),
+      linear-gradient(var(--grid-color-strong) 1px, transparent 1px),
+      linear-gradient(90deg, var(--grid-color-strong) 1px, transparent 1px);
+    background-size: 20px 20px, 20px 20px, 100px 100px, 100px 100px;
+    background-position: center center;
+  }
+
+  .page-container {
+    max-width: 1300px;
+    margin: 0 auto;
+    padding: 2rem 1.5rem;
+  }
+
+  /* Header */
+  .page-header {
+    text-align: center;
+    margin-bottom: 2rem;
+    opacity: 0;
+    transform: translateY(20px);
+    animation: fadeUp 0.6s ease-out forwards;
+  }
+
+  .page-header .badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 9999px;
+    padding: 0.35rem 1rem;
+    font-family: 'Fira Code', monospace;
+    font-size: 0.75rem;
+    color: var(--secondary);
+    margin-bottom: 1rem;
+    letter-spacing: 0.05em;
+  }
+
+  .page-header .badge::before {
+    content: '';
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--success);
+    animation: pulse-dot 2s ease-in-out infinite;
+  }
+
+  .page-header h1 {
+    font-family: 'Fira Sans', sans-serif;
+    font-size: clamp(1.5rem, 4vw, 2.25rem);
+    font-weight: 700;
+    color: var(--primary);
+    margin-bottom: 0.5rem;
+    letter-spacing: -0.02em;
+  }
+
+  .page-header .subtitle {
+    font-size: 0.95rem;
+    color: var(--muted);
+    max-width: 600px;
+    margin: 0 auto;
+    line-height: 1.6;
+  }
+
+  /* Card base */
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    box-shadow: var(--shadow);
+    overflow: hidden;
+  }
+
+  .card-header {
+    font-family: 'Fira Code', monospace;
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--muted);
+    padding: 0.85rem 1.25rem;
+    border-bottom: 1px solid var(--border);
+    background: var(--surface-alt);
+  }
+
+  /* Hero KPI Row */
+  .hero-kpis {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+    opacity: 0;
+    transform: translateY(20px);
+    animation: fadeUp 0.6s ease-out 0.1s forwards;
+  }
+
+  .hero-kpi {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 1.25rem 1.5rem;
+    box-shadow: var(--shadow);
+    position: relative;
+    overflow: hidden;
+  }
+
+  .hero-kpi::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+  }
+
+  .hero-kpi:nth-child(1)::after { background: var(--secondary); }
+  .hero-kpi:nth-child(2)::after { background: var(--success); }
+  .hero-kpi:nth-child(3)::after { background: var(--cta); }
+  .hero-kpi:nth-child(4)::after { background: var(--purple); }
+
+  .hero-kpi .kpi-label {
+    font-size: 0.75rem;
+    color: var(--muted);
+    margin-bottom: 0.5rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+
+  .hero-kpi .kpi-value {
+    font-family: 'Fira Code', monospace;
+    font-size: 1.75rem;
+    font-weight: 700;
+    color: var(--text);
+    line-height: 1;
+  }
+
+  .hero-kpi .kpi-unit {
+    font-size: 0.85rem;
+    font-weight: 400;
+    color: var(--muted);
+    margin-left: 0.25rem;
+  }
+
+  .hero-kpi .kpi-trend {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    margin-top: 0.5rem;
+    font-family: 'Fira Code', monospace;
+    font-size: 0.72rem;
+    font-weight: 600;
+    padding: 0.15rem 0.5rem;
+    border-radius: 9999px;
+  }
+
+  .kpi-trend.up {
+    color: var(--success);
+    background: var(--success-bg);
+  }
+
+  .kpi-trend.down {
+    color: var(--success);
+    background: var(--success-bg);
+  }
+
+  .kpi-trend.stable {
+    color: var(--cta);
+    background: var(--warning-bg);
+  }
+
+  /* Charts grid */
+  .charts-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+    opacity: 0;
+    transform: translateY(20px);
+    animation: fadeUp 0.6s ease-out 0.2s forwards;
+  }
+
+  .chart-container {
+    padding: 1.25rem;
+  }
+
+  .chart-container canvas {
+    max-height: 280px;
+  }
+
+  /* Pipeline health table */
+  .pipeline-section {
+    margin-bottom: 1.5rem;
+    opacity: 0;
+    transform: translateY(20px);
+    animation: fadeUp 0.6s ease-out 0.3s forwards;
+  }
+
+  .pipeline-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.85rem;
+  }
+
+  .pipeline-table thead th {
+    background: var(--surface-alt);
+    border-bottom: 2px solid var(--border);
+    padding: 0.7rem 1rem;
+    text-align: left;
+    font-family: 'Fira Code', monospace;
+    font-size: 0.68rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--muted);
+  }
+
+  .pipeline-table tbody tr {
+    border-bottom: 1px solid var(--border);
+    transition: background 0.15s ease;
+  }
+
+  .pipeline-table tbody tr:hover {
+    background: rgba(59, 130, 246, 0.04);
+  }
+
+  .pipeline-table tbody td {
+    padding: 0.65rem 1rem;
+    font-size: 0.82rem;
+  }
+
+  .pipeline-table .status-indicator {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    font-weight: 500;
+  }
+
+  .status-dot-sm {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+
+  .status-dot-sm.healthy {
+    background: var(--success);
+    animation: pulse-health 2s ease-in-out infinite;
+  }
+
+  .status-dot-sm.warning {
+    background: var(--warning);
+  }
+
+  .status-dot-sm.degraded {
+    background: var(--danger);
+  }
+
+  @keyframes pulse-health {
+    0%, 100% { box-shadow: 0 0 0 0 rgba(5, 150, 105, 0.4); }
+    50% { box-shadow: 0 0 0 4px rgba(5, 150, 105, 0); }
+  }
+
+  @media (prefers-color-scheme: dark) {
+    @keyframes pulse-health {
+      0%, 100% { box-shadow: 0 0 0 0 rgba(52, 211, 153, 0.4); }
+      50% { box-shadow: 0 0 0 4px rgba(52, 211, 153, 0); }
+    }
+  }
+
+  .pipeline-name {
+    font-weight: 600;
+    color: var(--primary);
+  }
+
+  .mono-sm {
+    font-family: 'Fira Code', monospace;
+    font-size: 0.75rem;
+    color: var(--muted);
+  }
+
+  /* Bottom row */
+  .bottom-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+    opacity: 0;
+    transform: translateY(20px);
+    animation: fadeUp 0.6s ease-out 0.4s forwards;
+  }
+
+  .bottom-card-content {
+    padding: 1.25rem;
+  }
+
+  /* Storage card */
+  .storage-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 0.75rem;
+  }
+
+  .storage-item:last-child { margin-bottom: 0; }
+
+  .storage-label {
+    font-size: 0.82rem;
+    color: var(--text);
+    min-width: 80px;
+  }
+
+  .storage-bar-container {
+    flex: 1;
+    margin: 0 0.75rem;
+    height: 6px;
+    background: var(--surface-alt);
+    border-radius: 3px;
+    overflow: hidden;
+    border: 1px solid var(--border);
+  }
+
+  .storage-bar {
+    height: 100%;
+    border-radius: 3px;
+    transition: width 1s ease-out;
+  }
+
+  .storage-bar.lake { background: var(--secondary); width: 66.6%; }
+  .storage-bar.warehouse { background: var(--cta); width: 30.7%; }
+  .storage-bar.cache { background: var(--purple); width: 2.7%; }
+
+  .storage-value {
+    font-family: 'Fira Code', monospace;
+    font-size: 0.75rem;
+    color: var(--muted);
+    min-width: 55px;
+    text-align: right;
+  }
+
+  .storage-total {
+    font-family: 'Fira Code', monospace;
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: var(--text);
+    margin-bottom: 1rem;
+  }
+
+  .storage-total .unit {
+    font-size: 0.8rem;
+    font-weight: 400;
+    color: var(--muted);
+  }
+
+  /* Cost card */
+  .cost-total {
+    font-family: 'Fira Code', monospace;
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: var(--text);
+    margin-bottom: 1rem;
+  }
+
+  .cost-total .unit {
+    font-size: 0.8rem;
+    font-weight: 400;
+    color: var(--muted);
+  }
+
+  .cost-chart-row {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+  }
+
+  .doughnut-container {
+    width: 90px;
+    height: 90px;
+    flex-shrink: 0;
+  }
+
+  .cost-breakdown {
+    flex: 1;
+  }
+
+  .cost-item {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    font-size: 0.8rem;
+    color: var(--muted);
+    margin-bottom: 0.35rem;
+  }
+
+  .cost-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 2px;
+    flex-shrink: 0;
+  }
+
+  .cost-dot.compute { background: var(--secondary); }
+  .cost-dot.storage { background: var(--cta); }
+  .cost-dot.network { background: var(--purple); }
+
+  .cost-pct {
+    font-family: 'Fira Code', monospace;
+    font-size: 0.72rem;
+    margin-left: auto;
+  }
+
+  /* SLA card */
+  .sla-total {
+    font-family: 'Fira Code', monospace;
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: var(--text);
+    margin-bottom: 1rem;
+  }
+
+  .sla-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.4rem 0;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .sla-item:last-child { border-bottom: none; }
+
+  .sla-name {
+    font-size: 0.82rem;
+    color: var(--text);
+  }
+
+  .sla-status {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    font-family: 'Fira Code', monospace;
+    font-size: 0.75rem;
+  }
+
+  .sla-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+  }
+
+  .sla-dot.green { background: var(--success); }
+  .sla-dot.amber { background: var(--warning); }
+
+  /* Footer */
+  .page-footer {
+    text-align: center;
+    margin-top: 2rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid var(--border);
+    opacity: 0;
+    transform: translateY(20px);
+    animation: fadeUp 0.6s ease-out 0.5s forwards;
+  }
+
+  .page-footer p {
+    font-family: 'Fira Code', monospace;
+    font-size: 0.7rem;
+    color: var(--muted);
+    letter-spacing: 0.05em;
+  }
+
+  /* Animations */
+  @keyframes fadeUp {
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  @keyframes pulse-dot {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.4; }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .page-header,
+    .hero-kpis,
+    .charts-grid,
+    .pipeline-section,
+    .bottom-row,
+    .page-footer {
+      opacity: 1;
+      transform: none;
+      animation: none;
+    }
+    .page-header .badge::before,
+    .status-dot-sm.healthy {
+      animation: none;
+    }
+  }
+
+  @media (max-width: 1024px) {
+    .bottom-row { grid-template-columns: 1fr; }
+  }
+
+  @media (max-width: 768px) {
+    .page-container { padding: 1rem; }
+    .hero-kpis { grid-template-columns: repeat(2, 1fr); }
+    .charts-grid { grid-template-columns: 1fr; }
+    .bottom-row { grid-template-columns: 1fr; }
+    .hero-kpi .kpi-value { font-size: 1.4rem; }
+  }
+
+  @media (max-width: 480px) {
+    .hero-kpis { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+<div class="page-container">
+  <header class="page-header">
+    <div class="badge">DATUM // DASHBOARD</div>
+    <h1>Platform KPIs</h1>
+    <p class="subtitle">Real-time operational metrics for the DATUM platform. Ingestion throughput, query performance, uptime, and pipeline health at a glance.</p>
+  </header>
+
+  <!-- Hero KPI Row -->
+  <div class="hero-kpis">
+    <div class="hero-kpi">
+      <div class="kpi-label">Rows Ingested / Day</div>
+      <div class="kpi-value"><span class="countup" data-target="2.4">0</span><span class="kpi-unit">B</span></div>
+      <span class="kpi-trend up">+18% MoM</span>
+    </div>
+    <div class="hero-kpi">
+      <div class="kpi-label">Avg Query Latency</div>
+      <div class="kpi-value"><span class="countup" data-target="847" data-decimals="0">0</span><span class="kpi-unit">ms</span></div>
+      <span class="kpi-trend down">-23% MoM</span>
+    </div>
+    <div class="hero-kpi">
+      <div class="kpi-label">Platform Uptime</div>
+      <div class="kpi-value"><span class="countup" data-target="99.97">0</span><span class="kpi-unit">%</span></div>
+      <span class="kpi-trend stable">Stable</span>
+    </div>
+    <div class="hero-kpi">
+      <div class="kpi-label">Active Pipelines</div>
+      <div class="kpi-value"><span class="countup" data-target="142" data-decimals="0">0</span></div>
+      <span class="kpi-trend up">+12 this month</span>
+    </div>
+  </div>
+
+  <!-- Charts -->
+  <div class="charts-grid">
+    <div class="card">
+      <div class="card-header">Ingestion Volume by Source</div>
+      <div class="chart-container">
+        <canvas id="barChart"></canvas>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-header">Query Latency P50 / P95 / P99 (7d)</div>
+      <div class="chart-container">
+        <canvas id="lineChart"></canvas>
+      </div>
+    </div>
+  </div>
+
+  <!-- Pipeline Health -->
+  <div class="pipeline-section">
+    <div class="card">
+      <div class="card-header">Pipeline Health</div>
+      <div style="overflow-x: auto;">
+        <table class="pipeline-table">
+          <thead>
+            <tr>
+              <th>Pipeline</th>
+              <th>Status</th>
+              <th>Last Run</th>
+              <th>Duration</th>
+              <th>Rows Processed</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td class="pipeline-name">user-events-kafka</td>
+              <td><span class="status-indicator"><span class="status-dot-sm healthy"></span> Healthy</span></td>
+              <td class="mono-sm">2 min ago</td>
+              <td class="mono-sm">4m 12s</td>
+              <td class="mono-sm">84.2M</td>
+            </tr>
+            <tr>
+              <td class="pipeline-name">transactions-cdc</td>
+              <td><span class="status-indicator"><span class="status-dot-sm healthy"></span> Healthy</span></td>
+              <td class="mono-sm">5 min ago</td>
+              <td class="mono-sm">12m 38s</td>
+              <td class="mono-sm">142.7M</td>
+            </tr>
+            <tr>
+              <td class="pipeline-name">product-catalog-sync</td>
+              <td><span class="status-indicator"><span class="status-dot-sm healthy"></span> Healthy</span></td>
+              <td class="mono-sm">18 min ago</td>
+              <td class="mono-sm">2m 05s</td>
+              <td class="mono-sm">1.2M</td>
+            </tr>
+            <tr>
+              <td class="pipeline-name">clickstream-batch</td>
+              <td><span class="status-indicator"><span class="status-dot-sm warning"></span> Warning</span></td>
+              <td class="mono-sm">34 min ago</td>
+              <td class="mono-sm">28m 44s</td>
+              <td class="mono-sm">328.5M</td>
+            </tr>
+            <tr>
+              <td class="pipeline-name">partner-api-ingest</td>
+              <td><span class="status-indicator"><span class="status-dot-sm healthy"></span> Healthy</span></td>
+              <td class="mono-sm">8 min ago</td>
+              <td class="mono-sm">6m 21s</td>
+              <td class="mono-sm">23.8M</td>
+            </tr>
+            <tr>
+              <td class="pipeline-name">ml-feature-refresh</td>
+              <td><span class="status-indicator"><span class="status-dot-sm degraded"></span> Degraded</span></td>
+              <td class="mono-sm">1 hr ago</td>
+              <td class="mono-sm">45m 12s</td>
+              <td class="mono-sm">56.1M</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- Bottom Row -->
+  <div class="bottom-row">
+    <!-- Storage -->
+    <div class="card">
+      <div class="card-header">Storage Utilization</div>
+      <div class="bottom-card-content">
+        <div class="storage-total">48.2 <span class="unit">TB total</span></div>
+        <div class="storage-item">
+          <span class="storage-label">Data Lake</span>
+          <div class="storage-bar-container"><div class="storage-bar lake"></div></div>
+          <span class="storage-value">32.1 TB</span>
+        </div>
+        <div class="storage-item">
+          <span class="storage-label">Warehouse</span>
+          <div class="storage-bar-container"><div class="storage-bar warehouse"></div></div>
+          <span class="storage-value">14.8 TB</span>
+        </div>
+        <div class="storage-item">
+          <span class="storage-label">Cache</span>
+          <div class="storage-bar-container"><div class="storage-bar cache"></div></div>
+          <span class="storage-value">1.3 TB</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Cost -->
+    <div class="card">
+      <div class="card-header">Monthly Cost Breakdown</div>
+      <div class="bottom-card-content">
+        <div class="cost-total">$12,847 <span class="unit">/mo</span></div>
+        <div class="cost-chart-row">
+          <div class="doughnut-container">
+            <canvas id="doughnutChart"></canvas>
+          </div>
+          <div class="cost-breakdown">
+            <div class="cost-item">
+              <span class="cost-dot compute"></span>
+              <span>Compute</span>
+              <span class="cost-pct">62%</span>
+            </div>
+            <div class="cost-item">
+              <span class="cost-dot storage"></span>
+              <span>Storage</span>
+              <span class="cost-pct">28%</span>
+            </div>
+            <div class="cost-item">
+              <span class="cost-dot network"></span>
+              <span>Network</span>
+              <span class="cost-pct">10%</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SLA -->
+    <div class="card">
+      <div class="card-header">SLA Compliance</div>
+      <div class="bottom-card-content">
+        <div class="sla-total">4 <span class="unit" style="font-size:0.8rem;font-weight:400;color:var(--muted);">metrics tracked</span></div>
+        <div class="sla-item">
+          <span class="sla-name">Uptime SLA (99.9%)</span>
+          <span class="sla-status"><span class="sla-dot green"></span> 99.97%</span>
+        </div>
+        <div class="sla-item">
+          <span class="sla-name">Query P99 (&lt;2s)</span>
+          <span class="sla-status"><span class="sla-dot green"></span> 1.42s</span>
+        </div>
+        <div class="sla-item">
+          <span class="sla-name">Ingestion Lag (&lt;60s)</span>
+          <span class="sla-status"><span class="sla-dot green"></span> 12s</span>
+        </div>
+        <div class="sla-item">
+          <span class="sla-name">Recovery Time (&lt;15m)</span>
+          <span class="sla-status"><span class="sla-dot amber"></span> 11m</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <footer class="page-footer">
+    <p>DATUM Platform // KPI Dashboard // Last updated: 2 minutes ago // Auto-refresh: 30s</p>
+  </footer>
+</div>
+
+<script>
+  // --- CountUp Animation ---
+  const prefersReduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  function animateCountUp(el) {
+    const target = parseFloat(el.dataset.target);
+    const decimals = el.dataset.decimals !== undefined ? parseInt(el.dataset.decimals) : (target % 1 !== 0 ? 2 : 0);
+    const duration = prefersReduced ? 0 : 1500;
+    const startTime = performance.now();
+
+    function update(currentTime) {
+      const elapsed = currentTime - startTime;
+      const progress = Math.min(elapsed / duration, 1);
+      // Ease out cubic
+      const eased = 1 - Math.pow(1 - progress, 3);
+      const current = target * eased;
+      el.textContent = current.toFixed(decimals);
+      if (progress < 1) {
+        requestAnimationFrame(update);
+      } else {
+        el.textContent = target.toFixed(decimals);
+      }
+    }
+
+    if (duration === 0) {
+      el.textContent = target.toFixed(decimals);
+    } else {
+      requestAnimationFrame(update);
+    }
+  }
+
+  // Start countup when visible
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        const counters = entry.target.querySelectorAll('.countup');
+        counters.forEach(animateCountUp);
+        observer.unobserve(entry.target);
+      }
+    });
+  }, { threshold: 0.3 });
+
+  document.querySelectorAll('.hero-kpis').forEach(el => observer.observe(el));
+
+  // --- Chart.js Setup ---
+  const isDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+  const gridColor = isDark ? 'rgba(59,130,246,0.1)' : 'rgba(30,64,175,0.08)';
+  const textColor = isDark ? '#94A3B8' : '#64748B';
+  const tooltipBg = isDark ? '#1A2332' : '#FFFFFF';
+  const tooltipBorder = isDark ? '#1E3A5F' : '#DBEAFE';
+  const tooltipText = isDark ? '#DBEAFE' : '#1E3A8A';
+
+  Chart.defaults.font.family = "'Fira Sans', sans-serif";
+  Chart.defaults.color = textColor;
+
+  // Bar Chart - Ingestion Volume
+  const barCtx = document.getElementById('barChart').getContext('2d');
+  new Chart(barCtx, {
+    type: 'bar',
+    data: {
+      labels: ['Kafka', 'CDC', 'API', 'Files'],
+      datasets: [{
+        label: 'Rows (Millions)',
+        data: [1200, 680, 340, 180],
+        backgroundColor: [
+          isDark ? 'rgba(59,130,246,0.7)' : 'rgba(30,64,175,0.75)',
+          isDark ? 'rgba(96,165,250,0.6)' : 'rgba(59,130,246,0.65)',
+          isDark ? 'rgba(251,191,36,0.6)' : 'rgba(245,158,11,0.65)',
+          isDark ? 'rgba(167,139,250,0.6)' : 'rgba(124,58,237,0.55)'
+        ],
+        borderColor: [
+          isDark ? '#3B82F6' : '#1E40AF',
+          isDark ? '#60A5FA' : '#3B82F6',
+          isDark ? '#FBBF24' : '#F59E0B',
+          isDark ? '#A78BFA' : '#7C3AED'
+        ],
+        borderWidth: 1,
+        borderRadius: 4,
+        maxBarThickness: 60
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: true,
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          backgroundColor: tooltipBg,
+          borderColor: tooltipBorder,
+          borderWidth: 1,
+          titleColor: tooltipText,
+          bodyColor: tooltipText,
+          titleFont: { family: "'Fira Code', monospace", size: 12 },
+          bodyFont: { family: "'Fira Sans', sans-serif", size: 12 },
+          padding: 10,
+          cornerRadius: 6,
+          callbacks: {
+            label: function(ctx) {
+              return ctx.parsed.y.toLocaleString() + 'M rows';
+            }
+          }
+        }
+      },
+      scales: {
+        x: {
+          grid: { display: false },
+          ticks: { font: { family: "'Fira Code', monospace", size: 11 } }
+        },
+        y: {
+          beginAtZero: true,
+          grid: { color: gridColor },
+          ticks: {
+            font: { family: "'Fira Code', monospace", size: 11 },
+            callback: function(v) { return v + 'M'; }
+          }
+        }
+      }
+    }
+  });
+
+  // Line Chart - Query Latency
+  const lineCtx = document.getElementById('lineChart').getContext('2d');
+  const days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+  new Chart(lineCtx, {
+    type: 'line',
+    data: {
+      labels: days,
+      datasets: [
+        {
+          label: 'P50',
+          data: [420, 395, 410, 380, 365, 350, 340],
+          borderColor: isDark ? '#34D399' : '#059669',
+          backgroundColor: 'transparent',
+          borderWidth: 2,
+          tension: 0.3,
+          pointRadius: 3,
+          pointHoverRadius: 5
+        },
+        {
+          label: 'P95',
+          data: [890, 920, 870, 850, 810, 780, 760],
+          borderColor: isDark ? '#FBBF24' : '#F59E0B',
+          backgroundColor: 'transparent',
+          borderWidth: 2,
+          tension: 0.3,
+          pointRadius: 3,
+          pointHoverRadius: 5
+        },
+        {
+          label: 'P99',
+          data: [1680, 1720, 1640, 1590, 1520, 1480, 1420],
+          borderColor: isDark ? '#F87171' : '#DC2626',
+          backgroundColor: 'transparent',
+          borderWidth: 2,
+          tension: 0.3,
+          pointRadius: 3,
+          pointHoverRadius: 5
+        }
+      ]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: true,
+      interaction: {
+        mode: 'index',
+        intersect: false
+      },
+      plugins: {
+        legend: {
+          position: 'bottom',
+          labels: {
+            usePointStyle: true,
+            pointStyle: 'circle',
+            font: { family: "'Fira Code', monospace", size: 11 },
+            padding: 16
+          }
+        },
+        tooltip: {
+          backgroundColor: tooltipBg,
+          borderColor: tooltipBorder,
+          borderWidth: 1,
+          titleColor: tooltipText,
+          bodyColor: tooltipText,
+          titleFont: { family: "'Fira Code', monospace", size: 12 },
+          bodyFont: { family: "'Fira Sans', sans-serif", size: 12 },
+          padding: 10,
+          cornerRadius: 6,
+          callbacks: {
+            label: function(ctx) {
+              return ctx.dataset.label + ': ' + ctx.parsed.y + 'ms';
+            }
+          }
+        }
+      },
+      scales: {
+        x: {
+          grid: { display: false },
+          ticks: { font: { family: "'Fira Code', monospace", size: 11 } }
+        },
+        y: {
+          beginAtZero: true,
+          grid: { color: gridColor },
+          ticks: {
+            font: { family: "'Fira Code', monospace", size: 11 },
+            callback: function(v) { return v + 'ms'; }
+          }
+        }
+      }
+    }
+  });
+
+  // Doughnut Chart - Cost
+  const doughnutCtx = document.getElementById('doughnutChart').getContext('2d');
+  new Chart(doughnutCtx, {
+    type: 'doughnut',
+    data: {
+      labels: ['Compute', 'Storage', 'Network'],
+      datasets: [{
+        data: [62, 28, 10],
+        backgroundColor: [
+          isDark ? 'rgba(59,130,246,0.8)' : 'rgba(30,64,175,0.8)',
+          isDark ? 'rgba(251,191,36,0.8)' : 'rgba(245,158,11,0.8)',
+          isDark ? 'rgba(167,139,250,0.8)' : 'rgba(124,58,237,0.7)'
+        ],
+        borderColor: isDark ? '#111827' : '#FFFFFF',
+        borderWidth: 2
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: true,
+      cutout: '65%',
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          backgroundColor: tooltipBg,
+          borderColor: tooltipBorder,
+          borderWidth: 1,
+          titleColor: tooltipText,
+          bodyColor: tooltipText,
+          titleFont: { family: "'Fira Code', monospace", size: 11 },
+          bodyFont: { family: "'Fira Sans', sans-serif", size: 11 },
+          padding: 8,
+          cornerRadius: 6,
+          callbacks: {
+            label: function(ctx) {
+              const val = Math.round(12847 * ctx.parsed / 100);
+              return ctx.label + ': $' + val.toLocaleString() + ' (' + ctx.parsed + '%)';
+            }
+          }
+        }
+      }
+    }
+  });
+
+  // Reload on theme change
+  window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => {
+    location.reload();
+  });
+</script>
+</body>
+</html>

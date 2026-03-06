@@ -1,0 +1,694 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DATUM Platform Architecture</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@300;400;500;600;700&family=Fira+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --primary: #1E40AF;
+    --secondary: #3B82F6;
+    --cta: #F59E0B;
+    --bg: #F8FAFC;
+    --text: #1E3A8A;
+    --border: #DBEAFE;
+    --card-bg: #FFFFFF;
+    --card-shadow: rgba(30, 64, 175, 0.08);
+    --grid-color: rgba(30, 58, 90, 0.06);
+    --accent-ingestion: #3B82F6;
+    --accent-processing: #8B5CF6;
+    --accent-storage: #10B981;
+    --accent-query: #F59E0B;
+    --accent-output: #EF4444;
+    --arrow-color: #3B82F6;
+    --legend-bg: rgba(255, 255, 255, 0.9);
+    --subtitle-color: #64748B;
+    --badge-bg: rgba(59, 130, 246, 0.1);
+    --badge-text: #1E40AF;
+    --inner-card-bg: #F8FAFC;
+    --inner-card-border: #DBEAFE;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --primary: #3B82F6;
+      --secondary: #60A5FA;
+      --cta: #F59E0B;
+      --bg: #0F172A;
+      --text: #DBEAFE;
+      --border: #1E3A5A;
+      --card-bg: #1E293B;
+      --card-shadow: rgba(0, 0, 0, 0.3);
+      --grid-color: rgba(59, 130, 246, 0.07);
+      --accent-ingestion: #60A5FA;
+      --accent-processing: #A78BFA;
+      --accent-storage: #34D399;
+      --accent-query: #FBBF24;
+      --accent-output: #F87171;
+      --arrow-color: #60A5FA;
+      --legend-bg: rgba(30, 41, 59, 0.95);
+      --subtitle-color: #94A3B8;
+      --badge-bg: rgba(59, 130, 246, 0.2);
+      --badge-text: #93C5FD;
+      --inner-card-bg: #0F172A;
+      --inner-card-border: #334155;
+    }
+  }
+
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(24px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+      animation-duration: 0.01ms !important;
+      animation-delay: 0ms !important;
+      transition-duration: 0.01ms !important;
+    }
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'Fira Sans', sans-serif;
+    background-color: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    background-image:
+      linear-gradient(var(--grid-color) 1px, transparent 1px),
+      linear-gradient(90deg, var(--grid-color) 1px, transparent 1px);
+    background-size: 40px 40px;
+    padding: 2rem;
+  }
+
+  .container {
+    max-width: 1200px;
+    margin: 0 auto;
+  }
+
+  header {
+    text-align: center;
+    margin-bottom: 3rem;
+    animation: fadeUp 0.6s ease-out both;
+  }
+
+  header h1 {
+    font-family: 'Fira Code', monospace;
+    font-size: 2rem;
+    font-weight: 700;
+    color: var(--primary);
+    margin-bottom: 0.5rem;
+    letter-spacing: -0.02em;
+  }
+
+  header p {
+    font-size: 1rem;
+    color: var(--subtitle-color);
+    font-weight: 400;
+  }
+
+  .layer {
+    margin-bottom: 1rem;
+    animation: fadeUp 0.6s ease-out both;
+  }
+  .layer:nth-child(2) { animation-delay: 0.1s; }
+  .layer:nth-child(3) { animation-delay: 0.25s; }
+  .layer:nth-child(4) { animation-delay: 0.4s; }
+  .layer:nth-child(5) { animation-delay: 0.55s; }
+  .layer:nth-child(6) { animation-delay: 0.7s; }
+  .layer:nth-child(7) { animation-delay: 0.85s; }
+  .layer:nth-child(8) { animation-delay: 1.0s; }
+  .layer:nth-child(9) { animation-delay: 1.15s; }
+  .layer:nth-child(10) { animation-delay: 1.3s; }
+  .layer:nth-child(11) { animation-delay: 1.45s; }
+
+  .section-card {
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 1.5rem;
+    box-shadow: 0 2px 8px var(--card-shadow);
+    position: relative;
+  }
+
+  .section-card::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 4px;
+    border-radius: 12px 0 0 12px;
+  }
+
+  .section-card.ingestion::before { background: var(--accent-ingestion); }
+  .section-card.processing::before { background: var(--accent-processing); }
+  .section-card.storage::before { background: var(--accent-storage); }
+  .section-card.query::before { background: var(--accent-query); }
+  .section-card.output::before { background: var(--accent-output); }
+
+  .section-header {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin-bottom: 1rem;
+  }
+
+  .dot-label {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+
+  .ingestion .dot-label { background: var(--accent-ingestion); }
+  .processing .dot-label { background: var(--accent-processing); }
+  .storage .dot-label { background: var(--accent-storage); }
+  .query .dot-label { background: var(--accent-query); }
+  .output .dot-label { background: var(--accent-output); }
+
+  .section-title {
+    font-family: 'Fira Code', monospace;
+    font-size: 0.9rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+
+  .section-badge {
+    font-family: 'Fira Code', monospace;
+    font-size: 0.65rem;
+    background: var(--badge-bg);
+    color: var(--badge-text);
+    padding: 2px 8px;
+    border-radius: 4px;
+    margin-left: auto;
+  }
+
+  .inner-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 0.75rem;
+  }
+
+  @media (max-width: 768px) {
+    .inner-grid { grid-template-columns: 1fr; }
+    .output-row { grid-template-columns: 1fr !important; }
+  }
+
+  @media (max-width: 1024px) and (min-width: 769px) {
+    .inner-grid { grid-template-columns: repeat(2, 1fr); }
+  }
+
+  .inner-card {
+    background: var(--inner-card-bg);
+    border: 1px solid var(--inner-card-border);
+    border-radius: 8px;
+    padding: 0.85rem;
+    text-align: center;
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
+  }
+
+  .inner-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px var(--card-shadow);
+  }
+
+  .inner-card .card-icon {
+    font-size: 1.4rem;
+    margin-bottom: 0.35rem;
+  }
+
+  .inner-card .card-name {
+    font-family: 'Fira Code', monospace;
+    font-size: 0.78rem;
+    font-weight: 500;
+    margin-bottom: 0.2rem;
+  }
+
+  .inner-card .card-desc {
+    font-size: 0.7rem;
+    color: var(--subtitle-color);
+    line-height: 1.3;
+  }
+
+  /* Hero card for ingestion layer */
+  .hero-card {
+    position: relative;
+    overflow: hidden;
+  }
+
+  .hero-card::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 120px;
+    height: 120px;
+    background: radial-gradient(circle at top right, var(--accent-ingestion), transparent 70%);
+    opacity: 0.06;
+    pointer-events: none;
+  }
+
+  /* Flow arrows */
+  .flow-arrow {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 40px;
+    animation: fadeUp 0.6s ease-out both;
+  }
+
+  .flow-arrow svg {
+    width: 24px;
+    height: 32px;
+  }
+
+  .flow-arrow svg path {
+    fill: none;
+    stroke: var(--arrow-color);
+    stroke-width: 2;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+
+  .flow-arrow svg polygon {
+    fill: var(--arrow-color);
+  }
+
+  /* Output row */
+  .output-row {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1rem;
+  }
+
+  .output-row .section-card {
+    margin-bottom: 0;
+  }
+
+  .output-row .inner-grid {
+    grid-template-columns: 1fr;
+    gap: 0.5rem;
+  }
+
+  .output-row .inner-card {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    text-align: left;
+    padding: 0.6rem 0.75rem;
+  }
+
+  .output-row .inner-card .card-icon {
+    margin-bottom: 0;
+    font-size: 1.1rem;
+  }
+
+  .output-row .card-info {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .output-row .card-info .card-name {
+    margin-bottom: 0;
+    font-size: 0.72rem;
+  }
+
+  .output-row .card-info .card-desc {
+    font-size: 0.65rem;
+  }
+
+  /* Legend */
+  .legend {
+    margin-top: 2rem;
+    background: var(--legend-bg);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 1rem 1.5rem;
+    animation: fadeUp 0.6s ease-out 1.5s both;
+  }
+
+  .legend-title {
+    font-family: 'Fira Code', monospace;
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-bottom: 0.75rem;
+    color: var(--subtitle-color);
+  }
+
+  .legend-items {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1.25rem;
+  }
+
+  .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.78rem;
+    font-family: 'Fira Code', monospace;
+  }
+
+  .legend-swatch {
+    width: 14px;
+    height: 14px;
+    border-radius: 3px;
+  }
+
+  .pipeline-step {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    font-family: 'Fira Code', monospace;
+    font-size: 0.68rem;
+    color: var(--subtitle-color);
+    margin-top: 0.5rem;
+    flex-wrap: wrap;
+  }
+
+  .pipeline-step .step-num {
+    background: var(--badge-bg);
+    color: var(--badge-text);
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.6rem;
+    font-weight: 600;
+    flex-shrink: 0;
+  }
+
+  .pipeline-step .step-arrow {
+    color: var(--arrow-color);
+  }
+</style>
+</head>
+<body>
+<div class="container">
+  <header>
+    <h1>DATUM Platform Architecture</h1>
+    <p>End-to-end data management and analytics infrastructure</p>
+    <div class="pipeline-step" style="justify-content: center; margin-top: 1rem;">
+      <span class="step-num">1</span> Ingest
+      <span class="step-arrow">&rarr;</span>
+      <span class="step-num">2</span> Process
+      <span class="step-arrow">&rarr;</span>
+      <span class="step-num">3</span> Store
+      <span class="step-arrow">&rarr;</span>
+      <span class="step-num">4</span> Query
+      <span class="step-arrow">&rarr;</span>
+      <span class="step-num">5</span> Serve
+    </div>
+  </header>
+
+  <!-- Ingestion Layer -->
+  <div class="layer">
+    <div class="section-card ingestion hero-card">
+      <div class="section-header">
+        <div class="dot-label"></div>
+        <span class="section-title">Ingestion Layer</span>
+        <span class="section-badge">Entry Point</span>
+      </div>
+      <div class="inner-grid">
+        <div class="inner-card">
+          <div class="card-icon">&#x1F300;</div>
+          <div class="card-name">Kafka Streams</div>
+          <div class="card-desc">Real-time event ingestion at scale</div>
+        </div>
+        <div class="inner-card">
+          <div class="card-icon">&#x1F310;</div>
+          <div class="card-name">REST API Gateway</div>
+          <div class="card-desc">HTTP endpoints for batch uploads</div>
+        </div>
+        <div class="inner-card">
+          <div class="card-icon">&#x1F4C1;</div>
+          <div class="card-name">File Upload (S3)</div>
+          <div class="card-desc">Bulk file & object storage</div>
+        </div>
+        <div class="inner-card">
+          <div class="card-icon">&#x1F504;</div>
+          <div class="card-name">CDC (Debezium)</div>
+          <div class="card-desc">Change data capture from databases</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Flow Arrow -->
+  <div class="flow-arrow layer">
+    <svg viewBox="0 0 24 32"><path d="M12 2 L12 22"/><polygon points="6,20 12,30 18,20"/></svg>
+  </div>
+
+  <!-- Processing Engine -->
+  <div class="layer">
+    <div class="section-card processing">
+      <div class="section-header">
+        <div class="dot-label"></div>
+        <span class="section-title">Processing Engine</span>
+        <span class="section-badge">Transform</span>
+      </div>
+      <div class="inner-grid">
+        <div class="inner-card">
+          <div class="card-icon">&#x26A1;</div>
+          <div class="card-name">Apache Spark</div>
+          <div class="card-desc">Distributed batch processing</div>
+        </div>
+        <div class="inner-card">
+          <div class="card-icon">&#x1F30A;</div>
+          <div class="card-name">Stream Processor</div>
+          <div class="card-desc">Low-latency event processing</div>
+        </div>
+        <div class="inner-card">
+          <div class="card-icon">&#x1F4D0;</div>
+          <div class="card-name">Schema Registry</div>
+          <div class="card-desc">Schema versioning & validation</div>
+        </div>
+        <div class="inner-card">
+          <div class="card-icon">&#x2705;</div>
+          <div class="card-name">Data Quality Engine</div>
+          <div class="card-desc">Automated quality checks</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Flow Arrow -->
+  <div class="flow-arrow layer">
+    <svg viewBox="0 0 24 32"><path d="M12 2 L12 22"/><polygon points="6,20 12,30 18,20"/></svg>
+  </div>
+
+  <!-- Storage Layer -->
+  <div class="layer">
+    <div class="section-card storage">
+      <div class="section-header">
+        <div class="dot-label"></div>
+        <span class="section-title">Storage Layer</span>
+        <span class="section-badge">Persist</span>
+      </div>
+      <div class="inner-grid">
+        <div class="inner-card">
+          <div class="card-icon">&#x1F4BE;</div>
+          <div class="card-name">Data Lake</div>
+          <div class="card-desc">Parquet / Iceberg tables</div>
+        </div>
+        <div class="inner-card">
+          <div class="card-icon">&#x1F3E2;</div>
+          <div class="card-name">Data Warehouse</div>
+          <div class="card-desc">Columnar analytical store</div>
+        </div>
+        <div class="inner-card">
+          <div class="card-icon">&#x1F4D6;</div>
+          <div class="card-name">Metadata Catalog</div>
+          <div class="card-desc">Schema & lineage registry</div>
+        </div>
+        <div class="inner-card">
+          <div class="card-icon">&#x1F9CA;</div>
+          <div class="card-name">Cache (Redis)</div>
+          <div class="card-desc">Hot data & query result cache</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Flow Arrow -->
+  <div class="flow-arrow layer">
+    <svg viewBox="0 0 24 32"><path d="M12 2 L12 22"/><polygon points="6,20 12,30 18,20"/></svg>
+  </div>
+
+  <!-- Query Engine -->
+  <div class="layer">
+    <div class="section-card query">
+      <div class="section-header">
+        <div class="dot-label"></div>
+        <span class="section-title">Query Engine</span>
+        <span class="section-badge">Compute</span>
+      </div>
+      <div class="inner-grid">
+        <div class="inner-card">
+          <div class="card-icon">&#x1F50D;</div>
+          <div class="card-name">SQL Parser</div>
+          <div class="card-desc">ANSI SQL syntax analysis</div>
+        </div>
+        <div class="inner-card">
+          <div class="card-icon">&#x1F9E0;</div>
+          <div class="card-name">Query Optimizer</div>
+          <div class="card-desc">Cost-based plan optimization</div>
+        </div>
+        <div class="inner-card">
+          <div class="card-icon">&#x2699;&#xFE0F;</div>
+          <div class="card-name">Execution Engine</div>
+          <div class="card-desc">Parallel query execution</div>
+        </div>
+        <div class="inner-card">
+          <div class="card-icon">&#x1F4CB;</div>
+          <div class="card-name">Result Cache</div>
+          <div class="card-desc">Deterministic result caching</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Flow Arrow -->
+  <div class="flow-arrow layer">
+    <svg viewBox="0 0 24 32"><path d="M12 2 L12 22"/><polygon points="6,20 12,30 18,20"/></svg>
+  </div>
+
+  <!-- Output Row: Three columns -->
+  <div class="output-row layer">
+    <!-- API Layer -->
+    <div class="section-card output">
+      <div class="section-header">
+        <div class="dot-label"></div>
+        <span class="section-title">API Layer</span>
+      </div>
+      <div class="inner-grid">
+        <div class="inner-card">
+          <div class="card-icon">&#x1F517;</div>
+          <div class="card-info">
+            <div class="card-name">REST</div>
+            <div class="card-desc">JSON over HTTP/2</div>
+          </div>
+        </div>
+        <div class="inner-card">
+          <div class="card-icon">&#x25C6;</div>
+          <div class="card-info">
+            <div class="card-name">GraphQL</div>
+            <div class="card-desc">Flexible queries</div>
+          </div>
+        </div>
+        <div class="inner-card">
+          <div class="card-icon">&#x26A1;</div>
+          <div class="card-info">
+            <div class="card-name">gRPC</div>
+            <div class="card-desc">High-perf streaming</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Visualization -->
+    <div class="section-card output">
+      <div class="section-header">
+        <div class="dot-label"></div>
+        <span class="section-title">Visualization</span>
+      </div>
+      <div class="inner-grid">
+        <div class="inner-card">
+          <div class="card-icon">&#x1F4CA;</div>
+          <div class="card-info">
+            <div class="card-name">Dashboards</div>
+            <div class="card-desc">Real-time views</div>
+          </div>
+        </div>
+        <div class="inner-card">
+          <div class="card-icon">&#x1F4C4;</div>
+          <div class="card-info">
+            <div class="card-name">Reports</div>
+            <div class="card-desc">Scheduled exports</div>
+          </div>
+        </div>
+        <div class="inner-card">
+          <div class="card-icon">&#x1F514;</div>
+          <div class="card-info">
+            <div class="card-name">Alerts</div>
+            <div class="card-desc">Threshold triggers</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Governance -->
+    <div class="section-card output">
+      <div class="section-header">
+        <div class="dot-label"></div>
+        <span class="section-title">Governance</span>
+      </div>
+      <div class="inner-grid">
+        <div class="inner-card">
+          <div class="card-icon">&#x1F5FA;&#xFE0F;</div>
+          <div class="card-info">
+            <div class="card-name">Lineage</div>
+            <div class="card-desc">End-to-end tracking</div>
+          </div>
+        </div>
+        <div class="inner-card">
+          <div class="card-icon">&#x1F512;</div>
+          <div class="card-info">
+            <div class="card-name">Access Control</div>
+            <div class="card-desc">RBAC policies</div>
+          </div>
+        </div>
+        <div class="inner-card">
+          <div class="card-icon">&#x1F4DD;</div>
+          <div class="card-info">
+            <div class="card-name">Audit</div>
+            <div class="card-desc">Compliance logging</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Legend -->
+  <div class="legend">
+    <div class="legend-title">Legend</div>
+    <div class="legend-items">
+      <div class="legend-item">
+        <div class="legend-swatch" style="background: var(--accent-ingestion);"></div>
+        Ingestion
+      </div>
+      <div class="legend-item">
+        <div class="legend-swatch" style="background: var(--accent-processing);"></div>
+        Processing
+      </div>
+      <div class="legend-item">
+        <div class="legend-swatch" style="background: var(--accent-storage);"></div>
+        Storage
+      </div>
+      <div class="legend-item">
+        <div class="legend-swatch" style="background: var(--accent-query);"></div>
+        Query
+      </div>
+      <div class="legend-item">
+        <div class="legend-swatch" style="background: var(--accent-output);"></div>
+        Output
+      </div>
+      <div class="legend-item">
+        <svg width="14" height="20" style="flex-shrink:0"><path d="M7 2 L7 12" fill="none" stroke="var(--arrow-color)" stroke-width="2" stroke-linecap="round"/><polygon points="3,11 7,18 11,11" fill="var(--arrow-color)"/></svg>
+        Data Flow
+      </div>
+    </div>
+  </div>
+</div>
+</body>
+</html>

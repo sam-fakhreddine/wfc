@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DATUM Data Ingestion Pipeline</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@300;400;500;600;700&family=Fira+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --primary: #1E40AF;
+    --secondary: #3B82F6;
+    --cta: #F59E0B;
+    --bg: #F8FAFC;
+    --text: #1E3A8A;
+    --border: #DBEAFE;
+    --card-bg: #FFFFFF;
+    --card-shadow: rgba(30, 64, 175, 0.08);
+    --grid-color: rgba(30, 58, 90, 0.06);
+    --subtitle-color: #64748B;
+    --controls-bg: rgba(255, 255, 255, 0.95);
+    --controls-border: #DBEAFE;
+    --controls-hover: #EFF6FF;
+    --controls-text: #1E40AF;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --primary: #3B82F6;
+      --secondary: #60A5FA;
+      --cta: #F59E0B;
+      --bg: #0F172A;
+      --text: #DBEAFE;
+      --border: #1E3A5A;
+      --card-bg: #1E293B;
+      --card-shadow: rgba(0, 0, 0, 0.3);
+      --grid-color: rgba(59, 130, 246, 0.07);
+      --subtitle-color: #94A3B8;
+      --controls-bg: rgba(30, 41, 59, 0.95);
+      --controls-border: #334155;
+      --controls-hover: #334155;
+      --controls-text: #93C5FD;
+    }
+  }
+
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(24px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+      animation-duration: 0.01ms !important;
+      animation-delay: 0ms !important;
+      transition-duration: 0.01ms !important;
+    }
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'Fira Sans', sans-serif;
+    background-color: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    background-image:
+      linear-gradient(var(--grid-color) 1px, transparent 1px),
+      linear-gradient(90deg, var(--grid-color) 1px, transparent 1px);
+    background-size: 40px 40px;
+    padding: 2rem;
+  }
+
+  .container {
+    max-width: 1200px;
+    margin: 0 auto;
+  }
+
+  header {
+    text-align: center;
+    margin-bottom: 2rem;
+    animation: fadeUp 0.6s ease-out both;
+  }
+
+  header h1 {
+    font-family: 'Fira Code', monospace;
+    font-size: 2rem;
+    font-weight: 700;
+    color: var(--primary);
+    margin-bottom: 0.5rem;
+    letter-spacing: -0.02em;
+  }
+
+  header p {
+    font-size: 1rem;
+    color: var(--subtitle-color);
+  }
+
+  .diagram-wrapper {
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 2rem;
+    box-shadow: 0 2px 8px var(--card-shadow);
+    position: relative;
+    overflow: hidden;
+    animation: fadeUp 0.6s ease-out 0.15s both;
+  }
+
+  .zoom-controls {
+    position: absolute;
+    top: 1rem;
+    right: 1rem;
+    display: flex;
+    gap: 0.25rem;
+    z-index: 10;
+    animation: fadeUp 0.6s ease-out 0.3s both;
+  }
+
+  .zoom-btn {
+    width: 36px;
+    height: 36px;
+    border: 1px solid var(--controls-border);
+    background: var(--controls-bg);
+    color: var(--controls-text);
+    border-radius: 8px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Fira Code', monospace;
+    font-size: 1rem;
+    font-weight: 600;
+    transition: background 0.15s ease;
+  }
+
+  .zoom-btn:hover {
+    background: var(--controls-hover);
+  }
+
+  .zoom-btn.reset {
+    font-size: 0.65rem;
+    width: auto;
+    padding: 0 10px;
+  }
+
+  .mermaid-container {
+    overflow: auto;
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    min-height: 500px;
+  }
+
+  .mermaid-container .mermaid {
+    transition: transform 0.2s ease;
+    transform-origin: top center;
+  }
+
+  .mermaid svg {
+    max-width: none !important;
+  }
+</style>
+</head>
+<body>
+<div class="container">
+  <header>
+    <h1>DATUM Data Ingestion Pipeline</h1>
+    <p>End-to-end data flow from source detection through catalog update</p>
+  </header>
+
+  <div class="diagram-wrapper">
+    <div class="zoom-controls">
+      <button class="zoom-btn" onclick="zoom(0.1)" title="Zoom In">+</button>
+      <button class="zoom-btn" onclick="zoom(-0.1)" title="Zoom Out">&minus;</button>
+      <button class="zoom-btn reset" onclick="resetZoom()" title="Reset Zoom">Reset</button>
+    </div>
+    <div class="mermaid-container" id="mermaid-container">
+      <pre class="mermaid" id="mermaid-diagram">
+---
+config:
+  look: classic
+  theme: base
+  themeVariables:
+    primaryColor: "#1E40AF"
+    primaryTextColor: "#FFFFFF"
+    primaryBorderColor: "#3B82F6"
+    secondaryColor: "#DBEAFE"
+    secondaryTextColor: "#1E3A8A"
+    secondaryBorderColor: "#93C5FD"
+    tertiaryColor: "#F8FAFC"
+    tertiaryTextColor: "#1E3A8A"
+    lineColor: "#3B82F6"
+    textColor: "#1E3A8A"
+    fontSize: "14px"
+    fontFamily: "Fira Sans, sans-serif"
+    nodeBorder: "#3B82F6"
+    mainBkg: "#DBEAFE"
+    clusterBkg: "#EFF6FF"
+    edgeLabelBackground: "#F8FAFC"
+---
+graph TD
+    A["Source Detection<br/><i>Identify new data</i>"] --> B["Schema Validation<br/><i>Check structure</i>"]
+    B --> C{"Valid Schema?"}
+    C -->|"Yes"| D["Data Transformation<br/><i>Clean & normalize</i>"]
+    C -->|"No"| H["Reject Record"]
+    D --> E["Quality Checks<br/><i>Validate rules</i>"]
+    E --> F{"Quality Pass?"}
+    F -->|"Yes"| G["Partitioning<br/><i>Organize by key</i>"]
+    F -->|"No"| K["Dead Letter Queue"]
+    G --> I["Write to Data Lake<br/><i>Parquet / Iceberg</i>"]
+    I --> J["Update Catalog<br/><i>Register metadata</i>"]
+    J --> N["Notify Subscribers<br/><i>Publish events</i>"]
+    N --> O(["Done"])
+    K --> L["Alert Ops Team"]
+    L --> M["Manual Review"]
+    H --> P["Log Error"]
+    P --> Q["Alert Source Owner"]
+
+    style A fill:#1E40AF,stroke:#3B82F6,color:#FFFFFF
+    style B fill:#DBEAFE,stroke:#3B82F6,color:#1E3A8A
+    style C fill:#F59E0B,stroke:#D97706,color:#FFFFFF
+    style D fill:#DBEAFE,stroke:#3B82F6,color:#1E3A8A
+    style E fill:#DBEAFE,stroke:#3B82F6,color:#1E3A8A
+    style F fill:#F59E0B,stroke:#D97706,color:#FFFFFF
+    style G fill:#DBEAFE,stroke:#3B82F6,color:#1E3A8A
+    style I fill:#10B981,stroke:#059669,color:#FFFFFF
+    style J fill:#10B981,stroke:#059669,color:#FFFFFF
+    style N fill:#8B5CF6,stroke:#7C3AED,color:#FFFFFF
+    style O fill:#1E40AF,stroke:#3B82F6,color:#FFFFFF
+    style K fill:#EF4444,stroke:#DC2626,color:#FFFFFF
+    style L fill:#F87171,stroke:#EF4444,color:#FFFFFF
+    style M fill:#F87171,stroke:#EF4444,color:#FFFFFF
+    style H fill:#EF4444,stroke:#DC2626,color:#FFFFFF
+    style P fill:#F87171,stroke:#EF4444,color:#FFFFFF
+    style Q fill:#F87171,stroke:#EF4444,color:#FFFFFF
+      </pre>
+    </div>
+  </div>
+</div>
+
+<script type="module">
+  import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs';
+
+  const isDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+
+  mermaid.initialize({
+    startOnLoad: true,
+    securityLevel: 'loose',
+    theme: 'base',
+    themeVariables: isDark ? {
+      primaryColor: '#1E3A5A',
+      primaryTextColor: '#DBEAFE',
+      primaryBorderColor: '#3B82F6',
+      secondaryColor: '#1E293B',
+      secondaryTextColor: '#DBEAFE',
+      secondaryBorderColor: '#60A5FA',
+      tertiaryColor: '#0F172A',
+      tertiaryTextColor: '#DBEAFE',
+      lineColor: '#60A5FA',
+      textColor: '#DBEAFE',
+      fontSize: '14px',
+      fontFamily: 'Fira Sans, sans-serif',
+      nodeBorder: '#60A5FA',
+      mainBkg: '#1E293B',
+      clusterBkg: '#1E293B',
+      edgeLabelBackground: '#0F172A'
+    } : {
+      primaryColor: '#1E40AF',
+      primaryTextColor: '#FFFFFF',
+      primaryBorderColor: '#3B82F6',
+      secondaryColor: '#DBEAFE',
+      secondaryTextColor: '#1E3A8A',
+      secondaryBorderColor: '#93C5FD',
+      tertiaryColor: '#F8FAFC',
+      tertiaryTextColor: '#1E3A8A',
+      lineColor: '#3B82F6',
+      textColor: '#1E3A8A',
+      fontSize: '14px',
+      fontFamily: 'Fira Sans, sans-serif',
+      nodeBorder: '#3B82F6',
+      mainBkg: '#DBEAFE',
+      clusterBkg: '#EFF6FF',
+      edgeLabelBackground: '#F8FAFC'
+    }
+  });
+</script>
+
+<script>
+  let currentZoom = 1;
+  const diagram = document.getElementById('mermaid-diagram');
+
+  function zoom(delta) {
+    currentZoom = Math.max(0.3, Math.min(3, currentZoom + delta));
+    diagram.style.transform = 'scale(' + currentZoom + ')';
+  }
+
+  function resetZoom() {
+    currentZoom = 1;
+    diagram.style.transform = 'scale(1)';
+  }
+</script>
+</body>
+</html>

@@ -1,0 +1,429 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DATUM Core Data Model</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@300;400;500;600;700&family=Fira+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --primary: #1E40AF;
+    --secondary: #3B82F6;
+    --cta: #F59E0B;
+    --bg: #F8FAFC;
+    --text: #1E3A8A;
+    --border: #DBEAFE;
+    --card-bg: #FFFFFF;
+    --card-shadow: rgba(30, 64, 175, 0.08);
+    --grid-color: rgba(30, 58, 90, 0.06);
+    --subtitle-color: #64748B;
+    --controls-bg: rgba(255, 255, 255, 0.95);
+    --controls-border: #DBEAFE;
+    --controls-hover: #EFF6FF;
+    --controls-text: #1E40AF;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --primary: #3B82F6;
+      --secondary: #60A5FA;
+      --cta: #F59E0B;
+      --bg: #0F172A;
+      --text: #DBEAFE;
+      --border: #1E3A5A;
+      --card-bg: #1E293B;
+      --card-shadow: rgba(0, 0, 0, 0.3);
+      --grid-color: rgba(59, 130, 246, 0.07);
+      --subtitle-color: #94A3B8;
+      --controls-bg: rgba(30, 41, 59, 0.95);
+      --controls-border: #334155;
+      --controls-hover: #334155;
+      --controls-text: #93C5FD;
+    }
+  }
+
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(24px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+      animation-duration: 0.01ms !important;
+      animation-delay: 0ms !important;
+      transition-duration: 0.01ms !important;
+    }
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'Fira Sans', sans-serif;
+    background-color: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    background-image:
+      linear-gradient(var(--grid-color) 1px, transparent 1px),
+      linear-gradient(90deg, var(--grid-color) 1px, transparent 1px);
+    background-size: 40px 40px;
+    padding: 2rem;
+  }
+
+  .container {
+    max-width: 1400px;
+    margin: 0 auto;
+  }
+
+  header {
+    text-align: center;
+    margin-bottom: 2rem;
+    animation: fadeUp 0.6s ease-out both;
+  }
+
+  header h1 {
+    font-family: 'Fira Code', monospace;
+    font-size: 2rem;
+    font-weight: 700;
+    color: var(--primary);
+    margin-bottom: 0.5rem;
+    letter-spacing: -0.02em;
+  }
+
+  header p {
+    font-size: 1rem;
+    color: var(--subtitle-color);
+  }
+
+  .diagram-wrapper {
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 2rem;
+    box-shadow: 0 2px 8px var(--card-shadow);
+    position: relative;
+    overflow: hidden;
+    animation: fadeUp 0.6s ease-out 0.15s both;
+  }
+
+  .zoom-controls {
+    position: absolute;
+    top: 1rem;
+    right: 1rem;
+    display: flex;
+    gap: 0.25rem;
+    z-index: 10;
+    animation: fadeUp 0.6s ease-out 0.3s both;
+  }
+
+  .zoom-btn {
+    width: 36px;
+    height: 36px;
+    border: 1px solid var(--controls-border);
+    background: var(--controls-bg);
+    color: var(--controls-text);
+    border-radius: 8px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Fira Code', monospace;
+    font-size: 1rem;
+    font-weight: 600;
+    transition: background 0.15s ease;
+  }
+
+  .zoom-btn:hover {
+    background: var(--controls-hover);
+  }
+
+  .zoom-btn.reset {
+    font-size: 0.65rem;
+    width: auto;
+    padding: 0 10px;
+  }
+
+  .mermaid-container {
+    overflow: auto;
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    min-height: 600px;
+  }
+
+  .mermaid-container .mermaid {
+    transition: transform 0.2s ease;
+    transform-origin: top center;
+  }
+
+  .mermaid svg {
+    max-width: none !important;
+  }
+
+  .schema-stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 0.75rem;
+    margin-top: 1.5rem;
+    padding-top: 1rem;
+    border-top: 1px solid var(--border);
+    animation: fadeUp 0.6s ease-out 0.45s both;
+  }
+
+  .stat-card {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 0.75rem 1rem;
+    text-align: center;
+  }
+
+  .stat-value {
+    font-family: 'Fira Code', monospace;
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--primary);
+  }
+
+  .stat-label {
+    font-family: 'Fira Code', monospace;
+    font-size: 0.68rem;
+    color: var(--subtitle-color);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-top: 0.2rem;
+  }
+
+  .relationship-legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1.25rem;
+    justify-content: center;
+    margin-top: 1rem;
+    animation: fadeUp 0.6s ease-out 0.6s both;
+  }
+
+  .rel-item {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-family: 'Fira Code', monospace;
+    font-size: 0.72rem;
+    color: var(--subtitle-color);
+  }
+
+  .rel-symbol {
+    font-weight: 700;
+    color: var(--primary);
+    font-size: 0.85rem;
+  }
+</style>
+</head>
+<body>
+<div class="container">
+  <header>
+    <h1>DATUM Core Data Model</h1>
+    <p>Entity-relationship diagram of the platform's persistent data schema</p>
+  </header>
+
+  <div class="diagram-wrapper">
+    <div class="zoom-controls">
+      <button class="zoom-btn" onclick="zoom(0.1)" title="Zoom In">+</button>
+      <button class="zoom-btn" onclick="zoom(-0.1)" title="Zoom Out">&minus;</button>
+      <button class="zoom-btn reset" onclick="resetZoom()" title="Reset Zoom">Reset</button>
+    </div>
+    <div class="mermaid-container" id="mermaid-container">
+      <pre class="mermaid" id="mermaid-diagram">
+erDiagram
+    DATASETS ||--o{ TABLES : contains
+    TABLES ||--o{ COLUMNS : has
+    TABLES ||--o{ PARTITIONS : split_into
+    DATASETS }o--|| SOURCES : ingested_from
+    TABLES ||--o{ QUALITY_RULES : validated_by
+    USERS ||--o{ QUERIES : submits
+    QUERIES }o--|| TABLES : reads_from
+    USERS ||--o{ ACCESS_POLICIES : governed_by
+    ACCESS_POLICIES }o--|| DATASETS : applies_to
+    LINEAGE_EDGES }o--|| TABLES : from_table
+    LINEAGE_EDGES }o--|| TABLES : to_table
+
+    DATASETS {
+        string id PK
+        string name
+        string owner
+        timestamp created_at
+        string zone
+    }
+
+    TABLES {
+        string id PK
+        string dataset_id FK
+        string name
+        string format
+        bigint row_count
+        timestamp last_updated
+    }
+
+    COLUMNS {
+        string id PK
+        string table_id FK
+        string name
+        string data_type
+        boolean nullable
+        string description
+    }
+
+    PARTITIONS {
+        string id PK
+        string table_id FK
+        string key
+        string value
+        bigint size_bytes
+    }
+
+    SOURCES {
+        string id PK
+        string name
+        string type
+        json config
+    }
+
+    QUALITY_RULES {
+        string id PK
+        string table_id FK
+        string rule_type
+        string expression
+        float threshold
+    }
+
+    USERS {
+        string id PK
+        string email
+        string role
+        timestamp last_login
+    }
+
+    QUERIES {
+        string id PK
+        string user_id FK
+        string sql
+        string status
+        int duration_ms
+        timestamp submitted_at
+    }
+
+    ACCESS_POLICIES {
+        string id PK
+        string user_id FK
+        string dataset_id FK
+        string permission
+        timestamp expires_at
+    }
+
+    LINEAGE_EDGES {
+        string id PK
+        string from_table_id FK
+        string to_table_id FK
+        string transform_type
+    }
+      </pre>
+    </div>
+  </div>
+
+  <div class="schema-stats">
+    <div class="stat-card">
+      <div class="stat-value">10</div>
+      <div class="stat-label">Entities</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-value">11</div>
+      <div class="stat-label">Relationships</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-value">46</div>
+      <div class="stat-label">Attributes</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-value">10</div>
+      <div class="stat-label">Primary Keys</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-value">8</div>
+      <div class="stat-label">Foreign Keys</div>
+    </div>
+  </div>
+
+  <div class="relationship-legend">
+    <div class="rel-item">
+      <span class="rel-symbol">||--o{</span>
+      One to Many
+    </div>
+    <div class="rel-item">
+      <span class="rel-symbol">}o--||</span>
+      Many to One
+    </div>
+    <div class="rel-item">
+      <span class="rel-symbol">PK</span>
+      Primary Key
+    </div>
+    <div class="rel-item">
+      <span class="rel-symbol">FK</span>
+      Foreign Key
+    </div>
+  </div>
+</div>
+
+<script type="module">
+  import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs';
+
+  const isDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+
+  mermaid.initialize({
+    startOnLoad: true,
+    securityLevel: 'loose',
+    theme: 'base',
+    themeVariables: isDark ? {
+      primaryColor: '#1E3A5A',
+      primaryTextColor: '#DBEAFE',
+      primaryBorderColor: '#60A5FA',
+      secondaryColor: '#1E293B',
+      secondaryTextColor: '#DBEAFE',
+      lineColor: '#60A5FA',
+      textColor: '#DBEAFE',
+      fontSize: '13px',
+      fontFamily: 'Fira Code, monospace',
+      attributeBackgroundColorEven: '#1E293B',
+      attributeBackgroundColorOdd: '#1E3A5A'
+    } : {
+      primaryColor: '#DBEAFE',
+      primaryTextColor: '#1E3A8A',
+      primaryBorderColor: '#3B82F6',
+      secondaryColor: '#EFF6FF',
+      secondaryTextColor: '#1E3A8A',
+      lineColor: '#3B82F6',
+      textColor: '#1E3A8A',
+      fontSize: '13px',
+      fontFamily: 'Fira Code, monospace',
+      attributeBackgroundColorEven: '#F8FAFC',
+      attributeBackgroundColorOdd: '#EFF6FF'
+    }
+  });
+</script>
+
+<script>
+  let currentZoom = 1;
+  const diagram = document.getElementById('mermaid-diagram');
+
+  function zoom(delta) {
+    currentZoom = Math.max(0.3, Math.min(3, currentZoom + delta));
+    diagram.style.transform = 'scale(' + currentZoom + ')';
+  }
+
+  function resetZoom() {
+    currentZoom = 1;
+    diagram.style.transform = 'scale(1)';
+  }
+</script>
+</body>
+</html>

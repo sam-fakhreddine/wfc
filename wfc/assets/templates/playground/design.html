@@ -4,94 +4,193 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>WFC Design Playground</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=DM+Sans:wght@400;500;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --chrome-bg: #0f172a;
+    --chrome-surface: #1e293b;
+    --chrome-border: #334155;
+    --chrome-text: #e2e8f0;
+    --chrome-dim: #94a3b8;
+    --chrome-accent: #3b82f6;
+    --chrome-accent-hover: #2563eb;
+    --font-body: 'Space Grotesk', system-ui, sans-serif;
+    --font-mono: 'JetBrains Mono', 'SF Mono', Consolas, monospace;
+  }
+
+  @media (prefers-color-scheme: light) {
+    :root {
+      --chrome-bg: #f1f5f9;
+      --chrome-surface: #ffffff;
+      --chrome-border: #e2e8f0;
+      --chrome-text: #1e293b;
+      --chrome-dim: #64748b;
+      --chrome-accent: #2563eb;
+      --chrome-accent-hover: #1d4ed8;
+    }
+  }
+
   body {
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-    background: #1a1a2e; color: #e0e0e0; height: 100vh;
-    display: grid; grid-template-columns: 280px 1fr; grid-template-rows: 1fr 200px;
+    font-family: var(--font-body);
+    background: var(--chrome-bg); color: var(--chrome-text); height: 100vh;
+    display: grid; grid-template-columns: 300px 1fr; grid-template-rows: 1fr 200px;
   }
+
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+      animation-duration: 0.01ms !important;
+      transition-duration: 0.01ms !important;
+    }
+  }
+
   .sidebar {
-    grid-row: 1 / 3; background: #16213e; padding: 20px;
-    overflow-y: auto; border-right: 1px solid #0f3460;
+    grid-row: 1 / 3; background: var(--chrome-surface); padding: 20px;
+    overflow-y: auto; border-right: 1px solid var(--chrome-border);
   }
-  .sidebar h2 { color: #e94560; margin-bottom: 16px; font-size: 18px; }
-  .control-group { margin-bottom: 16px; }
+  .sidebar h2 {
+    color: var(--chrome-accent); margin-bottom: 6px;
+    font-size: 18px; font-weight: 600;
+  }
+  .sidebar .subtitle {
+    font-family: var(--font-mono); font-size: 11px;
+    color: var(--chrome-dim); margin-bottom: 20px;
+  }
+
+  .section-label {
+    font-family: var(--font-mono); font-size: 10px; font-weight: 600;
+    text-transform: uppercase; letter-spacing: 1.2px;
+    color: var(--chrome-dim); margin: 20px 0 10px; padding-top: 12px;
+    border-top: 1px solid var(--chrome-border);
+  }
+  .section-label:first-of-type { border-top: none; margin-top: 0; padding-top: 0; }
+
+  .control-group { margin-bottom: 14px; }
   .control-group label {
-    display: block; margin-bottom: 6px; font-size: 13px;
-    color: #a0a0b0; text-transform: uppercase; letter-spacing: 0.5px;
+    display: block; margin-bottom: 5px; font-size: 12px;
+    color: var(--chrome-dim); font-weight: 500;
   }
   .control-group input[type="color"] {
-    width: 100%; height: 36px; border: none; border-radius: 6px;
-    cursor: pointer; background: transparent;
+    width: 100%; height: 32px; border: 1px solid var(--chrome-border);
+    border-radius: 6px; cursor: pointer; background: transparent;
   }
   .control-group input[type="range"] {
-    width: 100%; accent-color: #e94560;
+    width: 100%; accent-color: var(--chrome-accent);
   }
-  .control-group input[type="text"], .control-group select {
-    width: 100%; padding: 8px 12px; background: #0f3460; border: 1px solid #1a1a4e;
-    border-radius: 6px; color: #e0e0e0; font-size: 14px;
+  .control-group select {
+    width: 100%; padding: 7px 10px; background: var(--chrome-bg);
+    border: 1px solid var(--chrome-border); border-radius: 6px;
+    color: var(--chrome-text); font-size: 13px; font-family: var(--font-body);
   }
   .range-value {
-    text-align: right; font-size: 12px; color: #e94560; margin-top: 2px;
+    text-align: right; font-size: 11px; font-family: var(--font-mono);
+    color: var(--chrome-accent); margin-top: 2px;
   }
+
+  .preset-grid {
+    display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; margin-bottom: 14px;
+  }
+  .preset-btn {
+    padding: 6px 4px; font-size: 10px; font-family: var(--font-mono);
+    background: var(--chrome-bg); border: 1px solid var(--chrome-border);
+    border-radius: 6px; cursor: pointer; color: var(--chrome-dim);
+    text-align: center; transition: border-color 0.15s, color 0.15s;
+  }
+  .preset-btn:hover {
+    border-color: var(--chrome-accent); color: var(--chrome-text);
+  }
+  .preset-swatch {
+    display: flex; gap: 2px; justify-content: center; margin-bottom: 3px;
+  }
+  .preset-swatch span {
+    width: 12px; height: 12px; border-radius: 3px;
+  }
+
   .preview {
     padding: 30px; display: flex; align-items: center;
     justify-content: center; overflow: auto;
   }
   .preview-card {
     padding: 40px; border-radius: var(--radius, 12px); max-width: 500px; width: 100%;
-    background: var(--bg, #ffffff); color: var(--fg, #1a1a2e);
-    box-shadow: 0 var(--shadow-y, 8px) var(--shadow-blur, 24px) rgba(0,0,0,0.3);
+    background: var(--bg, #ffffff); color: var(--fg, #1e293b);
+    box-shadow: 0 var(--shadow-y, 8px) var(--shadow-blur, 24px) rgba(0,0,0,0.15);
     transition: all 0.3s ease;
   }
   .preview-card h3 { font-size: var(--heading-size, 24px); margin-bottom: 12px; }
   .preview-card p {
-    font-size: var(--body-size, 16px); line-height: 1.6; opacity: 0.8;
+    font-size: var(--body-size, 16px); line-height: 1.65; opacity: 0.75;
   }
   .preview-card .btn {
     display: inline-block; margin-top: 16px; padding: 10px 24px;
-    background: var(--accent, #e94560); color: #fff; border: none;
+    background: var(--accent, #3b82f6); color: #fff; border: none;
     border-radius: calc(var(--radius, 12px) / 2); font-size: 14px;
-    cursor: pointer;
+    font-family: var(--font-body); cursor: pointer; font-weight: 500;
   }
+
   .output {
-    grid-column: 2; background: #0d1b2a; border-top: 1px solid #0f3460;
+    grid-column: 2; background: var(--chrome-surface);
+    border-top: 1px solid var(--chrome-border);
     padding: 16px; overflow: auto; position: relative;
   }
   .output pre {
-    font-family: 'SF Mono', 'Fira Code', monospace; font-size: 13px;
-    color: #7ec8e3; white-space: pre-wrap; line-height: 1.5;
+    font-family: var(--font-mono); font-size: 12px;
+    color: var(--chrome-accent); white-space: pre-wrap; line-height: 1.5;
   }
   .copy-btn {
     position: absolute; top: 12px; right: 12px; padding: 6px 14px;
-    background: #e94560; color: #fff; border: none; border-radius: 6px;
-    cursor: pointer; font-size: 12px;
+    background: var(--chrome-accent); color: #fff; border: none; border-radius: 6px;
+    cursor: pointer; font-size: 11px; font-family: var(--font-mono);
+    transition: background 0.15s;
   }
-  .copy-btn:hover { background: #c73650; }
+  .copy-btn:hover { background: var(--chrome-accent-hover); }
+
+  @media (max-width: 768px) {
+    body { grid-template-columns: 1fr; grid-template-rows: auto 1fr 200px; }
+    .sidebar { grid-row: auto; max-height: 300px; border-right: none; border-bottom: 1px solid var(--chrome-border); }
+  }
 </style>
 </head>
 <body>
 
 <div class="sidebar">
   <h2>Design Controls</h2>
+  <p class="subtitle">industry palettes + live preview</p>
 
+  <div class="section-label">Industry Presets</div>
+  <div class="preset-grid" id="presets"></div>
+
+  <div class="section-label">Colors</div>
   <div class="control-group">
-    <label>Background Color</label>
+    <label>Background</label>
     <input type="color" id="bgColor" value="#ffffff">
   </div>
   <div class="control-group">
-    <label>Text Color</label>
-    <input type="color" id="fgColor" value="#1a1a2e">
+    <label>Text</label>
+    <input type="color" id="fgColor" value="#1e293b">
   </div>
   <div class="control-group">
-    <label>Accent Color</label>
-    <input type="color" id="accentColor" value="#e94560">
+    <label>Accent / CTA</label>
+    <input type="color" id="accentColor" value="#3b82f6">
   </div>
+
+  <div class="section-label">Typography</div>
   <div class="control-group">
-    <label>Border Radius</label>
-    <input type="range" id="radius" min="0" max="32" value="12">
-    <div class="range-value" id="radiusVal">12px</div>
+    <label>Font Pairing</label>
+    <select id="fontFamily">
+      <option value="'Space Grotesk', sans-serif">Space Grotesk (Tech)</option>
+      <option value="'Playfair Display', serif">Playfair Display (Luxury)</option>
+      <option value="'Poppins', sans-serif">Poppins (Professional)</option>
+      <option value="'JetBrains Mono', monospace">JetBrains Mono (Developer)</option>
+      <option value="'Lora', serif">Lora (Wellness)</option>
+      <option value="'Outfit', sans-serif">Outfit (Modern)</option>
+      <option value="'Bebas Neue', sans-serif">Bebas Neue (Bold)</option>
+      <option value="'Syne', sans-serif">Syne (Fashion)</option>
+      <option value="'IBM Plex Sans', sans-serif">IBM Plex Sans (Finance)</option>
+      <option value="'Fira Code', monospace">Fira Code (Dashboard)</option>
+    </select>
   </div>
   <div class="control-group">
     <label>Heading Size</label>
@@ -103,8 +202,15 @@
     <input type="range" id="bodySize" min="12" max="24" value="16">
     <div class="range-value" id="bodyVal">16px</div>
   </div>
+
+  <div class="section-label">Shape</div>
   <div class="control-group">
-    <label>Shadow Y Offset</label>
+    <label>Border Radius</label>
+    <input type="range" id="radius" min="0" max="32" value="12">
+    <div class="range-value" id="radiusVal">12px</div>
+  </div>
+  <div class="control-group">
+    <label>Shadow Y</label>
     <input type="range" id="shadowY" min="0" max="32" value="8">
     <div class="range-value" id="shadowYVal">8px</div>
   </div>
@@ -112,15 +218,6 @@
     <label>Shadow Blur</label>
     <input type="range" id="shadowBlur" min="0" max="64" value="24">
     <div class="range-value" id="shadowBlurVal">24px</div>
-  </div>
-  <div class="control-group">
-    <label>Font Family</label>
-    <select id="fontFamily">
-      <option value="-apple-system, sans-serif">System UI</option>
-      <option value="Georgia, serif">Georgia</option>
-      <option value="'Courier New', monospace">Monospace</option>
-      <option value="'Trebuchet MS', sans-serif">Trebuchet</option>
-    </select>
   </div>
 </div>
 
@@ -139,6 +236,37 @@
 </div>
 
 <script>
+  // Industry palette presets from design system
+  const PRESETS = [
+    { name: 'SaaS', bg: '#F8FAFC', fg: '#1E293B', accent: '#2563EB' },
+    { name: 'Health', bg: '#ECFEFF', fg: '#164E63', accent: '#0891B2' },
+    { name: 'Fintech', bg: '#0F172A', fg: '#F8FAFC', accent: '#F59E0B' },
+    { name: 'Gaming', bg: '#0F0F23', fg: '#E2E8F0', accent: '#7C3AED' },
+    { name: 'E-comm', bg: '#ECFDF5', fg: '#064E3B', accent: '#059669' },
+    { name: 'Creative', bg: '#FDF2F8', fg: '#831843', accent: '#EC4899' },
+    { name: 'DevTool', bg: '#0F172A', fg: '#F8FAFC', accent: '#22C55E' },
+    { name: 'AI/ML', bg: '#FAF5FF', fg: '#1E1B4B', accent: '#7C3AED' },
+    { name: 'Luxury', bg: '#FAFAF9', fg: '#0C0A09', accent: '#CA8A04' },
+    { name: 'News', bg: '#FEF2F2', fg: '#450A0A', accent: '#DC2626' },
+    { name: 'Edu', bg: '#EEF2FF', fg: '#1E1B4B', accent: '#4F46E5' },
+    { name: 'Cyber', bg: '#000000', fg: '#E0E0E0', accent: '#00FF41' },
+  ];
+
+  // Build preset buttons
+  const presetsEl = document.getElementById('presets');
+  PRESETS.forEach(p => {
+    const btn = document.createElement('button');
+    btn.className = 'preset-btn';
+    btn.innerHTML = `<div class="preset-swatch"><span style="background:${p.bg};border:1px solid rgba(128,128,128,0.3)"></span><span style="background:${p.accent}"></span><span style="background:${p.fg}"></span></div>${p.name}`;
+    btn.addEventListener('click', () => {
+      document.getElementById('bgColor').value = p.bg;
+      document.getElementById('fgColor').value = p.fg;
+      document.getElementById('accentColor').value = p.accent;
+      update();
+    });
+    presetsEl.appendChild(btn);
+  });
+
   const card = document.getElementById('card');
   const controls = {
     bgColor: { prop: '--bg', suffix: '' },
@@ -176,12 +304,12 @@
 
     const css = `:root {
   --color-bg: ${bg};
-  --color-fg: ${fg};
+  --color-text: ${fg};
   --color-accent: ${accent};
   --radius: ${r}px;
   --heading-size: ${hs}px;
   --body-size: ${bs}px;
-  --shadow: 0 ${sy}px ${sb}px rgba(0, 0, 0, 0.3);
+  --shadow: 0 ${sy}px ${sb}px rgba(0, 0, 0, 0.15);
   --font-family: ${font};
 }`;
     document.getElementById('cssOutput').textContent = css;

@@ -1,0 +1,453 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DATUM Pipeline Job States</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600;700&family=Fira+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --primary: #1E40AF;
+    --secondary: #3B82F6;
+    --cta: #F59E0B;
+    --bg: #F8FAFC;
+    --text: #1E3A8A;
+    --border: #DBEAFE;
+    --surface: #FFFFFF;
+    --surface-alt: #EFF6FF;
+    --grid-color: rgba(30, 64, 175, 0.06);
+    --grid-color-strong: rgba(30, 64, 175, 0.1);
+    --shadow: 0 1px 3px rgba(30, 58, 138, 0.08), 0 4px 12px rgba(30, 58, 138, 0.04);
+    --shadow-lg: 0 4px 12px rgba(30, 58, 138, 0.1), 0 12px 32px rgba(30, 58, 138, 0.06);
+    --code-bg: #F1F5F9;
+    --muted: #64748B;
+    --success: #059669;
+    --danger: #DC2626;
+    --warning: #D97706;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --primary: #3B82F6;
+      --secondary: #60A5FA;
+      --cta: #FBBF24;
+      --bg: #0B1120;
+      --text: #DBEAFE;
+      --border: #1E3A5F;
+      --surface: #111827;
+      --surface-alt: #1A2332;
+      --grid-color: rgba(59, 130, 246, 0.06);
+      --grid-color-strong: rgba(59, 130, 246, 0.12);
+      --shadow: 0 1px 3px rgba(0, 0, 0, 0.3), 0 4px 12px rgba(0, 0, 0, 0.2);
+      --shadow-lg: 0 4px 12px rgba(0, 0, 0, 0.4), 0 12px 32px rgba(0, 0, 0, 0.3);
+      --code-bg: #1E293B;
+      --muted: #94A3B8;
+      --success: #34D399;
+      --danger: #F87171;
+      --warning: #FBBF24;
+    }
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Fira Sans', sans-serif;
+    background-color: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    overflow-x: hidden;
+    background-image:
+      linear-gradient(var(--grid-color) 1px, transparent 1px),
+      linear-gradient(90deg, var(--grid-color) 1px, transparent 1px),
+      linear-gradient(var(--grid-color-strong) 1px, transparent 1px),
+      linear-gradient(90deg, var(--grid-color-strong) 1px, transparent 1px);
+    background-size: 20px 20px, 20px 20px, 100px 100px, 100px 100px;
+    background-position: center center;
+  }
+
+  .page-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 2rem 1.5rem;
+  }
+
+  /* Header */
+  .page-header {
+    text-align: center;
+    margin-bottom: 2rem;
+    opacity: 0;
+    transform: translateY(20px);
+    animation: fadeUp 0.6s ease-out forwards;
+  }
+
+  .page-header .badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 9999px;
+    padding: 0.35rem 1rem;
+    font-family: 'Fira Code', monospace;
+    font-size: 0.75rem;
+    color: var(--secondary);
+    margin-bottom: 1rem;
+    letter-spacing: 0.05em;
+  }
+
+  .page-header .badge::before {
+    content: '';
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--cta);
+    animation: pulse-dot 2s ease-in-out infinite;
+  }
+
+  .page-header h1 {
+    font-family: 'Fira Sans', sans-serif;
+    font-size: clamp(1.5rem, 4vw, 2.25rem);
+    font-weight: 700;
+    color: var(--primary);
+    margin-bottom: 0.5rem;
+    letter-spacing: -0.02em;
+  }
+
+  .page-header .subtitle {
+    font-size: 0.95rem;
+    color: var(--muted);
+    max-width: 600px;
+    margin: 0 auto;
+    line-height: 1.6;
+  }
+
+  /* Diagram container */
+  .diagram-wrapper {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    box-shadow: var(--shadow-lg);
+    overflow: hidden;
+    opacity: 0;
+    transform: translateY(20px);
+    animation: fadeUp 0.6s ease-out 0.15s forwards;
+    position: relative;
+  }
+
+  .diagram-toolbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.75rem 1.25rem;
+    border-bottom: 1px solid var(--border);
+    background: var(--surface-alt);
+  }
+
+  .diagram-toolbar .label {
+    font-family: 'Fira Code', monospace;
+    font-size: 0.75rem;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+  }
+
+  .zoom-controls {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  .zoom-controls button {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    color: var(--text);
+    font-family: 'Fira Code', monospace;
+    font-size: 0.85rem;
+    font-weight: 600;
+    transition: all 0.15s ease;
+  }
+
+  .zoom-controls button:hover {
+    background: var(--primary);
+    color: #fff;
+    border-color: var(--primary);
+  }
+
+  .zoom-controls .zoom-level {
+    font-family: 'Fira Code', monospace;
+    font-size: 0.75rem;
+    color: var(--muted);
+    min-width: 40px;
+    text-align: center;
+  }
+
+  .diagram-content {
+    padding: 2rem;
+    overflow: auto;
+    display: flex;
+    justify-content: center;
+    min-height: 450px;
+    transition: transform 0.2s ease;
+  }
+
+  .diagram-content .mermaid {
+    transition: transform 0.2s ease;
+    transform-origin: center center;
+  }
+
+  /* Legend */
+  .legend-section {
+    margin-top: 1.5rem;
+    opacity: 0;
+    transform: translateY(20px);
+    animation: fadeUp 0.6s ease-out 0.3s forwards;
+  }
+
+  .legend-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 1.25rem 1.5rem;
+    box-shadow: var(--shadow);
+  }
+
+  .legend-card h3 {
+    font-family: 'Fira Code', monospace;
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--muted);
+    margin-bottom: 1rem;
+  }
+
+  .legend-items {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem 2rem;
+  }
+
+  .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.85rem;
+    color: var(--text);
+  }
+
+  .legend-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+
+  .legend-dot.queued { background: var(--secondary); }
+  .legend-dot.running { background: var(--cta); }
+  .legend-dot.success { background: var(--success); }
+  .legend-dot.failed { background: var(--danger); }
+  .legend-dot.terminal { background: var(--muted); }
+
+  /* Footer */
+  .page-footer {
+    text-align: center;
+    margin-top: 2rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid var(--border);
+    opacity: 0;
+    transform: translateY(20px);
+    animation: fadeUp 0.6s ease-out 0.45s forwards;
+  }
+
+  .page-footer p {
+    font-family: 'Fira Code', monospace;
+    font-size: 0.7rem;
+    color: var(--muted);
+    letter-spacing: 0.05em;
+  }
+
+  /* Animations */
+  @keyframes fadeUp {
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  @keyframes pulse-dot {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.4; }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .page-header,
+    .diagram-wrapper,
+    .legend-section,
+    .page-footer {
+      opacity: 1;
+      transform: none;
+      animation: none;
+    }
+    .page-header .badge::before {
+      animation: none;
+    }
+  }
+
+  @media (max-width: 768px) {
+    .page-container { padding: 1rem; }
+    .diagram-content { padding: 1rem; }
+    .legend-items { flex-direction: column; gap: 0.5rem; }
+  }
+</style>
+</head>
+<body>
+<div class="page-container">
+  <header class="page-header">
+    <div class="badge">DATUM // STATE MACHINE</div>
+    <h1>Pipeline Job States</h1>
+    <p class="subtitle">Complete lifecycle of a DATUM pipeline job, from queue entry through execution, validation, archival, and terminal states.</p>
+  </header>
+
+  <div class="diagram-wrapper">
+    <div class="diagram-toolbar">
+      <span class="label">stateDiagram-v2 // Pipeline Lifecycle</span>
+      <div class="zoom-controls">
+        <button onclick="zoomOut()" title="Zoom Out">&minus;</button>
+        <span class="zoom-level" id="zoomLevel">100%</span>
+        <button onclick="zoomIn()" title="Zoom In">+</button>
+        <button onclick="zoomReset()" title="Reset Zoom">R</button>
+      </div>
+    </div>
+    <div class="diagram-content" id="diagramContent">
+      <pre class="mermaid" id="mermaidDiagram">
+stateDiagram-v2
+    direction TB
+
+    [*] --> Queued
+    Queued --> Scheduled : dispatcher assigns
+    Scheduled --> Running : agent picks up
+    Running --> Validating : execution complete
+    Validating --> Succeeded : all checks pass
+    Validating --> Failed : quality check fails
+    Running --> Failed : runtime error
+    Failed --> Queued : auto-retry (max 3)
+    Failed --> Dead : retries exhausted
+    Succeeded --> Archiving : retention policy
+    Archiving --> Archived : compressed + stored
+    Archived --> [*]
+    Dead --> [*]
+    Queued --> Cancelled : user cancels
+    Running --> Cancelled : user cancels
+    Cancelled --> [*]
+
+    classDef blueState fill:#DBEAFE,stroke:#1E40AF,color:#1E3A8A,stroke-width:2px
+    classDef amberState fill:#FEF3C7,stroke:#D97706,color:#92400E,stroke-width:2px
+    classDef greenState fill:#D1FAE5,stroke:#059669,color:#065F46,stroke-width:2px
+    classDef redState fill:#FEE2E2,stroke:#DC2626,color:#991B1B,stroke-width:2px
+    classDef grayState fill:#F1F5F9,stroke:#64748B,color:#475569,stroke-width:2px
+
+    class Queued,Scheduled blueState
+    class Running,Validating amberState
+    class Succeeded,Archiving,Archived greenState
+    class Failed,Dead redState
+    class Cancelled grayState
+      </pre>
+    </div>
+  </div>
+
+  <div class="legend-section">
+    <div class="legend-card">
+      <h3>State Legend</h3>
+      <div class="legend-items">
+        <div class="legend-item"><span class="legend-dot queued"></span> Queued / Scheduled</div>
+        <div class="legend-item"><span class="legend-dot running"></span> Running / Validating</div>
+        <div class="legend-item"><span class="legend-dot success"></span> Succeeded / Archiving / Archived</div>
+        <div class="legend-item"><span class="legend-dot failed"></span> Failed / Dead</div>
+        <div class="legend-item"><span class="legend-dot terminal"></span> Cancelled</div>
+      </div>
+    </div>
+  </div>
+
+  <footer class="page-footer">
+    <p>DATUM Platform // Pipeline State Machine // Auto-retry max 3 attempts</p>
+  </footer>
+</div>
+
+<script type="importmap">
+{
+  "imports": {
+    "mermaid": "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs",
+    "@elkjs/elk": "https://cdn.jsdelivr.net/npm/@elkjs/elk@0.9.3/lib/elk-api.min.js"
+  }
+}
+</script>
+<script type="module">
+  import mermaid from 'mermaid';
+
+  const isDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+
+  mermaid.initialize({
+    startOnLoad: true,
+    theme: 'base',
+    themeVariables: {
+      primaryColor: isDark ? '#1E3A5F' : '#DBEAFE',
+      primaryTextColor: isDark ? '#DBEAFE' : '#1E3A8A',
+      primaryBorderColor: isDark ? '#3B82F6' : '#1E40AF',
+      lineColor: isDark ? '#60A5FA' : '#3B82F6',
+      secondaryColor: isDark ? '#1A2332' : '#EFF6FF',
+      tertiaryColor: isDark ? '#111827' : '#F8FAFC',
+      fontFamily: 'Fira Sans, sans-serif',
+      fontSize: '14px',
+      stateBorder: isDark ? '#3B82F6' : '#1E40AF',
+      stateBkg: isDark ? '#1E3A5F' : '#DBEAFE',
+      labelBackgroundColor: isDark ? '#111827' : '#FFFFFF',
+      transitionColor: isDark ? '#60A5FA' : '#3B82F6',
+      transitionLabelColor: isDark ? '#94A3B8' : '#64748B',
+      compositeBackground: isDark ? '#0B1120' : '#F8FAFC',
+      altBackground: isDark ? '#1A2332' : '#EFF6FF'
+    },
+    stateDiagram: {
+      useElk: false
+    },
+    securityLevel: 'loose'
+  });
+
+  // Zoom functionality
+  let currentZoom = 1;
+  const zoomStep = 0.15;
+  const minZoom = 0.4;
+  const maxZoom = 2.5;
+
+  window.zoomIn = function() {
+    currentZoom = Math.min(maxZoom, currentZoom + zoomStep);
+    applyZoom();
+  };
+  window.zoomOut = function() {
+    currentZoom = Math.max(minZoom, currentZoom - zoomStep);
+    applyZoom();
+  };
+  window.zoomReset = function() {
+    currentZoom = 1;
+    applyZoom();
+  };
+
+  function applyZoom() {
+    const el = document.getElementById('mermaidDiagram');
+    if (el) {
+      el.style.transform = `scale(${currentZoom})`;
+    }
+    document.getElementById('zoomLevel').textContent = Math.round(currentZoom * 100) + '%';
+  }
+
+  // Listen for color scheme changes
+  window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => {
+    location.reload();
+  });
+</script>
+</body>
+</html>

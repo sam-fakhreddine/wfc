@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Esports Platform Evolution</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Russo+One&family=Chakra+Petch:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+  :root{
+    --primary:#7C3AED;--secondary:#A78BFA;--cta:#F43F5E;
+    --bg:#0F0F23;--text:#E2E8F0;--border:#4C1D95;
+    --surface:rgba(124,58,237,0.08);--glass:rgba(15,15,35,0.7);
+    --glow-primary:0 0 20px rgba(124,58,237,0.4);
+    --glow-cta:0 0 20px rgba(244,63,94,0.4);
+    --purple:#7C3AED;--rose:#F43F5E;--cyan:#06B6D4;--green:#10B981;
+    --amber:#F59E0B;
+  }
+  @media(prefers-color-scheme:light){
+    :root{
+      --bg:#F0EEFF;--text:#1E1B4B;--glass:rgba(255,255,255,0.75);
+      --surface:rgba(124,58,237,0.06);--border:#C4B5FD;
+    }
+  }
+  html{scroll-behavior:smooth}
+  body{
+    font-family:'Chakra Petch',sans-serif;background:var(--bg);color:var(--text);
+    min-height:100vh;overflow-x:hidden;
+  }
+  .page-wrapper{max-width:960px;margin:0 auto;padding:2rem 1.5rem}
+  header{text-align:center;margin-bottom:3rem}
+  header h1{
+    font-family:'Russo One',sans-serif;font-size:clamp(1.5rem,4vw,2.5rem);
+    background:linear-gradient(135deg,var(--primary),var(--secondary),var(--cta));
+    -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+    background-clip:text;letter-spacing:0.02em;
+  }
+  header p{color:var(--secondary);margin-top:0.5rem;font-size:0.95rem;font-weight:300}
+  .badge{
+    display:inline-block;padding:0.25rem 0.75rem;border-radius:9999px;font-size:0.75rem;
+    font-weight:600;background:rgba(124,58,237,0.15);color:var(--secondary);
+    border:1px solid var(--border);margin-top:0.75rem;letter-spacing:0.05em;
+    text-transform:uppercase;
+  }
+
+  /* Timeline */
+  .timeline{position:relative;padding:1rem 0}
+  .timeline::before{
+    content:'';position:absolute;left:50%;top:0;bottom:0;width:3px;
+    transform:translateX(-50%);
+    background:linear-gradient(180deg,var(--primary),var(--secondary),var(--cta),var(--cyan));
+    border-radius:4px;
+    box-shadow:0 0 12px rgba(124,58,237,0.5),0 0 24px rgba(124,58,237,0.2);
+  }
+  .timeline-item{
+    position:relative;width:50%;padding:0 2.5rem 3rem;
+  }
+  .timeline-item:nth-child(odd){left:0;text-align:right;padding-right:3rem;padding-left:1rem}
+  .timeline-item:nth-child(even){left:50%;text-align:left;padding-left:3rem;padding-right:1rem}
+
+  /* Connector dot */
+  .timeline-item::before{
+    content:'';position:absolute;top:1.2rem;width:16px;height:16px;
+    border-radius:50%;border:3px solid var(--primary);background:var(--bg);
+    z-index:2;box-shadow:0 0 10px rgba(124,58,237,0.6);
+  }
+  .timeline-item:nth-child(odd)::before{right:-8px}
+  .timeline-item:nth-child(even)::before{left:-8px}
+
+  /* Connector line */
+  .timeline-item::after{
+    content:'';position:absolute;top:1.65rem;width:2rem;height:2px;
+    background:rgba(124,58,237,0.4);
+  }
+  .timeline-item:nth-child(odd)::after{right:0}
+  .timeline-item:nth-child(even)::after{left:0}
+
+  .timeline-card{
+    background:var(--glass);border:1px solid var(--border);border-radius:0.75rem;
+    padding:1.25rem 1.5rem;backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);
+    position:relative;overflow:hidden;
+    transition:transform 0.3s ease,box-shadow 0.3s ease;
+  }
+  .timeline-card:hover{
+    transform:translateY(-3px);
+    box-shadow:var(--glow-primary);
+  }
+  .timeline-card::before{
+    content:'';position:absolute;top:0;left:0;right:0;height:2px;
+  }
+  .timeline-item.color-purple .timeline-card::before{background:linear-gradient(90deg,transparent,var(--purple),transparent)}
+  .timeline-item.color-rose .timeline-card::before{background:linear-gradient(90deg,transparent,var(--rose),transparent)}
+  .timeline-item.color-cyan .timeline-card::before{background:linear-gradient(90deg,transparent,var(--cyan),transparent)}
+  .timeline-item.color-green .timeline-card::before{background:linear-gradient(90deg,transparent,var(--green),transparent)}
+  .timeline-item.color-amber .timeline-card::before{background:linear-gradient(90deg,transparent,var(--amber),transparent)}
+
+  .timeline-item.color-purple::before{border-color:var(--purple);box-shadow:0 0 10px rgba(124,58,237,0.6)}
+  .timeline-item.color-rose::before{border-color:var(--rose);box-shadow:0 0 10px rgba(244,63,94,0.6)}
+  .timeline-item.color-cyan::before{border-color:var(--cyan);box-shadow:0 0 10px rgba(6,182,212,0.6)}
+  .timeline-item.color-green::before{border-color:var(--green);box-shadow:0 0 10px rgba(16,185,129,0.6)}
+  .timeline-item.color-amber::before{border-color:var(--amber);box-shadow:0 0 10px rgba(245,158,11,0.6)}
+
+  .version-badge{
+    display:inline-block;padding:0.2rem 0.75rem;border-radius:9999px;
+    font-family:'Russo One',sans-serif;font-size:0.7rem;letter-spacing:0.05em;
+    text-transform:uppercase;margin-bottom:0.5rem;
+  }
+  .color-purple .version-badge{background:rgba(124,58,237,0.2);color:var(--purple);border:1px solid rgba(124,58,237,0.35)}
+  .color-rose .version-badge{background:rgba(244,63,94,0.2);color:var(--rose);border:1px solid rgba(244,63,94,0.35)}
+  .color-cyan .version-badge{background:rgba(6,182,212,0.2);color:var(--cyan);border:1px solid rgba(6,182,212,0.35)}
+  .color-green .version-badge{background:rgba(16,185,129,0.2);color:var(--green);border:1px solid rgba(16,185,129,0.35)}
+  .color-amber .version-badge{background:rgba(245,158,11,0.2);color:var(--amber);border:1px solid rgba(245,158,11,0.35)}
+
+  .timeline-date{font-size:0.8rem;color:var(--secondary);font-weight:300;margin-bottom:0.35rem}
+  .timeline-title{
+    font-family:'Russo One',sans-serif;font-size:1.1rem;margin-bottom:0.5rem;
+    color:var(--text);
+  }
+  .timeline-features{
+    list-style:none;padding:0;margin:0;
+  }
+  .timeline-features li{
+    font-size:0.82rem;color:var(--secondary);line-height:1.7;
+    position:relative;padding-left:1rem;
+  }
+  .timeline-item:nth-child(odd) .timeline-features li{
+    padding-left:0;padding-right:1rem;
+  }
+  .timeline-features li::before{
+    content:'';position:absolute;top:0.55rem;width:5px;height:5px;
+    border-radius:50%;background:var(--primary);
+  }
+  .timeline-item:nth-child(odd) .timeline-features li::before{right:0;left:auto}
+  .timeline-item:nth-child(even) .timeline-features li::before{left:0}
+
+  .color-purple .timeline-features li::before{background:var(--purple)}
+  .color-rose .timeline-features li::before{background:var(--rose)}
+  .color-cyan .timeline-features li::before{background:var(--cyan)}
+  .color-green .timeline-features li::before{background:var(--green)}
+  .color-amber .timeline-features li::before{background:var(--amber)}
+
+  /* Planned item glow */
+  .timeline-item.planned .timeline-card{
+    border-style:dashed;
+    animation:subtlePulse 3s ease-in-out infinite;
+  }
+  @keyframes subtlePulse{
+    0%,100%{box-shadow:0 0 5px rgba(124,58,237,0.2)}
+    50%{box-shadow:0 0 20px rgba(124,58,237,0.4)}
+  }
+
+  .fade-up{opacity:0;transform:translateY(24px);animation:fadeUp 0.6s ease forwards}
+  @keyframes fadeUp{to{opacity:1;transform:translateY(0)}}
+  .timeline-item:nth-child(1){animation-delay:0.1s}
+  .timeline-item:nth-child(2){animation-delay:0.2s}
+  .timeline-item:nth-child(3){animation-delay:0.3s}
+  .timeline-item:nth-child(4){animation-delay:0.4s}
+  .timeline-item:nth-child(5){animation-delay:0.5s}
+  .timeline-item:nth-child(6){animation-delay:0.6s}
+  .timeline-item:nth-child(7){animation-delay:0.7s}
+  .timeline-item:nth-child(8){animation-delay:0.8s}
+  header.fade-up{animation-delay:0.05s}
+
+  @media(prefers-reduced-motion:reduce){
+    .fade-up{opacity:1;transform:none;animation:none}
+    .timeline-item.planned .timeline-card{animation:none}
+  }
+
+  @media(max-width:768px){
+    .timeline::before{left:1.5rem}
+    .timeline-item{width:100%;left:0!important;text-align:left!important;padding:0 1rem 2rem 3.5rem!important}
+    .timeline-item::before{left:17px!important;right:auto!important}
+    .timeline-item::after{left:33px!important;right:auto!important;width:1.5rem}
+    .timeline-item:nth-child(odd) .timeline-features li{padding-left:1rem;padding-right:0}
+    .timeline-item:nth-child(odd) .timeline-features li::before{left:0;right:auto}
+  }
+  @media(max-width:480px){
+    .page-wrapper{padding:1rem}
+  }
+</style>
+</head>
+<body>
+<div class="page-wrapper">
+  <header class="fade-up">
+    <h1>Esports Platform Evolution</h1>
+    <p>From alpha prototype to intelligent competitive platform -- our journey season by season</p>
+    <span class="badge">Timeline / Roadmap</span>
+  </header>
+
+  <div class="timeline">
+    <!-- Season 0 -->
+    <div class="timeline-item color-purple fade-up">
+      <div class="timeline-card">
+        <span class="version-badge">Season 0</span>
+        <div class="timeline-date">March 2023</div>
+        <div class="timeline-title">Alpha</div>
+        <ul class="timeline-features">
+          <li>Core matchmaking engine</li>
+          <li>CS2 + Valorant support</li>
+          <li>Basic ELO rating system</li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- Season 1 -->
+    <div class="timeline-item color-purple fade-up">
+      <div class="timeline-card">
+        <span class="version-badge">Season 1</span>
+        <div class="timeline-date">July 2023</div>
+        <div class="timeline-title">Launch</div>
+        <ul class="timeline-features">
+          <li>Tournament engine</li>
+          <li>Team profiles</li>
+          <li>Spectator mode</li>
+          <li>5 game titles</li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- Season 2 -->
+    <div class="timeline-item color-purple fade-up">
+      <div class="timeline-card">
+        <span class="version-badge">Season 2</span>
+        <div class="timeline-date">November 2023</div>
+        <div class="timeline-title">Compete</div>
+        <ul class="timeline-features">
+          <li>League system</li>
+          <li>Swiss format support</li>
+          <li>Anti-cheat v1</li>
+          <li>Prize pool infrastructure</li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- Season 3 -->
+    <div class="timeline-item color-rose fade-up">
+      <div class="timeline-card">
+        <span class="version-badge">Season 3</span>
+        <div class="timeline-date">March 2024</div>
+        <div class="timeline-title">Engage</div>
+        <ul class="timeline-features">
+          <li>Fantasy leagues</li>
+          <li>Predictions system</li>
+          <li>Twitch integration</li>
+          <li>Mobile app (iOS + Android)</li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- Season 4 -->
+    <div class="timeline-item color-cyan fade-up">
+      <div class="timeline-card">
+        <span class="version-badge">Season 4</span>
+        <div class="timeline-date">August 2024</div>
+        <div class="timeline-title">Analyze</div>
+        <ul class="timeline-features">
+          <li>Real-time stats engine</li>
+          <li>Player analytics dashboard</li>
+          <li>Coach dashboard</li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- Season 5 -->
+    <div class="timeline-item color-green fade-up">
+      <div class="timeline-card">
+        <span class="version-badge">Season 5</span>
+        <div class="timeline-date">January 2025</div>
+        <div class="timeline-title">Scale</div>
+        <ul class="timeline-features">
+          <li>12 game titles</li>
+          <li>Multi-region deployment</li>
+          <li>1M concurrent users</li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- Season 6 -->
+    <div class="timeline-item color-purple fade-up">
+      <div class="timeline-card">
+        <span class="version-badge">Season 6</span>
+        <div class="timeline-date">July 2025</div>
+        <div class="timeline-title">Intelligence</div>
+        <ul class="timeline-features">
+          <li>ML anti-cheat v2</li>
+          <li>Personalized matchmaking</li>
+          <li>Behavior scoring system</li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- Season 7 -->
+    <div class="timeline-item color-amber planned fade-up">
+      <div class="timeline-card">
+        <span class="version-badge">Season 7</span>
+        <div class="timeline-date">Q1 2026</div>
+        <div class="timeline-title">Planned</div>
+        <ul class="timeline-features">
+          <li>VR spectating</li>
+          <li>AI commentary</li>
+          <li>Cross-platform tournaments</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>
+</body>
+</html>

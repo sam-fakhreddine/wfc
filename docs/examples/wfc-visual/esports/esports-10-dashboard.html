@@ -1,0 +1,597 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Esports Platform Live Dashboard</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Russo+One&family=Chakra+Petch:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
+<style>
+  *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+  :root{
+    --primary:#7C3AED;--secondary:#A78BFA;--cta:#F43F5E;
+    --bg:#0F0F23;--text:#E2E8F0;--border:#4C1D95;
+    --surface:rgba(124,58,237,0.08);--glass:rgba(15,15,35,0.7);
+    --glow-primary:0 0 20px rgba(124,58,237,0.4);
+    --glow-cta:0 0 20px rgba(244,63,94,0.4);
+    --cyan:#06B6D4;--green:#10B981;--amber:#F59E0B;
+    --chart-grid:rgba(167,139,250,0.08);
+    --chart-text:#A78BFA;
+  }
+  @media(prefers-color-scheme:light){
+    :root{
+      --bg:#F0EEFF;--text:#1E1B4B;--glass:rgba(255,255,255,0.75);
+      --surface:rgba(124,58,237,0.06);--border:#C4B5FD;
+      --chart-grid:rgba(124,58,237,0.1);--chart-text:#6D28D9;
+    }
+  }
+  html{scroll-behavior:smooth}
+  body{
+    font-family:'Chakra Petch',sans-serif;background:var(--bg);color:var(--text);
+    min-height:100vh;overflow-x:hidden;
+  }
+  .page-wrapper{max-width:1400px;margin:0 auto;padding:2rem 1.5rem}
+  header{text-align:center;margin-bottom:2rem}
+  header h1{
+    font-family:'Russo One',sans-serif;font-size:clamp(1.5rem,4vw,2.5rem);
+    background:linear-gradient(135deg,var(--primary),var(--secondary),var(--cta));
+    -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+    background-clip:text;letter-spacing:0.02em;
+  }
+  header p{color:var(--secondary);margin-top:0.5rem;font-size:0.95rem;font-weight:300}
+  .badge{
+    display:inline-block;padding:0.25rem 0.75rem;border-radius:9999px;font-size:0.75rem;
+    font-weight:600;background:rgba(124,58,237,0.15);color:var(--secondary);
+    border:1px solid var(--border);margin-top:0.75rem;letter-spacing:0.05em;
+    text-transform:uppercase;
+  }
+
+  /* Glass card base */
+  .glass-card{
+    background:var(--glass);border:1px solid var(--border);border-radius:0.75rem;
+    padding:1.25rem;backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);
+    position:relative;overflow:hidden;
+    transition:transform 0.3s ease,box-shadow 0.3s ease;
+  }
+  .glass-card:hover{transform:translateY(-2px);box-shadow:var(--glow-primary)}
+  .glass-card::before{
+    content:'';position:absolute;top:0;left:0;right:0;height:2px;
+    background:linear-gradient(90deg,transparent,var(--primary),transparent);
+  }
+
+  /* Hero KPI row */
+  .kpi-row{
+    display:grid;grid-template-columns:repeat(4,1fr);gap:1rem;margin-bottom:1.5rem;
+  }
+  .kpi-card{text-align:center}
+  .kpi-value{
+    font-family:'Russo One',sans-serif;font-size:clamp(1.5rem,3vw,2.2rem);
+    color:var(--text);line-height:1.2;
+  }
+  .kpi-trend{
+    display:inline-flex;align-items:center;gap:0.25rem;
+    font-size:0.75rem;font-weight:600;margin-top:0.25rem;
+    padding:0.15rem 0.5rem;border-radius:9999px;
+  }
+  .kpi-trend.up{background:rgba(16,185,129,0.15);color:var(--green)}
+  .kpi-label{font-size:0.8rem;color:var(--secondary);margin-top:0.35rem;font-weight:400}
+  .kpi-card.pulse .kpi-value{animation:kpiPulse 2s ease-in-out infinite}
+  @keyframes kpiPulse{
+    0%,100%{opacity:1}
+    50%{opacity:0.7}
+  }
+
+  /* Chart grid */
+  .chart-row{
+    display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-bottom:1.5rem;
+  }
+  .chart-card{padding:1.25rem}
+  .chart-title{
+    font-family:'Russo One',sans-serif;font-size:0.9rem;margin-bottom:1rem;
+    color:var(--secondary);letter-spacing:0.03em;
+  }
+  .chart-wrapper{position:relative;height:280px}
+
+  /* Live matches */
+  .section-title{
+    font-family:'Russo One',sans-serif;font-size:1.1rem;color:var(--text);
+    margin-bottom:1rem;display:flex;align-items:center;gap:0.75rem;
+  }
+  .live-dot{
+    width:10px;height:10px;border-radius:50%;background:var(--cta);
+    animation:livePulse 1.5s ease-in-out infinite;
+    box-shadow:0 0 8px rgba(244,63,94,0.6);
+  }
+  @keyframes livePulse{
+    0%,100%{opacity:1;transform:scale(1)}
+    50%{opacity:0.5;transform:scale(1.3)}
+  }
+  .live-matches{
+    display:grid;grid-template-columns:repeat(4,1fr);gap:1rem;margin-bottom:1.5rem;
+  }
+  .match-card{padding:1rem;text-align:center}
+  .match-card .game-tag{
+    font-size:0.65rem;text-transform:uppercase;letter-spacing:0.08em;
+    color:var(--secondary);font-weight:600;margin-bottom:0.5rem;
+  }
+  .match-teams{
+    display:flex;align-items:center;justify-content:center;gap:0.5rem;
+    font-weight:600;font-size:0.9rem;margin-bottom:0.4rem;
+  }
+  .match-teams .vs{color:var(--secondary);font-size:0.7rem;font-weight:400}
+  .match-score{
+    font-family:'Russo One',sans-serif;font-size:1.3rem;color:var(--primary);
+  }
+  .live-badge{
+    display:inline-flex;align-items:center;gap:0.3rem;
+    font-size:0.65rem;font-weight:700;text-transform:uppercase;
+    letter-spacing:0.08em;padding:0.15rem 0.5rem;border-radius:9999px;
+    background:rgba(244,63,94,0.15);color:var(--cta);
+    border:1px solid rgba(244,63,94,0.3);margin-top:0.4rem;
+  }
+  .live-badge .dot{
+    width:6px;height:6px;border-radius:50%;background:var(--cta);
+    animation:livePulse 1.5s ease-in-out infinite;
+  }
+
+  /* Bottom row */
+  .bottom-row{
+    display:grid;grid-template-columns:1fr 1fr 1fr;gap:1rem;
+  }
+  .bottom-card{padding:1.25rem}
+  .bottom-card .card-title{
+    font-family:'Russo One',sans-serif;font-size:0.85rem;color:var(--secondary);
+    margin-bottom:0.75rem;letter-spacing:0.03em;
+  }
+  .stat-line{
+    display:flex;justify-content:space-between;align-items:center;
+    padding:0.4rem 0;font-size:0.82rem;
+    border-bottom:1px solid rgba(124,58,237,0.08);
+  }
+  .stat-line:last-child{border-bottom:none}
+  .stat-label{color:var(--secondary)}
+  .stat-value{font-weight:600;color:var(--text)}
+  .stat-value.green{color:var(--green)}
+  .stat-value.amber{color:var(--amber)}
+  .stat-value.cyan{color:var(--cyan)}
+  .status-dot{
+    display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:0.3rem;
+  }
+  .status-dot.ok{background:var(--green);box-shadow:0 0 6px rgba(16,185,129,0.5)}
+  .status-dot.warn{background:var(--amber);box-shadow:0 0 6px rgba(245,158,11,0.5)}
+  .big-stat{
+    font-family:'Russo One',sans-serif;font-size:1.5rem;color:var(--text);
+    margin-bottom:0.25rem;
+  }
+  .big-stat-sub{font-size:0.8rem;color:var(--green);font-weight:600}
+
+  .mini-bar{
+    display:flex;gap:2px;height:24px;align-items:flex-end;margin-top:0.5rem;
+  }
+  .mini-bar-segment{
+    flex:1;border-radius:2px 2px 0 0;min-width:4px;
+    transition:height 0.3s ease;
+  }
+
+  /* Revenue breakdown */
+  .revenue-bar{
+    display:flex;height:8px;border-radius:4px;overflow:hidden;margin:0.75rem 0 0.5rem;
+    background:rgba(124,58,237,0.1);
+  }
+  .revenue-segment{height:100%;transition:width 0.5s ease}
+
+  .fade-up{opacity:0;transform:translateY(24px);animation:fadeUp 0.6s ease forwards}
+  @keyframes fadeUp{to{opacity:1;transform:translateY(0)}}
+  .fade-up:nth-child(1){animation-delay:0.05s}
+  .fade-up:nth-child(2){animation-delay:0.1s}
+  .fade-up:nth-child(3){animation-delay:0.15s}
+  .fade-up:nth-child(4){animation-delay:0.2s}
+  .fade-up:nth-child(5){animation-delay:0.25s}
+  .fade-up:nth-child(6){animation-delay:0.3s}
+  .kpi-row .glass-card:nth-child(1){animation-delay:0.05s}
+  .kpi-row .glass-card:nth-child(2){animation-delay:0.1s}
+  .kpi-row .glass-card:nth-child(3){animation-delay:0.15s}
+  .kpi-row .glass-card:nth-child(4){animation-delay:0.2s}
+
+  @media(prefers-reduced-motion:reduce){
+    .fade-up{opacity:1;transform:none;animation:none}
+    .kpi-card.pulse .kpi-value{animation:none}
+    .live-dot,.live-badge .dot{animation:none}
+  }
+  @media(max-width:1024px){
+    .kpi-row{grid-template-columns:repeat(2,1fr)}
+    .chart-row{grid-template-columns:1fr}
+    .live-matches{grid-template-columns:repeat(2,1fr)}
+    .bottom-row{grid-template-columns:1fr}
+  }
+  @media(max-width:640px){
+    .page-wrapper{padding:1rem}
+    .kpi-row{grid-template-columns:1fr 1fr;gap:0.75rem}
+    .live-matches{grid-template-columns:1fr}
+  }
+</style>
+</head>
+<body>
+<div class="page-wrapper">
+  <header class="fade-up">
+    <h1>Esports Platform Live Dashboard</h1>
+    <p>Real-time metrics overview for the competitive gaming platform</p>
+    <span class="badge">Dashboard / Metrics Overview</span>
+  </header>
+
+  <!-- Hero KPI Row -->
+  <div class="kpi-row fade-up">
+    <div class="glass-card kpi-card fade-up">
+      <div class="kpi-value" data-target="847000" data-suffix="K" data-divide="1000">0</div>
+      <span class="kpi-trend up">+34%</span>
+      <div class="kpi-label">Concurrent Players</div>
+    </div>
+    <div class="glass-card kpi-card pulse fade-up">
+      <div class="kpi-value" data-target="12847" data-suffix="" data-divide="1">0</div>
+      <span class="kpi-trend up">+12%</span>
+      <div class="kpi-label">Active Matches</div>
+    </div>
+    <div class="glass-card kpi-card fade-up">
+      <div class="kpi-value" data-target="2100000" data-suffix="M" data-divide="1000000">0</div>
+      <span class="kpi-trend up">+28%</span>
+      <div class="kpi-label">Daily Match Events</div>
+    </div>
+    <div class="glass-card kpi-card fade-up">
+      <div class="kpi-value" data-target="4200000" data-suffix="M" data-divide="1000000" data-prefix="$">0</div>
+      <span class="kpi-trend up">+18%</span>
+      <div class="kpi-label">Monthly Prize Pools</div>
+    </div>
+  </div>
+
+  <!-- Chart Section -->
+  <div class="chart-row fade-up">
+    <div class="glass-card chart-card fade-up">
+      <div class="chart-title">Matches by Game</div>
+      <div class="chart-wrapper">
+        <canvas id="barChart"></canvas>
+      </div>
+    </div>
+    <div class="glass-card chart-card fade-up">
+      <div class="chart-title">Concurrent Players (24h)</div>
+      <div class="chart-wrapper">
+        <canvas id="lineChart"></canvas>
+      </div>
+    </div>
+  </div>
+
+  <!-- Live Matches -->
+  <div class="section-title fade-up">
+    <span class="live-dot"></span> Live Matches
+  </div>
+  <div class="live-matches fade-up">
+    <div class="glass-card match-card fade-up">
+      <div class="game-tag">Valorant</div>
+      <div class="match-teams">NaVi <span class="vs">vs</span> Fnatic</div>
+      <div class="match-score">13 - 11</div>
+      <div class="live-badge"><span class="dot"></span> LIVE</div>
+    </div>
+    <div class="glass-card match-card fade-up">
+      <div class="game-tag">CS2</div>
+      <div class="match-teams">G2 <span class="vs">vs</span> FaZe</div>
+      <div class="match-score">8 - 7</div>
+      <div class="live-badge"><span class="dot"></span> LIVE</div>
+    </div>
+    <div class="glass-card match-card fade-up">
+      <div class="game-tag">League of Legends</div>
+      <div class="match-teams">T1 <span class="vs">vs</span> GenG</div>
+      <div class="match-score">1 - 1</div>
+      <div class="live-badge"><span class="dot"></span> LIVE</div>
+    </div>
+    <div class="glass-card match-card fade-up">
+      <div class="game-tag">Dota 2</div>
+      <div class="match-teams">Spirit <span class="vs">vs</span> Liquid</div>
+      <div class="match-score">23 - 18</div>
+      <div class="live-badge"><span class="dot"></span> LIVE</div>
+    </div>
+  </div>
+
+  <!-- Bottom Row -->
+  <div class="bottom-row fade-up">
+    <!-- Anti-Cheat -->
+    <div class="glass-card bottom-card fade-up">
+      <div class="card-title">Anti-Cheat System</div>
+      <div class="big-stat">342</div>
+      <div class="big-stat-sub">Detections Today</div>
+      <div class="stat-line">
+        <span class="stat-label">Clean Rate</span>
+        <span class="stat-value green">99.7%</span>
+      </div>
+      <div class="stat-line">
+        <span class="stat-label">ML Flagged</span>
+        <span class="stat-value amber">127</span>
+      </div>
+      <div class="stat-line">
+        <span class="stat-label">Confirmed Bans</span>
+        <span class="stat-value">342</span>
+      </div>
+      <div class="mini-bar">
+        <div class="mini-bar-segment" style="height:30%;background:var(--green)"></div>
+        <div class="mini-bar-segment" style="height:45%;background:var(--green)"></div>
+        <div class="mini-bar-segment" style="height:60%;background:var(--green)"></div>
+        <div class="mini-bar-segment" style="height:40%;background:var(--green)"></div>
+        <div class="mini-bar-segment" style="height:80%;background:var(--amber)"></div>
+        <div class="mini-bar-segment" style="height:100%;background:var(--cta)"></div>
+        <div class="mini-bar-segment" style="height:70%;background:var(--amber)"></div>
+        <div class="mini-bar-segment" style="height:50%;background:var(--green)"></div>
+        <div class="mini-bar-segment" style="height:35%;background:var(--green)"></div>
+        <div class="mini-bar-segment" style="height:25%;background:var(--green)"></div>
+        <div class="mini-bar-segment" style="height:40%;background:var(--green)"></div>
+        <div class="mini-bar-segment" style="height:55%;background:var(--green)"></div>
+      </div>
+    </div>
+
+    <!-- Server Health -->
+    <div class="glass-card bottom-card fade-up">
+      <div class="card-title">Server Health</div>
+      <div class="stat-line">
+        <span class="stat-label"><span class="status-dot ok"></span>NA East</span>
+        <span class="stat-value green">12ms</span>
+      </div>
+      <div class="stat-line">
+        <span class="stat-label"><span class="status-dot ok"></span>EU West</span>
+        <span class="stat-value green">18ms</span>
+      </div>
+      <div class="stat-line">
+        <span class="stat-label"><span class="status-dot warn"></span>APAC</span>
+        <span class="stat-value amber">45ms</span>
+      </div>
+      <div class="stat-line">
+        <span class="stat-label"><span class="status-dot ok"></span>SA</span>
+        <span class="stat-value amber">38ms</span>
+      </div>
+      <div style="margin-top:0.75rem;padding-top:0.5rem;border-top:1px solid rgba(124,58,237,0.1)">
+        <div class="stat-line">
+          <span class="stat-label">Uptime (30d)</span>
+          <span class="stat-value green">99.97%</span>
+        </div>
+        <div class="stat-line">
+          <span class="stat-label">Active Servers</span>
+          <span class="stat-value">2,847</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Revenue -->
+    <div class="glass-card bottom-card fade-up">
+      <div class="card-title">Revenue</div>
+      <div class="big-stat">$2.1M</div>
+      <div class="big-stat-sub">MTD Revenue</div>
+      <div class="revenue-bar">
+        <div class="revenue-segment" style="width:45%;background:var(--primary)"></div>
+        <div class="revenue-segment" style="width:30%;background:var(--cta)"></div>
+        <div class="revenue-segment" style="width:15%;background:var(--cyan)"></div>
+        <div class="revenue-segment" style="width:10%;background:var(--amber)"></div>
+      </div>
+      <div class="stat-line">
+        <span class="stat-label" style="color:var(--primary)">Subscriptions</span>
+        <span class="stat-value">45%</span>
+      </div>
+      <div class="stat-line">
+        <span class="stat-label" style="color:var(--cta)">Tournaments</span>
+        <span class="stat-value">30%</span>
+      </div>
+      <div class="stat-line">
+        <span class="stat-label" style="color:var(--cyan)">Advertising</span>
+        <span class="stat-value">15%</span>
+      </div>
+      <div class="stat-line">
+        <span class="stat-label" style="color:var(--amber)">Merchandise</span>
+        <span class="stat-value">10%</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// CountUp animation
+function animateCountUp() {
+  const prefersReduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  document.querySelectorAll('.kpi-value[data-target]').forEach(function(el) {
+    var target = parseInt(el.getAttribute('data-target'));
+    var divide = parseFloat(el.getAttribute('data-divide')) || 1;
+    var suffix = el.getAttribute('data-suffix') || '';
+    var prefix = el.getAttribute('data-prefix') || '';
+    var display = target / divide;
+    if (prefersReduced) {
+      el.textContent = prefix + (divide > 1 ? display.toFixed(1) : display.toLocaleString()) + suffix;
+      return;
+    }
+    var duration = 2000;
+    var startTime = null;
+    function step(timestamp) {
+      if (!startTime) startTime = timestamp;
+      var progress = Math.min((timestamp - startTime) / duration, 1);
+      var eased = 1 - Math.pow(1 - progress, 3);
+      var current = eased * display;
+      if (divide > 1) {
+        el.textContent = prefix + current.toFixed(1) + suffix;
+      } else {
+        el.textContent = prefix + Math.floor(current).toLocaleString();
+      }
+      if (progress < 1) requestAnimationFrame(step);
+      else {
+        if (divide > 1) el.textContent = prefix + display.toFixed(1) + suffix;
+        else el.textContent = prefix + display.toLocaleString();
+      }
+    }
+    requestAnimationFrame(step);
+  });
+}
+
+// Charts
+function getChartColors() {
+  var style = getComputedStyle(document.documentElement);
+  return {
+    primary: '#7C3AED',
+    secondary: '#A78BFA',
+    cta: '#F43F5E',
+    cyan: '#06B6D4',
+    green: '#10B981',
+    amber: '#F59E0B',
+    grid: style.getPropertyValue('--chart-grid').trim() || 'rgba(167,139,250,0.08)',
+    text: style.getPropertyValue('--chart-text').trim() || '#A78BFA'
+  };
+}
+
+function createCharts() {
+  var c = getChartColors();
+
+  // Bar chart
+  var barCtx = document.getElementById('barChart').getContext('2d');
+  new Chart(barCtx, {
+    type: 'bar',
+    data: {
+      labels: ['Valorant', 'CS2', 'League', 'Dota 2', 'Rocket League', 'Fortnite'],
+      datasets: [{
+        label: 'Active Matches',
+        data: [4200, 3800, 2100, 1400, 900, 500],
+        backgroundColor: [
+          'rgba(124,58,237,0.7)',
+          'rgba(167,139,250,0.7)',
+          'rgba(244,63,94,0.7)',
+          'rgba(6,182,212,0.7)',
+          'rgba(16,185,129,0.7)',
+          'rgba(245,158,11,0.7)'
+        ],
+        borderColor: [
+          '#7C3AED','#A78BFA','#F43F5E','#06B6D4','#10B981','#F59E0B'
+        ],
+        borderWidth: 1,
+        borderRadius: 4,
+        hoverBackgroundColor: [
+          'rgba(124,58,237,0.9)',
+          'rgba(167,139,250,0.9)',
+          'rgba(244,63,94,0.9)',
+          'rgba(6,182,212,0.9)',
+          'rgba(16,185,129,0.9)',
+          'rgba(245,158,11,0.9)'
+        ]
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          backgroundColor: 'rgba(15,15,35,0.9)',
+          titleFont: { family: 'Chakra Petch', weight: '600' },
+          bodyFont: { family: 'Chakra Petch' },
+          borderColor: '#4C1D95',
+          borderWidth: 1,
+          cornerRadius: 8,
+          padding: 12
+        }
+      },
+      scales: {
+        x: {
+          ticks: { color: c.text, font: { family: 'Chakra Petch', size: 11 } },
+          grid: { display: false },
+          border: { color: 'rgba(124,58,237,0.2)' }
+        },
+        y: {
+          ticks: { color: c.text, font: { family: 'Chakra Petch', size: 11 },
+            callback: function(v) { return (v/1000).toFixed(1) + 'K'; }
+          },
+          grid: { color: c.grid },
+          border: { display: false }
+        }
+      }
+    }
+  });
+
+  // Line chart - concurrent players 24h
+  var hours = [];
+  for (var i = 0; i < 24; i++) hours.push(i + ':00');
+  var playerData = [
+    320, 280, 240, 210, 190, 180, 200, 280, 380, 450,
+    520, 560, 540, 510, 530, 580, 650, 740, 847, 820,
+    780, 700, 580, 450
+  ];
+
+  var lineCtx = document.getElementById('lineChart').getContext('2d');
+  var gradient = lineCtx.createLinearGradient(0, 0, 0, 280);
+  gradient.addColorStop(0, 'rgba(124,58,237,0.3)');
+  gradient.addColorStop(1, 'rgba(124,58,237,0)');
+
+  new Chart(lineCtx, {
+    type: 'line',
+    data: {
+      labels: hours,
+      datasets: [{
+        label: 'Players (K)',
+        data: playerData,
+        borderColor: '#7C3AED',
+        backgroundColor: gradient,
+        borderWidth: 2,
+        fill: true,
+        tension: 0.4,
+        pointBackgroundColor: '#7C3AED',
+        pointBorderColor: '#0F0F23',
+        pointBorderWidth: 2,
+        pointRadius: 0,
+        pointHoverRadius: 6,
+        pointHoverBackgroundColor: '#A78BFA',
+        pointHoverBorderColor: '#7C3AED'
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          backgroundColor: 'rgba(15,15,35,0.9)',
+          titleFont: { family: 'Chakra Petch', weight: '600' },
+          bodyFont: { family: 'Chakra Petch' },
+          borderColor: '#4C1D95',
+          borderWidth: 1,
+          cornerRadius: 8,
+          padding: 12,
+          callbacks: {
+            label: function(ctx) { return ctx.parsed.y + 'K players'; }
+          }
+        }
+      },
+      scales: {
+        x: {
+          ticks: {
+            color: c.text,
+            font: { family: 'Chakra Petch', size: 10 },
+            maxTicksLimit: 12
+          },
+          grid: { display: false },
+          border: { color: 'rgba(124,58,237,0.2)' }
+        },
+        y: {
+          ticks: {
+            color: c.text,
+            font: { family: 'Chakra Petch', size: 11 },
+            callback: function(v) { return v + 'K'; }
+          },
+          grid: { color: c.grid },
+          border: { display: false }
+        }
+      },
+      interaction: {
+        intersect: false,
+        mode: 'index'
+      }
+    }
+  });
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+  animateCountUp();
+  createCharts();
+});
+</script>
+</body>
+</html>
