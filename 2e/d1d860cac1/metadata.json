@@ -1,0 +1,47 @@
+{
+  "cli_version": "0.4.5",
+  "checkpoint_id": "2ed1d860cac1",
+  "strategy": "manual-commit",
+  "branch": "develop",
+  "checkpoints_count": 1,
+  "files_touched": [
+    "docs/solutions/configuration/claude-code-subagent-cannot-edit-outside-session-cwd.md"
+  ],
+  "sessions": [
+    {
+      "metadata": "/2e/d1d860cac1/0/metadata.json",
+      "transcript": "/2e/d1d860cac1/0/full.jsonl",
+      "context": "/2e/d1d860cac1/0/context.md",
+      "content_hash": "/2e/d1d860cac1/0/content_hash.txt",
+      "prompt": "/2e/d1d860cac1/0/prompt.txt"
+    },
+    {
+      "metadata": "/2e/d1d860cac1/1/metadata.json",
+      "transcript": "/2e/d1d860cac1/1/full.jsonl",
+      "context": "/2e/d1d860cac1/1/context.md",
+      "content_hash": "/2e/d1d860cac1/1/content_hash.txt",
+      "prompt": "/2e/d1d860cac1/1/prompt.txt"
+    },
+    {
+      "metadata": "/2e/d1d860cac1/2/metadata.json",
+      "transcript": "/2e/d1d860cac1/2/full.jsonl",
+      "context": "/2e/d1d860cac1/2/context.md",
+      "content_hash": "/2e/d1d860cac1/2/content_hash.txt",
+      "prompt": "/2e/d1d860cac1/2/prompt.txt"
+    },
+    {
+      "metadata": "/2e/d1d860cac1/3/metadata.json",
+      "transcript": "/2e/d1d860cac1/3/full.jsonl",
+      "context": "/2e/d1d860cac1/3/context.md",
+      "content_hash": "/2e/d1d860cac1/3/content_hash.txt",
+      "prompt": "/2e/d1d860cac1/3/prompt.txt"
+    }
+  ],
+  "token_usage": {
+    "input_tokens": 15501,
+    "cache_creation_tokens": 2319992,
+    "cache_read_tokens": 63998314,
+    "output_tokens": 57161,
+    "api_call_count": 604
+  }
+}
